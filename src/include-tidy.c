@@ -21,6 +21,7 @@
 // local
 #include "pjl_config.h"
 #include "include-tidy.h"
+#include "options.h"
 #include "util.h"
 
 // libclang
@@ -37,6 +38,7 @@
 
 // extern variable definitions
 char const *prog_name;
+char const *tidy_source_path;
 
 /// @endcond
 
@@ -90,13 +92,6 @@ skip_kind:
   return CXChildVisit_Recurse;
 }
 
-_Noreturn
-static void print_usage( int status ) {
-  FILE *const fout = status == EX_OK ? stdout : stderr;
-  fprintf( fout, "usage: %s [options] source-file\n", prog_name );
-  exit( status );
-}
-
 /**
  * The main entry point.
  *
@@ -106,9 +101,7 @@ static void print_usage( int status ) {
  */
 int main( int argc, char const *const argv[] ) {
   prog_name = base_name( argv[0] );
-  if ( argc < 2 )
-    print_usage( EX_USAGE );
-  char const *const source_file = argv[1];
+  options_init( argc, argv );
 
   CXIndex index = clang_createIndex( 0, 0 );
 
@@ -117,7 +110,7 @@ int main( int argc, char const *const argv[] ) {
 
   CXTranslationUnit tu = clang_parseTranslationUnit(
     index, 
-    source_file,
+    tidy_source_path,
     args, 
     ARRAY_SIZE( args ), 
     /*unsaved_files=*/NULL, 
@@ -137,7 +130,7 @@ int main( int argc, char const *const argv[] ) {
   }
 
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
-  visitor_data data = { clang_getFile( tu, source_file ) };
+  visitor_data data = { clang_getFile( tu, tidy_source_path ) };
   clang_visitChildren( cursor, visitor, &data );
 
   clang_disposeTranslationUnit( tu );

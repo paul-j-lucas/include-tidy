@@ -267,6 +267,17 @@
 	PERROR_EXIT_IF( putc( (C), (STREAM) ) == EOF, EX_IOERR )
 
 /**
+ * Prints \a N spaces to \a STREAM.
+ *
+ * @param N The number of spaces to print.
+ * @param STREAM The `FILE` stream to print to.
+ *
+ * @sa #FPUTS()
+ */
+#define FPUTNSP(N,STREAM) \
+  FPRINTF( (STREAM), "%*s", STATIC_CAST( int, (N) ), "" )
+
+/**
  * Calls **fputs**(3), checks for an error, and exits if there was one.
  *
  * @param S The C string to print.
@@ -524,6 +535,16 @@
  * @sa #CHARIFY()
  */
 #define STRINGIFY(X)              STRINGIFY_IMPL(X)
+
+/**
+ * Gets the length of \a S.
+ *
+ * @param S The C string literal to get the length of.
+ * @return Returns said length.
+ */
+#define STRLITLEN(S) \
+  (ARRAY_SIZE( (S) ) \
+   - STATIC_ASSERT_EXPR( IS_C_STR_EXPR( (S) ), #S " must be a C string literal" ))
 
 /**
  * A special-case of #INTERNAL_ERROR() that prints an unexpected integer value.

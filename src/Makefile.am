@@ -26,6 +26,7 @@ LDADD =			-lclang $(top_builddir)/lib/libgnu.a
 
 include_tidy_SOURCES =	include-tidy.c include-tidy.h \
 			pjl_config.h config.h \
+			options.c options.h \
 			type_traits.h \
 			util.c util.h
 

@@ -58,6 +58,21 @@
 #endif /* HAVE_TYPEOF */
 
 /**
+ * Checks (at compile-time) whether the type of \a EXPR is a C string type,
+ * i.e., <code>char*</code> or <code>char const*</code>.
+ *
+ * @param EXPR An expression. It is _not_ evaluated.
+ * @return Returns 1 (true) only if \a EXPR is a C string type; 0 (false)
+ * otherwise.
+ */
+#define IS_C_STR_EXPR(EXPR) \
+  _Generic( (EXPR),         \
+    char*       : 1,        \
+    char const* : 1,        \
+    default     : 0         \
+  )
+
+/**
  * Checks (at compile-time) whether \a P is a pointer.
  *
  * @param P The alleged pointer to check.

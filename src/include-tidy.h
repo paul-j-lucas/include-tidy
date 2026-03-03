@@ -64,12 +64,13 @@
 /**
  * **cdecl** primary author.
  */
-#define INCLUDE_TIDY_PRIMARY_AUTHOR     "Paul J. Lucas"
+#define INCLUDE_TIDY_AUTHOR             "Paul J. Lucas"
 
 ///////////////////////////////////////////////////////////////////////////////
 
 // extern variables
 extern char const  *prog_name;            ///< Program name.
+extern char const  *tidy_source_path;     ///< TODO.
 
 ///////////////////////////////////////////////////////////////////////////////
 
