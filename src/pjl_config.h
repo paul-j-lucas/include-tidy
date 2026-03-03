@@ -1,0 +1,97 @@
+/*
+**      PJL Library
+**      src/pjl_config.h
+**
+**      Copyright (C) 2018-2026  Paul J. Lucas, et al.
+**
+**      This program is free software: you can redistribute it and/or modify
+**      it under the terms of the GNU General Public License as published by
+**      the Free Software Foundation, either version 3 of the License, or
+**      (at your option) any later version.
+**
+**      This program is distributed in the hope that it will be useful,
+**      but WITHOUT ANY WARRANTY; without even the implied warranty of
+**      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**      GNU General Public License for more details.
+**
+**      You should have received a copy of the GNU General Public License
+**      along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef pjl_config_H
+#define pjl_config_H
+
+/**
+ * @file
+ * Includes platform configuration information in the right order.  Always
+ * `#include` this file rather than `config.h` directly.
+ */
+
+#ifdef wrap_config_H
+#error "Must #include pjl_config.h instead."
+#endif
+
+// local
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wundef"
+#include "config.h"                     /* IWYU pragma: export */
+#pragma GCC diagnostic pop
+
+#ifdef VERSION
+  // Undefine this since it clashes with our VERSION command-line option.  We
+  // don't need this since PACKAGE_VERSION is also defined.
+# undef VERSION
+#endif /* VERSION */
+
+// standard
+#include <attribute.h>                  /* IWYU pragma: export */
+
+////////// compiler attributes ////////////////////////////////////////////////
+
+/**
+ * Denote that a function's return value may be ignored without warning.
+ *
+ * @note
+ * There is no compiler attribute for this.  It's just a visual cue in code
+ * that `NODISCARD` wasn't forgotten.
+ */
+#define PJL_DISCARD               /* nothing */
+
+#ifdef HAVE___ATTRIBUTE__
+
+/**
+ * Denote a function declaration takes a `printf`-like format string followed
+ * by a variable number of arguments.
+ *
+ * @param N The position (starting at 1) of the parameter that contains the
+ * format string.
+ */
+#define PJL_PRINTF_LIKE_FUNC(N)   __attribute__((format(printf, (N), (N)+1)))
+
+#endif /* HAVE___ATTRIBUTE__ */
+
+#ifdef HAVE_TYPEOF
+/**
+ * Discard the return value of a function even if it was declared with
+ * `NODISCARD`.
+ *
+ * @param FN_CALL The function call.
+ */
+#define PJL_DISCARD_RV(FN_CALL) \
+  do { MAYBE_UNUSED typeof(FN_CALL) _rv = (FN_CALL); } while (0)
+#endif /* HAVE_TYPEOF */
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef PJL_DISCARD_RV
+#define PJL_DISCARD_RV(FN_CALL)   ((void)(FN_CALL))
+#endif /* PJL_DISCARD_RV */
+
+#ifndef PJL_PRINTF_LIKE_FUNC
+#define PJL_PRINTF_LIKE_FUNC(N)   /* nothing */
+#endif /* PJL_PRINTF_LIKE_FUNC */
+
+///////////////////////////////////////////////////////////////////////////////
+
+#endif /* pjl_config_H */
+/* vim:set et sw=2 ts=2: */

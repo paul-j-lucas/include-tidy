@@ -1,12 +1,44 @@
+/*
+**      include-tidy -- #include tidier
+**      src/include-tidy.c
+**
+**      Copyright (C) 2026  Paul J. Lucas
+**
+**      This program is free software: you can redistribute it and/or modify
+**      it under the terms of the GNU General Public License as published by
+**      the Free Software Foundation, either version 3 of the License, or
+**      (at your option) any later version.
+**
+**      This program is distributed in the hope that it will be useful,
+**      but WITHOUT ANY WARRANTY; without even the implied warranty of
+**      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**      GNU General Public License for more details.
+**
+**      You should have received a copy of the GNU General Public License
+**      along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// local
+#include "pjl_config.h"
+#include "include-tidy.h"
+#include "util.h"
+
+// libclang
 #include <clang-c/Index.h>
 
+// standard
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sysexits.h>
 
-#define ARRAY_SIZE(ARRAY)         ( sizeof ((ARRAY)) / sizeof 0[ (ARRAY) ] )
+/// @cond DOXYGEN_IGNORE
+/// Otherwise Doxygen generates two entries.
 
+// extern variable definitions
 char const *prog_name;
+
+/// @endcond
 
 struct visitor_data {
   CXFile source_file;
@@ -15,7 +47,10 @@ typedef struct visitor_data visitor_data;
 
 enum CXChildVisitResult visitor( CXCursor cursor, CXCursor parent,
                                  CXClientData client_data ) {
+  (void)parent;
+  assert( client_data != NULL );
   visitor_data const *const data = (visitor_data const*)client_data;
+
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
 
   if ( !(clang_isDeclaration( kind ) || kind == CXCursor_MacroDefinition) )
@@ -24,7 +59,6 @@ enum CXChildVisitResult visitor( CXCursor cursor, CXCursor parent,
   CXString name = clang_getCursorSpelling( cursor );
   char const *const name_cstr = clang_getCString( name );
 
-  // Ignore empty/anonymous symbols
   if ( name_cstr == NULL || name_cstr[0] == '\0' )
     goto skip_symbol;
 
@@ -63,8 +97,15 @@ static void print_usage( int status ) {
   exit( status );
 }
 
+/**
+ * The main entry point.
+ *
+ * @param argc The command-line argument count.
+ * @param argv The command-line argument values.
+ * @return Returns 0 on success, non-zero on failure.
+ */
 int main( int argc, char const *const argv[] ) {
-  prog_name = argv[0];
+  prog_name = base_name( argv[0] );
   if ( argc < 2 )
     print_usage( EX_USAGE );
   char const *const source_file = argv[1];

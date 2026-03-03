@@ -37,6 +37,7 @@
 #  --no-conditional-dependencies \
 #  --no-libtool \
 #  --macro-prefix=gl \
+#  attribute \
 #  bool \
 #  getopt-gnu \
 #  strerror \
@@ -46,6 +47,7 @@
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
 gl_MODULES([
+  attribute
   bool
   getopt-gnu
   strerror

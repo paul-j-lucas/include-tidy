@@ -32,6 +32,7 @@
 #  --no-conditional-dependencies \
 #  --no-libtool \
 #  --macro-prefix=gl \
+#  attribute \
 #  bool \
 #  getopt-gnu \
 #  strerror \
@@ -106,6 +107,13 @@ MOSTLYCLEANFILES += assert.h assert.h-t
 EXTRA_DIST += assert.in.h verify.h
 
 ## end   gnulib module assert-h
+
+## begin gnulib module attribute
+
+
+EXTRA_DIST += attribute.h
+
+## end   gnulib module attribute
 
 ## begin gnulib module errno-h
 

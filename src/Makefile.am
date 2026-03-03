@@ -22,9 +22,11 @@ bin_PROGRAMS =		include-tidy
 
 AM_CFLAGS =		$(INCLUDE_TIDY_CFLAGS)
 AM_CPPFLAGS =		-I$(top_srcdir)/lib -I$(top_builddir)/lib
-LDADD =			$(top_builddir)/lib/libgnu.a
+LDADD =			-lclang $(top_builddir)/lib/libgnu.a
 
-include_tidy_SOURCES =	pjl_config.h \
-			include_tidy.c
+include_tidy_SOURCES =	include-tidy.c include-tidy.h \
+			pjl_config.h config.h \
+			type_traits.h \
+			util.c util.h
 
 # vim:set noet sw=8 ts=8:
