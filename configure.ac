@@ -39,10 +39,22 @@ AC_ARG_WITH([libclang],
 )
 AS_IF([test "x$with_libclang" != xno], [
   AS_IF([test "x$withval" != xyes], [
-    CPPFLAGS="-I${withval}/include ${CPPFLAGS}"
-    LDFLAGS="-L${withval}/lib ${LDFLAGS}"
+    LIBCLANG_PATH="$withval"
+    CPPFLAGS="-I$LIBCLANG_PATH/include ${CPPFLAGS}"
+    LDFLAGS="-L$LIBCLANG_PATH/lib ${LDFLAGS}"
   ])
 ])
+
+# Check host type.
+AC_CANONICAL_HOST
+case "x$host_os" in
+xdarwin*)
+  AC_DEFINE([SHLIB_PATH_VAR], [DYLD_LIBRARY_PATH], [Define to platform shared library path variable.])
+  ;;
+*)
+  AC_DEFINE([SHLIB_PATH_VAR], [LD_LIBRARY_PATH], [Define to platform shared library path variable.])
+  ;;
+esac
 
 # Checks for libraries.
 AC_CHECK_HEADER([clang-c/Index.h], [], [
