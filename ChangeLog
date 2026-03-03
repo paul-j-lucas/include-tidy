@@ -1,0 +1,3 @@
+2026-03-03  Paul J. Lucas <paul@lucasmail.org>
+
+   * src/Makefile.am: Added missing file.
