@@ -422,7 +422,7 @@ struct option const* cli_option_next( struct option const *opt ) {
   return opt == NULL ? OPTIONS : (++opt)->name == NULL ? NULL : opt;
 }
 
-void options_init( int argc, char const *argv[] ) {
+void options_init( int argc, char const *const argv[] ) {
   ASSERT_RUN_ONCE();
 
   int               opt;

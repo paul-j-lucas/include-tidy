@@ -51,44 +51,56 @@ enum CXChildVisitResult visitor( CXCursor cursor, CXCursor parent,
                                  CXClientData client_data ) {
   (void)parent;
   assert( client_data != NULL );
-  visitor_data const *const data = (visitor_data const*)client_data;
+  visitor_data const *const vd =
+    POINTER_CAST( visitor_data const*, client_data );
+
+  CXSourceLocation ref_loc = clang_getCursorLocation( cursor );
+  CXFile ref_file;
+  clang_getSpellingLocation( ref_loc, &ref_file, NULL, NULL, NULL );
+
+  if ( !ref_file || !clang_File_isEqual( ref_file, vd->source_file ) )
+    goto skip;
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  switch ( kind ) {
+    case CXCursor_CallExpr:
+    case CXCursor_DeclRefExpr:
+    case CXCursor_MacroExpansion:;
 
-  if ( !(clang_isDeclaration( kind ) || kind == CXCursor_MacroDefinition) )
-    goto skip_kind;
+      // Follow the reference to the actual declaration
+      CXCursor decl = clang_getCursorReferenced( cursor );
+      if ( clang_isInvalid( decl.kind ) )
+        break;
 
-  CXString name = clang_getCursorSpelling( cursor );
-  char const *const name_cstr = clang_getCString( name );
+      CXSourceLocation decl_loc = clang_getCursorLocation( decl );
+      CXFile decl_file;
+      unsigned decl_line;
+      clang_getSpellingLocation( decl_loc, &decl_file, &decl_line, NULL, NULL );
 
-  if ( name_cstr == NULL || name_cstr[0] == '\0' )
-    goto skip_symbol;
+      // 3. Check: Is the declaration file different from our main file?
+      if ( !decl_file || clang_File_isEqual( decl_file, vd->source_file) )
+        break;
 
-  CXSourceLocation loc = clang_getCursorLocation( cursor );
+      CXString symbol_name = clang_getCursorSpelling( decl );
+      CXString file_name = clang_getFileName( decl_file );
+      CXString kind_name = clang_getCursorKindSpelling( clang_getCursorKind( decl ) );
 
-  CXFile file;
-  unsigned line, column, offset;
-  clang_getSpellingLocation( loc, &file, &line, &column, &offset );
-  if ( !clang_File_isEqual( file, data->source_file ) )
-    return CXChildVisit_Continue;
+      printf( "%-15s | Type: %-12s | Declared In: %-15s (Line %u)\n",
+              clang_getCString( symbol_name ),
+              clang_getCString( kind_name ),
+              clang_getCString( file_name ),
+              decl_line );
 
-  CXString cxFileName;
-  char const *file_name = "unknown";
+      clang_disposeString( symbol_name );
+      clang_disposeString( file_name );
+      clang_disposeString( kind_name );
+      break;
 
-  if ( file ) {
-    cxFileName = clang_getFileName( file );
-    file_name = clang_getCString( cxFileName );
-  }
+    default:
+      break;
+  } // switch
 
-  printf( "%s -> %s:%u\n", name_cstr, file_name, line );
-
-  if ( file )
-    clang_disposeString( cxFileName );
-
-skip_symbol:
-  clang_disposeString( name );
-
-skip_kind:
+skip:
   return CXChildVisit_Recurse;
 }
 
@@ -120,22 +132,15 @@ int main( int argc, char const *const argv[] ) {
 
   int rv = EX_OK;
 
-  if ( tu == NULL ) {
-    fprintf( stderr,
-      "%s: error: failed to parse the translation unit\n",
-      prog_name
-    );
-    rv = EX_DATAERR;
-    goto error;
-  }
+  if ( tu == NULL )
+    fatal_error( EX_DATAERR, "error: failed to parse the translation unit\n" );
 
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
-  visitor_data data = { clang_getFile( tu, tidy_source_path ) };
-  clang_visitChildren( cursor, visitor, &data );
+  visitor_data vd = { clang_getFile( tu, tidy_source_path ) };
+  clang_visitChildren( cursor, visitor, &vd );
 
   clang_disposeTranslationUnit( tu );
-
-error:
   clang_disposeIndex( index );
+
   return rv;
 }
