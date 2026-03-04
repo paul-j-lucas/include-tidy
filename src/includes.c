@@ -118,6 +118,12 @@ static int tidy_include_file_cmp( tidy_include_file const *i_file,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
+tidy_include_file const* include_find( CXFile file ) {
+  tidy_include_file const inc_file = { .file = file };
+  rb_node_t const *const found_rb = rb_tree_find( &include_set, &inc_file );
+  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
+}
+
 void includes_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
   rb_tree_init(

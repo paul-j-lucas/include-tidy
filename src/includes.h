@@ -21,6 +21,9 @@
 #ifndef include_tidy_includes_H
 #define include_tidy_includes_H
 
+// local
+#include "pjl_config.h"
+
 // libclang
 #include <clang-c/Index.h>
 
@@ -38,6 +41,15 @@ struct tidy_include_file {
 typedef struct tidy_include_file tidy_include_file;
 
 ////////// extern functions ///////////////////////////////////////////////////
+
+/**
+ * Attempts to find \a file among the set of files included.
+ *
+ * @param file The file to find.
+ * @return Returns the corresponding tidy_include_file if found or NULL if not.
+ */
+NODISCARD
+tidy_include_file const* include_find( CXFile file );
 
 /**
  * Initializes the set of files included in the given translation unit.

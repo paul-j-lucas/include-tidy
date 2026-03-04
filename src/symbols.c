@@ -22,6 +22,7 @@
 #include "pjl_config.h"
 #include "symbols.h"
 #include "include-tidy.h"
+#include "includes.h"
 #include "red_black.h"
 #include "util.h"
 
@@ -99,6 +100,11 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
 
       // If the symbol is declared in the file being tidied, we don't care.
       if ( clang_File_isEqual( decl_file, svd->source_file ) )
+        break;
+
+      // If the symbol is declared in a file included, we don't care.
+      tidy_include_file const *const inc_file = include_find( decl_file );
+      if ( inc_file != NULL )
         break;
 
       tidy_symbol sym = {
