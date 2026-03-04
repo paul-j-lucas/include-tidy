@@ -25,8 +25,11 @@ AM_CPPFLAGS =		-I$(top_srcdir)/lib -I$(top_builddir)/lib
 LDADD =			-lclang $(top_builddir)/lib/libgnu.a
 
 include_tidy_SOURCES =	include-tidy.c include-tidy.h \
-			pjl_config.h config.h \
+			includes.c \
 			options.c options.h \
+			pjl_config.h config.h \
+			red_black.c red_black.h \
+			symbols.c \
 			type_traits.h \
 			util.c util.h
 
