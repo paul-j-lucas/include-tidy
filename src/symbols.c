@@ -61,8 +61,8 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
   if ( !ref_file || !clang_File_isEqual( ref_file, svd->source_file ) )
     goto skip;
 
-  enum CXCursorKind const kind = clang_getCursorKind( cursor );
-  switch ( kind ) {
+  enum CXCursorKind const sym_kind = clang_getCursorKind( cursor );
+  switch ( sym_kind ) {
     case CXCursor_CallExpr:
     case CXCursor_DeclRefExpr:
     case CXCursor_MacroExpansion:;
@@ -79,19 +79,19 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
         decl_loc, &decl_file, &decl_line, /*column=*/NULL, /*offset=*/NULL
       );
 
-      // 3. Check: Is the declaration file different from our main file?
-      if ( !decl_file || clang_File_isEqual( decl_file, svd->source_file) )
+      // Is the declaration file different from our main file?
+      if ( !decl_file || clang_File_isEqual( decl_file, svd->source_file ) )
         break;
 
-      CXString symbol_name = clang_getCursorSpelling( decl );
+      CXString sym_name = clang_getCursorSpelling( decl );
       CXString file_name = clang_getFileName( decl_file );
 
       printf( "%-15s | Declared In: %-15s (Line %u)\n",
-              clang_getCString( symbol_name ),
+              clang_getCString( sym_name ),
               clang_getCString( file_name ),
               decl_line );
 
-      clang_disposeString( symbol_name );
+      clang_disposeString( sym_name );
       clang_disposeString( file_name );
       break;
 
