@@ -76,10 +76,10 @@ static int include_file_cmp( include_file const *i_file,
  * TODO
  */
 static void include_visitor( CXFile included_file,
-                             CXSourceLocation *source_loc,
+                             CXSourceLocation *inclusion_stack,
                              unsigned include_depth,
                              CXClientData client_data ) {
-  (void)source_loc;
+  (void)inclusion_stack;
   (void)client_data;
 
   include_file file = {
@@ -87,7 +87,7 @@ static void include_visitor( CXFile included_file,
     .count = 1,
     .depth = include_depth
   };
-  rb_insert_rv_t rv_rbi = rb_tree_insert( &includes, &file, sizeof file );
+  rb_insert_rv_t const rv_rbi = rb_tree_insert( &includes, &file, sizeof file );
   if ( !rv_rbi.inserted ) {
     include_file *const old_file = RB_DINT( rv_rbi.node );
     ++old_file->count;
