@@ -30,45 +30,23 @@
 
 // standard
 #include <assert.h>
-#include <stdlib.h>
+#include <stdlib.h>                     /* for atexit(3) */
 #include <string.h>
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// local functions
+static void tidy_include_file_cleanup( tidy_include_file* );
 
 static rb_tree_t include_set;           ///< Set of included files.
 
 ////////// local functions ////////////////////////////////////////////////////
 
-static void tidy_include_file_cleanup( tidy_include_file *file ) {
-  (void)file;
-}
-
-/**
- * Compares two \ref tidy_include_file objects.
- */
-NODISCARD
-static int tidy_include_file_cmp( tidy_include_file const *i_file,
-                                  tidy_include_file const *j_file ) {
-  assert( i_file != NULL );
-  assert( j_file != NULL );
-
-  CXString i_string = clang_getFileName( i_file->file );
-  CXString j_string = clang_getFileName( j_file->file );
-
-  int const cmp =
-    strcmp( clang_getCString( i_string ), clang_getCString( j_string ) );
-
-  clang_disposeString( i_string );
-  clang_disposeString( j_string );
-
-  return cmp;
-}
-
 /**
  * TODO
  *
- * @param included_file TODO.
- * @param inclusion_stack TODO.
+ * @param included_file The file being includes.
+ * @param inclusion_stack The stack of all files being included.
  * @param include_len The length of \a inclusion_stack.
  * @param client_data Not used.
  */
@@ -108,6 +86,34 @@ static void includes_cleanup( void ) {
   rb_tree_cleanup(
     &include_set, POINTER_CAST( rb_free_fn_t, &tidy_include_file_cleanup )
   );
+}
+
+/**
+ * TODO.
+ */
+static void tidy_include_file_cleanup( tidy_include_file *file ) {
+  (void)file;
+}
+
+/**
+ * Compares two \ref tidy_include_file objects.
+ */
+NODISCARD
+static int tidy_include_file_cmp( tidy_include_file const *i_file,
+                                  tidy_include_file const *j_file ) {
+  assert( i_file != NULL );
+  assert( j_file != NULL );
+
+  CXString i_string = clang_getFileName( i_file->file );
+  CXString j_string = clang_getFileName( j_file->file );
+
+  int const cmp =
+    strcmp( clang_getCString( i_string ), clang_getCString( j_string ) );
+
+  clang_disposeString( i_string );
+  clang_disposeString( j_string );
+
+  return cmp;
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
