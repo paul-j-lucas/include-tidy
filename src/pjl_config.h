@@ -27,7 +27,7 @@
  * `#include` this file rather than `config.h` directly.
  */
 
-#ifdef wrap_config_H
+#ifdef include_tidy_config_H
 #error "Must #include pjl_config.h instead."
 #endif
 
