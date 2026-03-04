@@ -112,7 +112,7 @@ void symbols_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
   symbol_visitor_data svd = { clang_getFile( tu, tidy_source_path ) };
-  clang_visitChildren( cursor, symbol_visitor, &svd );
+  clang_visitChildren( cursor, &symbol_visitor, &svd );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

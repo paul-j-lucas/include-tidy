@@ -20,6 +20,7 @@
 
 // local
 #include "pjl_config.h"
+#include "includes.h"
 #include "include-tidy.h"
 #include "red_black.h"
 #include "util.h"
@@ -34,30 +35,20 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/**
- * TODO
- */
-struct include_file {
-  CXFile    file;                       ///< File that was included.
-  unsigned  count;                      ///< Number of times included.
-  unsigned  depth;                      ///< "Depth" of include.
-};
-typedef struct include_file include_file;
-
 static rb_tree_t include_set;           ///< Set of included files.
 
 ////////// local functions ////////////////////////////////////////////////////
 
-static void include_file_cleanup( include_file *file ) {
+static void tidy_include_file_cleanup( tidy_include_file *file ) {
   (void)file;
 }
 
 /**
- * Compares to \ref include_file objects.
+ * Compares two \ref tidy_include_file objects.
  */
 NODISCARD
-static int include_file_cmp( include_file const *i_file,
-                             include_file const *j_file ) {
+static int tidy_include_file_cmp( tidy_include_file const *i_file,
+                                  tidy_include_file const *j_file ) {
   assert( i_file != NULL );
   assert( j_file != NULL );
 
@@ -75,25 +66,38 @@ static int include_file_cmp( include_file const *i_file,
 
 /**
  * TODO
+ *
+ * @param included_file TODO.
+ * @param inclusion_stack TODO.
+ * @param include_len The length of \a inclusion_stack.
+ * @param client_data Not used.
  */
 static void include_visitor( CXFile included_file,
                              CXSourceLocation *inclusion_stack,
-                             unsigned include_depth,
+                             unsigned include_len,
                              CXClientData client_data ) {
-  (void)inclusion_stack;
   (void)client_data;
 
-  include_file file = {
+  tidy_include_file file = {
     .file = included_file,
     .count = 1,
-    .depth = include_depth
+    .depth = include_len
   };
-  rb_insert_rv_t const rv_rbi = rb_tree_insert( &include_set, &file, sizeof file );
+
+  if ( include_len == 1 ) {
+    clang_getSpellingLocation(
+      inclusion_stack[0], /*file=*/NULL, &file.line, /*column=*/NULL,
+      /*offset=*/NULL
+    );
+  }
+
+  rb_insert_rv_t const rv_rbi =
+    rb_tree_insert( &include_set, &file, sizeof file );
   if ( !rv_rbi.inserted ) {
-    include_file *const old_file = RB_DINT( rv_rbi.node );
+    tidy_include_file *const old_file = RB_DINT( rv_rbi.node );
     ++old_file->count;
-    if ( include_depth < old_file->depth )
-      old_file->depth = include_depth;
+    if ( include_len < old_file->depth )
+      old_file->depth = include_len;
   }
 }
 
@@ -102,7 +106,7 @@ static void include_visitor( CXFile included_file,
  */
 static void includes_cleanup( void ) {
   rb_tree_cleanup(
-    &include_set, POINTER_CAST( rb_free_fn_t, &include_file_cleanup )
+    &include_set, POINTER_CAST( rb_free_fn_t, &tidy_include_file_cleanup )
   );
 }
 
@@ -111,7 +115,7 @@ static void includes_cleanup( void ) {
 void includes_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
   rb_tree_init(
-    &include_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &include_file_cmp )
+    &include_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_include_file_cmp )
   );
   ATEXIT( &includes_cleanup );
   clang_getInclusions( tu, &include_visitor, /*client_data=*/NULL );
