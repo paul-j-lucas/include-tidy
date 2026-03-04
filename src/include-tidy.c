@@ -82,4 +82,5 @@ int main( int argc, char const *const argv[] ) {
   return EX_OK;
 }
 
+///////////////////////////////////////////////////////////////////////////////
 /* vim:set et sw=2 ts=2: */

@@ -29,6 +29,7 @@
 
 // standard
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -39,11 +40,11 @@
 struct include_file {
   CXFile    file;                       ///< File that was included.
   unsigned  count;                      ///< Number of times included.
-  unsigned  depth;
+  unsigned  depth;                      ///< "Depth" of include.
 };
 typedef struct include_file include_file;
 
-static rb_tree_t includes;
+static rb_tree_t include_set;           ///< Set of included files.
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -87,7 +88,7 @@ static void include_visitor( CXFile included_file,
     .count = 1,
     .depth = include_depth
   };
-  rb_insert_rv_t const rv_rbi = rb_tree_insert( &includes, &file, sizeof file );
+  rb_insert_rv_t const rv_rbi = rb_tree_insert( &include_set, &file, sizeof file );
   if ( !rv_rbi.inserted ) {
     include_file *const old_file = RB_DINT( rv_rbi.node );
     ++old_file->count;
@@ -97,11 +98,11 @@ static void include_visitor( CXFile included_file,
 }
 
 /**
- * TODO
+ * Cleans-up set of included files.
  */
 static void includes_cleanup( void ) {
   rb_tree_cleanup(
-    &includes, POINTER_CAST( rb_free_fn_t, &include_file_cleanup )
+    &include_set, POINTER_CAST( rb_free_fn_t, &include_file_cleanup )
   );
 }
 
@@ -110,10 +111,11 @@ static void includes_cleanup( void ) {
 void includes_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
   rb_tree_init(
-    &includes, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &include_file_cmp )
+    &include_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &include_file_cmp )
   );
   ATEXIT( &includes_cleanup );
   clang_getInclusions( tu, &include_visitor, /*client_data=*/NULL );
 }
 
+///////////////////////////////////////////////////////////////////////////////
 /* vim:set et sw=2 ts=2: */

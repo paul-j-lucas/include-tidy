@@ -34,23 +34,31 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-struct visitor_data {
+struct symbol_visitor_data {
   CXFile source_file;
 };
-typedef struct visitor_data visitor_data;
+typedef struct symbol_visitor_data symbol_visitor_data;
 
-enum CXChildVisitResult visitor( CXCursor cursor, CXCursor parent,
-                                 CXClientData client_data ) {
+/**
+ * TODO.
+ *
+ * @param parent Not used.
+ * @param client_data TODO.
+ * @return Always returns `CXChildVisit_Recurse`.
+ */
+static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
+                                               CXClientData client_data ) {
   (void)parent;
   assert( client_data != NULL );
-  visitor_data const *const vd =
-    POINTER_CAST( visitor_data const*, client_data );
+  symbol_visitor_data const *const svd =
+    POINTER_CAST( symbol_visitor_data const*, client_data );
 
   CXSourceLocation ref_loc = clang_getCursorLocation( cursor );
   CXFile ref_file;
-  clang_getSpellingLocation( ref_loc, &ref_file, NULL, NULL, NULL );
-
-  if ( !ref_file || !clang_File_isEqual( ref_file, vd->source_file ) )
+  clang_getSpellingLocation(
+    ref_loc, &ref_file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
+  );
+  if ( !ref_file || !clang_File_isEqual( ref_file, svd->source_file ) )
     goto skip;
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
@@ -67,25 +75,24 @@ enum CXChildVisitResult visitor( CXCursor cursor, CXCursor parent,
       CXSourceLocation decl_loc = clang_getCursorLocation( decl );
       CXFile decl_file;
       unsigned decl_line;
-      clang_getSpellingLocation( decl_loc, &decl_file, &decl_line, NULL, NULL );
+      clang_getSpellingLocation(
+        decl_loc, &decl_file, &decl_line, /*column=*/NULL, /*offset=*/NULL
+      );
 
       // 3. Check: Is the declaration file different from our main file?
-      if ( !decl_file || clang_File_isEqual( decl_file, vd->source_file) )
+      if ( !decl_file || clang_File_isEqual( decl_file, svd->source_file) )
         break;
 
       CXString symbol_name = clang_getCursorSpelling( decl );
       CXString file_name = clang_getFileName( decl_file );
-      CXString kind_name = clang_getCursorKindSpelling( clang_getCursorKind( decl ) );
 
-      printf( "%-15s | Type: %-12s | Declared In: %-15s (Line %u)\n",
+      printf( "%-15s | Declared In: %-15s (Line %u)\n",
               clang_getCString( symbol_name ),
-              clang_getCString( kind_name ),
               clang_getCString( file_name ),
               decl_line );
 
       clang_disposeString( symbol_name );
       clang_disposeString( file_name );
-      clang_disposeString( kind_name );
       break;
 
     default:
@@ -104,8 +111,9 @@ skip:
 void symbols_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
-  visitor_data vd = { clang_getFile( tu, tidy_source_path ) };
-  clang_visitChildren( cursor, visitor, &vd );
+  symbol_visitor_data svd = { clang_getFile( tu, tidy_source_path ) };
+  clang_visitChildren( cursor, symbol_visitor, &svd );
 }
 
+///////////////////////////////////////////////////////////////////////////////
 /* vim:set et sw=2 ts=2: */
