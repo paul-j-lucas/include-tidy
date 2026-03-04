@@ -166,7 +166,9 @@ void symbols_init( CXTranslationUnit tu ) {
   );
   ATEXIT( &symbols_cleanup );
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
-  symbol_visitor_data svd = { clang_getFile( tu, tidy_source_path ) };
+  symbol_visitor_data svd = {
+    .source_file = clang_getFile( tu, tidy_source_path )
+  };
   clang_visitChildren( cursor, &symbol_visitor, &svd );
 }
 
