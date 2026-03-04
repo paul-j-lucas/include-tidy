@@ -23,6 +23,7 @@
 #include "include-tidy.h"
 #include "includes.h"
 #include "options.h"
+#include "symbols.h"
 #include "util.h"
 
 // libclang
@@ -70,8 +71,6 @@ int main( int argc, char const *const argv[] ) {
 
   if ( tu == NULL )
     fatal_error( EX_DATAERR, "error: failed to parse the translation unit\n" );
-
-  void symbols_init( CXTranslationUnit );
 
   includes_init( tu );
   symbols_init( tu );

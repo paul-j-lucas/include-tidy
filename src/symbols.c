@@ -20,7 +20,9 @@
 
 // local
 #include "pjl_config.h"
+#include "symbols.h"
 #include "include-tidy.h"
+#include "red_black.h"
 #include "util.h"
 
 // libclang
@@ -30,7 +32,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sysexits.h>
+#include <string.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -41,6 +43,13 @@ struct symbol_visitor_data {
   CXFile source_file;                   ///< The file being tidied.
 };
 typedef struct symbol_visitor_data symbol_visitor_data;
+
+// local functions
+static void tidy_symbol_cleanup( tidy_symbol* );
+
+static rb_tree_t symbol_set;            ///< Set of symbols.
+
+////////// local functions ////////////////////////////////////////////////////
 
 /**
  * Visit each symbol in a translation unit.
@@ -88,20 +97,20 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
       if ( decl_file == NULL )
         break;
 
-      // Is the declaration file different from our main file?
+      // If the symbol is declared in the file being tidied, we don't care.
       if ( clang_File_isEqual( decl_file, svd->source_file ) )
         break;
 
-      CXString sym_name = clang_getCursorSpelling( decl );
-      CXString file_name = clang_getFileName( decl_file );
+      tidy_symbol sym = {
+        .name = clang_getCursorSpelling( decl ),
+        .decl_file = decl_file,
+        .decl_line = decl_line
+      };
 
-      printf( "%-15s | Declared In: %-15s (Line %u)\n",
-              clang_getCString( sym_name ),
-              clang_getCString( file_name ),
-              decl_line );
-
-      clang_disposeString( sym_name );
-      clang_disposeString( file_name );
+      rb_insert_rv_t const rv_rbi =
+        rb_tree_insert( &symbol_set, &sym, sizeof sym );
+      if ( !rv_rbi.inserted )
+        tidy_symbol_cleanup( &sym );
       break;
 
     default:
@@ -112,13 +121,44 @@ skip:
   return CXChildVisit_Recurse;
 }
 
-////////// extern functions ///////////////////////////////////////////////////
+/**
+ * Cleans-up all symbols.
+ */
+static void symbols_cleanup( void ) {
+  rb_tree_cleanup(
+    &symbol_set, POINTER_CAST( rb_free_fn_t, &tidy_symbol_cleanup )
+  );
+}
 
 /**
- * TODO
  */
+static void tidy_symbol_cleanup( tidy_symbol *sym ) {
+  if ( sym == NULL )
+    return;
+  clang_disposeString( sym->name );
+}
+
+/**
+ * Compares two \ref tidy_include_file objects.
+ */
+NODISCARD
+static int tidy_symbol_cmp( tidy_symbol const *i_sym,
+                            tidy_symbol const *j_sym ) {
+  assert( i_sym != NULL );
+  assert( j_sym != NULL );
+
+  return strcmp( clang_getCString( i_sym->name ),
+                 clang_getCString( j_sym->name ) );
+}
+
+////////// extern functions ///////////////////////////////////////////////////
+
 void symbols_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
+  rb_tree_init(
+    &symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
+  );
+  ATEXIT( &symbols_cleanup );
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
   symbol_visitor_data svd = { clang_getFile( tu, tidy_source_path ) };
   clang_visitChildren( cursor, &symbol_visitor, &svd );
