@@ -404,7 +404,7 @@ static void print_usage( int status ) {
 }
 
 /**
- * Prints the **ad** version.
+ * Prints the **include-tidy** version.
  */
 static void print_version( void ) {
   PUTS(
@@ -471,7 +471,7 @@ void options_init( int argc, char const *const argv[] ) {
     print_usage( argc > 0 ? EX_USAGE : EX_OK );
 
   if ( opt_version ) {
-    if ( argc > 0 )                     // ad -v foo
+    if ( argc > 0 )                     // include-tidy -v foo
       print_usage( EX_USAGE );
     print_version();
     exit( EX_OK );
