@@ -294,7 +294,7 @@ static char const* opt_format( char short_opt, char buf[const], size_t size ) {
  */
 NODISCARD
 static char const* opt_get_long( char short_opt ) {
-  FOREACH_CLI_OPTION( opt ) {
+  for ( struct option const *opt = OPTIONS; opt->name != NULL; ++opt ) {
     if ( opt->val == short_opt )
       return opt->name;
   } // for
@@ -417,10 +417,6 @@ static void print_version( void ) {
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
-
-struct option const* cli_option_next( struct option const *opt ) {
-  return opt == NULL ? OPTIONS : (++opt)->name == NULL ? NULL : opt;
-}
 
 void options_init( int argc, char const *const argv[] ) {
   ASSERT_RUN_ONCE();
