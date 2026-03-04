@@ -44,6 +44,7 @@
 
 // in ascending option character ASCII order; sort using: sort -bdfk3
 #define OPT_HELP                h
+#define OPT_INCLUDE_TIDY        X
 #define OPT_VERSION             v
 
 /// Command-line option character as a character literal.
@@ -70,51 +71,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * When to dump in UTF-8.
- */
-enum utf8_when {
-  UTF8_NEVER,                           ///< Never dump in UTF-8.
-  UTF8_ENCODING,                        ///< Dump in UTF-8 only if encoding is.
-  UTF8_ALWAYS                           ///< Always dump in UTF-8.
-};
-typedef enum utf8_when utf8_when_t;
-
-/// @cond DOXYGEN_IGNORE
-/// Otherwise Doxygen generates two entries.
-
-// TODO
-
-/// @endcond
-
-/**
  * Command-line options.
- *
- * @sa OPTIONS_HELP
  */
 static struct option const OPTIONS[] = {
-  { "help",               no_argument,        NULL, COPT(HELP)                },
-  { "version",            no_argument,        NULL, COPT(VERSION)             },
-  { NULL,                 0,                  NULL, 0                         }
-};
-
-/**
- * Command-line options help.
- *
- * @note It is indexed by short option characters.
- *
- * @sa OPTIONS
- * @sa opt_help()
- */
-static char const *const OPTIONS_HELP[] = {
-  [ COPT(HELP) ] = "Print this help and exit",
-  [ COPT(VERSION) ] = "Print version and exit",
+  { "help",     no_argument,  NULL, COPT(HELP)    },
+  { "version",  no_argument,  NULL, COPT(VERSION) },
+  { NULL,       0,            NULL, 0             }
 };
 
 // local variable definitions
 static bool         opts_given[ 128 ];  ///< Table of options that were given.
 
 // local functions
-static void         set_all_or_none( char const**, char const* );
 NODISCARD
 static char const*  opt_format( char, char[const], size_t ),
                  *  opt_get_long( char );
@@ -126,8 +94,6 @@ static char const*  opt_format( char, char[const], size_t ),
  * error message and exits; if \a opt was not given, does nothing.
  *
  * @param opt The option to check for.
- *
- * @sa check_opt_mutually_exclusive()
  */
 static void check_opt_exclusive( char opt ) {
   if ( !opts_given[ STATIC_CAST( unsigned, opt ) ] )
@@ -147,83 +113,9 @@ static void check_opt_exclusive( char opt ) {
 }
 
 /**
- * Checks that no options were given that are among the two given mutually
- * exclusive sets of short options.
- * Prints an error message and exits if any such options are found.
- *
- * @param opts1 The first set of short options.
- * @param opts2 The second set of short options.
- *
- * @sa check_opt_exclusive()
- */
-static void check_opt_mutually_exclusive( char const *opts1,
-                                          char const *opts2 ) {
-  assert( opts1 != NULL );
-  assert( opts2 != NULL );
-
-  unsigned gave_count = 0;
-  char const *opt = opts1;
-  char gave_opt1 = '\0';
-
-  for ( unsigned i = 0; i < 2; ++i ) {
-    for ( ; *opt != '\0'; ++opt ) {
-      if ( opts_given[ STATIC_CAST( uint8_t, *opt ) ] ) {
-        if ( ++gave_count > 1 ) {
-          char const gave_opt2 = *opt;
-          char opt1_buf[ OPT_BUF_SIZE ];
-          char opt2_buf[ OPT_BUF_SIZE ];
-          fatal_error( EX_USAGE,
-            "%s and %s are mutually exclusive\n",
-            opt_format( gave_opt1, opt1_buf, sizeof opt1_buf ),
-            opt_format( gave_opt2, opt2_buf, sizeof opt2_buf  )
-          );
-        }
-        gave_opt1 = *opt;
-        break;
-      }
-    } // for
-    if ( gave_count == 0 )
-      break;
-    opt = opts2;
-  } // for
-}
-
-/**
- * For each option in \a opts that was given, checks that at least one of
- * \a req_opts was also given.
- * If not, prints an error message and exits.
- *
- * @param opts The set of short options.
- * @param req_opts The set of required options for \a opts.
- */
-static void check_opt_required( char const *opts, char const *req_opts ) {
-  assert( opts != NULL );
-  assert( opts[0] != '\0' );
-  assert( req_opts != NULL );
-  assert( req_opts[0] != '\0' );
-
-  for ( char const *opt = opts; *opt; ++opt ) {
-    if ( opts_given[ STATIC_CAST( uint8_t, *opt ) ] ) {
-      for ( char const *req_opt = req_opts; req_opt[0] != '\0'; ++req_opt )
-        if ( opts_given[ STATIC_CAST( uint8_t, *req_opt ) ] )
-          return;
-      char opt_buf[ OPT_BUF_SIZE ];
-      bool const reqs_multiple = req_opts[1] != '\0';
-      fatal_error( EX_USAGE,
-        "%s requires %sthe -%s option%s to be given also\n",
-        opt_format( *opt, opt_buf, sizeof opt_buf ),
-        (reqs_multiple ? "one of " : ""),
-        req_opts, (reqs_multiple ? "s" : "")
-      );
-    }
-  } // for
-}
-
-/**
  * Checks option combinations for semantic errors.
  */
 static void check_options( void ) {
-  // check for exclusive options
   check_opt_exclusive( COPT(HELP) );
   check_opt_exclusive( COPT(VERSION) );
 }
@@ -240,7 +132,7 @@ static void check_options( void ) {
 NODISCARD
 static char const* make_short_opts( struct option const opts[static const 2] ) {
   // pre-flight to calculate string length
-  size_t len = 1;                       // for leading ':'
+  size_t len = 1 /* for leading ':' */ + STRLITLEN( "X:" );
   for ( struct option const *opt = opts; opt->name != NULL; ++opt ) {
     assert( opt->has_arg >= 0 && opt->has_arg <= 2 );
     len += 1 + STATIC_CAST( unsigned, opt->has_arg );
@@ -250,8 +142,12 @@ static char const* make_short_opts( struct option const opts[static const 2] ) {
   char *s = short_opts;
 
   *s++ = ':';                           // return missing argument as ':'
+  *s++ = 'X';
+  *s++ = ':';
+
   for ( struct option const *opt = opts; opt->name != NULL; ++opt ) {
     assert( opt->val > 0 && opt->val < 128 );
+    assert( opt->val != 'X' );
     *s++ = STATIC_CAST( char, opt->val );
     switch ( opt->has_arg ) {
       case optional_argument:
@@ -302,44 +198,6 @@ static char const* opt_get_long( char short_opt ) {
 }
 
 /**
- * Gets the help message for \a opt.
- *
- * @param opt The option to get the help for.
- * @return Returns said help message.
- */
-NODISCARD
-static char const* opt_help( int opt ) {
-  unsigned const uopt = STATIC_CAST( unsigned, opt );
-  assert( uopt < ARRAY_SIZE( OPTIONS_HELP ) );
-  char const *const help = OPTIONS_HELP[ uopt ];
-  assert( help != NULL );
-  return help;
-}
-
-/**
- * If \a *pformat is:
- *
- *  + `"*"`: sets \a *pformat to \a all_value.
- *  + `"-"`: sets \a *pformat to `""` (the empty string).
- *
- * Otherwise does nothing.
- *
- * @param pformat A pointer to the format string to possibly set.
- * @param all_value The "all" value for when \a *pformat is `"*"`.
- */
-static void set_all_or_none( char const **pformat, char const *all_value ) {
-  assert( pformat != NULL );
-  assert( *pformat != NULL );
-  assert( all_value != NULL );
-  assert( all_value[0] != '\0' );
-
-  if ( strcmp( *pformat, "*" ) == 0 )
-    *pformat = all_value;
-  else if ( strcmp( *pformat, "-" ) == 0 )
-    *pformat = "";
-}
-
-/**
  * Prints the usage message to standard error and exits.
  *
  * @param status The status to exit with.  If it is `EX_OK`, prints to standard
@@ -347,57 +205,16 @@ static void set_all_or_none( char const **pformat, char const *all_value ) {
  */
 _Noreturn
 static void print_usage( int status ) {
-  // pre-flight to calculate longest long option length
-  size_t longest_opt_len = 0;
-  for ( struct option const *opt = OPTIONS; opt->name != NULL; ++opt ) {
-    size_t opt_len = strlen( opt->name );
-    switch ( opt->has_arg ) {
-      case no_argument:
-        break;
-      case optional_argument:
-        opt_len += STRLITLEN( "[=ARG]" );
-        break;
-      case required_argument:
-        opt_len += STRLITLEN( "=ARG" );
-        break;
-    } // switch
-    if ( opt_len > longest_opt_len )
-      longest_opt_len = opt_len;
-  } // for
-
   FILE *const fout = status == EX_OK ? stdout : stderr;
 
   FPRINTF( fout,
-"usage: %s [options] [infile [outfile]]\n"
-"       %s --help\n"
-"       %s --version\n"
-"options:\n",
-    prog_name, prog_name, prog_name
-  );
-
-  for ( struct option const *opt = OPTIONS; opt->name != NULL; ++opt ) {
-    FPRINTF( fout, "  --%s", opt->name );
-    size_t opt_len = strlen( opt->name );
-    switch ( opt->has_arg ) {
-      case no_argument:
-        break;
-      case optional_argument:
-        opt_len += STATIC_CAST( size_t, fprintf( fout, "[=ARG]" ) );
-        break;
-      case required_argument:
-        opt_len += STATIC_CAST( size_t, fprintf( fout, "=ARG" ) );
-        break;
-    } // switch
-    assert( opt_len <= longest_opt_len );
-    FPUTNSP( longest_opt_len - opt_len, fout );
-    FPRINTF( fout, " (-%c) %s.\n", opt->val, opt_help( opt->val ) );
-  } // for
-
-  FPUTS(
+    "usage: %s [-Xtidy option] source-file\n"
+    "       %s --help\n"
+    "       %s --version\n"
     "\n"
     PACKAGE_NAME " home page: " PACKAGE_URL "\n"
     "Report bugs to: " PACKAGE_BUGREPORT "\n",
-    fout
+    prog_name, prog_name, prog_name
   );
 
   exit( status );
@@ -438,6 +255,9 @@ void options_init( int argc, char const *const argv[] ) {
     switch ( opt ) {
       case COPT(HELP):
         opt_help = true;
+        break;
+      case COPT(INCLUDE_TIDY):
+        // TODO
         break;
       case COPT(VERSION):
         opt_version = true;
