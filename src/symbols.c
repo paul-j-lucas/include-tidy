@@ -104,7 +104,7 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
 
       // If the symbol is declared in a file included, we don't care.
       tidy_include_file const *const inc_file = include_find( decl_file );
-      if ( inc_file != NULL )
+      if ( inc_file != NULL && inc_file->depth == 1 )
         break;
 
       tidy_symbol sym = {
@@ -163,10 +163,17 @@ static bool tidy_symbol_visitor( void *node_data, void *visit_data ) {
 
   tidy_symbol const *const sym = node_data;
   CXString decl_str = clang_getFileName( sym->decl_file );
+  char const *decl_cstr = clang_getCString( decl_str );
+  char delims[] = { '<', '>' };
 
-  printf( "#include <%s> // %s\n",
-    clang_getCString( sym->name ),
-    clang_getCString( decl_str )
+  if ( strncmp( decl_cstr, "./", 2 ) == 0 ) {
+    decl_cstr += 2;
+    delims[0] = delims[1] = '"';
+  }
+
+  printf( "#include %c%s%c // %s\n",
+    delims[0], decl_cstr, delims[1],
+    clang_getCString( sym->name )
   );
 
   clang_disposeString( decl_str );
