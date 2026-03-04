@@ -74,6 +74,7 @@ int main( int argc, char const *const argv[] ) {
 
   includes_init( tu );
   symbols_init( tu );
+  symbols_visit();
 
   clang_disposeTranslationUnit( tu );
   clang_disposeIndex( index );

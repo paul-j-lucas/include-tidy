@@ -43,6 +43,8 @@ typedef struct tidy_symbol tidy_symbol;
  */
 void symbols_init( CXTranslationUnit tu );
 
+void symbols_visit( void );
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #endif /* include_tidy_symbols_H */

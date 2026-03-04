@@ -157,6 +157,22 @@ static int tidy_symbol_cmp( tidy_symbol const *i_sym,
                  clang_getCString( j_sym->name ) );
 }
 
+static bool tidy_symbol_visitor( void *node_data, void *visit_data ) {
+  assert( node_data != NULL );
+  (void)visit_data;
+
+  tidy_symbol const *const sym = node_data;
+  CXString decl_str = clang_getFileName( sym->decl_file );
+
+  printf( "#include <%s> // %s\n",
+    clang_getCString( sym->name ),
+    clang_getCString( decl_str )
+  );
+
+  clang_disposeString( decl_str );
+  return false;
+}
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 void symbols_init( CXTranslationUnit tu ) {
@@ -170,6 +186,10 @@ void symbols_init( CXTranslationUnit tu ) {
     .source_file = clang_getFile( tu, tidy_source_path )
   };
   clang_visitChildren( cursor, &symbol_visitor, &svd );
+}
+
+void symbols_visit( void ) {
+  rb_tree_visit( &symbol_set, &tidy_symbol_visitor, /*visit_data=*/NULL );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
