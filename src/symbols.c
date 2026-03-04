@@ -34,13 +34,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * TODO
+ */
 struct symbol_visitor_data {
-  CXFile source_file;
+  CXFile source_file;                   ///< The file being tidied.
 };
 typedef struct symbol_visitor_data symbol_visitor_data;
 
 /**
- * TODO.
+ * Visit each symbol in a translation unit.
  *
  * @param parent Not used.
  * @param client_data TODO.
@@ -53,12 +56,15 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
   symbol_visitor_data const *const svd =
     POINTER_CAST( symbol_visitor_data const*, client_data );
 
-  CXSourceLocation ref_loc = clang_getCursorLocation( cursor );
-  CXFile ref_file;
+  CXSourceLocation  ref_loc = clang_getCursorLocation( cursor );
+  CXFile            ref_file;
+
   clang_getSpellingLocation(
     ref_loc, &ref_file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
   );
-  if ( !ref_file || !clang_File_isEqual( ref_file, svd->source_file ) )
+  if ( ref_file == NULL )
+    goto skip;
+  if ( !clang_File_isEqual( ref_file, svd->source_file ) )
     goto skip;
 
   enum CXCursorKind const sym_kind = clang_getCursorKind( cursor );
@@ -72,15 +78,18 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
       if ( clang_isInvalid( decl.kind ) )
         break;
 
-      CXSourceLocation decl_loc = clang_getCursorLocation( decl );
-      CXFile decl_file;
-      unsigned decl_line;
+      CXSourceLocation  decl_loc = clang_getCursorLocation( decl );
+      CXFile            decl_file;
+      unsigned          decl_line;
+
       clang_getSpellingLocation(
         decl_loc, &decl_file, &decl_line, /*column=*/NULL, /*offset=*/NULL
       );
+      if ( decl_file == NULL )
+        break;
 
       // Is the declaration file different from our main file?
-      if ( !decl_file || clang_File_isEqual( decl_file, svd->source_file ) )
+      if ( clang_File_isEqual( decl_file, svd->source_file ) )
         break;
 
       CXString sym_name = clang_getCursorSpelling( decl );
