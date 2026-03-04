@@ -26,9 +26,6 @@
  * Declares global variables and functions for **include-tidy** options.
  */
 
-// local
-#include "pjl_config.h"                 /* must go first */
-
 /**
  * @defgroup options-group Ad Options
  * Global variables and functions for **include-tiny** options.
