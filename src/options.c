@@ -113,42 +113,84 @@ static void check_options( void ) {
 }
 
 /**
- * Makes the `optstring` (short option) equivalent of \a opts for the third
- * argument of `getopt_long()`.
+ * Move include-tidy specific command-line options to a separate array.
  *
- * @param opts An array of options to make the short option string from.  Its
- * last element must be all zeros.
- * @return Returns the `optstring` for the third argument of `getopt_long()`.
- * The caller is responsible for freeing it.
+ * @remarks
+ * @parblock
+ * Command-line options of the form have:
+ *
+ *  + `-Xtidy` _option_ have `-Xtidy` removed and _option_ moved to \a
+ *    *ptidy_argv.
+ *  + `--help` or `--version` have either moved to \a *ptidy_argv.
+ *
+ * All other options and arguments are left as-is in \a orig_argv.  Examples:
+ *
+ *      include-tidy --help
+ *
+ *          orig_argc = 1
+ *          orig_argv[0] = "include-tidy"
+ *          orig_argv[1] = NULL
+ *
+ *          tidy_argc = 2
+ *          tidy_argv[0] = "include-tidy"
+ *          tidy_argv[1] = "--help"
+ *          tidy_argv[2] = NULL
+ *
+ *      include-tidy -Xtidy --foo -I/opt/local/include bar.c
+ *
+ *          orig_argc = 3
+ *          orig_argv[0] = "include-tidy"
+ *          orig_argv[1] = "-I/opt/local/include
+ *          orig_argv[2] = bar.c
+ *          orig_argv[3] = NULL
+ *
+ *          tidy_argc = 2
+ *          tidy_argv[0] = "include-tidy"
+ *          tidy_argv[1] = "--foo"
+ *          tidy_argv[2] = NULL
+ * @endparblock
+ *
+ * @param porig_argc A pointer to `argc`.
+ * @param orig_argv A copy of `argv`.
+ * @param ptidy_argc A pointer to an `argc` for include-tidy specific options.
+ * @param ptidy_argv A pointer to an `argv` for include-tidy specific options.
+ * The caller is responsible for free'ing the array of pointers to strings, but
+ * _not_ the strings themselves.
  */
-NODISCARD
-static char const* make_short_opts( struct option const opts[static const 2] ) {
-  // pre-flight to calculate string length
-  size_t len = 1;                       // for leading ':'
-  for ( struct option const *opt = opts; opt->name != NULL; ++opt ) {
-    assert( opt->has_arg >= 0 && opt->has_arg <= 2 );
-    len += 1 + STATIC_CAST( unsigned, opt->has_arg );
+static void move_tidy_args( int *porig_argc, char const *orig_argv[],
+                            int *ptidy_argc, char const **ptidy_argv[] ) {
+  assert( porig_argc != NULL );
+  assert(  orig_argv != NULL );
+  assert( ptidy_argc != NULL );
+  assert( ptidy_argv != NULL );
+
+  int const orig_argc = *porig_argc;
+  int new_argc = 1, tidy_argc = 1;
+
+  char const **const tidy_argv =
+    MALLOC( char*, STATIC_CAST( size_t, orig_argc ) + 1 );
+  tidy_argv[0] = orig_argv[0];
+
+  for ( int i = 1; i < orig_argc; ++i ) {
+    if ( strcmp( orig_argv[i], "-Xtidy" ) == 0 ) {
+      if ( ++i >= orig_argc )
+        fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
+      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
+    }
+    else if ( strcmp( orig_argv[i], "--help" ) == 0 ||
+              strcmp( orig_argv[i], "--version" ) == 0 ) {
+      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
+    }
+    else {
+      orig_argv[ new_argc++ ] = orig_argv[ i ];
+    }
   } // for
 
-  char *const short_opts = MALLOC( char, len + 1/*\0*/ );
-  char *s = short_opts;
+  orig_argv[ new_argc ] = tidy_argv[ tidy_argc ] = NULL;
 
-  *s++ = ':';                           // return missing argument as ':'
-  for ( struct option const *opt = opts; opt->name != NULL; ++opt ) {
-    assert( opt->val > 0 && opt->val < 128 );
-    assert( opt->val != 'X' );
-    *s++ = STATIC_CAST( char, opt->val );
-    switch ( opt->has_arg ) {
-      case optional_argument:
-        *s++ = ':';
-        FALLTHROUGH;
-      case required_argument:
-        *s++ = ':';
-    } // switch
-  } // for
-  *s = '\0';
-
-  return short_opts;
+  *porig_argc = new_argc;
+  *ptidy_argc = tidy_argc;
+  *ptidy_argv = tidy_argv;
 }
 
 /**
@@ -222,71 +264,26 @@ static void print_version( void ) {
   );
 }
 
-/**
- * TODO.
- *
- * @param porig_argc TODO.
- * @param orig_argv TODO.
- * @param ptidy_argc TODO.
- * @param ptidy_argv TODO.
- */
-static void split_tidy_args( int *porig_argc, char const *orig_argv[],
-                             int *ptidy_argc, char const **ptidy_argv[] ) {
-  assert( porig_argc != NULL );
-  assert(  orig_argv != NULL );
-  assert( ptidy_argc != NULL );
-  assert( ptidy_argv != NULL );
-
-  int const orig_argc = *porig_argc;
-  int new_argc = 1, tidy_argc = 1;
-
-  char const **const tidy_argv =
-    MALLOC( char*, STATIC_CAST( size_t, orig_argc ) + 1 );
-  tidy_argv[0] = orig_argv[0];
-
-  for ( int i = 1; i < orig_argc; ++i ) {
-    if ( strcmp( orig_argv[i], "-Xtidy" ) == 0 ) {
-      if ( ++i >= orig_argc )
-        fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
-      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
-    }
-    else if ( strcmp( orig_argv[i], "--help" ) == 0 ||
-              strcmp( orig_argv[i], "--version" ) == 0 ||
-              orig_argv[i][0] != '-' ) {
-      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
-    }
-    else {
-      orig_argv[ new_argc++ ] = orig_argv[ i ];
-    }
-  } // for
-
-  orig_argv[ new_argc ] = tidy_argv[ tidy_argc ] = NULL;
-
-  *porig_argc = new_argc;
-  *ptidy_argc = tidy_argc;
-  *ptidy_argv = tidy_argv;
-}
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 void options_init( int *pargc, char const *argv[] ) {
   ASSERT_RUN_ONCE();
 
-  int               opt;
-  bool              opt_help = false;
-  bool              opt_version = false;
-  char const *const short_opts = make_short_opts( OPTIONS );
-  int               tidy_argc;
-  char const      **tidy_argv;
+  int           opt;
+  bool          opt_help = false;
+  bool          opt_version = false;
+  int           tidy_argc;
+  char const  **tidy_argv;
 
-  split_tidy_args( pargc, argv, &tidy_argc, &tidy_argv );
+  move_tidy_args( pargc, argv, &tidy_argc, &tidy_argv );
 
   opterr = 1;
 
   for (;;) {
     opt = getopt_long(
-      tidy_argc, CONST_CAST( char**, tidy_argv ), short_opts, OPTIONS,
-      /*longindex=*/NULL
+      tidy_argc, CONST_CAST( char**, tidy_argv ),
+      ":",                              // return missing argument as ':'
+      OPTIONS, /*longindex=*/NULL
     );
     if ( opt == -1 )
       break;
@@ -315,34 +312,37 @@ void options_init( int *pargc, char const *argv[] ) {
     opts_given[ opt ] = true;
   } // for
 
-  FREE( short_opts );
+  tidy_argc -= optind - 1;
 
-  char const **const orig_tidy_argv = tidy_argv;
-  tidy_argc -= optind;
-  tidy_argv += optind;
-  int const remaining_argc = tidy_argc + *pargc - 1;
+#if 0
+  printf( "argc = %d\n", *pargc );
+  for ( int i = 0; i < *pargc; ++i )
+    printf( "%d %s\n", i, argv[i] );
+  printf( "tidy_argc = %d\n", tidy_argc  );
+  for ( int i = 0; i < tidy_argc; ++i )
+    printf( "%d %s\n", i, tidy_argv[i] );
+  puts( "-------------------------" );
+#endif
 
+  free( tidy_argv );
   check_options();
 
+  if ( tidy_argc > 1 )
+    print_usage( EX_USAGE );
   if ( opt_help )
-    print_usage( remaining_argc > 0 ? EX_USAGE : EX_OK );
-
+    print_usage( *pargc > 1 ? EX_USAGE : EX_OK );
   if ( opt_version ) {
-    if ( remaining_argc > 0 )           // include-tidy --version foo
+    if ( *pargc > 1 )                   // include-tidy --version foo
       print_usage( EX_USAGE );
     print_version();
     exit( EX_OK );
   }
 
-  switch ( tidy_argc ) {
-    case 1:
-      tidy_source_path = tidy_argv[0];
-      break;
-    default:
-      print_usage( EX_USAGE );
-  } // switch
+  if ( *pargc < 2 )
+    print_usage( EX_USAGE );
+  tidy_source_path = argv[ --*pargc ];
+  argv[ *pargc ] = NULL;
 
-  free( orig_tidy_argv );
   return;
 
 invalid_opt:;
