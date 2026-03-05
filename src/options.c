@@ -44,7 +44,6 @@
 
 // in ascending option character ASCII order; sort using: sort -bdfk3
 #define OPT_HELP                h
-#define OPT_INCLUDE_TIDY        X
 #define OPT_VERSION             v
 
 /// Command-line option character as a character literal.
@@ -121,6 +120,51 @@ static void check_options( void ) {
 }
 
 /**
+ * TODO.
+ *
+ * @param porig_argc TODO.
+ * @param orig_argv TODO.
+ * @param ptiny_argc TODO.
+ * @param ptiny_argv TODO.
+ */
+static void filter_tiny_args( int *porig_argc, char const *orig_argv[],
+                              int *ptiny_argc, char const **ptiny_argv[] ) {
+  assert( porig_argc != NULL );
+  assert(  orig_argv != NULL );
+  assert( ptiny_argc != NULL );
+  assert( ptiny_argv != NULL );
+
+  int const orig_argc = *porig_argc;
+  int new_argc = 1, tiny_argc = 1;
+
+  char const **const tiny_argv =
+    MALLOC( char*, STATIC_CAST( size_t, orig_argc ) + 1 );
+  tiny_argv[0] = orig_argv[0];
+
+  for ( int i = 1; i < orig_argc; ++i ) {
+    if ( strcmp( orig_argv[i], "-Xtiny" ) == 0 ) {
+      if ( ++i >= orig_argc )
+        fatal_error( EX_USAGE, "-Xtiny requires subsequent option\n" );
+      tiny_argv[ tiny_argc++ ] = orig_argv[ i ];
+    }
+    else if ( strcmp( orig_argv[i], "--help" ) == 0 ||
+              strcmp( orig_argv[i], "--version" ) == 0 ||
+              orig_argv[i][0] != '-' ) {
+      tiny_argv[ tiny_argc++ ] = orig_argv[ i ];
+    }
+    else {
+      orig_argv[ new_argc++ ] = orig_argv[ i ];
+    }
+  } // for
+
+  orig_argv[ new_argc ] = tiny_argv[ tiny_argc ] = NULL;
+
+  *porig_argc = new_argc;
+  *ptiny_argc = tiny_argc;
+  *ptiny_argv = tiny_argv;
+}
+
+/**
  * Makes the `optstring` (short option) equivalent of \a opts for the third
  * argument of `getopt_long()`.
  *
@@ -132,7 +176,7 @@ static void check_options( void ) {
 NODISCARD
 static char const* make_short_opts( struct option const opts[static const 2] ) {
   // pre-flight to calculate string length
-  size_t len = 1 /* for leading ':' */ + STRLITLEN( "X:" );
+  size_t len = 1;                       // for leading ':'
   for ( struct option const *opt = opts; opt->name != NULL; ++opt ) {
     assert( opt->has_arg >= 0 && opt->has_arg <= 2 );
     len += 1 + STATIC_CAST( unsigned, opt->has_arg );
@@ -142,9 +186,6 @@ static char const* make_short_opts( struct option const opts[static const 2] ) {
   char *s = short_opts;
 
   *s++ = ':';                           // return missing argument as ':'
-  *s++ = 'X';
-  *s++ = ':';
-
   for ( struct option const *opt = opts; opt->name != NULL; ++opt ) {
     assert( opt->val > 0 && opt->val < 128 );
     assert( opt->val != 'X' );
@@ -235,19 +276,24 @@ static void print_version( void ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void options_init( int argc, char const *const argv[] ) {
+void options_init( int *pargc, char const *argv[] ) {
   ASSERT_RUN_ONCE();
 
   int               opt;
   bool              opt_help = false;
   bool              opt_version = false;
+  int const         orig_argc = *pargc;
   char const *const short_opts = make_short_opts( OPTIONS );
+  int               tiny_argc;
+  char const      **tiny_argv;
+
+  filter_tiny_args( pargc, argv, &tiny_argc, &tiny_argv );
 
   opterr = 1;
 
   for (;;) {
     opt = getopt_long(
-      argc, CONST_CAST( char**, argv ), short_opts, OPTIONS,
+      tiny_argc, CONST_CAST( char**, tiny_argv ), short_opts, OPTIONS,
       /*longindex=*/NULL
     );
     if ( opt == -1 )
@@ -255,9 +301,6 @@ void options_init( int argc, char const *const argv[] ) {
     switch ( opt ) {
       case COPT(HELP):
         opt_help = true;
-        break;
-      case COPT(INCLUDE_TIDY):
-        // TODO
         break;
       case COPT(VERSION):
         opt_version = true;
@@ -282,34 +325,35 @@ void options_init( int argc, char const *const argv[] ) {
 
   FREE( short_opts );
 
-  argc -= optind;
-  argv += optind - 1;
+  tiny_argc -= optind;
+  tiny_argv += optind - 1;
 
   check_options();
 
   if ( opt_help )
-    print_usage( argc > 0 ? EX_USAGE : EX_OK );
+    print_usage( orig_argc > 0 ? EX_USAGE : EX_OK );
 
   if ( opt_version ) {
-    if ( argc > 0 )                     // include-tidy -v foo
+    if ( orig_argc > 0 )                // include-tidy -v foo
       print_usage( EX_USAGE );
     print_version();
     exit( EX_OK );
   }
 
-  switch ( argc ) {
-    case 1:                             // infile only
-      tidy_source_path = argv[1];
+  switch ( tiny_argc ) {
+    case 1:
+      tidy_source_path = tiny_argv[1];
       break;
     default:
       print_usage( EX_USAGE );
   } // switch
 
+  free( tiny_argv );
   return;
 
 invalid_opt:;
   // Determine whether the invalid option was short or long.
-  char const *const invalid_opt = argv[ optind - 1 ];
+  char const *const invalid_opt = tiny_argv[ optind - 1 ];
   EPRINTF( "%s: ", prog_name );
   if ( invalid_opt != NULL && strncmp( invalid_opt, "--", 2 ) == 0 )
     EPRINTF( "\"%s\"", invalid_opt + 2/*skip over "--"*/ );

@@ -46,7 +46,7 @@
  *
  * @note This function must be called exactly once.
  */
-void options_init( int argc, char const *const argv[] );
+void options_init( int *pargc, char const *argv[] );
 
 ///////////////////////////////////////////////////////////////////////////////
 

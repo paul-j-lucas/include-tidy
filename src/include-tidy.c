@@ -50,9 +50,9 @@ char const *tidy_source_path;
  * @param argv The command-line argument values.
  * @return Returns 0 on success, non-zero on failure.
  */
-int main( int argc, char const *const argv[] ) {
+int main( int argc, char const *argv[] ) {
   prog_name = base_name( argv[0] );
-  options_init( argc, argv );
+  options_init( &argc, argv );
 
   CXIndex index = clang_createIndex( 0, 0 );
 
