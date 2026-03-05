@@ -55,15 +55,11 @@ int main( int argc, char const *argv[] ) {
   options_init( &argc, argv );
 
   CXIndex index = clang_createIndex( 0, 0 );
-
-  // We need detailed preprocessing records to extract macro definitions
-  char const *const args[] = { "-detailed-preprocessing-record" };
-
   CXTranslationUnit tu = clang_parseTranslationUnit(
     index, 
     tidy_source_path,
-    args, 
-    ARRAY_SIZE( args ), 
+    argv + 1,
+    argc - 1,
     /*unsaved_files=*/NULL, 
     /*num_unsaved_files=*/0,
     CXTranslationUnit_DetailedPreprocessingRecord
