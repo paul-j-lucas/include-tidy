@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tiny_options_H
-#define include_tiny_options_H
+#ifndef include_tidy_options_H
+#define include_tidy_options_H
 
 /**
  * @file
@@ -28,7 +28,7 @@
 
 /**
  * @defgroup options-group Ad Options
- * Global variables and functions for **include-tiny** options.
+ * Global variables and functions for **include-tidy** options.
  * @{
  */
 
@@ -39,7 +39,7 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Initializes **include-tiny** options from the command-line.
+ * Initializes **include-tidy** options from the command-line.
  *
  * @param argc The argument count from \c main().
  * @param argv The argument values from \c main().
@@ -52,5 +52,5 @@ void options_init( int *pargc, char const *argv[] );
 
 /** @} */
 
-#endif /* include_tiny_options_H */
+#endif /* include_tidy_options_H */
 /* vim:set et sw=2 ts=2: */
