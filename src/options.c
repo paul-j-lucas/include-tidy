@@ -49,13 +49,6 @@
 /// Command-line option character as a character literal.
 #define COPT(X)                   CHARIFY(OPT_##X)
 
-/// Command-line option character as a single-character string literal.
-#define SOPT(X)                   STRINGIFY(OPT_##X)
-
-/// Command-line short option as a parenthesized, dashed string literal for the
-/// usage message.
-#define UOPT(X)                   " (-" SOPT(X) ") "
-
 /// @endcond
 
 /**
@@ -117,51 +110,6 @@ static void check_opt_exclusive( char opt ) {
 static void check_options( void ) {
   check_opt_exclusive( COPT(HELP) );
   check_opt_exclusive( COPT(VERSION) );
-}
-
-/**
- * TODO.
- *
- * @param porig_argc TODO.
- * @param orig_argv TODO.
- * @param ptidy_argc TODO.
- * @param ptidy_argv TODO.
- */
-static void filter_tidy_args( int *porig_argc, char const *orig_argv[],
-                              int *ptidy_argc, char const **ptidy_argv[] ) {
-  assert( porig_argc != NULL );
-  assert(  orig_argv != NULL );
-  assert( ptidy_argc != NULL );
-  assert( ptidy_argv != NULL );
-
-  int const orig_argc = *porig_argc;
-  int new_argc = 1, tidy_argc = 1;
-
-  char const **const tidy_argv =
-    MALLOC( char*, STATIC_CAST( size_t, orig_argc ) + 1 );
-  tidy_argv[0] = orig_argv[0];
-
-  for ( int i = 1; i < orig_argc; ++i ) {
-    if ( strcmp( orig_argv[i], "-Xtidy" ) == 0 ) {
-      if ( ++i >= orig_argc )
-        fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
-      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
-    }
-    else if ( strcmp( orig_argv[i], "--help" ) == 0 ||
-              strcmp( orig_argv[i], "--version" ) == 0 ||
-              orig_argv[i][0] != '-' ) {
-      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
-    }
-    else {
-      orig_argv[ new_argc++ ] = orig_argv[ i ];
-    }
-  } // for
-
-  orig_argv[ new_argc ] = tidy_argv[ tidy_argc ] = NULL;
-
-  *porig_argc = new_argc;
-  *ptidy_argc = tidy_argc;
-  *ptidy_argv = tidy_argv;
 }
 
 /**
@@ -249,7 +197,7 @@ static void print_usage( int status ) {
   FILE *const fout = status == EX_OK ? stdout : stderr;
 
   FPRINTF( fout,
-    "usage: %s [-Xtidy option] source-file\n"
+    "usage: %s [-Xtidy option]... [clang-options] source-file\n"
     "       %s --help\n"
     "       %s --version\n"
     "\n"
@@ -274,6 +222,51 @@ static void print_version( void ) {
   );
 }
 
+/**
+ * TODO.
+ *
+ * @param porig_argc TODO.
+ * @param orig_argv TODO.
+ * @param ptidy_argc TODO.
+ * @param ptidy_argv TODO.
+ */
+static void split_tidy_args( int *porig_argc, char const *orig_argv[],
+                             int *ptidy_argc, char const **ptidy_argv[] ) {
+  assert( porig_argc != NULL );
+  assert(  orig_argv != NULL );
+  assert( ptidy_argc != NULL );
+  assert( ptidy_argv != NULL );
+
+  int const orig_argc = *porig_argc;
+  int new_argc = 1, tidy_argc = 1;
+
+  char const **const tidy_argv =
+    MALLOC( char*, STATIC_CAST( size_t, orig_argc ) + 1 );
+  tidy_argv[0] = orig_argv[0];
+
+  for ( int i = 1; i < orig_argc; ++i ) {
+    if ( strcmp( orig_argv[i], "-Xtidy" ) == 0 ) {
+      if ( ++i >= orig_argc )
+        fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
+      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
+    }
+    else if ( strcmp( orig_argv[i], "--help" ) == 0 ||
+              strcmp( orig_argv[i], "--version" ) == 0 ||
+              orig_argv[i][0] != '-' ) {
+      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
+    }
+    else {
+      orig_argv[ new_argc++ ] = orig_argv[ i ];
+    }
+  } // for
+
+  orig_argv[ new_argc ] = tidy_argv[ tidy_argc ] = NULL;
+
+  *porig_argc = new_argc;
+  *ptidy_argc = tidy_argc;
+  *ptidy_argv = tidy_argv;
+}
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 void options_init( int *pargc, char const *argv[] ) {
@@ -287,7 +280,7 @@ void options_init( int *pargc, char const *argv[] ) {
   int               tidy_argc;
   char const      **tidy_argv;
 
-  filter_tidy_args( pargc, argv, &tidy_argc, &tidy_argv );
+  split_tidy_args( pargc, argv, &tidy_argc, &tidy_argv );
 
   opterr = 1;
 
