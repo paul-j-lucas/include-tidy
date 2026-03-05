@@ -57,7 +57,11 @@ static void tu_cleanup( void ) {
 CXTranslationUnit tu_new( int argc, char const *const argv[] ) {
   assert( argc > 0 );
 
-  tidy_index = clang_createIndex( 0, 0 );
+  tidy_index = clang_createIndex(
+    /*excludeDeclarationsFromPCH*/false,
+    /*displayDisgnostics=*/false
+  );
+
   tidy_tu = clang_parseTranslationUnit(
     tidy_index, 
     tidy_source_path,
