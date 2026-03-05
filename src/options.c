@@ -275,7 +275,6 @@ void options_init( int *pargc, char const *argv[] ) {
   int               opt;
   bool              opt_help = false;
   bool              opt_version = false;
-  int const         orig_argc = *pargc;
   char const *const short_opts = make_short_opts( OPTIONS );
   int               tidy_argc;
   char const      **tidy_argv;
@@ -318,16 +317,18 @@ void options_init( int *pargc, char const *argv[] ) {
 
   FREE( short_opts );
 
+  char const **const orig_tidy_argv = tidy_argv;
   tidy_argc -= optind;
-  tidy_argv += optind - 1;
+  tidy_argv += optind;
+  int const remaining_argc = tidy_argc + *pargc - 1;
 
   check_options();
 
   if ( opt_help )
-    print_usage( orig_argc > 0 ? EX_USAGE : EX_OK );
+    print_usage( remaining_argc > 0 ? EX_USAGE : EX_OK );
 
   if ( opt_version ) {
-    if ( orig_argc > 0 )                // include-tidy -v foo
+    if ( remaining_argc > 0 )           // include-tidy --version foo
       print_usage( EX_USAGE );
     print_version();
     exit( EX_OK );
@@ -335,13 +336,13 @@ void options_init( int *pargc, char const *argv[] ) {
 
   switch ( tidy_argc ) {
     case 1:
-      tidy_source_path = tidy_argv[1];
+      tidy_source_path = tidy_argv[0];
       break;
     default:
       print_usage( EX_USAGE );
   } // switch
 
-  free( tidy_argv );
+  free( orig_tidy_argv );
   return;
 
 invalid_opt:;
