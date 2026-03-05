@@ -41,6 +41,8 @@ char const *tidy_source_path;
 
 /// @endcond
 
+CXTranslationUnit tu_new( int, char const *const[] );
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
@@ -54,26 +56,10 @@ int main( int argc, char const *argv[] ) {
   prog_name = base_name( argv[0] );
   options_init( &argc, argv );
 
-  CXIndex index = clang_createIndex( 0, 0 );
-  CXTranslationUnit tu = clang_parseTranslationUnit(
-    index, 
-    tidy_source_path,
-    argv + 1,
-    argc - 1,
-    /*unsaved_files=*/NULL, 
-    /*num_unsaved_files=*/0,
-    CXTranslationUnit_DetailedPreprocessingRecord
-  );
-
-  if ( tu == NULL )
-    fatal_error( EX_DATAERR, "error: failed to parse the translation unit\n" );
-
+  CXTranslationUnit tu = tu_new( argc, argv );
   includes_init( tu );
   symbols_init( tu );
   symbols_visit();
-
-  clang_disposeTranslationUnit( tu );
-  clang_disposeIndex( index );
 
   return EX_OK;
 }
