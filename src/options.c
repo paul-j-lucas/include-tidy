@@ -124,44 +124,44 @@ static void check_options( void ) {
  *
  * @param porig_argc TODO.
  * @param orig_argv TODO.
- * @param ptiny_argc TODO.
- * @param ptiny_argv TODO.
+ * @param ptidy_argc TODO.
+ * @param ptidy_argv TODO.
  */
-static void filter_tiny_args( int *porig_argc, char const *orig_argv[],
-                              int *ptiny_argc, char const **ptiny_argv[] ) {
+static void filter_tidy_args( int *porig_argc, char const *orig_argv[],
+                              int *ptidy_argc, char const **ptidy_argv[] ) {
   assert( porig_argc != NULL );
   assert(  orig_argv != NULL );
-  assert( ptiny_argc != NULL );
-  assert( ptiny_argv != NULL );
+  assert( ptidy_argc != NULL );
+  assert( ptidy_argv != NULL );
 
   int const orig_argc = *porig_argc;
-  int new_argc = 1, tiny_argc = 1;
+  int new_argc = 1, tidy_argc = 1;
 
-  char const **const tiny_argv =
+  char const **const tidy_argv =
     MALLOC( char*, STATIC_CAST( size_t, orig_argc ) + 1 );
-  tiny_argv[0] = orig_argv[0];
+  tidy_argv[0] = orig_argv[0];
 
   for ( int i = 1; i < orig_argc; ++i ) {
-    if ( strcmp( orig_argv[i], "-Xtiny" ) == 0 ) {
+    if ( strcmp( orig_argv[i], "-Xtidy" ) == 0 ) {
       if ( ++i >= orig_argc )
-        fatal_error( EX_USAGE, "-Xtiny requires subsequent option\n" );
-      tiny_argv[ tiny_argc++ ] = orig_argv[ i ];
+        fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
+      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
     }
     else if ( strcmp( orig_argv[i], "--help" ) == 0 ||
               strcmp( orig_argv[i], "--version" ) == 0 ||
               orig_argv[i][0] != '-' ) {
-      tiny_argv[ tiny_argc++ ] = orig_argv[ i ];
+      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
     }
     else {
       orig_argv[ new_argc++ ] = orig_argv[ i ];
     }
   } // for
 
-  orig_argv[ new_argc ] = tiny_argv[ tiny_argc ] = NULL;
+  orig_argv[ new_argc ] = tidy_argv[ tidy_argc ] = NULL;
 
   *porig_argc = new_argc;
-  *ptiny_argc = tiny_argc;
-  *ptiny_argv = tiny_argv;
+  *ptidy_argc = tidy_argc;
+  *ptidy_argv = tidy_argv;
 }
 
 /**
@@ -284,16 +284,16 @@ void options_init( int *pargc, char const *argv[] ) {
   bool              opt_version = false;
   int const         orig_argc = *pargc;
   char const *const short_opts = make_short_opts( OPTIONS );
-  int               tiny_argc;
-  char const      **tiny_argv;
+  int               tidy_argc;
+  char const      **tidy_argv;
 
-  filter_tiny_args( pargc, argv, &tiny_argc, &tiny_argv );
+  filter_tidy_args( pargc, argv, &tidy_argc, &tidy_argv );
 
   opterr = 1;
 
   for (;;) {
     opt = getopt_long(
-      tiny_argc, CONST_CAST( char**, tiny_argv ), short_opts, OPTIONS,
+      tidy_argc, CONST_CAST( char**, tidy_argv ), short_opts, OPTIONS,
       /*longindex=*/NULL
     );
     if ( opt == -1 )
@@ -325,8 +325,8 @@ void options_init( int *pargc, char const *argv[] ) {
 
   FREE( short_opts );
 
-  tiny_argc -= optind;
-  tiny_argv += optind - 1;
+  tidy_argc -= optind;
+  tidy_argv += optind - 1;
 
   check_options();
 
@@ -340,20 +340,20 @@ void options_init( int *pargc, char const *argv[] ) {
     exit( EX_OK );
   }
 
-  switch ( tiny_argc ) {
+  switch ( tidy_argc ) {
     case 1:
-      tidy_source_path = tiny_argv[1];
+      tidy_source_path = tidy_argv[1];
       break;
     default:
       print_usage( EX_USAGE );
   } // switch
 
-  free( tiny_argv );
+  free( tidy_argv );
   return;
 
 invalid_opt:;
   // Determine whether the invalid option was short or long.
-  char const *const invalid_opt = tiny_argv[ optind - 1 ];
+  char const *const invalid_opt = tidy_argv[ optind - 1 ];
   EPRINTF( "%s: ", prog_name );
   if ( invalid_opt != NULL && strncmp( invalid_opt, "--", 2 ) == 0 )
     EPRINTF( "\"%s\"", invalid_opt + 2/*skip over "--"*/ );
