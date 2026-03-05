@@ -28,6 +28,7 @@
 #include <clang-c/Index.h>
 
 // standard
+#include <assert.h>
 #include <sysexits.h>
 
 // local variables
@@ -54,12 +55,13 @@ static void tu_cleanup( void ) {
  * @return Returns a new translation unit.
  */
 CXTranslationUnit tu_new( int argc, char const *const argv[] ) {
+  assert( argc > 0 );
+
   tidy_index = clang_createIndex( 0, 0 );
   tidy_tu = clang_parseTranslationUnit(
     tidy_index, 
     tidy_source_path,
-    argv + 1,
-    argc - 1,
+    argv + 1, argc - 1,                 // skip argv[0] (program name)
     /*unsaved_files=*/NULL, 
     /*num_unsaved_files=*/0,
     CXTranslationUnit_DetailedPreprocessingRecord
