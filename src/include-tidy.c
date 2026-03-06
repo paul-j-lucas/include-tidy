@@ -60,6 +60,7 @@ int main( int argc, char const *argv[] ) {
   includes_init( tu );
   symbols_init( tu );
   symbols_visit();
+  includes_print_unneeded();
 
   return EX_OK;
 }

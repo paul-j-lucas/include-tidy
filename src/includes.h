@@ -32,13 +32,14 @@
 /**
  * A file that was included.
  */
-struct tidy_include_file {
+struct tidy_include {
   CXFile    file;                       ///< File that was included.
   unsigned  count;                      ///< Number of times included.
   unsigned  depth;                      ///< "Depth" of include.
   unsigned  line;                       ///< Line included from.
+  bool      is_needed;                  ///< Is this include needed?
 };
-typedef struct tidy_include_file tidy_include_file;
+typedef struct tidy_include tidy_include;
 
 ////////// extern functions ///////////////////////////////////////////////////
 
@@ -46,10 +47,10 @@ typedef struct tidy_include_file tidy_include_file;
  * Attempts to find \a file among the set of files included.
  *
  * @param file The file to find.
- * @return Returns the corresponding tidy_include_file if found or NULL if not.
+ * @return Returns the corresponding tidy_include if found or NULL if not.
  */
 NODISCARD
-tidy_include_file const* include_find( CXFile file );
+tidy_include* include_find( CXFile file );
 
 /**
  * Initializes the set of files included in the given translation unit.
@@ -57,6 +58,11 @@ tidy_include_file const* include_find( CXFile file );
  * @param tu The translation unit to use.
  */
 void includes_init( CXTranslationUnit tu );
+
+/**
+ * Print unneeded include files.
+ */
+void includes_print_unneeded( void );
 
 ///////////////////////////////////////////////////////////////////////////////
 

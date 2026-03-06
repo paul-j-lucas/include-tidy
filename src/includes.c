@@ -36,7 +36,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // local functions
-static void tidy_include_file_cleanup( tidy_include_file* );
+static void tidy_include_cleanup( tidy_include* );
 
 static rb_tree_t include_set;           ///< Set of included files.
 
@@ -56,7 +56,7 @@ static void include_visitor( CXFile included_file,
                              CXClientData client_data ) {
   (void)client_data;
 
-  tidy_include_file file = {
+  tidy_include include = {
     .file = included_file,
     .count = 1,
     .depth = include_len
@@ -64,18 +64,18 @@ static void include_visitor( CXFile included_file,
 
   if ( include_len == 1 ) {
     clang_getSpellingLocation(
-      inclusion_stack[0], /*file=*/NULL, &file.line, /*column=*/NULL,
+      inclusion_stack[0], /*file=*/NULL, &include.line, /*column=*/NULL,
       /*offset=*/NULL
     );
   }
 
   rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &include_set, &file, sizeof file );
+    rb_tree_insert( &include_set, &include, sizeof include );
   if ( !rv_rbi.inserted ) {
-    tidy_include_file *const old_file = RB_DINT( rv_rbi.node );
-    ++old_file->count;
-    if ( include_len < old_file->depth )
-      old_file->depth = include_len;
+    tidy_include *const old_include = RB_DINT( rv_rbi.node );
+    ++old_include->count;
+    if ( include_len < old_include->depth )
+      old_include->depth = include_len;
   }
 }
 
@@ -84,28 +84,28 @@ static void include_visitor( CXFile included_file,
  */
 static void includes_cleanup( void ) {
   rb_tree_cleanup(
-    &include_set, POINTER_CAST( rb_free_fn_t, &tidy_include_file_cleanup )
+    &include_set, POINTER_CAST( rb_free_fn_t, &tidy_include_cleanup )
   );
 }
 
 /**
  * TODO.
  */
-static void tidy_include_file_cleanup( tidy_include_file *file ) {
-  (void)file;
+static void tidy_include_cleanup( tidy_include *include ) {
+  (void)include;
 }
 
 /**
- * Compares two \ref tidy_include_file objects.
+ * Compares two \ref tidy_include objects.
  */
 NODISCARD
-static int tidy_include_file_cmp( tidy_include_file const *i_file,
-                                  tidy_include_file const *j_file ) {
-  assert( i_file != NULL );
-  assert( j_file != NULL );
+static int tidy_include_cmp( tidy_include const *i_include,
+                             tidy_include const *j_include ) {
+  assert( i_include != NULL );
+  assert( j_include != NULL );
 
-  CXString i_string = clang_getFileName( i_file->file );
-  CXString j_string = clang_getFileName( j_file->file );
+  CXString i_string = clang_getFileName( i_include->file );
+  CXString j_string = clang_getFileName( j_include->file );
 
   int const cmp =
     strcmp( clang_getCString( i_string ), clang_getCString( j_string ) );
@@ -116,21 +116,58 @@ static int tidy_include_file_cmp( tidy_include_file const *i_file,
   return cmp;
 }
 
+/**
+ * Visits each include file that was includes.
+ *
+ * @param node_data The tidy_include.
+ * @param visit_data Not used.
+ * @return Always returns `false` (keep visiting).
+ */
+NODISCARD
+static bool tidy_include_visitor( void *node_data, void *visit_data ) {
+  assert( node_data != NULL );
+  (void)visit_data;
+
+  tidy_include const *const include = node_data;
+  if ( !include->is_needed ) {
+    char        delims[] = { '<', '>' };
+    CXString    file_str = clang_getFileName( include->file );
+    char const *file_cstr = clang_getCString( file_str );
+
+    if ( STRNCMPLIT( file_cstr, "./" ) == 0 ) {
+      file_cstr += STRLITLEN( "./" );
+      delims[0] = delims[1] = '"';
+    }
+
+    printf( "#include %c%s%c // REMOVE\n",
+      delims[0], file_cstr, delims[1]
+    );
+
+    clang_disposeString( file_str );
+  }
+
+  return false;
+}
+
 ////////// extern functions ///////////////////////////////////////////////////
 
-tidy_include_file const* include_find( CXFile file ) {
-  tidy_include_file const inc_file = { .file = file };
-  rb_node_t const *const found_rb = rb_tree_find( &include_set, &inc_file );
+tidy_include* include_find( CXFile file ) {
+  tidy_include const include = { .file = file };
+  rb_node_t const *const found_rb = rb_tree_find( &include_set, &include );
   return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }
 
 void includes_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
   rb_tree_init(
-    &include_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_include_file_cmp )
+    &include_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp )
   );
   ATEXIT( &includes_cleanup );
   clang_getInclusions( tu, &include_visitor, /*client_data=*/NULL );
+}
+
+void includes_print_unneeded( void ) {
+  rb_tree_visit( &include_set, &tidy_include_visitor, /*visit_data=*/NULL );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

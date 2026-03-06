@@ -104,9 +104,11 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
         break;
 
       // If the symbol is declared in a file included, we don't care.
-      tidy_include_file const *const inc_file = include_find( decl_file );
-      if ( inc_file != NULL && inc_file->depth == 1 )
+      tidy_include *const include = include_find( decl_file );
+      if ( include != NULL && include->depth == 1 ) {
+        include->is_needed = true;
         break;
+      }
 
       tidy_symbol sym = {
         .name = clang_getCursorSpelling( decl ),
@@ -146,7 +148,7 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
 }
 
 /**
- * Compares two \ref tidy_include_file objects.
+ * Compares two \ref tidy_include objects.
  *
  * @param i_sym The first symbol.
  * @param j_sym The second symbol.
@@ -171,26 +173,27 @@ static int tidy_symbol_cmp( tidy_symbol const *i_sym,
  * @param visit_data Not used.
  * @return Always returns `false` (keep visiting).
  */
+NODISCARD
 static bool tidy_symbol_visitor( void *node_data, void *visit_data ) {
   assert( node_data != NULL );
   (void)visit_data;
 
-  tidy_symbol const *const  sym = node_data;
-  CXString                  decl_str = clang_getFileName( sym->decl_file );
-  char const               *decl_cstr = clang_getCString( decl_str );
   char                      delims[] = { '<', '>' };
+  tidy_symbol const *const  sym = node_data;
+  CXString                  file_str = clang_getFileName( sym->decl_file );
+  char const               *file_cstr = clang_getCString( file_str );
 
-  if ( STRNCMPLIT( decl_cstr, "./" ) == 0 ) {
-    decl_cstr += STRLITLEN( "./" );
+  if ( STRNCMPLIT( file_cstr, "./" ) == 0 ) {
+    file_cstr += STRLITLEN( "./" );
     delims[0] = delims[1] = '"';
   }
 
   printf( "#include %c%s%c // %s\n",
-    delims[0], decl_cstr, delims[1],
+    delims[0], file_cstr, delims[1],
     clang_getCString( sym->name )
   );
 
-  clang_disposeString( decl_str );
+  clang_disposeString( file_str );
   return false;
 }
 
