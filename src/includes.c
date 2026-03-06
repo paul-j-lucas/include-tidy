@@ -92,7 +92,8 @@ static void includes_cleanup( void ) {
  * TODO.
  */
 static void ti_cleanup( tidy_include *inc ) {
-  (void)inc;
+  if ( inc == NULL )
+    return;
 }
 
 /**
