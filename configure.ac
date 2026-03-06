@@ -33,7 +33,7 @@ AS_IF([test "x$ac_cv_prog_cc_c11" = xno],
 gl_EARLY
 AC_PROG_INSTALL
 
-# External dependency: readline (enabled by default)
+# External dependency: libclang
 AC_ARG_WITH([libclang],
   AS_HELP_STRING([--with-libclang], [where libclang is installed])
 )
@@ -60,9 +60,6 @@ esac
 AC_CHECK_HEADER([clang-c/Index.h], [], [
   AC_MSG_ERROR([libclang headers not found; use --with-libclang=DIR])
 ])
-AC_CHECK_LIB([clang], [clang_createIndex], [CLANG_LIBS="-lclang"], [
-  AC_MSG_ERROR([libclang library not found; use --with-libclang=DIR])
-])
 AC_CHECK_HEADERS([getopt.h])
 AC_CHECK_HEADERS([pwd.h])
 AC_CHECK_HEADERS([sysexits.h])
@@ -81,6 +78,9 @@ PJL_COMPILE([__builtin_expect],[], [(void)__builtin_expect(1,1);])
 # Checks for library functions.
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([geteuid getpwuid perror strerror strndup])
+AC_CHECK_LIB([clang], [clang_createIndex], [CLANG_LIBS="-lclang"], [
+  AC_MSG_ERROR([libclang library not found; use --with-libclang=DIR])
+])
 
 # Makefile conditionals.
 

@@ -104,9 +104,9 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
         break;
 
       // If the symbol is declared in a file included, we don't care.
-      tidy_include *const include = include_find( decl_file );
-      if ( include != NULL && include->depth == 1 ) {
-        include->is_needed = true;
+      tidy_include *const inc = include_find( decl_file );
+      if ( inc != NULL && inc->depth == 1 ) {
+        inc->is_needed = true;
         break;
       }
 
@@ -138,6 +138,9 @@ static void symbols_cleanup( void ) {
 }
 
 /**
+ * Cleans-up a tidy_symbol.
+ *
+ * @param sym The tidy_symbol to clean up.  If NULL, does nothing.
  */
 static void ts_cleanup( tidy_symbol *sym ) {
   if ( sym == NULL )
