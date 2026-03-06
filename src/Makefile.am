@@ -30,7 +30,7 @@ include_tidy_SOURCES =	include-tidy.c include-tidy.h \
 			pjl_config.h config.h \
 			red_black.c red_black.h \
 			symbols.c symbols.h \
-			tu.c \
+			trans_unit.c \
 			type_traits.h \
 			util.c util.h
 
