@@ -547,6 +547,16 @@
    - STATIC_ASSERT_EXPR( IS_C_STR_EXPR( (S) ), #S " must be a C string literal" ))
 
 /**
+ * Calls **strncmp**(3) with #STRLITLEN(\a LIT) for the third argument.
+ *
+ * @param S The string to compare.
+ * @param LIT The string literal to compare against.
+ * @return Returns a number less than 0, 0, or greater than 0 if \a S is
+ * less than, equal to, or greater than \a LIT, respectively.
+ */
+#define STRNCMPLIT(S,LIT)         strncmp( (S), (LIT), STRLITLEN( (LIT) ) )
+
+/**
  * A special-case of #INTERNAL_ERROR() that prints an unexpected integer value.
  *
  * @param EXPR The expression having the unexpected value.
