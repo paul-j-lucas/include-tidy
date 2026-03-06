@@ -38,7 +38,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * TODO
+ * Additional data passed to symbol_visitor.
  */
 struct symbol_visitor_data {
   CXFile source_file;                   ///< The file being tidied.
@@ -53,10 +53,11 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Visit each symbol in a translation unit.
+ * Visits each symbol in a translation unit.
  *
+ * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent Not used.
- * @param client_data TODO.
+ * @param client_data A pointer to a symbol_visitor_data.
  * @return Always returns `CXChildVisit_Recurse`.
  */
 static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
@@ -146,6 +147,12 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
 
 /**
  * Compares two \ref tidy_include_file objects.
+ *
+ * @param i_sym The first symbol.
+ * @param j_sym The second symbol.
+ * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
+ * i_sym is less than, equal to, or greater than the name of \a j_sym,
+ * respectively.
  */
 NODISCARD
 static int tidy_symbol_cmp( tidy_symbol const *i_sym,
@@ -157,6 +164,13 @@ static int tidy_symbol_cmp( tidy_symbol const *i_sym,
                  clang_getCString( j_sym->name ) );
 }
 
+/**
+ * Visits each symbol that needs a `#include` file in a translation unit.
+ *
+ * @param node_data The tidy_symbol.
+ * @param visit_data Not used.
+ * @return Always returns `false` (keep visiting).
+ */
 static bool tidy_symbol_visitor( void *node_data, void *visit_data ) {
   assert( node_data != NULL );
   (void)visit_data;
@@ -166,8 +180,8 @@ static bool tidy_symbol_visitor( void *node_data, void *visit_data ) {
   char const *decl_cstr = clang_getCString( decl_str );
   char delims[] = { '<', '>' };
 
-  if ( strncmp( decl_cstr, "./", 2 ) == 0 ) {
-    decl_cstr += 2;
+  if ( STRNCMPLIT( decl_cstr, "./" ) == 0 ) {
+    decl_cstr += STRLITLEN( "./" );
     delims[0] = delims[1] = '"';
   }
 
