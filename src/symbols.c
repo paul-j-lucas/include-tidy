@@ -46,7 +46,7 @@ struct symbol_visitor_data {
 typedef struct symbol_visitor_data symbol_visitor_data;
 
 // local functions
-static void tidy_symbol_cleanup( tidy_symbol* );
+static void ts_cleanup( tidy_symbol* );
 
 static rb_tree_t symbol_set;            ///< Set of symbols.
 
@@ -119,7 +119,7 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
       rb_insert_rv_t const rv_rbi =
         rb_tree_insert( &symbol_set, &sym, sizeof sym );
       if ( !rv_rbi.inserted )
-        tidy_symbol_cleanup( &sym );
+        ts_cleanup( &sym );
       break;
 
     default:
@@ -134,14 +134,12 @@ skip:
  * Cleans-up all symbols.
  */
 static void symbols_cleanup( void ) {
-  rb_tree_cleanup(
-    &symbol_set, POINTER_CAST( rb_free_fn_t, &tidy_symbol_cleanup )
-  );
+  rb_tree_cleanup( &symbol_set, POINTER_CAST( rb_free_fn_t, &ts_cleanup ) );
 }
 
 /**
  */
-static void tidy_symbol_cleanup( tidy_symbol *sym ) {
+static void ts_cleanup( tidy_symbol *sym ) {
   if ( sym == NULL )
     return;
   clang_disposeString( sym->name );
@@ -157,13 +155,14 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
  * respectively.
  */
 NODISCARD
-static int tidy_symbol_cmp( tidy_symbol const *i_sym,
-                            tidy_symbol const *j_sym ) {
+static int ts_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
   assert( i_sym != NULL );
   assert( j_sym != NULL );
 
-  return strcmp( clang_getCString( i_sym->name ),
-                 clang_getCString( j_sym->name ) );
+  char const *const i_sym_cstr = clang_getCString( i_sym->name );
+  char const *const j_sym_cstr = clang_getCString( j_sym->name );
+
+  return strcmp( i_sym_cstr, j_sym_cstr );
 }
 
 /**
@@ -174,7 +173,7 @@ static int tidy_symbol_cmp( tidy_symbol const *i_sym,
  * @return Always returns `false` (keep visiting).
  */
 NODISCARD
-static bool tidy_symbol_visitor( void *node_data, void *visit_data ) {
+static bool ts_visitor( void *node_data, void *visit_data ) {
   assert( node_data != NULL );
   (void)visit_data;
 
@@ -201,9 +200,7 @@ static bool tidy_symbol_visitor( void *node_data, void *visit_data ) {
 
 void symbols_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
-  rb_tree_init(
-    &symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
-  );
+  rb_tree_init( &symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &ts_cmp ) );
   ATEXIT( &symbols_cleanup );
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
   symbol_visitor_data svd = {
@@ -213,7 +210,7 @@ void symbols_init( CXTranslationUnit tu ) {
 }
 
 void symbols_visit( void ) {
-  rb_tree_visit( &symbol_set, &tidy_symbol_visitor, /*visit_data=*/NULL );
+  rb_tree_visit( &symbol_set, &ts_visitor, /*visit_data=*/NULL );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
