@@ -175,10 +175,10 @@ static bool tidy_symbol_visitor( void *node_data, void *visit_data ) {
   assert( node_data != NULL );
   (void)visit_data;
 
-  tidy_symbol const *const sym = node_data;
-  CXString decl_str = clang_getFileName( sym->decl_file );
-  char const *decl_cstr = clang_getCString( decl_str );
-  char delims[] = { '<', '>' };
+  tidy_symbol const *const  sym = node_data;
+  CXString                  decl_str = clang_getFileName( sym->decl_file );
+  char const               *decl_cstr = clang_getCString( decl_str );
+  char                      delims[] = { '<', '>' };
 
   if ( STRNCMPLIT( decl_cstr, "./" ) == 0 ) {
     decl_cstr += STRLITLEN( "./" );
