@@ -121,7 +121,7 @@ static void check_options( void ) {
  *
  *  + `-Xtidy` _option_ have `-Xtidy` removed and _option_ moved to \a
  *    *ptidy_argv.
- *  + `--help` or `--version` have either moved to \a *ptidy_argv.
+ *  + `--help` or `--version` are moved to \a *ptidy_argv.
  *
  * All other options and arguments are left as-is in \a orig_argv.  Examples:
  *
