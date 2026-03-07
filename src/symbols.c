@@ -26,6 +26,7 @@
 #include "includes.h"
 #include "options.h"
 #include "red_black.h"
+#include "tidy_util.h"
 #include "util.h"
 
 // libclang
@@ -180,13 +181,16 @@ static int ts_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
 NODISCARD
 static bool ts_visitor( void *node_data, void *visit_data ) {
   assert( node_data != NULL );
+
   tidy_symbol const *const sym = node_data;
   (void)visit_data;
 
-  char              delims[] = { '<', '>' };
   CXString          file_str = tidy_File_getRealPathName( sym->decl_file );
   char const *const file_cstr = clang_getCString( file_str );
   char const *const resolved_path = include_resolve( file_cstr );
+
+  char delims[2];
+  include_get_delims( file_cstr, delims );
 
   printf( "#include %c%s%c // %s\n",
     delims[0], resolved_path, delims[1],

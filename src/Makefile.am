@@ -31,6 +31,7 @@ include_tidy_SOURCES =	clang_util.c clang_util.h \
 			pjl_config.h config.h \
 			red_black.c red_black.h \
 			symbols.c symbols.h \
+			tidy_util.c tidy_util.h \
 			trans_unit.c \
 			type_traits.h \
 			util.c util.h

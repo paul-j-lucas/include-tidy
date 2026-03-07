@@ -25,6 +25,7 @@
 #include "include-tidy.h"
 #include "options.h"
 #include "red_black.h"
+#include "tidy_util.h"
 #include "util.h"
 
 // libclang
@@ -128,15 +129,17 @@ static int ti_cmp( tidy_include const *i_inc, tidy_include const *j_inc ) {
 NODISCARD
 static bool ti_unneeded_visitor( void *node_data, void *visit_data ) {
   assert( node_data != NULL );
-  (void)visit_data;
 
   tidy_include const *const inc = node_data;
-  if ( !inc->is_needed && inc->depth == 1 ) {
-    char delims[] = { '<', '>' };
+  (void)visit_data;
 
+  if ( !inc->is_needed && inc->depth == 1 ) {
     CXString          file_str = tidy_File_getRealPathName( inc->file );
     char const *const file_cstr = clang_getCString( file_str );
     char const *const resolved_path = include_resolve( file_cstr );
+
+    char delims[2];
+    include_get_delims( file_cstr, delims );
 
     printf( "#include %c%s%c // REMOVE\n",
       delims[0], resolved_path, delims[1]
