@@ -45,9 +45,9 @@
 #include <string.h>
 
 // in ascending option character ASCII order; sort using: sort -bdfk3
-#define OPT_HELP                h
-#define OPT_INCLUDE             I
-#define OPT_VERSION             v
+#define OPT_HELP                  h
+#define OPT_INCLUDE               I
+#define OPT_VERSION               v
 
 /// Command-line option character as a character literal.
 #define COPT(X)                   CHARIFY(OPT_##X)
