@@ -21,8 +21,10 @@
 // local
 #include "pjl_config.h"
 #include "symbols.h"
+#include "clang_util.h"
 #include "include-tidy.h"
 #include "includes.h"
+#include "options.h"
 #include "red_black.h"
 #include "util.h"
 
@@ -178,20 +180,16 @@ static int ts_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
 NODISCARD
 static bool ts_visitor( void *node_data, void *visit_data ) {
   assert( node_data != NULL );
+  tidy_symbol const *const sym = node_data;
   (void)visit_data;
 
-  char                      delims[] = { '<', '>' };
-  tidy_symbol const *const  sym = node_data;
-  CXString                  file_str = clang_getFileName( sym->decl_file );
-  char const               *file_cstr = clang_getCString( file_str );
-
-  if ( STRNCMPLIT( file_cstr, "./" ) == 0 ) {
-    file_cstr += STRLITLEN( "./" );
-    delims[0] = delims[1] = '"';
-  }
+  char              delims[] = { '<', '>' };
+  CXString          file_str = tidy_File_getRealPathName( sym->decl_file );
+  char const *const file_cstr = clang_getCString( file_str );
+  char const *const resolved_path = include_resolve( file_cstr );
 
   printf( "#include %c%s%c // %s\n",
-    delims[0], file_cstr, delims[1],
+    delims[0], resolved_path, delims[1],
     clang_getCString( sym->name )
   );
 

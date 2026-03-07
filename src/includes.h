@@ -36,11 +36,12 @@
  * A file that was included.
  */
 struct tidy_include {
-  CXFile    file;                       ///< File that was included.
-  unsigned  count;                      ///< Number of times included.
-  unsigned  depth;                      ///< "Depth" of include.
-  unsigned  line;                       ///< Line included from.
-  bool      is_needed;                  ///< Is this include needed?
+  CXFile          file;                 ///< File that was included.
+  CXFileUniqueID  file_id;              ///< Unique file ID.
+  unsigned        count;                ///< Number of times included.
+  unsigned        depth;                ///< "Depth" of include.
+  unsigned        line;                 ///< Line included from.
+  bool            is_needed;            ///< Is this include needed?
 };
 typedef struct tidy_include tidy_include;
 

@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/options.h
+**      src/clang_util.c
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **
@@ -18,43 +18,25 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_options_H
-#define include_tidy_options_H
+// local
+#include "pjl_config.h"
 
-/**
- * @file
- * Declares global variables and functions for **include-tidy** options.
- */
-
-/**
- * @defgroup options-group Ad Options
- * Global variables and functions for **include-tidy** options.
- * @{
- */
+// libclang
+#include <clang-c/Index.h>
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-/**
- * TODO.
- *
- * @param included_path The path being included.
- * @return Returns TODO.
- */
-char const* include_resolve( char const *included_path );
+CXString tidy_File_getRealPathName( CXFile file ) {
+  CXString    file_str  = clang_File_tryGetRealPathName( file );
+  char const *file_cstr = clang_getCString( file_str );
 
-/**
- * Initializes **include-tidy** options from the command-line.
- *
- * @param argc The argument count from \c main().
- * @param argv The argument values from \c main().
- *
- * @note This function must be called exactly once.
- */
-void options_init( int *pargc, char const *argv[] );
+  if ( file_cstr == NULL || file_cstr[0] == '\0' ) {
+    clang_disposeString( file_str );
+    file_str = clang_getFileName( file );
+  }
+
+  return file_str;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
-
-/** @} */
-
-#endif /* include_tidy_options_H */
 /* vim:set et sw=2 ts=2: */

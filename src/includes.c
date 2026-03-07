@@ -21,7 +21,9 @@
 // local
 #include "pjl_config.h"
 #include "includes.h"
+#include "clang_util.h"
 #include "include-tidy.h"
+#include "options.h"
 #include "red_black.h"
 #include "util.h"
 
@@ -62,6 +64,9 @@ static void include_visitor( CXFile included_file,
     .depth = include_len
   };
 
+  int const rv = clang_getFileUniqueID( included_file, &inc.file_id );
+  (void)rv;
+
   if ( include_len == 1 ) {             // file is directly included
     clang_getSpellingLocation(
       inclusion_stack[0], /*file=*/NULL, &inc.line, /*column=*/NULL,
@@ -101,28 +106,16 @@ static void ti_cleanup( tidy_include *inc ) {
  *
  * @param i_inc The first tidy_include.
  * @param j_inc The second tidy_include.
- * @return Returns a number less than 0, 0, or greater than 0 if the filename
- * of \a i_inc is less than, equal to, or greater than the filename of \a
- * j_inc, respectively.
+ * @return Returns a number less than 0, 0, or greater than 0 if the file ID of
+ * \a i_inc is less than, equal to, or greater than the file ID of \a j_inc,
+ * respectively.
 
  */
 NODISCARD
 static int ti_cmp( tidy_include const *i_inc, tidy_include const *j_inc ) {
   assert( i_inc != NULL );
   assert( j_inc != NULL );
-
-  CXString i_str = clang_getFileName( i_inc->file );
-  CXString j_str = clang_getFileName( j_inc->file );
-
-  char const *const i_cstr = clang_getCString( i_str );
-  char const *const j_cstr = clang_getCString( j_str );
-
-  int const cmp = strcmp( i_cstr, j_cstr );
-
-  clang_disposeString( i_str );
-  clang_disposeString( j_str );
-
-  return cmp;
+  return memcmp( &i_inc->file_id, &j_inc->file_id, sizeof i_inc->file_id );
 }
 
 /**
@@ -139,17 +132,14 @@ static bool ti_unneeded_visitor( void *node_data, void *visit_data ) {
 
   tidy_include const *const inc = node_data;
   if ( !inc->is_needed && inc->depth == 1 ) {
-    char        delims[] = { '<', '>' };
-    CXString    file_str = clang_getFileName( inc->file );
-    char const *file_cstr = clang_getCString( file_str );
+    char delims[] = { '<', '>' };
 
-    if ( STRNCMPLIT( file_cstr, "./" ) == 0 ) {
-      file_cstr += STRLITLEN( "./" );
-      delims[0] = delims[1] = '"';
-    }
+    CXString          file_str = tidy_File_getRealPathName( inc->file );
+    char const *const file_cstr = clang_getCString( file_str );
+    char const *const resolved_path = include_resolve( file_cstr );
 
     printf( "#include %c%s%c // REMOVE\n",
-      delims[0], file_cstr, delims[1]
+      delims[0], resolved_path, delims[1]
     );
 
     clang_disposeString( file_str );

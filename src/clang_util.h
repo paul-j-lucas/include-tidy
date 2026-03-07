@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/options.h
+**      src/clang_util.h
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **
@@ -18,43 +18,29 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_options_H
-#define include_tidy_options_H
+#ifndef include_tidy_clang_util_H
+#define include_tidy_clang_util_H
 
-/**
- * @file
- * Declares global variables and functions for **include-tidy** options.
- */
+// local
+#include "pjl_config.h"
 
-/**
- * @defgroup options-group Ad Options
- * Global variables and functions for **include-tidy** options.
- * @{
- */
+// libclang
+#include <clang-c/Index.h>
 
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * TODO.
+ * Gets the real path of \a file.
  *
- * @param included_path The path being included.
- * @return Returns TODO.
+ * @param file The file to get the real path of.
+ * @return Returns the string containing the real path of \a file.  The caller
+ * _must_ call `clang_disposeString()` on it.
+ *
  */
-char const* include_resolve( char const *included_path );
-
-/**
- * Initializes **include-tidy** options from the command-line.
- *
- * @param argc The argument count from \c main().
- * @param argv The argument values from \c main().
- *
- * @note This function must be called exactly once.
- */
-void options_init( int *pargc, char const *argv[] );
+NODISCARD
+CXString tidy_File_getRealPathName( CXFile file );
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/** @} */
-
-#endif /* include_tidy_options_H */
+#endif /* include_tidy_clang_util_H */
 /* vim:set et sw=2 ts=2: */

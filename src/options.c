@@ -27,6 +27,7 @@
 #include "pjl_config.h"                 /* must go first */
 #include "options.h"
 #include "include-tidy.h"
+#include "red_black.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -35,6 +36,7 @@
 #include <assert.h>
 #include <ctype.h>                      /* for islower(), toupper() */
 #include <getopt.h>
+#include <limits.h>                     /* for PATH_MAX */
 #include <stddef.h>                     /* for size_t */
 #include <stdio.h>                      /* for fdopen() */
 #include <stdlib.h>                     /* for exit() */
@@ -44,6 +46,7 @@
 
 // in ascending option character ASCII order; sort using: sort -bdfk3
 #define OPT_HELP                h
+#define OPT_INCLUDE             I
 #define OPT_VERSION             v
 
 /// Command-line option character as a character literal.
@@ -72,6 +75,7 @@ static struct option const OPTIONS[] = {
 };
 
 // local variable definitions
+static char       **include_path_list;  ///< List of `-I` paths.
 static bool         opts_given[ 128 ];  ///< Table of options that were given.
 
 // local functions
@@ -113,15 +117,39 @@ static void check_options( void ) {
 }
 
 /**
- * Move include-tidy specific command-line options to a separate array.
+ * Adds \a include_path to the global list of include (`-I`) paths.
+ *
+ * @param include_path The include path to add.
+ */
+static void include_add_path( char const *include_path ) {
+  assert( include_path != NULL );
+
+  char real_path[ PATH_MAX ];
+  if ( realpath( include_path, real_path ) != NULL )
+    include_path = real_path;
+
+  char **ppath;
+  for ( ppath = include_path_list; *ppath != NULL; ++ppath ) {
+    if ( strcmp( include_path, *ppath ) == 0 )
+      return;
+  } // for
+
+  *ppath   = check_strdup( include_path );
+  *++ppath = NULL;
+}
+
+/**
+ * Moves include-tidy specific command-line options to a separate array.
  *
  * @remarks
  * @parblock
  * Command-line options of the form have:
  *
- *  + `-Xtidy` _option_ have `-Xtidy` removed and _option_ moved to \a
+ *  + <tt>-Xtidy</tt> _option_ have <tt>-Xtidy</tt> removed and _option_ moved
+ *    to \a *ptidy_argv.
+ *  + <tt>-I</tt><i>path</i> or <tt>-I</tt> <i>path</i> copied to \a
  *    *ptidy_argv.
- *  + `--help` or `--version` are moved to \a *ptidy_argv.
+ *  + <tt>--help</tt> or <tt>--version</tt> are moved to \a *ptidy_argv.
  *
  * All other options and arguments are left as-is in \a orig_argv.  Examples:
  *
@@ -136,18 +164,20 @@ static void check_options( void ) {
  *          tidy_argv[1] = "--help"
  *          tidy_argv[2] = NULL
  *
- *      include-tidy -Xtidy --foo -I/opt/local/include bar.c
+ *      include-tidy -Xtidy --foo -DNDEBUG -I/opt/local/include bar.c
  *
- *          orig_argc = 3
+ *          orig_argc = 4
  *          orig_argv[0] = "include-tidy"
- *          orig_argv[1] = "-I/opt/local/include
- *          orig_argv[2] = bar.c
- *          orig_argv[3] = NULL
+ *          orig_argv[1] = "-DNDEBUG"
+ *          orig_argv[2] = "-I/opt/local/include"
+ *          orig_argv[3] = "bar.c"
+ *          orig_argv[4] = NULL
  *
- *          tidy_argc = 2
+ *          tidy_argc = 3
  *          tidy_argv[0] = "include-tidy"
  *          tidy_argv[1] = "--foo"
- *          tidy_argv[2] = NULL
+ *          orig_argv[2] = "-I/opt/local/include"
+ *          tidy_argv[3] = NULL
  * @endparblock
  *
  * @param porig_argc A pointer to `argc`.
@@ -176,6 +206,16 @@ static void move_tidy_args( int *porig_argc, char const *orig_argv[],
       if ( ++i >= orig_argc )
         fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
       tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
+    }
+    else if ( STRNCMPLIT( orig_argv[i], "-I" ) == 0 ) {
+      orig_argv[ new_argc++ ] = orig_argv[ i ];
+      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
+      if ( orig_argv[i][2] == '\0' ) {  // -I dir, not -Idir
+        if ( ++i >= orig_argc )
+          fatal_error( EX_USAGE, "-I requires argument\n" );
+        orig_argv[ new_argc++ ] = orig_argv[ i ];
+        tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
+      }
     }
     else if ( strcmp( orig_argv[i], "--help" ) == 0 ||
               strcmp( orig_argv[i], "--version" ) == 0 ) {
@@ -229,6 +269,15 @@ static char const* opt_get_long( char short_opt ) {
 }
 
 /**
+ * Cleans-up options.
+ */
+static void options_cleanup( void ) {
+  for ( char **ppath = include_path_list; *ppath != NULL; ++ppath )
+    free( *ppath );
+  free( include_path_list );
+}
+
+/**
  * Prints the usage message to standard error and exits.
  *
  * @param status The status to exit with.  If it is `EX_OK`, prints to standard
@@ -239,7 +288,7 @@ static void print_usage( int status ) {
   FILE *const fout = status == EX_OK ? stdout : stderr;
 
   FPRINTF( fout,
-    "usage: %s [-Xtidy option]... [clang-options] source-file\n"
+    "usage: %s [-Xtidy tidy-option]... [clang-option]... source-file\n"
     "       %s --help\n"
     "       %s --version\n"
     "\n"
@@ -266,6 +315,32 @@ static void print_version( void ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
+char const* include_resolve( char const *included_path ) {
+  assert( included_path != NULL );
+
+  size_t      longest_include_path_len = 0;
+  char const *shortest_include_path = included_path;
+
+  for ( char **ppath = include_path_list; *ppath != NULL; ++ppath ) {
+    char const *const include_path_i      = *ppath;
+    size_t const      include_path_i_len  = strlen( include_path_i );
+
+    if ( include_path_i_len > longest_include_path_len &&
+        strncmp( included_path, include_path_i, include_path_i_len ) == 0 ) {
+      longest_include_path_len = include_path_i_len;
+      shortest_include_path = included_path + include_path_i_len;
+
+      if ( shortest_include_path[0] == '/' )
+        ++shortest_include_path;
+    }
+  } // for
+
+  if ( STRNCMPLIT( shortest_include_path, "./" ) == 0 )
+    shortest_include_path += STRLITLEN( "./" );
+
+  return shortest_include_path;
+}
+
 void options_init( int *pargc, char const *argv[] ) {
   ASSERT_RUN_ONCE();
 
@@ -277,12 +352,18 @@ void options_init( int *pargc, char const *argv[] ) {
 
   move_tidy_args( pargc, argv, &tidy_argc, &tidy_argv );
 
+  include_path_list = MALLOC( char*, STATIC_CAST( size_t, *pargc ) );
+  include_path_list[0] = NULL;
+  include_add_path( "." );
+  ATEXIT( &options_cleanup );
+
   opterr = 1;
 
   for (;;) {
     opt = getopt_long(
       tidy_argc, CONST_CAST( char**, tidy_argv ),
-      ":",                              // return missing argument as ':'
+      ":"                               // return missing argument as ':'
+      "I:",
       OPTIONS, /*longindex=*/NULL
     );
     if ( opt == -1 )
@@ -290,6 +371,11 @@ void options_init( int *pargc, char const *argv[] ) {
     switch ( opt ) {
       case COPT(HELP):
         opt_help = true;
+        break;
+      case COPT(INCLUDE):
+        if ( *SKIP_WS( optarg ) == '\0' )
+          goto missing_arg;
+        include_add_path( optarg );
         break;
       case COPT(VERSION):
         opt_version = true;
