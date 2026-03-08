@@ -49,9 +49,13 @@
 #define OPT_HELP                  h
 #define OPT_INCLUDE               I
 #define OPT_VERSION               v
+#define OPT_LANGUAGE              x
 
 /// Command-line option character as a character literal.
 #define COPT(X)                   CHARIFY(OPT_##X)
+
+/// Command-line option as a string literal.
+#define SOPT(X)                   STRINGIFY(OPT_##X)
 
 /// @endcond
 
@@ -78,6 +82,7 @@ static struct option const OPTIONS[] = {
 
 // option variables
 static char const  *opt_clang_path = "clang";
+static char const  *opt_language;
 
 // local variable definitions
 static char       **include_path_list;  ///< List of `-I` paths.
@@ -274,6 +279,8 @@ add_path:
  *    to \a *ptidy_argv.
  *  + <tt>-I</tt><i>path</i> or <tt>-I</tt> <i>path</i> copied to \a
  *    *ptidy_argv.
+ *  + <tt>-x</tt><i>language</i> or <tt>-x</tt> <i>language</i> copied to \a
+ *    *ptidy_argv.
  *  + <tt>--help</tt> or <tt>--version</tt> are moved to \a *ptidy_argv.
  *
  * All other options and arguments are left as-is in \a orig_argv.  Examples:
@@ -332,13 +339,14 @@ static void move_tidy_args( int *porig_argc, char const *orig_argv[],
         fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
       tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
     }
-    else if ( STRNCMPLIT( orig_argv[i], "-I" ) == 0 ) {
-      orig_argv[ new_argc++ ] = orig_argv[ i ];
+    else if ( STRNCMPLIT( orig_argv[i], "-" SOPT(INCLUDE)  ) == 0 ||
+              STRNCMPLIT( orig_argv[i], "-" SOPT(LANGUAGE) ) == 0 ) {
+      orig_argv[ new_argc++  ] = orig_argv[ i ];
       tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
       if ( orig_argv[i][2] == '\0' ) {  // -I dir, not -Idir
         if ( ++i >= orig_argc )
-          fatal_error( EX_USAGE, "-I requires argument\n" );
-        orig_argv[ new_argc++ ] = orig_argv[ i ];
+          fatal_error( EX_USAGE, "-%c requires argument\n", orig_argv[i][1] );
+        orig_argv[ new_argc++  ] = orig_argv[ i ];
         tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
       }
     }
@@ -402,6 +410,24 @@ static void options_cleanup( void ) {
       free( *ppath );
     free( include_path_list );
   }
+}
+
+/**
+ * Parses the language to use.
+ *
+ * @param language Either `"c"` or `"c++"`.
+ * @return Returns \a language.
+ */
+static char const* parse_language( char const *language ) {
+  assert( language != NULL );
+
+  if ( strcmp( language, "c" ) == 0 || strcmp( language, "c++" ) == 0 )
+    return language;
+
+  fatal_error( EX_USAGE,
+    "\"%s\": invalid value for -" SOPT(LANGUAGE) "; must be either c or c++\n",
+    language
+  );
 }
 
 /**
@@ -489,7 +515,8 @@ void options_init( int *pargc, char const **pargv[] ) {
     opt = getopt_long(
       tidy_argc, CONST_CAST( char**, tidy_argv ),
       ":"                               // return missing argument as ':'
-      "I:",
+      SOPT(INCLUDE)   ":"
+      SOPT(LANGUAGE)  ":",
       OPTIONS, /*longindex=*/NULL
     );
     if ( opt == -1 )
@@ -507,6 +534,11 @@ void options_init( int *pargc, char const **pargv[] ) {
         if ( *SKIP_WS( optarg ) == '\0' )
           goto missing_arg;
         include_add_path( optarg );
+        break;
+      case COPT(LANGUAGE):
+        if ( *SKIP_WS( optarg ) == '\0' )
+          goto missing_arg;
+        opt_language = parse_language( optarg );
         break;
       case COPT(VERSION):
         opt_version = true;
