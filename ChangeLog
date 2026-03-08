@@ -1,3 +1,61 @@
+2026-03-08  Paul J. Lucas <paul@lucasmail.org>
+
+   * options.c, util.c, util.h: Now using fput_list().
+   * options.c: Added parse_file_ext().
+   * util.c, util.h: Added empty_if_null().
+   * options.c: Put make_short_opts() back.
+   * options.c: Added --verbose option.
+
+2026-03-07  Paul J. Lucas <paul@lucasmail.org>
+
+   * options.c: Added NODISCARD.
+   * options.c: Partial support for -x.
+   * options.c: Added --clang/-c.
+   * include-tidy.c, options.c, options.h, util.c, util.h: Added
+     add_clang_include_paths().
+   * src/Makefile.am, includes.c, symbols.c, tidy_util.c, tidy_util.h: Now
+     emitting correct #include delimiters.
+
+2026-03-06  Paul J. Lucas <paul@lucasmail.org>
+
+   * src/Makefile.am, clang_util.c, clang_util.h, includes.c, includes.h,
+     options.c, options.h, symbols.c: Now using real pathnames.
+   * includes.h: Added missing #include <stdbool.h>.
+
+2026-03-05  Paul J. Lucas <paul@lucasmail.org>
+
+   * include-tidy.c, includes.c, includes.h, symbols.c: Added
+     includes_print_unneeded().
+   * util.h: Added STRNCMPLIT().
+   * tu.c: Added assert().
+   * options.c: Finally fixed options.
+   * options.c: Fixed option processing.
+   * src/Makefile.am, include-tidy.c, tu.c: Added tu.c.
+
+2026-03-04  Paul J. Lucas <paul@lucasmail.org>
+
+   * include-tidy.c: Now passing remaining options to libclang.
+   * include-tidy.c, options.c, options.h: Now splitting tidy options out.
+   * options.c: Options clean-up.
+   * symbols.c: Works!
+   * includes.c, includes.h, symbols.c: Include/symbol integration.
+
 2026-03-03  Paul J. Lucas <paul@lucasmail.org>
 
+   * src/Makefile.am, include-tidy.c, symbols.c, symbols.h: Split out
+     symbols.h.
+   * options.c, options.h: Removed ununsed stuff.
+   * configure.ac, man/man1/include-tidy.1, pjl_config.h: Removed last remnants
+     of wrap.
+   * src/Makefile.am, include-tidy.c, includes.c, red_black.c, red_black.h,
+     symbols.c: Split out includes.c, symbols.c.
+   * include-tidy.c, options.c, options.h: Now printing only symbols declared
+     elsewhere.
+   * src/Makefile.am, include-tidy.c, include-tidy.h, options.c, options.h,
+     type_traits.h, util.h: Added options.[ch].
+   * lib/Makefile.am, attribute.h, gnulib-cache.m4, src/Makefile.am,
+     include-tidy.c, include-tidy.h, pjl_config.h, type_traits.h, util.c,
+     util.h: More files.
+   * man/man1/include-tidy.1: Embrionic manual page.
+   * configure.ac: Now checking host.
    * src/Makefile.am: Added missing file.
