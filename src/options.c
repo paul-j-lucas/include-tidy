@@ -45,6 +45,7 @@
 #include <string.h>
 
 // in ascending option character ASCII order; sort using: sort -bdfk3
+#define OPT_CLANG                 c
 #define OPT_HELP                  h
 #define OPT_INCLUDE               I
 #define OPT_VERSION               v
@@ -69,10 +70,14 @@
  * Command-line options.
  */
 static struct option const OPTIONS[] = {
-  { "help",     no_argument,  NULL, COPT(HELP)    },
-  { "version",  no_argument,  NULL, COPT(VERSION) },
-  { NULL,       0,            NULL, 0             }
+  { "clang",    required_argument,  NULL, COPT(CLANG)   },
+  { "help",     no_argument,        NULL, COPT(HELP)    },
+  { "version",  no_argument,        NULL, COPT(VERSION) },
+  { NULL,       0,                  NULL, 0             }
 };
+
+// option variables
+static char const  *opt_clang_path = "clang";
 
 // local variable definitions
 static char       **include_path_list;  ///< List of `-I` paths.
@@ -108,7 +113,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[] ) {
     " 2>&1";                            // redirect stderr to stdout
 
   char clang_buf[ PATH_MAX + 32 ];
-  snprintf( clang_buf, sizeof clang_buf, CLANG_TEMPLATE, "clang", "c" );
+  snprintf( clang_buf, sizeof clang_buf, CLANG_TEMPLATE, opt_clang_path, "c" );
 
   FILE *const clang = popen( clang_buf, "r" );
   if ( clang == NULL )
@@ -490,6 +495,11 @@ void options_init( int *pargc, char const **pargv[] ) {
     if ( opt == -1 )
       break;
     switch ( opt ) {
+      case COPT(CLANG):
+        if ( *SKIP_WS( optarg ) == '\0' )
+          goto missing_arg;
+        opt_clang_path = optarg;
+        break;
       case COPT(HELP):
         opt_help = true;
         break;
