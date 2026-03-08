@@ -418,6 +418,7 @@ static void options_cleanup( void ) {
  * @param language Either `"c"` or `"c++"`.
  * @return Returns \a language.
  */
+NODISCARD
 static char const* parse_language( char const *language ) {
   assert( language != NULL );
 
