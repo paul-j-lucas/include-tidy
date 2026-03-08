@@ -41,6 +41,7 @@
 #include <stdio.h>                      /* for fdopen() */
 #include <stdlib.h>                     /* for exit() */
 #include <string.h>                     /* for str...() */
+#include <strings.h>                    /* for strcasecmp() */
 #include <sysexits.h>
 #include <string.h>
 
@@ -108,8 +109,10 @@ static char const*  opt_format( char, char[const], size_t ),
  *
  * @param pargc A pointer to the argument count from \c main().
  * @param pargv A pointer to the argument values from \c main().
+ * @param lang The language to use, either `"c"` or `"c++"`.
  */
-static void add_clang_include_paths( int *pargc, char const **pargv[] ) {
+static void add_clang_include_paths( int *pargc, char const **pargv[],
+                                     char const *lang ) {
   ASSERT_RUN_ONCE();
 
   static char const CLANG_TEMPLATE[] =
@@ -122,7 +125,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[] ) {
     " 2>&1";                            // redirect stderr to stdout
 
   char clang_buf[ PATH_MAX + 32 ];
-  snprintf( clang_buf, sizeof clang_buf, CLANG_TEMPLATE, opt_clang_path, "c" );
+  snprintf( clang_buf, sizeof clang_buf, CLANG_TEMPLATE, opt_clang_path, lang );
 
   FILE *const clang = popen( clang_buf, "r" );
   if ( clang == NULL )
@@ -278,13 +281,18 @@ add_path:
  *
  * @param opts An array of options to make the short option string from.  Its
  * last element must be all zeros.
+ * @param extra_short_opts TODO.
  * @return Returns the `optstring` for the third argument of `getopt_long()`.
  * The caller is responsible for freeing it.
  */
 NODISCARD
-static char const* make_short_opts( struct option const opts[static const 2] ) {
+static char const* make_short_opts( struct option const opts[static const 2],
+                                    char const *extra_short_opts ) {
+  extra_short_opts = empty_if_null( extra_short_opts );
+  size_t const extra_short_len = strlen( extra_short_opts );
+
   // pre-flight to calculate string length
-  unsigned len = 1;                     // for leading ':'
+  size_t len = extra_short_len + 1 /* for leading ':' */;
   for ( struct option const *opt = opts; opt->name != NULL; ++opt ) {
     assert( opt->has_arg >= 0 && opt->has_arg <= 2 );
     len += 1 + STATIC_CAST( unsigned, opt->has_arg );
@@ -305,6 +313,9 @@ static char const* make_short_opts( struct option const opts[static const 2] ) {
         *s++ = ':';
     } // switch
   } // for
+
+  strcpy( s, extra_short_opts );
+  s += extra_short_len;
   *s = '\0';
 
   return short_opts;
@@ -455,17 +466,52 @@ static void options_cleanup( void ) {
 }
 
 /**
+ * Parses the file extension of \a path.
+ *
+ * @param path The pathname.
+ * @return Returns either `"c"` (for C) or `"c++"` (for C++).
+ */
+NODISCARD
+static char const* parse_file_ext( char const *path ) {
+  assert( path != NULL );
+
+  char const *const dot = strchr( path, '.' );
+  if ( dot == NULL || dot[1] == '\0' )
+    return NULL;
+  char const *const ext = dot + 1;
+  if ( strcasecmp( ext, "c" ) == 0 )
+    return "c";
+  if ( strcasecmp( ext, "cc"  ) == 0 ||
+       strcasecmp( ext, "cpp" ) == 0 ||
+       strcasecmp( ext, "c++" ) == 0 ||
+       strcasecmp( ext, "cxx" ) == 0 ||
+       strcasecmp( ext, "cp"  ) == 0 ) {
+    return "c++";
+  }
+
+  fatal_error( EX_USAGE,
+    "\"%s\": unknown file extension;"
+    " must be one of .c, .cc, .cpp, .c++, .cxx, or .cp;"
+    " or use -xc[++]\n",
+    dot
+  );
+}
+
+/**
  * Parses the language to use.
  *
- * @param language Either `"c"` or `"c++"`.
+ * @param language Either `"c"` or `"c++"` (case sensitive, just like
+ * **clang**).
  * @return Returns \a language.
  */
 NODISCARD
 static char const* parse_language( char const *language ) {
   assert( language != NULL );
 
-  if ( strcmp( language, "c" ) == 0 || strcmp( language, "c++" ) == 0 )
-    return language;
+  if ( strcmp( language, "c" ) == 0 )
+    return "c";
+  if ( strcmp( language, "c++" ) == 0 )
+    return "c++";
 
   fatal_error( EX_USAGE,
     "\"%s\": invalid value for -" SOPT(LANGUAGE) "; must be either c or c++\n",
@@ -540,14 +586,20 @@ char const* include_resolve( char const *included_path ) {
 void options_init( int *pargc, char const **pargv[] ) {
   ASSERT_RUN_ONCE();
 
+  if ( *pargc < 2 || (*pargv)[ --*pargc ][0] == '-' )
+    print_usage( EX_USAGE );
+  tidy_source_path = (*pargv)[ *pargc ];
+  (*pargv)[ *pargc ] = NULL;
+  char const *const lang = parse_file_ext( tidy_source_path );
+
   int               opt;
   bool              opt_help = false;
   bool              opt_version = false;
-  char const *const short_opts = make_short_opts( OPTIONS );
+  char const *const short_opts = make_short_opts( OPTIONS, SOPT(LANGUAGE) ":" );
   int               tidy_argc;
   char const      **tidy_argv;
 
-  add_clang_include_paths( pargc, pargv );
+  add_clang_include_paths( pargc, pargv, lang );
   move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
 
   include_add_path( "." );
@@ -632,12 +684,6 @@ void options_init( int *pargc, char const **pargv[] ) {
     print_version();
     exit( EX_OK );
   }
-
-  if ( *pargc < 2 )
-    print_usage( EX_USAGE );
-
-  tidy_source_path = (*pargv)[ --*pargc ];
-  (*pargv)[ *pargc ] = NULL;
 
   return;
 
