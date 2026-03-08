@@ -77,6 +77,7 @@
 static struct option const OPTIONS[] = {
   { "clang",    required_argument,  NULL, COPT(CLANG)   },
   { "help",     no_argument,        NULL, COPT(HELP)    },
+  { "include",  required_argument,  NULL, COPT(INCLUDE) },
   { "verbose",  no_argument,        NULL, COPT(VERBOSE) },
   { "version",  no_argument,        NULL, COPT(VERSION) },
   { NULL,       0,                  NULL, 0             }
@@ -269,6 +270,44 @@ static void include_add_path( char const *include_path ) {
 add_path:
   include_path_list[  i] = check_strdup( include_path );
   include_path_list[++i] = NULL;
+}
+
+/**
+ * Makes the `optstring` (short option) equivalent of \a opts for the third
+ * argument of `getopt_long()`.
+ *
+ * @param opts An array of options to make the short option string from.  Its
+ * last element must be all zeros.
+ * @return Returns the `optstring` for the third argument of `getopt_long()`.
+ * The caller is responsible for freeing it.
+ */
+NODISCARD
+static char const* make_short_opts( struct option const opts[static const 2] ) {
+  // pre-flight to calculate string length
+  unsigned len = 1;                     // for leading ':'
+  for ( struct option const *opt = opts; opt->name != NULL; ++opt ) {
+    assert( opt->has_arg >= 0 && opt->has_arg <= 2 );
+    len += 1 + STATIC_CAST( unsigned, opt->has_arg );
+  } // for
+
+  char *const short_opts = MALLOC( char, len + 1/*\0*/ );
+  char *s = short_opts;
+
+  *s++ = ':';                           // return missing argument as ':'
+  for ( struct option const *opt = opts; opt->name != NULL; ++opt ) {
+    assert( opt->val > 0 && opt->val < 128 );
+    *s++ = STATIC_CAST( char, opt->val );
+    switch ( opt->has_arg ) {
+      case optional_argument:
+        *s++ = ':';
+        FALLTHROUGH;
+      case required_argument:
+        *s++ = ':';
+    } // switch
+  } // for
+  *s = '\0';
+
+  return short_opts;
 }
 
 /**
@@ -501,11 +540,12 @@ char const* include_resolve( char const *included_path ) {
 void options_init( int *pargc, char const **pargv[] ) {
   ASSERT_RUN_ONCE();
 
-  int           opt;
-  bool          opt_help = false;
-  bool          opt_version = false;
-  int           tidy_argc;
-  char const  **tidy_argv;
+  int               opt;
+  bool              opt_help = false;
+  bool              opt_version = false;
+  char const *const short_opts = make_short_opts( OPTIONS );
+  int               tidy_argc;
+  char const      **tidy_argv;
 
   add_clang_include_paths( pargc, pargv );
   move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
@@ -517,12 +557,8 @@ void options_init( int *pargc, char const **pargv[] ) {
 
   for (;;) {
     opt = getopt_long(
-      tidy_argc, CONST_CAST( char**, tidy_argv ),
-      ":"                               // return missing argument as ':'
-      SOPT(INCLUDE)   ":"
-      SOPT(LANGUAGE)  ":"
-      SOPT(VERBOSE)
-      , OPTIONS, /*longindex=*/NULL
+      tidy_argc, CONST_CAST( char**, tidy_argv ), short_opts, OPTIONS,
+      /*longindex=*/NULL
     );
     if ( opt == -1 )
       break;
@@ -568,6 +604,7 @@ void options_init( int *pargc, char const **pargv[] ) {
     } // switch
     opts_given[ opt ] = true;
   } // for
+  FREE( short_opts );
 
   if ( opt_verbose > 0 ) {
     int i;
