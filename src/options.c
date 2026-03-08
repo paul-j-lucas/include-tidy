@@ -48,6 +48,7 @@
 #define OPT_CLANG                 c
 #define OPT_HELP                  h
 #define OPT_INCLUDE               I
+#define OPT_VERBOSE               V
 #define OPT_VERSION               v
 #define OPT_LANGUAGE              x
 
@@ -76,6 +77,7 @@
 static struct option const OPTIONS[] = {
   { "clang",    required_argument,  NULL, COPT(CLANG)   },
   { "help",     no_argument,        NULL, COPT(HELP)    },
+  { "verbose",  no_argument,        NULL, COPT(VERBOSE) },
   { "version",  no_argument,        NULL, COPT(VERSION) },
   { NULL,       0,                  NULL, 0             }
 };
@@ -83,6 +85,7 @@ static struct option const OPTIONS[] = {
 // option variables
 static char const  *opt_clang_path = "clang";
 static char const  *opt_language;
+static unsigned     opt_verbose;
 
 // local variable definitions
 static char       **include_path_list;  ///< List of `-I` paths.
@@ -517,8 +520,9 @@ void options_init( int *pargc, char const **pargv[] ) {
       tidy_argc, CONST_CAST( char**, tidy_argv ),
       ":"                               // return missing argument as ':'
       SOPT(INCLUDE)   ":"
-      SOPT(LANGUAGE)  ":",
-      OPTIONS, /*longindex=*/NULL
+      SOPT(LANGUAGE)  ":"
+      SOPT(VERBOSE)
+      , OPTIONS, /*longindex=*/NULL
     );
     if ( opt == -1 )
       break;
@@ -541,6 +545,9 @@ void options_init( int *pargc, char const **pargv[] ) {
           goto missing_arg;
         opt_language = parse_language( optarg );
         break;
+      case COPT(VERBOSE):
+        ++opt_verbose;
+        break;
       case COPT(VERSION):
         opt_version = true;
         break;
@@ -562,18 +569,19 @@ void options_init( int *pargc, char const **pargv[] ) {
     opts_given[ opt ] = true;
   } // for
 
+  if ( opt_verbose > 0 ) {
+    int i;
+    PUTS( "/*\n" );
+    PUTS( "  clang argv\n" );
+    for ( i = 0; i < *pargc; ++i )
+      PRINTF( "    %2d %s\n", i, (*pargv)[i] );
+    PUTS( "\n  tidy argv\n" );
+    for ( i = 0; i < tidy_argc; ++i )
+      PRINTF( "    %2d %s\n", i, tidy_argv[i] );
+    PUTS( "*/\n" );
+  }
+
   tidy_argc -= optind - 1;
-
-#if 0
-  printf( "argc = %d\n", *pargc );
-  for ( int i = 0; i < *pargc; ++i )
-    printf( "%d %s\n", i, (*pargv)[i] );
-  printf( "tidy_argc = %d\n", tidy_argc  );
-  for ( int i = 0; i < tidy_argc; ++i )
-    printf( "%d %s\n", i, tidy_argv[i] );
-  puts( "-------------------------" );
-#endif
-
   free( tidy_argv );
   check_options();
 
