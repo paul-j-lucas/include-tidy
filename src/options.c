@@ -51,7 +51,6 @@
 #define OPT_INCLUDE               I
 #define OPT_VERBOSE               V
 #define OPT_VERSION               v
-#define OPT_LANGUAGE              x
 
 /// Command-line option character as a character literal.
 #define COPT(X)                   CHARIFY(OPT_##X)
@@ -86,7 +85,6 @@ static struct option const OPTIONS[] = {
 
 // option variables
 static char const  *opt_clang_path = "clang";
-static char const  *opt_language;
 static unsigned     opt_verbose;
 
 // local variable definitions
@@ -241,6 +239,41 @@ static void check_options( void ) {
 }
 
 /**
+ * Gets the value of clang's `-x` option, if given.
+ *
+ * @param argc The command-line argument count.
+ * @param argv The command-line argument values.
+ * @return Returns the value of clang's `-x` option or NULL if not given.
+ */
+static char const* get_x_opt_val( int argc, char const *const argv[] ) {
+  for ( int i = 1; i < argc; ++i ) {
+    if ( STRNCMPLIT( argv[i], "-x" ) != 0 )
+      continue;
+    char const *lang;
+    if ( argv[i][2] == '\0' ) {         // -x lang, not -xlang
+      if ( ++i >= argc )
+        fatal_error( EX_USAGE, "-%c requires argument\n", argv[i][1] );
+      lang = argv[i];
+    }
+    else {
+      lang = argv[i] + STRLITLEN( "-x" );
+    }
+
+    if ( strcmp( lang, "c" ) == 0 )
+      return "c";
+    if ( strcmp( lang, "c++" ) == 0 )
+      return "c++";
+
+    fatal_error( EX_USAGE,
+      "\"%s\": invalid value for -x; must be either \"c\" or \"c++\"\n",
+      lang
+    );
+  } // for
+
+  return NULL;
+}
+
+/**
  * Adds \a include_path to the global list of include (`-I`) paths.
  *
  * @param include_path The include path to add.
@@ -281,18 +314,13 @@ add_path:
  *
  * @param opts An array of options to make the short option string from.  Its
  * last element must be all zeros.
- * @param extra_short_opts TODO.
  * @return Returns the `optstring` for the third argument of `getopt_long()`.
  * The caller is responsible for freeing it.
  */
 NODISCARD
-static char const* make_short_opts( struct option const opts[static const 2],
-                                    char const *extra_short_opts ) {
-  extra_short_opts = empty_if_null( extra_short_opts );
-  size_t const extra_short_len = strlen( extra_short_opts );
-
+static char const* make_short_opts( struct option const opts[static const 2] ) {
   // pre-flight to calculate string length
-  size_t len = extra_short_len + 1 /* for leading ':' */;
+  size_t len = 1 /* for leading ':' */;
   for ( struct option const *opt = opts; opt->name != NULL; ++opt ) {
     assert( opt->has_arg >= 0 && opt->has_arg <= 2 );
     len += 1 + STATIC_CAST( unsigned, opt->has_arg );
@@ -313,9 +341,6 @@ static char const* make_short_opts( struct option const opts[static const 2],
         *s++ = ':';
     } // switch
   } // for
-
-  strcpy( s, extra_short_opts );
-  s += extra_short_len;
   *s = '\0';
 
   return short_opts;
@@ -331,8 +356,6 @@ static char const* make_short_opts( struct option const opts[static const 2],
  *  + <tt>-Xtidy</tt> _option_ have <tt>-Xtidy</tt> removed and _option_ moved
  *    to \a *ptidy_argv.
  *  + <tt>-I</tt><i>path</i> or <tt>-I</tt> <i>path</i> copied to \a
- *    *ptidy_argv.
- *  + <tt>-x</tt><i>language</i> or <tt>-x</tt> <i>language</i> copied to \a
  *    *ptidy_argv.
  *  + <tt>--help</tt> or <tt>--version</tt> are moved to \a *ptidy_argv.
  *
@@ -392,8 +415,7 @@ static void move_tidy_args( int *porig_argc, char const *orig_argv[],
         fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
       tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
     }
-    else if ( STRNCMPLIT( orig_argv[i], "-" SOPT(INCLUDE)  ) == 0 ||
-              STRNCMPLIT( orig_argv[i], "-" SOPT(LANGUAGE) ) == 0 ) {
+    else if ( STRNCMPLIT( orig_argv[i], "-" SOPT(INCLUDE) ) == 0 ) {
       orig_argv[ new_argc++  ] = orig_argv[ i ];
       tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
       if ( orig_argv[i][2] == '\0' ) {  // -I dir, not -Idir
@@ -506,28 +528,6 @@ static char const* parse_file_ext( char const *path ) {
 }
 
 /**
- * Parses the language to use.
- *
- * @param language Either `"c"` or `"c++"` (case sensitive, just like
- * **clang**).
- * @return Returns \a language.
- */
-NODISCARD
-static char const* parse_language( char const *language ) {
-  assert( language != NULL );
-
-  if ( strcmp( language, "c" ) == 0 )
-    return "c";
-  if ( strcmp( language, "c++" ) == 0 )
-    return "c++";
-
-  fatal_error( EX_USAGE,
-    "\"%s\": invalid value for -" SOPT(LANGUAGE) "; must be either c or c++\n",
-    language
-  );
-}
-
-/**
  * Prints the usage message to standard error and exits.
  *
  * @param status The status to exit with.  If it is `EX_OK`, prints to standard
@@ -593,25 +593,27 @@ char const* include_resolve( char const *included_path ) {
 
 void options_init( int *pargc, char const **pargv[] ) {
   ASSERT_RUN_ONCE();
+  ATEXIT( &options_cleanup );
 
   if ( *pargc < 2 || (*pargv)[ --*pargc ][0] == '-' )
     print_usage( EX_USAGE );
   tidy_source_path = (*pargv)[ *pargc ];
   (*pargv)[ *pargc ] = NULL;
-  char const *const lang = parse_file_ext( tidy_source_path );
+
+  char const *lang = get_x_opt_val( *pargc, *pargv );
+  if ( lang == NULL )
+    lang = parse_file_ext( tidy_source_path );
+  add_clang_include_paths( pargc, pargv, lang );
+  include_add_path( "." );
+
+  int           tidy_argc;
+  char const  **tidy_argv;
+  move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
 
   int               opt;
   bool              opt_help = false;
   bool              opt_version = false;
-  char const *const short_opts = make_short_opts( OPTIONS, SOPT(LANGUAGE) ":" );
-  int               tidy_argc;
-  char const      **tidy_argv;
-
-  add_clang_include_paths( pargc, pargv, lang );
-  move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
-
-  include_add_path( "." );
-  ATEXIT( &options_cleanup );
+  char const *const short_opts = make_short_opts( OPTIONS );
 
   opterr = 1;
 
@@ -635,11 +637,6 @@ void options_init( int *pargc, char const **pargv[] ) {
         if ( *SKIP_WS( optarg ) == '\0' )
           goto missing_arg;
         include_add_path( optarg );
-        break;
-      case COPT(LANGUAGE):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
-        opt_language = parse_language( optarg );
         break;
       case COPT(VERBOSE):
         ++opt_verbose;
