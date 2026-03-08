@@ -54,7 +54,7 @@ CXTranslationUnit tu_new( int, char const *const[] );
  */
 int main( int argc, char const *argv[] ) {
   prog_name = base_name( argv[0] );
-  options_init( &argc, argv );
+  options_init( &argc, &argv );
 
   CXTranslationUnit tu = tu_new( argc, argv );
   includes_init( tu );

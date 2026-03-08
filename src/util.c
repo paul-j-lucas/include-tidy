@@ -32,6 +32,7 @@
 
 // standard
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -141,6 +142,14 @@ bool is_any( char const *s, char const *const matches[const static 2] ) {
 void perror_exit( int status ) {
   perror( prog_name );
   exit( status );
+}
+
+char* str_trim( char *s ) {
+  assert( s != NULL );
+  SKIP_WS( s );
+  for ( size_t len = strlen( s ); len > 0 && isspace( s[ --len ] ); )
+    s[ len ] = '\0';
+  return s;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

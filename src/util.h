@@ -715,6 +715,15 @@ inline char* strncpy_0( char *dst, char const *src, size_t n ) {
 }
 
 /**
+ * Trims both leading and trailing whitespace from a string.
+ *
+ * @param s The string to trim whitespace from.
+ * @return Returns a pointer to within \a s having all whitespace trimmed.
+ */
+NODISCARD
+char* str_trim( char *s );
+
+/**
  * Checks \a flag: if `false`, sets it to `true`.
  *
  * @param flag A pointer to the Boolean flag to be tested and, if `false`, sets

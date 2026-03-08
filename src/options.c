@@ -76,14 +76,121 @@ static struct option const OPTIONS[] = {
 
 // local variable definitions
 static char       **include_path_list;  ///< List of `-I` paths.
+static size_t       include_path_cap;
 static bool         opts_given[ 128 ];  ///< Table of options that were given.
 
 // local functions
+static void         include_add_path( char const* );
+
 NODISCARD
 static char const*  opt_format( char, char[const], size_t ),
                  *  opt_get_long( char );
 
 /////////// local functions ///////////////////////////////////////////////////
+
+/**
+ * Call **clang**(1) and parse its verbose output to get the list of include
+ * search paths.
+ *
+ * @param pargc A pointer to the argument count from \c main().
+ * @param pargv A pointer to the argument values from \c main().
+ */
+static void add_clang_include_paths( int *pargc, char const **pargv[] ) {
+  ASSERT_RUN_ONCE();
+
+  static char const CLANG_TEMPLATE[] =
+    "%s"                                // clang path
+    " -E"                               // run only the preprocessor stage
+    " -x%s"                             // specify langauge: c or c++
+    " -v"                               // show verbose output
+    " -"                                // read from stdin
+    " </dev/null"                       // read from /dev/null
+    " 2>&1";                            // redirect stderr to stdout
+
+  char clang_buf[ PATH_MAX + 32 ];
+  snprintf( clang_buf, sizeof clang_buf, CLANG_TEMPLATE, "clang", "c" );
+
+  FILE *const clang = popen( clang_buf, "r" );
+  if ( clang == NULL )
+    goto error;
+
+  bool    found_include_search = false;
+  char   *line_buf = NULL;
+  size_t  line_cap = 0;
+
+  while ( getline( &line_buf, &line_cap, clang ) != -1 ) {
+    if ( STRNCMPLIT( line_buf, "#include <...> search starts here:" ) == 0 ) {
+      found_include_search = true;
+      break;
+    }
+  } // while
+
+  if ( found_include_search ) {
+    int argi = *pargc;                  // index where to insert new -I option
+    for ( int i = *pargc - 1; i > 0; --i ) {
+      if ( (*pargv)[i][0] != '-' ) {
+        argi = i;
+        break;
+      }
+    } // for
+
+    while ( getline( &line_buf, &line_cap, clang ) != -1 ) {
+      if ( STRNCMPLIT( line_buf, "End of search list." ) == 0 )
+        break;
+
+#ifdef __APPLE__
+      // On macOS, clang's include search paths include frameworks directories
+      // denoted by having paths followed by " (framework directory)".  These
+      // don't contain .h file directly, so there's no point in including them.
+      if ( strstr( line_buf, "(framework directory)" ) != NULL )
+        continue;
+#endif /* __APPLE__ */
+
+      char const *const abs_include_path = str_trim( line_buf );
+      if ( abs_include_path[0] != '/' )
+        continue;
+
+      size_t const old_argc = STATIC_CAST( size_t, *pargc );
+      size_t const new_size = (old_argc + 2) * sizeof(char*);
+
+      static bool is_argv_on_heap = false;
+      if ( !is_argv_on_heap ) {
+        char const **const heap_argv = malloc( new_size );
+        if ( unlikely( heap_argv == NULL ) )
+          goto error;
+        memcpy( heap_argv, *pargv, old_argc * sizeof(char*) );
+        *pargv = heap_argv;
+        is_argv_on_heap = true;
+      }
+      else {
+        *pargv = realloc( *pargv, new_size );
+        if ( *pargv == NULL )
+          goto error;
+      }
+
+      // make space to insert new -I option before last argv (the filename)
+      memmove( &(*pargv)[ argi + 1 ], &(*pargv)[ argi ], 
+               STATIC_CAST( size_t, *pargc - argi + 1 ) * sizeof(char*) );
+
+      char *new_arg = NULL;
+      if ( unlikely( asprintf( &new_arg, "-I%s", abs_include_path ) == -1 ) )
+        goto error;
+      (*pargv)[ argi++ ] = new_arg;
+      ++*pargc;
+    } // while
+
+    (*pargv)[ *pargc ] = NULL;
+  }
+
+  free( line_buf );
+  if ( ferror( clang ) )
+    goto error;
+  pclose( clang );
+  return;
+
+error:
+  fatal_error( EX_UNAVAILABLE, "invoking clang failed%s\n", STRERROR() );
+}
 
 /**
  * If \a opt was given, checks that _only_ it was given and, if not, prints an
@@ -128,14 +235,27 @@ static void include_add_path( char const *include_path ) {
   if ( realpath( include_path, real_path ) != NULL )
     include_path = real_path;
 
-  char **ppath;
-  for ( ppath = include_path_list; *ppath != NULL; ++ppath ) {
-    if ( strcmp( include_path, *ppath ) == 0 )
+  size_t i = 0;
+
+  if ( include_path_list == NULL ) {
+    include_path_cap = 1;
+    include_path_list = MALLOC( char*, include_path_cap + 1 );
+    goto add_path;
+  }
+
+  for ( ; include_path_list[i] != NULL; ++i ) {
+    if ( strcmp( include_path, include_path_list[i] ) == 0 )
       return;
   } // for
 
-  *ppath   = check_strdup( include_path );
-  *++ppath = NULL;
+  if ( i >= include_path_cap ) {
+    include_path_cap *= 2;
+    REALLOC( include_path_list, char*, include_path_cap + 1 );
+  }
+
+add_path:
+  include_path_list[  i] = check_strdup( include_path );
+  include_path_list[++i] = NULL;
 }
 
 /**
@@ -272,9 +392,11 @@ static char const* opt_get_long( char short_opt ) {
  * Cleans-up options.
  */
 static void options_cleanup( void ) {
-  for ( char **ppath = include_path_list; *ppath != NULL; ++ppath )
-    free( *ppath );
-  free( include_path_list );
+  if ( include_path_list != NULL ) {
+    for ( char **ppath = include_path_list; *ppath != NULL; ++ppath )
+      free( *ppath );
+    free( include_path_list );
+  }
 }
 
 /**
@@ -341,7 +463,7 @@ char const* include_resolve( char const *included_path ) {
   return shortest_include_path;
 }
 
-void options_init( int *pargc, char const *argv[] ) {
+void options_init( int *pargc, char const **pargv[] ) {
   ASSERT_RUN_ONCE();
 
   int           opt;
@@ -350,10 +472,9 @@ void options_init( int *pargc, char const *argv[] ) {
   int           tidy_argc;
   char const  **tidy_argv;
 
-  move_tidy_args( pargc, argv, &tidy_argc, &tidy_argv );
+  add_clang_include_paths( pargc, pargv );
+  move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
 
-  include_path_list = MALLOC( char*, STATIC_CAST( size_t, *pargc ) );
-  include_path_list[0] = NULL;
   include_add_path( "." );
   ATEXIT( &options_cleanup );
 
@@ -403,7 +524,7 @@ void options_init( int *pargc, char const *argv[] ) {
 #if 0
   printf( "argc = %d\n", *pargc );
   for ( int i = 0; i < *pargc; ++i )
-    printf( "%d %s\n", i, argv[i] );
+    printf( "%d %s\n", i, (*pargv)[i] );
   printf( "tidy_argc = %d\n", tidy_argc  );
   for ( int i = 0; i < tidy_argc; ++i )
     printf( "%d %s\n", i, tidy_argv[i] );
@@ -426,8 +547,9 @@ void options_init( int *pargc, char const *argv[] ) {
 
   if ( *pargc < 2 )
     print_usage( EX_USAGE );
-  tidy_source_path = argv[ --*pargc ];
-  argv[ *pargc ] = NULL;
+
+  tidy_source_path = (*pargv)[ --*pargc ];
+  (*pargv)[ *pargc ] = NULL;
 
   return;
 

@@ -45,12 +45,12 @@ char const* include_resolve( char const *included_path );
 /**
  * Initializes **include-tidy** options from the command-line.
  *
- * @param argc The argument count from \c main().
- * @param argv The argument values from \c main().
+ * @param pargc A pointer to the argument count from \c main().
+ * @param pargv A pointer to the argument values from \c main().
  *
  * @note This function must be called exactly once.
  */
-void options_init( int *pargc, char const *argv[] );
+void options_init( int *pargc, char const **pargv[] );
 
 ///////////////////////////////////////////////////////////////////////////////
 
