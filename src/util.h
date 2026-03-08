@@ -643,6 +643,19 @@ NODISCARD
 char* check_strdup( char const *s );
 
 /**
+ * Checks whether \a s is null: if so, returns the empty string.
+ *
+ * @param s The pointer to check.
+ * @return If \a s is null, returns the empty string; otherwise returns \a s.
+ *
+ * @sa null_if_empty()
+ */
+NODISCARD
+inline char const* empty_if_null( char const *s ) {
+  return s == NULL ? "" : s;
+}
+
+/**
  * Prints an error message to standard error and exits with \a status code.
  *
  * @param status The status code to exit with.

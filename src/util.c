@@ -156,6 +156,7 @@ char* str_trim( char *s ) {
 
 /** @} */
 
+extern inline char const* empty_if_null( char const* );
 extern inline bool is_digits( char const* );
 extern inline char const* null_if_empty( char const* );
 extern inline bool true_or_set( bool* );
