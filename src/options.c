@@ -479,22 +479,30 @@ static char const* parse_file_ext( char const *path ) {
   if ( dot == NULL || dot[1] == '\0' )
     return NULL;
   char const *const ext = dot + 1;
+
   if ( strcasecmp( ext, "c" ) == 0 )
     return "c";
-  if ( strcasecmp( ext, "cc"  ) == 0 ||
-       strcasecmp( ext, "cpp" ) == 0 ||
-       strcasecmp( ext, "c++" ) == 0 ||
-       strcasecmp( ext, "cxx" ) == 0 ||
-       strcasecmp( ext, "cp"  ) == 0 ) {
-    return "c++";
-  }
 
-  fatal_error( EX_USAGE,
-    "\"%s\": unknown file extension;"
-    " must be one of .c, .cc, .cpp, .c++, .cxx, or .cp;"
-    " or use -xc[++]\n",
-    dot
+  static char const *const CPP_EXT[] = {
+    "cc",
+    "cpp",
+    "c++",
+    "cxx",
+    "cp",
+    NULL
+  };
+  for ( char const *const *pext = CPP_EXT; *pext != NULL; ++pext ) {
+    if ( strcasecmp( ext, *pext ) == 0 )
+      return "c++";
+  } // for
+
+  EPRINTF(
+    "%s: \"%s\": unknown file extension; must be one of ",
+    prog_name, ext
   );
+  fput_list( stderr, CPP_EXT, /*gets=*/NULL );
+  EPUTS( "; or use -xc[++]\n" );
+  exit( EX_USAGE );
 }
 
 /**

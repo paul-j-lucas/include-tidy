@@ -669,6 +669,34 @@ inline char const* empty_if_null( char const *s ) {
 PJL_PRINTF_LIKE_FUNC(2)
 _Noreturn void fatal_error( int status, char const *format, ... );
 
+/**
+ * Prints a zero-or-more element list of strings where for:
+ *
+ *  + A zero-element list, nothing is printed;
+ *  + A one-element list, the string for the element is printed;
+ *  + A two-element list, the strings for the elements are printed separated by
+ *    `or`;
+ *  + A three-or-more element list, the strings for the first N-1 elements are
+ *    printed separated by `,` and the N-1st and Nth elements are separated by
+ *    `, or`.
+ *
+ * @param out The `FILE` to print to.
+ * @param elt A pointer to the first element to print.
+ * @param gets A pointer to a function to call to get the string for the
+ * element `**ppelt`: if the function returns NULL, it signals the end of the
+ * list; otherwise, the function returns the string for the element and must
+ * increment `*ppelt` to the next element.  If \a gets is NULL, it is assumed
+ * that \a elt points to the first element of an array of `char*` and that the
+ * array ends with NULL.
+ *
+ * @warning The string pointer returned by \a gets for a given element _must_
+ * remain valid at least until after the _next_ call to fput_list(), that is
+ * upon return, the previously returned string pointer must still be valid
+ * also.
+ */
+void fput_list( FILE *out, void const *elt,
+                char const* (*gets)( void const **ppelt ) );
+
 #ifndef NDEBUG
 /**
  * Checks whether \a s is an affirmative value.  An affirmative value is one of

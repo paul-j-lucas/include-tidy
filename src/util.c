@@ -55,6 +55,21 @@ char const WS_CHARS[] =           " \n\t\r\f\v";
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
+ * Helper function for fput_list() that, given a pointer to a pointer to an
+ * array of pointer to `char`, returns the pointer to the associated string.
+ *
+ * @param ppelt A pointer to the pointer to the element to get the string of.
+ * On return, it is incremented by the size of the element.
+ * @return Returns said string or NULL if none.
+ */
+NODISCARD
+static char const* fput_list_apc_gets( void const **ppelt ) {
+  char const *const *const ps = *ppelt;
+  *ppelt = ps + 1;
+  return *ps;
+}
+
+/**
  * Checks whether \a s is any one of \a matches, case-insensitive.
  *
  * @param s The null-terminated string to check or null.  May be NULL.
@@ -113,6 +128,24 @@ void fatal_error( int status, char const *format, ... ) {
   vfprintf( stderr, format, args );
   va_end( args );
   _Exit( status );
+}
+
+void fput_list( FILE *out, void const *elt,
+                char const* (*gets)( void const** ) ) {
+  assert( out != NULL );
+  assert( elt != NULL );
+
+  if ( gets == NULL )
+    gets = &fput_list_apc_gets;
+
+  char const *s = (*gets)( &elt );
+  for ( size_t i = 0; s != NULL; ++i ) {
+    char const *const next_s = (*gets)( &elt );
+    if ( i > 0 )
+      FPUTS( next_s != NULL ? ", " : i > 1 ? ", or " : " or ", out );
+    FPUTS( s, out );
+    s = next_s;
+  } // for
 }
 
 #ifndef NDEBUG
