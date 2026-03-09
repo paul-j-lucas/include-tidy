@@ -262,7 +262,7 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
     if ( STRNCMPLIT( argv[i], "-" SOPT(CLANG) ) == 0 ) {
       if ( argv[i][2] == '\0' ) {       // -c <path>, not -c<path>
         if ( ++i >= argc )
-          fatal_error( EX_USAGE, "-%c requires argument\n", argv[i][1] );
+          fatal_error( EX_USAGE, "-%c requires an argument\n", argv[i][1] );
         return argv[i];
       }
       return argv[i] + STRLITLEN( "-" SOPT(CLANG) );
@@ -270,14 +270,32 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
     if ( STRNCMPLIT( argv[i], "--clang" ) == 0 ) {
       char const *const equal = strchr( argv[i], '=' );
       if ( equal == NULL )
-        fatal_error( EX_USAGE, "--clang requires argument\n" );
+        goto missing_arg;
       char const *const path = equal + 1;
       if ( path[0] == '\0' )
-        fatal_error( EX_USAGE, "--clang requires argument\n" );
+        goto missing_arg;
       return path;
     }
   } // for
   return NULL;
+
+missing_arg:
+  fatal_error( EX_USAGE, "--clang requires an argument\n" );
+}
+
+/**
+ * Gets the `option` corresponding to \a short_opt.
+ *
+ * @param short_opt The short option to get the option for.
+ * @return Returns the corresponding `option` or NULL if not found.
+ */
+NODISCARD
+static struct option const* get_option( char short_opt ) {
+  for ( struct option const *opt = OPTIONS; opt->name != NULL; ++opt ) {
+    if ( opt->val == short_opt )
+      return opt;
+  } // for
+  return NULL;                          // LCOV_EXCL_LINE
 }
 
 /**
@@ -465,13 +483,29 @@ static void move_tidy_args( int *pargc, char const *argv[],
       if ( ++i >= argc )
         fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
       tidy_argv[ tidy_argc++ ] = argv[ i ];
+      if ( argv[i][0] == '-' && isalnum( argv[i][1] ) ) {
+        if ( argv[i][2] != '\0' )
+          continue;
+        char const short_opt = argv[i][1];
+        struct option const *const opt = get_option( short_opt );
+        if ( opt == NULL ) {
+          fatal_error( EX_USAGE,
+            "'%c': invalid option; use --help for help\n", short_opt
+          );
+        }
+        if ( opt->has_arg == no_argument )
+          continue;
+        if ( ++i >= argc )
+          fatal_error( EX_USAGE, "-%c requires an argument\n", short_opt );
+        tidy_argv[ tidy_argc++ ] = argv[ i ];
+      }
     }
     else if ( STRNCMPLIT( argv[i], "-I" ) == 0 ) {
       argv[ new_argc++  ] = argv[ i ];
       tidy_argv[ tidy_argc++ ] = argv[ i ];
       if ( argv[i][2] == '\0' ) {  // -I <dir>, not -I<dir>
         if ( ++i >= argc )
-          fatal_error( EX_USAGE, "-%c requires argument\n", argv[i][1] );
+          fatal_error( EX_USAGE, "-%c requires an argument\n", argv[i][1] );
         argv[ new_argc++  ] = argv[ i ];
         tidy_argv[ tidy_argc++ ] = argv[ i ];
       }
@@ -824,7 +858,7 @@ invalid_opt:;
     EPRINTF( "\"%s\"", invalid_opt + 2/*skip over "--"*/ );
   else
     EPRINTF( "'%c'", STATIC_CAST( char, optopt ) );
-  EPRINTF( ": invalid option; use --help or -h for help\n" );
+  EPRINTF( ": invalid option; use --help for help\n" );
   exit( EX_USAGE );
 
 missing_arg:;
