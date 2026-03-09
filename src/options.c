@@ -47,6 +47,7 @@
 
 // in ascending option character ASCII order; sort using: sort -bdfk3
 #define OPT_CLANG                 c
+#define OPT_COMMENTS              C
 #define OPT_HELP                  h
 #define OPT_INCLUDE               I
 #define OPT_VERBOSE               V
@@ -75,13 +76,17 @@
  * Command-line options.
  */
 static struct option const OPTIONS[] = {
-  { "clang",    required_argument,  NULL, COPT(CLANG)   },
-  { "help",     no_argument,        NULL, COPT(HELP)    },
-  { "include",  required_argument,  NULL, COPT(INCLUDE) },
-  { "verbose",  no_argument,        NULL, COPT(VERBOSE) },
-  { "version",  no_argument,        NULL, COPT(VERSION) },
-  { NULL,       0,                  NULL, 0             }
+  { "clang",    required_argument,  NULL, COPT(CLANG)     },
+  { "comments", required_argument,  NULL, COPT(COMMENTS)  },
+  { "help",     no_argument,        NULL, COPT(HELP)      },
+  { "include",  required_argument,  NULL, COPT(INCLUDE)   },
+  { "verbose",  no_argument,        NULL, COPT(VERBOSE)   },
+  { "version",  no_argument,        NULL, COPT(VERSION)   },
+  { NULL,       0,                  NULL, 0               }
 };
+
+// extern option variables
+char const         *opt_comments[2] = { "// ", "" };
 
 // option variables
 static char const  *opt_clang_path = "clang";
@@ -489,6 +494,35 @@ static void options_cleanup( void ) {
 }
 
 /**
+ * Parses a comment delimiter.
+ *
+ * @param comment_delim The comment delimiter to parse.
+ */
+static void parse_comments( char const *comment_delim ) {
+  assert( comment_delim != NULL );
+
+  if ( strcmp( comment_delim, "none" ) == 0 ) {
+    opt_comments[0] = NULL;
+    opt_comments[1] = NULL;
+  }
+  else if ( strcmp( comment_delim, "//" ) == 0 ) {
+    opt_comments[0] = "// ";
+    opt_comments[1] = "";
+  }
+  else if ( strcmp( comment_delim, "/*" ) == 0 ) {
+    opt_comments[0] = "/* ";
+    opt_comments[1] = " */";
+  }
+  else {
+    fatal_error( EX_USAGE,
+      "\"%s\": invalid value for --comments;"
+      " must be one of \"//\", \"/*\", or \"none\"\n",
+      comment_delim
+    );
+  }
+}
+
+/**
  * Parses the file extension of \a path.
  *
  * @param path The pathname.
@@ -660,6 +694,11 @@ void options_init( int *pargc, char const **pargv[] ) {
         if ( *SKIP_WS( optarg ) == '\0' )
           goto missing_arg;
         opt_clang_path = optarg;
+        break;
+      case COPT(COMMENTS):
+        if ( *SKIP_WS( optarg ) == '\0' )
+          goto missing_arg;
+        parse_comments( optarg );
         break;
       case COPT(HELP):
         opt_help = true;

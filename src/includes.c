@@ -138,12 +138,13 @@ static bool ti_unneeded_visitor( void *node_data, void *visit_data ) {
     char const *const file_cstr = clang_getCString( file_str );
     char const *const resolved_path = include_resolve( file_cstr );
 
-    char delims[2];
-    include_get_delims( file_cstr, delims );
+    char inc_delim[2];
+    include_get_delims( file_cstr, inc_delim );
 
-    printf( "#include %c%s%c // REMOVE\n",
-      delims[0], resolved_path, delims[1]
-    );
+    PRINTF( "#include %c%s%c", inc_delim[0], resolved_path, inc_delim[1] );
+    if ( opt_comments[0] != NULL )
+      PRINTF( " %sREMOVE%s", opt_comments[0], opt_comments[1] );
+    PUTC( '\n' );
 
     clang_disposeString( file_str );
   }

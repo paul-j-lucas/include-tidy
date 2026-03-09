@@ -189,13 +189,16 @@ static bool ts_visitor( void *node_data, void *visit_data ) {
   char const *const file_cstr = clang_getCString( file_str );
   char const *const resolved_path = include_resolve( file_cstr );
 
-  char delims[2];
-  include_get_delims( file_cstr, delims );
+  char inc_delim[2];
+  include_get_delims( file_cstr, inc_delim );
 
-  printf( "#include %c%s%c // %s\n",
-    delims[0], resolved_path, delims[1],
-    clang_getCString( sym->name )
-  );
+  PRINTF( "#include %c%s%c", inc_delim[0], resolved_path, inc_delim[1] );
+  if ( opt_comments[0] != NULL ) {
+    PRINTF( " %s%s%s",
+      opt_comments[0], clang_getCString( sym->name ), opt_comments[1]
+    );
+  }
+  PUTC( '\n' );
 
   clang_disposeString( file_str );
   return false;
