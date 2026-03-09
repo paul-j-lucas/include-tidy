@@ -197,10 +197,23 @@ void include_print( char const *real_path, char const *comment ) {
 
   char const *const resolved_path = include_resolve( real_path );
 
-  PRINTF( "#include %c%s%c", inc_delim[0], resolved_path, inc_delim[1] );
-  if ( opt_comment_style[0] != NULL )
-    PRINTF( " %s%s%s", opt_comment_style[0], comment, opt_comment_style[1] );
-  PUTC( '\n' );
+  if ( opt_comment_style[0] == NULL ) {
+    PRINTF( "#include %c%s%c\n", inc_delim[0], resolved_path, inc_delim[1] );
+    return;
+  }
+
+  char *include = NULL;
+  int len = asprintf( &include,
+    "#include %c%s%c", inc_delim[0], resolved_path, inc_delim[1]
+  );
+  if ( len == -1 ) {
+    // TODO
+  }
+  PUTS( include );
+  free( include );
+  if ( ++len < (int)opt_comment_align )
+    FPUTNSP( (int)opt_comment_align - len, stdout );
+  PRINTF( "%s%s%s\n", opt_comment_style[0], comment, opt_comment_style[1] );
 }
 
 void includes_init( CXTranslationUnit tu ) {
