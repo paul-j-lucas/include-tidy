@@ -87,7 +87,6 @@ static struct option const OPTIONS[] = {
 char const         *opt_comments[2] = { "// ", "" };
 
 // option variables
-static char const  *opt_clang_path = "clang";
 static unsigned     opt_verbose;
 
 // local variable definitions
@@ -110,23 +109,30 @@ static char const*  opt_format( char, char[const], size_t ),
  *
  * @param pargc A pointer to the argument count from \c main().
  * @param pargv A pointer to the argument values from \c main().
+ * @param clang_path The path of the **clang** to use.  May be NULL.
  * @param lang The language to use, either `"c"` or `"c++"`.
  */
 static void add_clang_include_paths( int *pargc, char const **pargv[],
+                                     char const *clang_path,
                                      char const *lang ) {
   ASSERT_RUN_ONCE();
+  assert( pargc != NULL );
+  assert( pargv != NULL );
+  if ( clang_path == NULL )
+    clang_path = "clang";
+  assert( lang != NULL );
 
   static char const CLANG_TEMPLATE[] =
     "%s"                                // clang path
     " -E"                               // run only the preprocessor stage
-    " -x%s"                             // specify langauge: c or c++
     " -v"                               // show verbose output
+    " -x%s"                             // specify langauge: c or c++
     " -"                                // read from stdin
     " </dev/null"                       // read from /dev/null
     " 2>&1";                            // redirect stderr to stdout
 
   char clang_buf[ PATH_MAX + 32 ];
-  snprintf( clang_buf, sizeof clang_buf, CLANG_TEMPLATE, opt_clang_path, lang );
+  snprintf( clang_buf, sizeof clang_buf, CLANG_TEMPLATE, clang_path, lang );
 
   FILE *const clang = popen( clang_buf, "r" );
   if ( clang == NULL )
@@ -137,7 +143,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
   size_t  line_cap = 0;
 
   while ( getline( &line_buf, &line_cap, clang ) != -1 ) {
-    if ( STRNCMPLIT( line_buf, "#include <...> search starts here:" ) == 0 ) {
+    if ( strcmp( line_buf, "#include <...> search starts here:\n" ) == 0 ) {
       found_include_search = true;
       break;
     }
@@ -153,7 +159,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
     } // for
 
     while ( getline( &line_buf, &line_cap, clang ) != -1 ) {
-      if ( STRNCMPLIT( line_buf, "End of search list." ) == 0 )
+      if ( strcmp( line_buf, "End of search list.\n" ) == 0 )
         break;
 
 #ifdef __APPLE__
@@ -242,6 +248,39 @@ static void check_options( void ) {
 }
 
 /**
+ * Gets the path to clang, if given.
+ *
+ * @param argc The command-line argument count.
+ * @param argv The command-line argument values.
+ */
+static char const* get_clang_path( int argc, char const *const argv[] ) {
+  for ( int i = 1; i < argc; ++i ) {
+    if ( strcmp( argv[i], "-Xtidy" ) != 0 )
+      continue;
+    if ( ++i >= argc )
+      fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
+    if ( STRNCMPLIT( argv[i], "-" SOPT(CLANG) ) == 0 ) {
+      if ( argv[i][2] == '\0' ) {       // -c <path>, not -c<path>
+        if ( ++i >= argc )
+          fatal_error( EX_USAGE, "-%c requires argument\n", argv[i][1] );
+        return argv[i];
+      }
+      return argv[i] + STRLITLEN( "-" SOPT(CLANG) );
+    }
+    if ( STRNCMPLIT( argv[i], "--clang" ) == 0 ) {
+      char const *const equal = strchr( argv[i], '=' );
+      if ( equal == NULL )
+        fatal_error( EX_USAGE, "--clang requires argument\n" );
+      char const *const path = equal + 1;
+      if ( path[0] == '\0' )
+        fatal_error( EX_USAGE, "--clang requires argument\n" );
+      return path;
+    }
+  } // for
+  return NULL;
+}
+
+/**
  * Gets the language of clang's `-x` option, if given.
  *
  * @param argc The command-line argument count.
@@ -254,7 +293,7 @@ static char const* get_x_language( int argc, char const *const argv[] ) {
     if ( STRNCMPLIT( argv[i], "-x" ) != 0 )
       continue;
     char const *lang;
-    if ( argv[i][2] == '\0' ) {         // -x lang, not -xlang
+    if ( argv[i][2] == '\0' ) {         // -x <lang>, not -x<lang>
       if ( ++i >= argc )
         fatal_error( EX_USAGE, "-%c requires argument\n", argv[i][1] );
       lang = argv[i];
@@ -430,7 +469,7 @@ static void move_tidy_args( int *porig_argc, char const *orig_argv[],
     else if ( STRNCMPLIT( orig_argv[i], "-I" ) == 0 ) {
       orig_argv[ new_argc++  ] = orig_argv[ i ];
       tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
-      if ( orig_argv[i][2] == '\0' ) {  // -I dir, not -Idir
+      if ( orig_argv[i][2] == '\0' ) {  // -I <dir>, not -I<dir>
         if ( ++i >= orig_argc )
           fatal_error( EX_USAGE, "-%c requires argument\n", orig_argv[i][1] );
         orig_argv[ new_argc++  ] = orig_argv[ i ];
@@ -631,11 +670,12 @@ static void preprocess_argv( int *pargc, char const **pargv[] ) {
     return;
   tidy_source_path = (*pargv)[ *pargc - 1 ];
 
+  char const *const clang_path = get_clang_path( *pargc, *pargv );
   char const *lang = get_x_language( *pargc, *pargv );
   if ( lang == NULL )
     lang = parse_file_ext( tidy_source_path );
 
-  add_clang_include_paths( pargc, pargv, lang );
+  add_clang_include_paths( pargc, pargv, clang_path, lang );
   include_add_path( "." );
 }
 
@@ -703,10 +743,7 @@ void options_init( int *pargc, char const **pargv[] ) {
     if ( opt == -1 )
       break;
     switch ( opt ) {
-      case COPT(CLANG):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
-        opt_clang_path = optarg;
+      case COPT(CLANG):                 // already handled
         break;
       case COPT(COMMENTS):
         if ( *SKIP_WS( optarg ) == '\0' )
