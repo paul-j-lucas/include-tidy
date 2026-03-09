@@ -410,13 +410,13 @@ static char const* make_short_opts( struct option const opts[static const 2],
  *    *ptidy_argv.
  *  + <tt>--help</tt> or <tt>--version</tt> are moved to \a *ptidy_argv.
  *
- * All other options and arguments are left as-is in \a orig_argv.  Examples:
+ * All other options and arguments are left as-is in \a argv.  Examples:
  *
  *      include-tidy --help
  *
- *          orig_argc = 1
- *          orig_argv[0] = "include-tidy"
- *          orig_argv[1] = NULL
+ *          argc = 1
+ *          argv[0] = "include-tidy"
+ *          argv[1] = NULL
  *
  *          tidy_argc = 2
  *          tidy_argv[0] = "include-tidy"
@@ -425,69 +425,69 @@ static char const* make_short_opts( struct option const opts[static const 2],
  *
  *      include-tidy -Xtidy --foo -DNDEBUG -I/opt/local/include bar.c
  *
- *          orig_argc = 4
- *          orig_argv[0] = "include-tidy"
- *          orig_argv[1] = "-DNDEBUG"
- *          orig_argv[2] = "-I/opt/local/include"
- *          orig_argv[3] = "bar.c"
- *          orig_argv[4] = NULL
+ *          argc = 4
+ *          argv[0] = "include-tidy"
+ *          argv[1] = "-DNDEBUG"
+ *          argv[2] = "-I/opt/local/include"
+ *          argv[3] = "bar.c"
+ *          argv[4] = NULL
  *
  *          tidy_argc = 3
  *          tidy_argv[0] = "include-tidy"
  *          tidy_argv[1] = "--foo"
- *          orig_argv[2] = "-I/opt/local/include"
+ *          tidy_argv[2] = "-I/opt/local/include"
  *          tidy_argv[3] = NULL
  * @endparblock
  *
- * @param porig_argc A pointer to `argc`.
- * @param orig_argv A copy of `argv`.
+ * @param pargc A pointer to `argc`.
+ * @param argv A copy of `argv`.
  * @param ptidy_argc A pointer to an `argc` for include-tidy specific options.
  * @param ptidy_argv A pointer to an `argv` for include-tidy specific options.
  * The caller is responsible for free'ing the array of pointers to strings, but
  * _not_ the strings themselves.
  */
-static void move_tidy_args( int *porig_argc, char const *orig_argv[],
+static void move_tidy_args( int *pargc, char const *argv[],
                             int *ptidy_argc, char const **ptidy_argv[] ) {
-  assert( porig_argc != NULL );
-  assert(  orig_argv != NULL );
+  assert( pargc != NULL );
+  assert(  argv != NULL );
   assert( ptidy_argc != NULL );
   assert( ptidy_argv != NULL );
 
-  int const orig_argc = *porig_argc;
+  int const orig_argc = *pargc;
   int new_argc = 1, tidy_argc = 1;
 
   char const **const tidy_argv =
     MALLOC( char*, STATIC_CAST( size_t, orig_argc ) + 1 );
-  tidy_argv[0] = orig_argv[0];
+  tidy_argv[0] = argv[0];
 
   for ( int i = 1; i < orig_argc; ++i ) {
-    if ( strcmp( orig_argv[i], "-Xtidy" ) == 0 ) {
+    if ( strcmp( argv[i], "-Xtidy" ) == 0 ) {
       if ( ++i >= orig_argc )
         fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
-      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
+      tidy_argv[ tidy_argc++ ] = argv[ i ];
     }
-    else if ( STRNCMPLIT( orig_argv[i], "-I" ) == 0 ) {
-      orig_argv[ new_argc++  ] = orig_argv[ i ];
-      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
-      if ( orig_argv[i][2] == '\0' ) {  // -I <dir>, not -I<dir>
+    else if ( STRNCMPLIT( argv[i], "-I" ) == 0 ) {
+      argv[ new_argc++  ] = argv[ i ];
+      tidy_argv[ tidy_argc++ ] = argv[ i ];
+      if ( argv[i][2] == '\0' ) {  // -I <dir>, not -I<dir>
         if ( ++i >= orig_argc )
-          fatal_error( EX_USAGE, "-%c requires argument\n", orig_argv[i][1] );
-        orig_argv[ new_argc++  ] = orig_argv[ i ];
-        tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
+          fatal_error( EX_USAGE, "-%c requires argument\n", argv[i][1] );
+        argv[ new_argc++  ] = argv[ i ];
+        tidy_argv[ tidy_argc++ ] = argv[ i ];
       }
     }
-    else if ( strcmp( orig_argv[i], "--help" ) == 0 ||
-              strcmp( orig_argv[i], "--version" ) == 0 ) {
-      tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
+    else if ( strcmp( argv[i], "--help" ) == 0 ||
+              strcmp( argv[i], "--version" ) == 0 ) {
+      tidy_argv[ tidy_argc++ ] = argv[ i ];
     }
     else {
-      orig_argv[ new_argc++ ] = orig_argv[ i ];
+      argv[ new_argc++ ] = argv[ i ];
     }
   } // for
 
-  orig_argv[ new_argc ] = tidy_argv[ tidy_argc ] = NULL;
+  argv[ new_argc ] = tidy_argv[ tidy_argc ] = NULL;
 
-  *porig_argc = new_argc;
+  *pargc = new_argc;
   *ptidy_argc = tidy_argc;
   *ptidy_argv = tidy_argv;
 }
