@@ -49,7 +49,6 @@
 #define OPT_CLANG                 c
 #define OPT_COMMENTS              C
 #define OPT_HELP                  h
-#define OPT_INCLUDE               I
 #define OPT_VERBOSE               V
 #define OPT_VERSION               v
 
@@ -79,7 +78,6 @@ static struct option const OPTIONS[] = {
   { "clang",    required_argument,  NULL, COPT(CLANG)     },
   { "comments", required_argument,  NULL, COPT(COMMENTS)  },
   { "help",     no_argument,        NULL, COPT(HELP)      },
-  { "include",  required_argument,  NULL, COPT(INCLUDE)   },
   { "verbose",  no_argument,        NULL, COPT(VERBOSE)   },
   { "version",  no_argument,        NULL, COPT(VERSION)   },
   { NULL,       0,                  NULL, 0               }
@@ -320,13 +318,18 @@ add_path:
  *
  * @param opts An array of options to make the short option string from.  Its
  * last element must be all zeros.
+ * @param extra_opts Extra options to add.  May be NULL.
  * @return Returns the `optstring` for the third argument of `getopt_long()`.
  * The caller is responsible for freeing it.
  */
 NODISCARD
-static char const* make_short_opts( struct option const opts[static const 2] ) {
+static char const* make_short_opts( struct option const opts[static const 2],
+                                    char const *extra_opts ) {
+  extra_opts = empty_if_null( extra_opts );
+  size_t const extra_opts_len = strlen( extra_opts );
+
   // pre-flight to calculate string length
-  size_t len = 1 /* for leading ':' */;
+  size_t len = 1 /* for leading ':' */ + extra_opts_len;
   for ( struct option const *opt = opts; opt->name != NULL; ++opt ) {
     assert( opt->has_arg >= 0 && opt->has_arg <= 2 );
     len += 1 + STATIC_CAST( unsigned, opt->has_arg );
@@ -347,6 +350,9 @@ static char const* make_short_opts( struct option const opts[static const 2] ) {
         *s++ = ':';
     } // switch
   } // for
+
+  strcpy( s, extra_opts );
+  s += extra_opts_len;
   *s = '\0';
 
   return short_opts;
@@ -421,7 +427,7 @@ static void move_tidy_args( int *porig_argc, char const *orig_argv[],
         fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
       tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
     }
-    else if ( STRNCMPLIT( orig_argv[i], "-" SOPT(INCLUDE) ) == 0 ) {
+    else if ( STRNCMPLIT( orig_argv[i], "-I" ) == 0 ) {
       orig_argv[ new_argc++  ] = orig_argv[ i ];
       tidy_argv[ tidy_argc++ ] = orig_argv[ i ];
       if ( orig_argv[i][2] == '\0' ) {  // -I dir, not -Idir
@@ -681,7 +687,7 @@ void options_init( int *pargc, char const **pargv[] ) {
   int               opt;
   bool              opt_help = false;
   bool              opt_version = false;
-  char const *const short_opts = make_short_opts( OPTIONS );
+  char const *const short_opts = make_short_opts( OPTIONS, "I:" );
   int               tidy_argc;
   char const      **tidy_argv;
 
@@ -710,7 +716,7 @@ void options_init( int *pargc, char const **pargv[] ) {
       case COPT(HELP):
         opt_help = true;
         break;
-      case COPT(INCLUDE):
+      case 'I':                         // special case
         if ( *SKIP_WS( optarg ) == '\0' )
           goto missing_arg;
         include_add_path( optarg );
