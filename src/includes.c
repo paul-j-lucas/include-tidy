@@ -173,7 +173,10 @@ static bool ti_unneeded_visitor( void *node_data, void *visit_data ) {
 
   if ( !inc->is_needed && inc->depth == 1 ) {
     CXString file_str = tidy_File_getRealPathName( inc->file );
-    include_print( clang_getCString( file_str ), "REMOVE" );
+    char *delete = NULL;
+    check_asprintf( &delete, "DELETE line %u", inc->line );
+    include_print( clang_getCString( file_str ), delete );
+    free( delete );
     clang_disposeString( file_str );
   }
 
@@ -203,16 +206,13 @@ void include_print( char const *real_path, char const *comment ) {
   }
 
   char *include = NULL;
-  int len = asprintf( &include,
+  unsigned len = check_asprintf( &include,
     "#include %c%s%c", inc_delim[0], resolved_path, inc_delim[1]
   );
-  if ( len == -1 ) {
-    // TODO
-  }
   PUTS( include );
   free( include );
-  if ( ++len < (int)opt_comment_align )
-    FPUTNSP( (int)opt_comment_align - len, stdout );
+  if ( ++len < opt_comment_align )
+    FPUTNSP( opt_comment_align - len, stdout );
   PRINTF( "%s%s%s\n", opt_comment_style[0], comment, opt_comment_style[1] );
 }
 

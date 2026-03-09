@@ -97,6 +97,22 @@ char const* base_name( char const *path_name ) {
   return path_name;
 }
 
+unsigned check_asprintf( char **ps, char const *format, ... ) {
+  assert( ps != NULL );
+  assert( format != NULL );
+
+  va_list args;
+  va_start( args, format );
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+  int const raw_len = vasprintf( ps, format, args );
+#pragma GCC diagnostic pop
+  va_end( args );
+
+  PERROR_EXIT_IF( raw_len < 0, EX_OSERR );
+  return STATIC_CAST( unsigned, raw_len );
+}
+
 unsigned check_atou( char const *s ) {
   assert( s != NULL );
   if ( !is_digits( s ) )

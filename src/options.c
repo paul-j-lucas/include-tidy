@@ -140,8 +140,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
     " 2>&1";      // redirect stderr to stdout
 
   char *clang = NULL;
-  if ( unlikely( asprintf( &clang, CLANG_TEMPLATE, clang_path, lang ) ) == -1 )
-    goto error;
+  check_asprintf( &clang, CLANG_TEMPLATE, clang_path, lang );
 
   FILE *const fclang = popen( clang, "r" );
   free( clang );
@@ -207,8 +206,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
                STATIC_CAST( size_t, *pargc - argi + 1 ) * sizeof(char*) );
 
       char *new_arg = NULL;
-      if ( unlikely( asprintf( &new_arg, "-I%s", abs_include_path ) == -1 ) )
-        goto error;
+      check_asprintf( &new_arg, "-I%s", abs_include_path );
       (*pargv)[ argi++ ] = new_arg;
       ++*pargc;
     } // while

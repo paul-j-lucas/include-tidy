@@ -611,6 +611,18 @@ NODISCARD
 char const* base_name( char const *path_name );
 
 /**
+ * Calls **asprintf**(3) and checks for failure.
+ *
+ * @param ps A pointer to the string to receive the printed result.  The caller
+ * is responsible for freeing it.
+ * @param format The `printf()` style format string.
+ * @return Returns the number of characters printed.
+ */
+PJL_DISCARD
+PJL_PRINTF_LIKE_FUNC(2)
+unsigned check_asprintf( char **ps, char const *format, ... );
+
+/**
  * Converts an ASCII string to an unsigned integer.
  * Unlike **atoi**(3), insists that all characters in \a s are digits.
  * If conversion fails, prints an error message and exits.
