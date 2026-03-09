@@ -127,9 +127,7 @@ static void include_visitor( CXFile included_file,
  * Cleans-up set of included files.
  */
 static void includes_cleanup( void ) {
-  rb_tree_cleanup(
-    &include_set, POINTER_CAST( rb_free_fn_t, &ti_cleanup )
-  );
+  rb_tree_cleanup( &include_set, POINTER_CAST( rb_free_fn_t, &ti_cleanup ) );
 }
 
 /**
