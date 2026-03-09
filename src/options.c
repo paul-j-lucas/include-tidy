@@ -453,16 +453,16 @@ static void move_tidy_args( int *pargc, char const *argv[],
   assert( ptidy_argc != NULL );
   assert( ptidy_argv != NULL );
 
-  int const orig_argc = *pargc;
+  int const argc = *pargc;
   int new_argc = 1, tidy_argc = 1;
 
   char const **const tidy_argv =
-    MALLOC( char*, STATIC_CAST( size_t, orig_argc ) + 1 );
+    MALLOC( char*, STATIC_CAST( size_t, argc ) + 1 );
   tidy_argv[0] = argv[0];
 
-  for ( int i = 1; i < orig_argc; ++i ) {
+  for ( int i = 1; i < argc; ++i ) {
     if ( strcmp( argv[i], "-Xtidy" ) == 0 ) {
-      if ( ++i >= orig_argc )
+      if ( ++i >= argc )
         fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
       tidy_argv[ tidy_argc++ ] = argv[ i ];
     }
@@ -470,7 +470,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
       argv[ new_argc++  ] = argv[ i ];
       tidy_argv[ tidy_argc++ ] = argv[ i ];
       if ( argv[i][2] == '\0' ) {  // -I <dir>, not -I<dir>
-        if ( ++i >= orig_argc )
+        if ( ++i >= argc )
           fatal_error( EX_USAGE, "-%c requires argument\n", argv[i][1] );
         argv[ new_argc++  ] = argv[ i ];
         tidy_argv[ tidy_argc++ ] = argv[ i ];
