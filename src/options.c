@@ -89,7 +89,7 @@ static unsigned const COMMENT_ALIGN_MAX = 256;
 
 // extern option variables
 unsigned            opt_comment_align = 41;
-char const         *opt_comments[2] = { "// ", "" };
+char const         *opt_comment_style[2] = { "// ", "" };
 
 // option variables
 static unsigned     opt_verbose;
@@ -587,20 +587,20 @@ static void options_cleanup( void ) {
  *
  * @param comment_delim The comment delimiter to parse.
  */
-static void parse_comments( char const *comment_delim ) {
+static void parse_comment_style( char const *comment_delim ) {
   assert( comment_delim != NULL );
 
   if ( strcmp( comment_delim, "none" ) == 0 ) {
-    opt_comments[0] = NULL;
-    opt_comments[1] = NULL;
+    opt_comment_style[0] = NULL;
+    opt_comment_style[1] = NULL;
   }
   else if ( strcmp( comment_delim, "//" ) == 0 ) {
-    opt_comments[0] = "// ";
-    opt_comments[1] = "";
+    opt_comment_style[0] = "// ";
+    opt_comment_style[1] = "";
   }
   else if ( strcmp( comment_delim, "/*" ) == 0 ) {
-    opt_comments[0] = "/* ";
-    opt_comments[1] = " */";
+    opt_comment_style[0] = "/* ";
+    opt_comment_style[1] = " */";
   }
   else {
     fatal_error( EX_USAGE,
@@ -838,7 +838,7 @@ void options_init( int *pargc, char const **pargv[] ) {
       case COPT(COMMENTS):
         if ( *SKIP_WS( optarg ) == '\0' )
           goto missing_arg;
-        parse_comments( optarg );
+        parse_comment_style( optarg );
         break;
       case COPT(HELP):
         opt_help = true;

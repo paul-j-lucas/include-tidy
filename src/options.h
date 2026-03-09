@@ -36,7 +36,7 @@
 
 // extern option variables
 extern unsigned    opt_comment_align;   ///< Comment alignment column.
-extern char const *opt_comments[2];     ///< Comment delimiters to use.
+extern char const *opt_comment_style[2];///< Comment delimiters to use.
 
 ////////// extern functions ///////////////////////////////////////////////////
 

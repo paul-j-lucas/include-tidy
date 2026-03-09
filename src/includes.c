@@ -198,8 +198,8 @@ void include_print( char const *real_path, char const *comment ) {
   char const *const resolved_path = include_resolve( real_path );
 
   PRINTF( "#include %c%s%c", inc_delim[0], resolved_path, inc_delim[1] );
-  if ( opt_comments[0] != NULL )
-    PRINTF( " %s%s%s", opt_comments[0], comment, opt_comments[1] );
+  if ( opt_comment_style[0] != NULL )
+    PRINTF( " %s%s%s", opt_comment_style[0], comment, opt_comment_style[1] );
   PUTC( '\n' );
 }
 
@@ -211,18 +211,18 @@ void includes_init( CXTranslationUnit tu ) {
 }
 
 void includes_print_unneeded( void ) {
-  bool reset_opt_comments = false;
-  if ( opt_comments[0] == NULL ) {
-    opt_comments[0] = "// ";
-    opt_comments[1] = "";
-    reset_opt_comments = true;
+  bool reset_opt_comment_style = false;
+  if ( opt_comment_style[0] == NULL ) {
+    opt_comment_style[0] = "// ";
+    opt_comment_style[1] = "";
+    reset_opt_comment_style = true;
   }
 
   rb_tree_visit( &include_set, &ti_unneeded_visitor, /*visit_data=*/NULL );
 
-  if ( reset_opt_comments ) {
-    opt_comments[0] = NULL;
-    opt_comments[1] = NULL;
+  if ( reset_opt_comment_style ) {
+    opt_comment_style[0] = NULL;
+    opt_comment_style[1] = NULL;
   }
 }
 
