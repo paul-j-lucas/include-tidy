@@ -87,12 +87,14 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
     case CXCursor_DeclRefExpr:
     case CXCursor_MacroExpansion:;
 
-      // Follow the reference to the actual declaration
-      CXCursor decl = clang_getCursorReferenced( cursor );
-      if ( clang_isInvalid( decl.kind ) )
+      // Get the cursor to this reference of the symbol.
+      CXCursor ref_cursor = clang_getCursorReferenced( cursor );
+      if ( clang_isInvalid( ref_cursor.kind ) )
         break;
 
-      CXSourceLocation  decl_loc = clang_getCursorLocation( decl );
+      // Get the cursor to the first time the symbol was seen.
+      CXCursor          decl_cursor = clang_getCanonicalCursor( ref_cursor );
+      CXSourceLocation  decl_loc = clang_getCursorLocation( decl_cursor );
       CXFile            decl_file;
       unsigned          decl_line;
 
@@ -114,7 +116,7 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
       }
 
       tidy_symbol sym = {
-        .name = clang_getCursorSpelling( decl ),
+        .name = clang_getCursorSpelling( decl_cursor ),
         .decl_file = decl_file,
         .decl_line = decl_line
       };
