@@ -239,13 +239,14 @@ static void check_options( void ) {
 }
 
 /**
- * Gets the value of clang's `-x` option, if given.
+ * Gets the language of clang's `-x` option, if given.
  *
  * @param argc The command-line argument count.
  * @param argv The command-line argument values.
- * @return Returns the value of clang's `-x` option or NULL if not given.
+ * @return Returns the language of clang's `-x` option, either `"c"` or
+ * `"c++"`, or NULL if not given.
  */
-static char const* get_x_opt_val( int argc, char const *const argv[] ) {
+static char const* get_x_language( int argc, char const *const argv[] ) {
   for ( int i = 1; i < argc; ++i ) {
     if ( STRNCMPLIT( argv[i], "-x" ) != 0 )
       continue;
@@ -551,6 +552,47 @@ static void print_usage( int status ) {
 }
 
 /**
+ * Preprocess the command-line.
+ *
+ * @remarks
+ * @parblock
+ * The order that we have to parse command-line arguments is necessitated to
+ * be unconventional.
+ *
+ * Ordinarily, a program would parse all options first, increment argv past
+ * them, then look at (the new) argv[1] for the file; but the source file may
+ * be needed before parsing options because its language (based on its filename
+ * extension) affects the list of system include files and the corresponding -I
+ * options needed by clang.
+ *
+ * We also have to pre-scan all options looking for clang's -x<language> option
+ * because that has priority over whatever language is indicated by the source
+ * file's extension.
+ *
+ * Finally, we have to call **clang** and insert `-I` options for the system
+ * include paths it would use to compile the source file.
+ * @endparblock
+ *
+ * @param pargc A pointer to the argument count from \c main().
+ * @param pargv A pointer to the argument values from \c main().
+ */
+static void preprocess_argv( int *pargc, char const **pargv[] ) {
+  assert( pargc != NULL );
+  assert( pargv != NULL );
+
+  if ( *pargc < 2 || (*pargv)[ *pargc - 1 ][0] == '-' )
+    return;
+  tidy_source_path = (*pargv)[ *pargc - 1 ];
+
+  char const *lang = get_x_language( *pargc, *pargv );
+  if ( lang == NULL )
+    lang = parse_file_ext( tidy_source_path );
+
+  add_clang_include_paths( pargc, pargv, lang );
+  include_add_path( "." );
+}
+
+/**
  * Prints the **include-tidy** version.
  */
 static void print_version( void ) {
@@ -595,28 +637,17 @@ void options_init( int *pargc, char const **pargv[] ) {
   ASSERT_RUN_ONCE();
   ATEXIT( &options_cleanup );
 
-  if ( *pargc < 2 || (*pargv)[ --*pargc ][0] == '-' )
-    print_usage( EX_USAGE );
-  tidy_source_path = (*pargv)[ *pargc ];
-  (*pargv)[ *pargc ] = NULL;
-
-  char const *lang = get_x_opt_val( *pargc, *pargv );
-  if ( lang == NULL )
-    lang = parse_file_ext( tidy_source_path );
-  add_clang_include_paths( pargc, pargv, lang );
-  include_add_path( "." );
-
-  int           tidy_argc;
-  char const  **tidy_argv;
-  move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
-
   int               opt;
   bool              opt_help = false;
   bool              opt_version = false;
   char const *const short_opts = make_short_opts( OPTIONS );
+  int               tidy_argc;
+  char const      **tidy_argv;
+
+  preprocess_argv( pargc, pargv );
+  move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
 
   opterr = 1;
-
   for (;;) {
     opt = getopt_long(
       tidy_argc, CONST_CAST( char**, tidy_argv ), short_opts, OPTIONS,
@@ -689,6 +720,10 @@ void options_init( int *pargc, char const **pargv[] ) {
     print_version();
     exit( EX_OK );
   }
+
+  // argv[argc-1] is the source file, but we've already copied it into
+  // tidy_source_path, so just NULL it out.
+  (*pargv)[ --*pargc ] = NULL;
 
   return;
 
