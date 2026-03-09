@@ -20,42 +20,12 @@
 
 // local
 #include "pjl_config.h"
-#include "util.h"
 
-// standard
-#include <limits.h>                     /* for PATH_MAX */
-#include <string.h>
-#include <sysexits.h>
-#include <unistd.h>                     /* for getcwd() */
+////////// local functions ////////////////////////////////////////////////////
+
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void include_get_delims( char const *full_path, char delims[static 2] ) {
-  static char   cwd_buf[ PATH_MAX + 1 ];
-  static size_t cwd_len;
-
-  if ( cwd_len == 0 ) {
-    if ( getcwd( cwd_buf, PATH_MAX ) == NULL ) {
-      fatal_error( EX_UNAVAILABLE,
-        "could not get current working directory: %s\n", STRERROR()
-      );
-    }
-    cwd_len = strlen( cwd_buf );
-    if ( cwd_len > 0 && cwd_buf[ cwd_len - 1 ] != '/' ) {
-      cwd_buf[   cwd_len ] = '/';
-      cwd_buf[ ++cwd_len ] = '\0';
-    }
-  }
-
-  if ( strncmp( full_path, cwd_buf, cwd_len ) == 0 ) {
-    delims[0] = '"';
-    delims[1] = '"';
-  }
-  else {
-    delims[0] = '<';
-    delims[1] = '>';
-  }
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 /* vim:set et sw=2 ts=2: */

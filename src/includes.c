@@ -33,8 +33,10 @@
 
 // standard
 #include <assert.h>
+#include <limits.h>                     /* for PATH_MAX */
 #include <stdlib.h>                     /* for atexit(3) */
 #include <string.h>
+#include <unistd.h>                     /* for getcwd(3) */
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -44,6 +46,42 @@ static void ti_cleanup( tidy_include* );
 static rb_tree_t include_set;           ///< Set of included files.
 
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Gets the `#include` path delimiters that should be used for \a full_path.
+ *
+ * @param full_path The full path of a file that's included.
+ * @param delims A 2-element array to receive the opening and closing
+ * delimiters.
+ */
+static void include_delims( char const *full_path, char delims[static 2] ) {
+  assert( full_path != NULL );
+
+  static char   cwd_buf[ PATH_MAX + 1 ];
+  static size_t cwd_len;
+
+  if ( cwd_len == 0 ) {
+    if ( getcwd( cwd_buf, PATH_MAX ) == NULL ) {
+      fatal_error( EX_UNAVAILABLE,
+        "could not get current working directory: %s\n", STRERROR()
+      );
+    }
+    cwd_len = strlen( cwd_buf );
+    if ( cwd_len > 0 && cwd_buf[ cwd_len - 1 ] != '/' ) {
+      cwd_buf[   cwd_len ] = '/';
+      cwd_buf[ ++cwd_len ] = '\0';
+    }
+  }
+
+  if ( strncmp( full_path, cwd_buf, cwd_len ) == 0 ) {
+    delims[0] = '"';
+    delims[1] = '"';
+  }
+  else {
+    delims[0] = '<';
+    delims[1] = '>';
+  }
+}
 
 /**
  * TODO
@@ -134,18 +172,8 @@ static bool ti_unneeded_visitor( void *node_data, void *visit_data ) {
   (void)visit_data;
 
   if ( !inc->is_needed && inc->depth == 1 ) {
-    CXString          file_str = tidy_File_getRealPathName( inc->file );
-    char const *const file_cstr = clang_getCString( file_str );
-    char const *const resolved_path = include_resolve( file_cstr );
-
-    char inc_delim[2];
-    include_get_delims( file_cstr, inc_delim );
-
-    PRINTF( "#include %c%s%c", inc_delim[0], resolved_path, inc_delim[1] );
-    if ( opt_comments[0] != NULL )
-      PRINTF( " %sREMOVE%s", opt_comments[0], opt_comments[1] );
-    PUTC( '\n' );
-
+    CXString file_str = tidy_File_getRealPathName( inc->file );
+    include_print( clang_getCString( file_str ), "REMOVE" );
     clang_disposeString( file_str );
   }
 
@@ -160,6 +188,21 @@ tidy_include* include_find( CXFile file ) {
   return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }
 
+void include_print( char const *real_path, char const *comment ) {
+  assert( real_path != NULL );
+  assert( comment != NULL );
+
+  char inc_delim[2];
+  include_delims( real_path, inc_delim );
+
+  char const *const resolved_path = include_resolve( real_path );
+
+  PRINTF( "#include %c%s%c", inc_delim[0], resolved_path, inc_delim[1] );
+  if ( opt_comments[0] != NULL )
+    PRINTF( " %s%s%s", opt_comments[0], comment, opt_comments[1] );
+  PUTC( '\n' );
+}
+
 void includes_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
   rb_tree_init( &include_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &ti_cmp ) );
@@ -168,7 +211,19 @@ void includes_init( CXTranslationUnit tu ) {
 }
 
 void includes_print_unneeded( void ) {
+  bool reset_opt_comments = false;
+  if ( opt_comments[0] == NULL ) {
+    opt_comments[0] = "// ";
+    opt_comments[1] = "";
+    reset_opt_comments = true;
+  }
+
   rb_tree_visit( &include_set, &ti_unneeded_visitor, /*visit_data=*/NULL );
+
+  if ( reset_opt_comments ) {
+    opt_comments[0] = NULL;
+    opt_comments[1] = NULL;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

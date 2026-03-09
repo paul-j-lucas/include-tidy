@@ -185,22 +185,10 @@ static bool ts_visitor( void *node_data, void *visit_data ) {
   tidy_symbol const *const sym = node_data;
   (void)visit_data;
 
-  CXString          file_str = tidy_File_getRealPathName( sym->decl_file );
-  char const *const file_cstr = clang_getCString( file_str );
-  char const *const resolved_path = include_resolve( file_cstr );
-
-  char inc_delim[2];
-  include_get_delims( file_cstr, inc_delim );
-
-  PRINTF( "#include %c%s%c", inc_delim[0], resolved_path, inc_delim[1] );
-  if ( opt_comments[0] != NULL ) {
-    PRINTF( " %s%s%s",
-      opt_comments[0], clang_getCString( sym->name ), opt_comments[1]
-    );
-  }
-  PUTC( '\n' );
-
+  CXString file_str = tidy_File_getRealPathName( sym->decl_file );
+  include_print( clang_getCString( file_str ), clang_getCString( sym->name ) );
   clang_disposeString( file_str );
+
   return false;
 }
 

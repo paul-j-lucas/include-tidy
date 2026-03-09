@@ -57,6 +57,14 @@ NODISCARD
 tidy_include* include_find( CXFile file );
 
 /**
+ * Prints a `#include` preprocessor directive.
+ *
+ * @param real_path The include file's real path.
+ * @param comment The text of the comment (not including the delimiters).
+ */
+void include_print( char const *path, char const *comment );
+
+/**
  * Initializes the set of files included in the given translation unit.
  *
  * @param tu The translation unit to use.

@@ -23,14 +23,6 @@
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-/**
- * Gets the `#include` path delimiters that should be used for \a full_path.
- *
- * @param full_path The full path of a file that's included.
- * @param delims A 2-element array to receive the opening and closing
- * delimiters.
- */
-void include_get_delims( char const *full_path, char delims[static 2] );
 
 ///////////////////////////////////////////////////////////////////////////////
 
