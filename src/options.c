@@ -509,12 +509,12 @@ static void move_tidy_args( int *pargc, char const *argv[],
       }
     }
     else if ( STRNCMPLIT( argv[i], "-I" ) == 0 ) {
-      argv[ new_argc++  ] = argv[ i ];
+      argv[ new_argc++ ] = argv[ i ];
       tidy_argv[ tidy_argc++ ] = argv[ i ];
       if ( argv[i][2] == '\0' ) {  // -I <dir>, not -I<dir>
         if ( ++i >= argc )
           fatal_error( EX_USAGE, "-%c requires an argument\n", argv[i][1] );
-        argv[ new_argc++  ] = argv[ i ];
+        argv[ new_argc++ ] = argv[ i ];
         tidy_argv[ tidy_argc++ ] = argv[ i ];
       }
     }
@@ -628,11 +628,11 @@ static char const* parse_file_ext( char const *path ) {
     return "c";
 
   static char const *const CPP_EXT[] = {
-    "cc",
-    "cpp",
-    "c++",
-    "cxx",
-    "cp",
+    "cc",  "hh",
+    "cpp", "hpp",
+    "c++", "h++",
+    "cxx", "hxx",
+    "cp",  "hp",
     NULL
   };
   for ( char const *const *pext = CPP_EXT; *pext != NULL; ++pext ) {
