@@ -123,26 +123,28 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
   assert( lang != NULL );
 
   static char const CLANG_TEMPLATE[] =
-    "%s"                                // clang path
-    " -E"                               // run only the preprocessor stage
-    " -v"                               // show verbose output
-    " -x%s"                             // specify langauge: c or c++
-    " -"                                // read from stdin
-    " </dev/null"                       // read from /dev/null
-    " 2>&1";                            // redirect stderr to stdout
+    "%s"          // clang path
+    " -E"         // run only the preprocessor stage
+    " -v"         // show verbose output
+    " -x%s"       // set langauge: c or c++
+    " -"          // read from stdin
+    " </dev/null" // read from /dev/null
+    " 2>&1";      // redirect stderr to stdout
 
-  char clang_buf[ PATH_MAX + 32 ];
-  snprintf( clang_buf, sizeof clang_buf, CLANG_TEMPLATE, clang_path, lang );
+  char *clang = NULL;
+  if ( unlikely( asprintf( &clang, CLANG_TEMPLATE, clang_path, lang ) ) == -1 )
+    goto error;
 
-  FILE *const clang = popen( clang_buf, "r" );
-  if ( clang == NULL )
+  FILE *const fclang = popen( clang, "r" );
+  free( clang );
+  if ( fclang == NULL )
     goto error;
 
   bool    found_include_search = false;
   char   *line_buf = NULL;
   size_t  line_cap = 0;
 
-  while ( getline( &line_buf, &line_cap, clang ) != -1 ) {
+  while ( getline( &line_buf, &line_cap, fclang ) != -1 ) {
     if ( strcmp( line_buf, "#include <...> search starts here:\n" ) == 0 ) {
       found_include_search = true;
       break;
@@ -158,7 +160,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
       }
     } // for
 
-    while ( getline( &line_buf, &line_cap, clang ) != -1 ) {
+    while ( getline( &line_buf, &line_cap, fclang ) != -1 ) {
       if ( strcmp( line_buf, "End of search list.\n" ) == 0 )
         break;
 
@@ -207,9 +209,9 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
   }
 
   free( line_buf );
-  if ( ferror( clang ) )
+  if ( ferror( fclang ) )
     goto error;
-  pclose( clang );
+  pclose( fclang );
   return;
 
 error:
