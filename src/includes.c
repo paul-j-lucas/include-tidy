@@ -97,24 +97,24 @@ static void include_visitor( CXFile included_file,
                              CXClientData client_data ) {
   (void)client_data;
 
-  tidy_include inc = {
+  tidy_include include = {
     .file = included_file,
     .count = 1,
     .depth = include_len
   };
 
-  int const rv = clang_getFileUniqueID( included_file, &inc.file_id );
+  int const rv = clang_getFileUniqueID( included_file, &include.file_id );
   (void)rv;
 
   if ( include_len == 1 ) {             // file is directly included
     clang_getSpellingLocation(
-      inclusion_stack[0], /*file=*/NULL, &inc.line, /*column=*/NULL,
+      inclusion_stack[0], /*file=*/NULL, &include.line, /*column=*/NULL,
       /*offset=*/NULL
     );
   }
 
   rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &include_set, &inc, sizeof inc );
+    rb_tree_insert( &include_set, &include, sizeof include );
   if ( !rv_rbi.inserted ) {
     tidy_include *const old_include = RB_DINT( rv_rbi.node );
     ++old_include->count;
@@ -166,13 +166,13 @@ NODISCARD
 static bool ti_unneeded_visitor( void *node_data, void *visit_data ) {
   assert( node_data != NULL );
 
-  tidy_include const *const inc = node_data;
+  tidy_include const *const include = node_data;
   (void)visit_data;
 
-  if ( !inc->is_needed && inc->depth == 1 ) {
-    CXString file_str = tidy_File_getRealPathName( inc->file );
+  if ( !include->is_needed && include->depth == 1 ) {
+    CXString file_str = tidy_File_getRealPathName( include->file );
     char *delete = NULL;
-    check_asprintf( &delete, "DELETE line %u", inc->line );
+    check_asprintf( &delete, "DELETE line %u", include->line );
     include_print( clang_getCString( file_str ), delete );
     free( delete );
     clang_disposeString( file_str );
@@ -184,7 +184,10 @@ static bool ti_unneeded_visitor( void *node_data, void *visit_data ) {
 ////////// extern functions ///////////////////////////////////////////////////
 
 tidy_include* include_find( CXFile file ) {
-  tidy_include const include = { .file = file };
+  tidy_include include = { .file = file };
+  int const rv = clang_getFileUniqueID( file, &include.file_id );
+  (void)rv;
+
   rb_node_t const *const found_rb = rb_tree_find( &include_set, &include );
   return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }
