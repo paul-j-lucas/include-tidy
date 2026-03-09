@@ -574,12 +574,19 @@ static void print_usage( int status ) {
 
   FPRINTF( fout,
     "usage: %s [-Xtidy tidy-option]... [clang-option]... source-file\n"
-    "       %s --help\n"
-    "       %s --version\n"
+    "\n"
+    "global options:\n"
+    "  --help              Print this help and exit.\n"
+    "  --version           Print version and exit.\n"
+    "\n"
+    "include-tidy options:\n"
+    "  --clang=arg    (-" SOPT(CLANG) ") Path of clang to use; default \"clang\".\n"
+    "  --comments=arg (-" SOPT(COMMENTS) ") Comment delimiters: \"//\", \"/*\", or \"none\".\n"
+    "  --verbose      (-" SOPT(VERBOSE) ") Print verbose output.\n"
     "\n"
     PACKAGE_NAME " home page: " PACKAGE_URL "\n"
     "Report bugs to: " PACKAGE_BUGREPORT "\n",
-    prog_name, prog_name, prog_name
+    prog_name
   );
 
   exit( status );
