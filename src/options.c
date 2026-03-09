@@ -46,6 +46,7 @@
 #include <string.h>
 
 // in ascending option character ASCII order; sort using: sort -bdfk3
+#define OPT_ALIGN                 a
 #define OPT_CLANG                 c
 #define OPT_COMMENTS              C
 #define OPT_HELP                  h
@@ -75,6 +76,7 @@
  * Command-line options.
  */
 static struct option const OPTIONS[] = {
+  { "align",    required_argument,  NULL, COPT(ALIGN)     },
   { "clang",    required_argument,  NULL, COPT(CLANG)     },
   { "comments", required_argument,  NULL, COPT(COMMENTS)  },
   { "help",     no_argument,        NULL, COPT(HELP)      },
@@ -83,7 +85,10 @@ static struct option const OPTIONS[] = {
   { NULL,       0,                  NULL, 0               }
 };
 
+static unsigned const COMMENT_ALIGN_MAX = 256;
+
 // extern option variables
+unsigned            opt_comment_align = 41;
 char const         *opt_comments[2] = { "// ", "" };
 
 // option variables
@@ -100,6 +105,9 @@ static void         include_add_path( char const* );
 NODISCARD
 static char const*  opt_format( char, char[const], size_t ),
                  *  opt_get_long( char );
+
+NODISCARD
+unsigned long long  parse_ull( char const* );
 
 /////////// local functions ///////////////////////////////////////////////////
 
@@ -644,6 +652,49 @@ static char const* parse_file_ext( char const *path ) {
 }
 
 /**
+ * TODO.
+ *
+ * @param s.
+ * @return Returns TODO.
+ */
+NODISCARD
+unsigned parse_comment_alignment( char const *s ) {
+  assert( s != NULL );
+  unsigned long long ull = parse_ull( s );
+  if ( ull > COMMENT_ALIGN_MAX ) {
+    fatal_error( EX_USAGE,
+      "\"%s\": invalid value for --align/-a; must be 0-%u\n",
+      s, COMMENT_ALIGN_MAX
+    );
+  }
+  return STATIC_CAST( unsigned, ull );
+}
+
+/**
+ * Parses a string into an <code>unsigned long long</code>.
+ *
+ * @remarks Unlike **strtoull(3)**, insists that \a s is entirely a non-
+ * negative number.
+ *
+ * @param s The NULL-terminated string to parse.
+ * @return Returns the parsed number only if \a s is entirely a non-negative
+ * number or prints an error message and exits if there was an error.
+ */
+NODISCARD
+unsigned long long parse_ull( char const *s ) {
+  assert( s != NULL );
+  SKIP_WS( s );
+  if ( likely( s[0] != '\0' || s[0] != '-' ) ) {
+    char *end = NULL;
+    errno = 0;
+    unsigned long long const n = strtoull( s, &end, 0 );
+    if ( likely( errno == 0 && *end == '\0' ) )
+      return n;
+  }
+  fatal_error( EX_USAGE, "\"%s\": invalid integer\n", s );
+}
+
+/**
  * Prints the usage message to standard error and exits.
  *
  * @param status The status to exit with.  If it is `EX_OK`, prints to standard
@@ -779,6 +830,9 @@ void options_init( int *pargc, char const **pargv[] ) {
     if ( opt == -1 )
       break;
     switch ( opt ) {
+      case COPT(ALIGN):;
+        opt_comment_align = parse_comment_alignment( optarg );
+        break;
       case COPT(CLANG):                 // already handled
         break;
       case COPT(COMMENTS):
