@@ -21,7 +21,7 @@
 /**
  * @file
  * Defines global variables and functions for **include-tidy** options.
- */
+*/
 
 // local
 #include "pjl_config.h"                 /* must go first */
@@ -636,35 +636,48 @@ static void parse_comment_style( char const *comment_delim ) {
  */
 NODISCARD
 static char const* parse_file_ext( char const *path ) {
+  struct ext_lang_map {
+    char const *ext;
+    char const *lang;
+  };
+  typedef struct ext_lang_map ext_lang_map;
+
+  static ext_lang_map const EXT_LANG_MAP[] = {
+    { "c",   "c"   },
+    { "c++", "c++" },
+    { "cc",  "c++" },
+    { "cp",  "c++" },
+    { "cpp", "c++" },
+    { "cxx", "c++" },
+    { "h",   "c"   },
+    { "h++", "c++" },
+    { "hh",  "c++" },
+    { "hp",  "c++" },
+    { "hpp", "c++" },
+    { "hxx", "c++" },
+  };
+
   assert( path != NULL );
 
-  char const *const dot = strchr( path, '.' );
+  char const *const dot = strrchr( path, '.' );
   if ( dot == NULL || dot[1] == '\0' )
     return NULL;
   char const *const ext = dot + 1;
 
-  if ( strcasecmp( ext, "c" ) == 0 )
-    return "c";
-
-  static char const *const CPP_EXT[] = {
-    "cc",  "hh",
-    "cpp", "hpp",
-    "c++", "h++",
-    "cxx", "hxx",
-    "cp",  "hp",
-    NULL
-  };
-  for ( char const *const *pext = CPP_EXT; *pext != NULL; ++pext ) {
-    if ( strcasecmp( ext, *pext ) == 0 )
-      return "c++";
+  FOREACH_ARRAY_ELEMENT( ext_lang_map, m, EXT_LANG_MAP ) {
+    if ( strcasecmp( ext, m->ext ) == 0 )
+      return m->lang;
   } // for
 
   EPRINTF(
     "%s: \"%s\": unknown file extension; must be one of ",
     prog_name, ext
   );
-  fput_list( stderr, CPP_EXT, /*gets=*/NULL );
+  bool comma = false;
+  FOREACH_ARRAY_ELEMENT( ext_lang_map, m, EXT_LANG_MAP )
+    EPRINTF( true_or_set( &comma ) ? ", %s" : "%s", m->ext );
   EPUTS( "; or use -xc[++]\n" );
+
   exit( EX_USAGE );
 }
 
