@@ -23,6 +23,7 @@
 
 // local
 #include "pjl_config.h"
+#include "symbols.h"
 
 // libclang
 #include <clang-c/Index.h>
@@ -30,39 +31,16 @@
 // standard
 #include <stdbool.h>
 
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * A file that was included.
- */
-struct tidy_include {
-  CXFile          file;                 ///< File that was included.
-  CXFileUniqueID  file_id;              ///< Unique file ID.
-  unsigned        count;                ///< Number of times included.
-  unsigned        depth;                ///< "Depth" of include.
-  unsigned        line;                 ///< Line included from.
-  bool            is_needed;            ///< Is this include needed?
-};
-typedef struct tidy_include tidy_include;
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Attempts to find \a file among the set of files included.
+ * Adds \a sym to the set of symbols that are used and declared in \a
+ * include_file.
  *
- * @param file The file to find.
- * @return Returns the corresponding tidy_include if found or NULL if not.
+ * @param include_file The file that was included that declared \a sym.
+ * @return Returns `true` only if the symbol was added.
  */
-NODISCARD
-tidy_include* include_find( CXFile file );
-
-/**
- * Prints a `#include` preprocessor directive.
- *
- * @param real_path The include file's real path.
- * @param comment The text of the comment (not including the delimiters).
- */
-void include_print( char const *path, char const *comment );
+bool include_add_symbol( CXFile include_file, tidy_symbol *sym );
 
 /**
  * Initializes the set of files included in the given translation unit.
@@ -72,9 +50,9 @@ void include_print( char const *path, char const *comment );
 void includes_init( CXTranslationUnit tu );
 
 /**
- * Print unneeded include files.
+ * Prints include files.
  */
-void includes_print_unneeded( void );
+void includes_print( void );
 
 ///////////////////////////////////////////////////////////////////////////////
 

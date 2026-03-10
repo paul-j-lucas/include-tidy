@@ -41,7 +41,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Additional data passed to symbol_visitor.
+ * Additional data passed to symbols_init_visitor.
  */
 struct symbol_visitor_data {
   CXFile source_file;                   ///< The file being tidied.
@@ -49,15 +49,15 @@ struct symbol_visitor_data {
 typedef struct symbol_visitor_data symbol_visitor_data;
 
 // local functions
-static void ts_cleanup( tidy_symbol* );
+static void tidy_symbol_cleanup( tidy_symbol* );
 
 static rb_tree_t symbol_set;            ///< Set of symbols.
 
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Helper function for symbol_visitor that gets whether the symbol at \a cursor
- * is referenced from \a file.
+ * Helper function for symbols_init_visitor that gets whether the symbol at \a
+ * cursor is referenced from \a file.
  *
  * @param cursor The cursor for the symbol.
  * @param file The file of interest.
@@ -73,19 +73,29 @@ static bool is_symbol_in_file( CXCursor cursor, CXFile file ) {
 }
 
 /**
+ * Cleans-up all symbols.
+ */
+static void symbols_cleanup( void ) {
+  rb_tree_cleanup(
+    &symbol_set, POINTER_CAST( rb_free_fn_t, &tidy_symbol_cleanup )
+  );
+}
+
+/**
  * Visits each symbol in a translation unit.
  *
  * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent Not used.
- * @param client_data A pointer to a symbol_visitor_data.
+ * @param data A pointer to a symbol_visitor_data.
  * @return Always returns `CXChildVisit_Recurse`.
  */
-static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
-                                               CXClientData client_data ) {
+static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
+                                                     CXCursor parent,
+                                                     CXClientData data ) {
   (void)parent;
-  assert( client_data != NULL );
+  assert( data != NULL );
   symbol_visitor_data const *const svd =
-    POINTER_CAST( symbol_visitor_data const*, client_data );
+    POINTER_CAST( symbol_visitor_data const*, data );
 
   if ( !is_symbol_in_file( cursor, svd->source_file ) )
     goto skip;
@@ -120,12 +130,6 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
   if ( clang_File_isEqual( first_file, svd->source_file ) )
     goto skip;
 
-  // If the symbol was declared in a file directly included, that file is
-  // needed.
-  tidy_include *const include = include_find( first_file );
-  if ( include != NULL && include->depth == 1 )
-    include->is_needed = true;
-
   tidy_symbol sym = {
     .name = clang_getCursorSpelling( first_cursor ),
     .decl_file = first_file,
@@ -133,18 +137,13 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
   };
 
   rb_insert_rv_t const rv_rbi = rb_tree_insert( &symbol_set, &sym, sizeof sym );
-  if ( !rv_rbi.inserted )
-    ts_cleanup( &sym );
+  if ( !(rv_rbi.inserted &&
+         include_add_symbol( first_file, RB_DINT( rv_rbi.node ) )) ) {
+    tidy_symbol_cleanup( &sym );
+  }
 
 skip:
   return CXChildVisit_Recurse;
-}
-
-/**
- * Cleans-up all symbols.
- */
-static void symbols_cleanup( void ) {
-  rb_tree_cleanup( &symbol_set, POINTER_CAST( rb_free_fn_t, &ts_cleanup ) );
 }
 
 /**
@@ -152,23 +151,29 @@ static void symbols_cleanup( void ) {
  *
  * @param sym The tidy_symbol to clean up.  If NULL, does nothing.
  */
-static void ts_cleanup( tidy_symbol *sym ) {
+static void tidy_symbol_cleanup( tidy_symbol *sym ) {
   if ( sym == NULL )
     return;
   clang_disposeString( sym->name );
 }
 
-/**
- * Compares two \ref tidy_include objects.
- *
- * @param i_sym The first symbol.
- * @param j_sym The second symbol.
- * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
- * i_sym is less than, equal to, or greater than the name of \a j_sym,
- * respectively.
- */
+////////// extern functions ///////////////////////////////////////////////////
+
+void symbols_init( CXTranslationUnit tu ) {
+  ASSERT_RUN_ONCE();
+  rb_tree_init(
+    &symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &ti_symbol_cmp )
+  );
+  ATEXIT( &symbols_cleanup );
+  CXCursor cursor = clang_getTranslationUnitCursor( tu );
+  symbol_visitor_data svd = {
+    .source_file = clang_getFile( tu, tidy_source_path )
+  };
+  clang_visitChildren( cursor, &symbols_init_visitor, &svd );
+}
+
 NODISCARD
-static int ts_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
+int ti_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
   assert( i_sym != NULL );
   assert( j_sym != NULL );
 
@@ -176,44 +181,6 @@ static int ts_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
   char const *const j_sym_cstr = clang_getCString( j_sym->name );
 
   return strcmp( i_sym_cstr, j_sym_cstr );
-}
-
-/**
- * Visits each symbol that needs a `#include` file in a translation unit.
- *
- * @param node_data The tidy_symbol.
- * @param visit_data Not used.
- * @return Always returns `false` (keep visiting).
- */
-NODISCARD
-static bool ts_visitor( void *node_data, void *visit_data ) {
-  assert( node_data != NULL );
-
-  tidy_symbol const *const sym = node_data;
-  (void)visit_data;
-
-  CXString file_str = tidy_File_getRealPathName( sym->decl_file );
-  include_print( clang_getCString( file_str ), clang_getCString( sym->name ) );
-  clang_disposeString( file_str );
-
-  return false;
-}
-
-////////// extern functions ///////////////////////////////////////////////////
-
-void symbols_init( CXTranslationUnit tu ) {
-  ASSERT_RUN_ONCE();
-  rb_tree_init( &symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &ts_cmp ) );
-  ATEXIT( &symbols_cleanup );
-  CXCursor cursor = clang_getTranslationUnitCursor( tu );
-  symbol_visitor_data svd = {
-    .source_file = clang_getFile( tu, tidy_source_path )
-  };
-  clang_visitChildren( cursor, &symbol_visitor, &svd );
-}
-
-void symbols_visit( void ) {
-  rb_tree_visit( &symbol_set, &ts_visitor, /*visit_data=*/NULL );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
