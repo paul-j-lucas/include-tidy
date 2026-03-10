@@ -169,10 +169,10 @@ static bool ti_unneeded_visitor( void *node_data, void *visit_data ) {
 
   if ( !include->is_needed && include->depth == 1 ) {
     CXString file_str = tidy_File_getRealPathName( include->file );
-    char *delete = NULL;
-    check_asprintf( &delete, "DELETE line %u", include->line );
-    include_print( clang_getCString( file_str ), delete );
-    free( delete );
+    char *delete_line = NULL;
+    check_asprintf( &delete_line, "DELETE line %u", include->line );
+    include_print( clang_getCString( file_str ), delete_line );
+    free( delete_line );
     clang_disposeString( file_str );
   }
 
