@@ -56,6 +56,23 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
+ * Helper function for symbol_visitor that gets whether the symbol at \a cursor
+ * is referenced from \a file.
+ *
+ * @param cursor The cursor for the symbol.
+ * @param file The file of interest.
+ * @return Returns `true` only if the symbol is referenced from file.
+ */
+static bool is_symbol_in_file( CXCursor cursor, CXFile file ) {
+  CXSourceLocation  sym_loc = clang_getCursorLocation( cursor );
+  CXFile            sym_file;
+
+  clang_getSpellingLocation( sym_loc, &sym_file,
+                             /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL );
+  return sym_file != NULL && clang_File_isEqual( sym_file, file );
+}
+
+/**
  * Visits each symbol in a translation unit.
  *
  * @param cursor The cursor for the symbol in the AST being visited.
@@ -70,66 +87,54 @@ static enum CXChildVisitResult symbol_visitor( CXCursor cursor, CXCursor parent,
   symbol_visitor_data const *const svd =
     POINTER_CAST( symbol_visitor_data const*, client_data );
 
-  CXSourceLocation  ref_loc = clang_getCursorLocation( cursor );
-  CXFile            ref_file;
-
-  clang_getSpellingLocation(
-    ref_loc, &ref_file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
-  );
-  if ( ref_file == NULL )
-    goto skip;
-  if ( !clang_File_isEqual( ref_file, svd->source_file ) )
+  if ( !is_symbol_in_file( cursor, svd->source_file ) )
     goto skip;
 
-  enum CXCursorKind const sym_kind = clang_getCursorKind( cursor );
-  switch ( sym_kind ) {
+  switch ( clang_getCursorKind( cursor ) ) {
     case CXCursor_CallExpr:
     case CXCursor_DeclRefExpr:
     case CXCursor_MacroExpansion:;
-
-      // Get the cursor to this reference of the symbol.
-      CXCursor ref_cursor = clang_getCursorReferenced( cursor );
-      if ( clang_isInvalid( ref_cursor.kind ) )
-        break;
-
-      // Get the cursor to the first time the symbol was seen.
-      CXCursor          decl_cursor = clang_getCanonicalCursor( ref_cursor );
-      CXSourceLocation  decl_loc = clang_getCursorLocation( decl_cursor );
-      CXFile            decl_file;
-      unsigned          decl_line;
-
-      clang_getSpellingLocation(
-        decl_loc, &decl_file, &decl_line, /*column=*/NULL, /*offset=*/NULL
-      );
-      if ( decl_file == NULL )
-        break;
-
-      // If the symbol is declared in the file being tidied, we don't care.
-      if ( clang_File_isEqual( decl_file, svd->source_file ) )
-        break;
-
-      // If the symbol is declared in a file included, we don't care.
-      tidy_include *const inc = include_find( decl_file );
-      if ( inc != NULL && inc->depth == 1 ) {
-        inc->is_needed = true;
-        break;
-      }
-
-      tidy_symbol sym = {
-        .name = clang_getCursorSpelling( decl_cursor ),
-        .decl_file = decl_file,
-        .decl_line = decl_line
-      };
-
-      rb_insert_rv_t const rv_rbi =
-        rb_tree_insert( &symbol_set, &sym, sizeof sym );
-      if ( !rv_rbi.inserted )
-        ts_cleanup( &sym );
       break;
-
     default:
-      break;
+      goto skip;
   } // switch
+
+  // Gets the cursor for _a_ declaration of the symbol.
+  CXCursor decl_cursor = clang_getCursorReferenced( cursor );
+  if ( clang_isInvalid( decl_cursor.kind ) )
+    goto skip;
+
+  // Gets the cursor for the first time the symbol was seen.
+  CXCursor          first_cursor = clang_getCanonicalCursor( decl_cursor );
+  CXSourceLocation  first_loc = clang_getCursorLocation( first_cursor );
+  CXFile            first_file;
+  unsigned          first_line;
+
+  clang_getSpellingLocation(
+    first_loc, &first_file, &first_line, /*column=*/NULL, /*offset=*/NULL
+  );
+  if ( first_file == NULL )
+    goto skip;
+
+  // If the symbol was first seen in the file being tidied, we don't care.
+  if ( clang_File_isEqual( first_file, svd->source_file ) )
+    goto skip;
+
+  // If the symbol was declared in a file directly included, that file is
+  // needed.
+  tidy_include *const include = include_find( first_file );
+  if ( include != NULL && include->depth == 1 )
+    include->is_needed = true;
+
+  tidy_symbol sym = {
+    .name = clang_getCursorSpelling( first_cursor ),
+    .decl_file = first_file,
+    .decl_line = first_line
+  };
+
+  rb_insert_rv_t const rv_rbi = rb_tree_insert( &symbol_set, &sym, sizeof sym );
+  if ( !rv_rbi.inserted )
+    ts_cleanup( &sym );
 
 skip:
   return CXChildVisit_Recurse;
