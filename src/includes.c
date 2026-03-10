@@ -215,7 +215,7 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
     include_print( file_cstr, declared.symbols );
     free( declared.symbols );
   }
-  else {
+  else if ( include->depth == 1 ) {     // directly included, but not needed
     char *delete_line = NULL;
     check_asprintf( &delete_line, "DELETE line %u", include->line );
     include_print( file_cstr, delete_line );
