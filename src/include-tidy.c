@@ -59,8 +59,7 @@ int main( int argc, char const *argv[] ) {
   CXTranslationUnit tu = tu_new( argc, argv );
   includes_init( tu );
   symbols_init( tu );
-  symbols_visit();
-  includes_print_unneeded();
+  includes_print();
 
   return EX_OK;
 }

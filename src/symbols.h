@@ -21,6 +21,9 @@
 #ifndef include_tidy_symbols_H
 #define include_tidy_symbols_H
 
+// local
+#include "pjl_config.h"
+
 // libclang
 #include <clang-c/Index.h>
 
@@ -43,7 +46,17 @@ typedef struct tidy_symbol tidy_symbol;
  */
 void symbols_init( CXTranslationUnit tu );
 
-void symbols_visit( void );
+/**
+ * Compares two \ref tidy_symbol objects.
+ *
+ * @param i_sym The first symbol.
+ * @param j_sym The second symbol.
+ * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
+ * i_sym is less than, equal to, or greater than the name of \a j_sym,
+ * respectively.
+ */
+NODISCARD
+int ti_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym );
 
 ///////////////////////////////////////////////////////////////////////////////
 
