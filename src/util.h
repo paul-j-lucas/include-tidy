@@ -123,11 +123,27 @@
 /// @endcond
 
 /**
+ * Gets a pointer to one element past the last of the given array.
+ *
+ * @param ARRAY The array to use.
+ * @return Returns a pointer to one element past the last of \a ARRAY.
+ *
+ * @note \a ARRAY _must_ be a statically allocated array.
+ *
+ * @sa #ARRAY_SIZE()
+ * @sa #FOREACH_ARRAY_ELEMENT()
+ */
+#define ARRAY_END(ARRAY)          ( (ARRAY) + ARRAY_SIZE( (ARRAY) ) )
+
+/**
  * Gets the number of elements of the given array.
  *
  * @param A The array to get the number of elements of.
  *
  * @note \a A _must_ be a statically allocated array.
+ *
+ * @sa #ARRAY_END()
+ * @sa #FOREACH_ARRAY_ELEMENT()
  */
 #define ARRAY_SIZE(A) (     \
   sizeof(A) / sizeof(0[A])  \
@@ -238,6 +254,21 @@
  */
 #define FERROR(STREAM) \
   PERROR_EXIT_IF( ferror( STREAM ) != 0, EX_IOERR )
+
+/**
+ * Convenience macro for iterating over the elements of a static array.
+ *
+ * @param TYPE The type of element.
+ * @param VAR The element loop variable.
+ * @param ARRAY The array to iterate over.
+ *
+ * @note \a ARRAY _must_ be a statically allocated array.
+ *
+ * @sa #ARRAY_END()
+ * @sa #ARRAY_SIZE()
+ */
+#define FOREACH_ARRAY_ELEMENT(TYPE,VAR,ARRAY) \
+  for ( TYPE const *VAR = (ARRAY); VAR < ARRAY_END( (ARRAY) ); ++VAR )
 
 /**
  * Shorthand for printing to standard output.
