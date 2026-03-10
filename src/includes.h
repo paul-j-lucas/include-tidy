@@ -34,10 +34,11 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Adds \a sym to the set of symbols that are used and declared in \a
- * include_file.
+ * Adds \a sym to the set of symbols that are used in the file being tidied and
+ * declared in \a include_file.
  *
- * @param include_file The file that was included that declared \a sym.
+ * @param include_file The file that declares \a sym.
+ * @param sym The symbol that is used.
  * @return Returns `true` only if the symbol was added.
  */
 bool include_add_symbol( CXFile include_file, tidy_symbol *sym );
