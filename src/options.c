@@ -159,7 +159,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
   } // while
 
   if ( found_include_search ) {
-    int argi = *pargc;                  // index where to insert new -I option
+    int argi = *pargc;                  // where to insert new -isystem option
     for ( int i = *pargc - 1; i > 0; --i ) {
       if ( (*pargv)[i][0] != '-' ) {
         argi = i;
@@ -201,12 +201,12 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
           goto error;
       }
 
-      // make space to insert new -I option before last argv (the filename)
+      // Insert new -isystem option before last argv (the filename).
       memmove( &(*pargv)[ argi + 1 ], &(*pargv)[ argi ], 
                STATIC_CAST( size_t, *pargc - argi + 1 ) * sizeof(char*) );
 
       char *new_arg = NULL;
-      check_asprintf( &new_arg, "-I%s", abs_include_path );
+      check_asprintf( &new_arg, "-isystem%s", abs_include_path );
       (*pargv)[ argi++ ] = new_arg;
       ++*pargc;
     } // while
@@ -434,6 +434,8 @@ static char const* make_short_opts( struct option const opts[static const 2],
  *    to \a *ptidy_argv.
  *  + <tt>-I</tt><i>path</i> or <tt>-I</tt> <i>path</i> copied to \a
  *    *ptidy_argv.
+ *  + <tt>-isystem</tt><i>path</i> or <tt>-isystem</tt> <i>path</i> copied to
+ *    \a *ptidy_argv, but as <tt>-I</tt><i>path</i>.
  *  + <tt>--help</tt> or <tt>--version</tt> are moved to \a *ptidy_argv.
  *
  * All other options and arguments are left as-is in \a argv.  Examples:
@@ -490,7 +492,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
     if ( strcmp( argv[i], "-Xtidy" ) == 0 ) {
       if ( ++i >= argc )
         fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
-      tidy_argv[ tidy_argc++ ] = argv[ i ];
+      tidy_argv[ tidy_argc++ ] = argv[i];
       if ( argv[i][0] == '-' && isalnum( argv[i][1] ) ) {
         if ( argv[i][2] != '\0' )
           continue;
@@ -505,25 +507,38 @@ static void move_tidy_args( int *pargc, char const *argv[],
           continue;
         if ( ++i >= argc )
           fatal_error( EX_USAGE, "-%c requires an argument\n", short_opt );
-        tidy_argv[ tidy_argc++ ] = argv[ i ];
+        tidy_argv[ tidy_argc++ ] = argv[i];
       }
     }
     else if ( STRNCMPLIT( argv[i], "-I" ) == 0 ) {
-      argv[ new_argc++ ] = argv[ i ];
-      tidy_argv[ tidy_argc++ ] = argv[ i ];
+      argv[ new_argc++ ] = argv[i];
+      tidy_argv[ tidy_argc++ ] = argv[i];
       if ( argv[i][2] == '\0' ) {  // -I <dir>, not -I<dir>
         if ( ++i >= argc )
           fatal_error( EX_USAGE, "-%c requires an argument\n", argv[i][1] );
-        argv[ new_argc++ ] = argv[ i ];
-        tidy_argv[ tidy_argc++ ] = argv[ i ];
+        argv[ new_argc++ ] = argv[i];
+        tidy_argv[ tidy_argc++ ] = argv[i];
+      }
+    }
+    else if ( STRNCMPLIT( argv[i], "-isystem" ) == 0 ) {
+      argv[ new_argc++ ] = argv[i];
+      char *new_arg = NULL;
+      check_asprintf( &new_arg, "-I%s", argv[i] + STRLITLEN( "-isystem" ) );
+      tidy_argv[ tidy_argc++ ] = new_arg;
+      if ( argv[i][STRLITLEN( "-isystem" )] == '\0' ) {
+        // -isystem <dir>, not -isystem<dir>
+        if ( ++i >= argc )
+          fatal_error( EX_USAGE, "-isystem requires an argument\n" );
+        argv[ new_argc++ ] = argv[i];
+        tidy_argv[ tidy_argc++ ] = argv[i];
       }
     }
     else if ( strcmp( argv[i], "--help" ) == 0 ||
               strcmp( argv[i], "--version" ) == 0 ) {
-      tidy_argv[ tidy_argc++ ] = argv[ i ];
+      tidy_argv[ tidy_argc++ ] = argv[i];
     }
     else {
-      argv[ new_argc++ ] = argv[ i ];
+      argv[ new_argc++ ] = argv[i];
     }
   } // for
 
