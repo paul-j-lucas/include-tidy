@@ -67,10 +67,8 @@ static void include_delims( char const *full_path, char delims[static 2] ) {
       );
     }
     cwd_len = strlen( cwd_buf );
-    if ( cwd_len > 0 && cwd_buf[ cwd_len - 1 ] != '/' ) {
-      cwd_buf[   cwd_len ] = '/';
-      cwd_buf[ ++cwd_len ] = '\0';
-    }
+    if ( cwd_len > 0 && cwd_buf[ cwd_len - 1 ] != '/' )
+      strcpy( cwd_buf + cwd_len++, "/" );
   }
 
   if ( strncmp( full_path, cwd_buf, cwd_len ) == 0 ) {
