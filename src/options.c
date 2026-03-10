@@ -50,6 +50,7 @@
 #define OPT_CLANG                 c
 #define OPT_COMMENTS              C
 #define OPT_HELP                  h
+#define OPT_LINE_LENGTH           l
 #define OPT_VERBOSE               V
 #define OPT_VERSION               v
 
@@ -76,20 +77,23 @@
  * Command-line options.
  */
 static struct option const OPTIONS[] = {
-  { "align",    required_argument,  NULL, COPT(ALIGN)     },
-  { "clang",    required_argument,  NULL, COPT(CLANG)     },
-  { "comments", required_argument,  NULL, COPT(COMMENTS)  },
-  { "help",     no_argument,        NULL, COPT(HELP)      },
-  { "verbose",  no_argument,        NULL, COPT(VERBOSE)   },
-  { "version",  no_argument,        NULL, COPT(VERSION)   },
-  { NULL,       0,                  NULL, 0               }
+  { "align",        required_argument,  NULL, COPT(ALIGN)       },
+  { "clang",        required_argument,  NULL, COPT(CLANG)       },
+  { "comments",     required_argument,  NULL, COPT(COMMENTS)    },
+  { "help",         no_argument,        NULL, COPT(HELP)        },
+  { "line-length",  required_argument,  NULL, COPT(LINE_LENGTH) },
+  { "verbose",      no_argument,        NULL, COPT(VERBOSE)     },
+  { "version",      no_argument,        NULL, COPT(VERSION)     },
+  { NULL,           0,                  NULL, 0                 }
 };
 
 static unsigned const COMMENT_ALIGN_MAX = 256;
+static unsigned const LINE_LENGTH_MAX   = 256;
 
 // extern option variables
 unsigned            opt_comment_align = 41;
 char const         *opt_comment_style[2] = { "// ", "" };
+unsigned            opt_line_length = 80;
 
 // option variables
 static unsigned     opt_verbose;
@@ -665,10 +669,10 @@ static char const* parse_file_ext( char const *path ) {
 }
 
 /**
- * TODO.
+ * Parses the alignment column number for comments.
  *
- * @param s.
- * @return Returns TODO.
+ * @param s The string to parse.
+ * @return Returns the comment alignment column.
  */
 NODISCARD
 unsigned parse_comment_alignment( char const *s ) {
@@ -678,6 +682,25 @@ unsigned parse_comment_alignment( char const *s ) {
     fatal_error( EX_USAGE,
       "\"%s\": invalid value for --align/-a; must be 0-%u\n",
       s, COMMENT_ALIGN_MAX
+    );
+  }
+  return STATIC_CAST( unsigned, ull );
+}
+
+/**
+ * Parses the line length.
+ *
+ * @param s The string to parse.
+ * @return Returns the line length.
+ */
+NODISCARD
+unsigned parse_line_length( char const *s ) {
+  assert( s != NULL );
+  unsigned long long ull = parse_ull( s );
+  if ( ull > LINE_LENGTH_MAX ) {
+    fatal_error( EX_USAGE,
+      "\"%s\": invalid value for --line-length/-l; must be 1-%u\n",
+      s, LINE_LENGTH_MAX
     );
   }
   return STATIC_CAST( unsigned, ull );
@@ -860,6 +883,9 @@ void options_init( int *pargc, char const **pargv[] ) {
         if ( *SKIP_WS( optarg ) == '\0' )
           goto missing_arg;
         include_add_path( optarg );
+        break;
+      case COPT(LINE_LENGTH):
+        opt_line_length = parse_line_length( optarg );
         break;
       case COPT(VERBOSE):
         ++opt_verbose;
