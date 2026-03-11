@@ -59,7 +59,7 @@ typedef struct tidy_include tidy_include;
  */
 struct symbols_declared {
   char   *symbols;                      ///< TODO.
-  size_t  len;                          ///< TODO.
+  size_t  symbols_len;                  ///< Length of \ref symbols.
 };
 typedef struct symbols_declared symbols_declared;
 
@@ -79,7 +79,7 @@ static rb_tree_t include_set;           ///< Set of included files.
 /**
  * Prints a `#include` preprocessor directive.
  *
- * @param include TODO.
+ * @param include The tidy_include to print.
  * @param comment The text of the comment (not including the delimiters).
  */
 static void include_print( tidy_include const *include, char const *comment ) {
@@ -329,19 +329,19 @@ static bool symbols_declared_visitor( void *node_data, void *visit_data ) {
   char const *const name_cstr = clang_getCString( sym->name );
   size_t const      name_len  = strlen( name_cstr );
 
-  if ( declared->len == 0 ) {
+  if ( declared->symbols_len == 0 ) {
     declared->symbols = check_strdup( name_cstr );
-    declared->len = name_len;
+    declared->symbols_len = name_len;
   }
   else {
     size_t const add_len = STRLITLEN( ", " ) + name_len;
     size_t const comment_len =
       strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
-    if ( comment_len + declared->len + add_len >= opt_line_length )
+    if ( comment_len + declared->symbols_len + add_len >= opt_line_length )
       return true;
-    REALLOC( declared->symbols, char, declared->len + add_len + 1 );
-    sprintf( declared->symbols + declared->len, ", %s", name_cstr );
-    declared->len += add_len;
+    REALLOC( declared->symbols, char, declared->symbols_len + add_len + 1 );
+    sprintf( declared->symbols + declared->symbols_len, ", %s", name_cstr );
+    declared->symbols_len += add_len;
   }
 
   return false;
