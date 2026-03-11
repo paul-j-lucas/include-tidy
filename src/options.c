@@ -69,12 +69,27 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define OPT_BUF_SIZE        32          /**< Maximum size for an option. */
+/**
+ * Convenience macro for iterating over all command-line options.
+ *
+ * @param VAR The `struct option` loop variable.
+ */
+#define FOREACH_CLI_OPTION(VAR, OPTIONS) \
+  for ( struct option const *VAR = (OPTIONS); (VAR)->name != NULL; ++(VAR) )
+
+#define OPT_COMMENT_ALIGN_DEFAULT 41
+#define OPT_COMMENT_ALIGN_MAX     256
+#define OPT_LINE_LENGTH_DEFAULT   80
+#define OPT_LINE_LENGTH_MAX       256
+
+#define OPT_BUF_SIZE              32    /**< Maximum size for an option. */
 
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
  * Command-line options.
+ *
+ * @sa OPTIONS_HELP
  */
 static struct option const OPTIONS[] = {
   { "align",        required_argument,  NULL, COPT(ALIGN)       },
@@ -87,13 +102,28 @@ static struct option const OPTIONS[] = {
   { NULL,           0,                  NULL, 0                 }
 };
 
-static unsigned const COMMENT_ALIGN_MAX = 256;
-static unsigned const LINE_LENGTH_MAX   = 256;
+/**
+ * Command-line options help.
+ *
+ * @note It is indexed by short option characters.
+ *
+ * @sa get_opt_help()
+ * @sa OPTIONS
+ */
+static char const *const OPTIONS_HELP[] = {
+  [ COPT(ALIGN) ] = "Align comments to this column; default: " STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
+  [ COPT(CLANG) ] = "Path of clang to use; default \"clang\"",
+  [ COPT(COMMENTS) ] = "Comment delimiters: \"//\", \"/*\", or \"none\"",
+  [ COPT(HELP) ] = "Print this help and exit",
+  [ COPT(LINE_LENGTH) ] = "Line length; default: " STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
+  [ COPT(VERBOSE) ] = "Print verbose output",
+  [ COPT(VERSION) ] = "Print version and exit",
+};
 
 // extern option variables
-unsigned            opt_comment_align = 41;
+unsigned            opt_comment_align = OPT_COMMENT_ALIGN_DEFAULT;
 char const         *opt_comment_style[2] = { "// ", "" };
-unsigned            opt_line_length = 80;
+unsigned            opt_line_length = OPT_LINE_LENGTH_DEFAULT;
 
 // option variables
 static unsigned     opt_verbose;
@@ -296,6 +326,21 @@ missing_arg:
 }
 
 /**
+ * Gets the help message for \a opt.
+ *
+ * @param opt The option to get the help for.
+ * @return Returns said help message.
+ */
+NODISCARD
+static char const* get_opt_help( int opt ) {
+  assert( opt > 0 );
+  assert( (unsigned)opt < ARRAY_SIZE( OPTIONS_HELP ) );
+  char const *const help = OPTIONS_HELP[ opt ];
+  assert( help != NULL );
+  return help;
+}
+
+/**
  * Gets the `option` corresponding to \a short_opt.
  *
  * @param short_opt The short option to get the option for.
@@ -303,7 +348,7 @@ missing_arg:
  */
 NODISCARD
 static struct option const* get_option( char short_opt ) {
-  for ( struct option const *opt = OPTIONS; opt->name != NULL; ++opt ) {
+  FOREACH_CLI_OPTION( opt, OPTIONS ) {
     if ( opt->val == short_opt )
       return opt;
   } // for
@@ -399,7 +444,7 @@ static char const* make_short_opts( struct option const opts[static const 2],
 
   // pre-flight to calculate string length
   size_t len = 1 /* for leading ':' */ + extra_opts_len;
-  for ( struct option const *opt = opts; opt->name != NULL; ++opt ) {
+  FOREACH_CLI_OPTION( opt, opts ) {
     assert( opt->has_arg >= 0 && opt->has_arg <= 2 );
     len += 1 + STATIC_CAST( unsigned, opt->has_arg );
   } // for
@@ -408,7 +453,7 @@ static char const* make_short_opts( struct option const opts[static const 2],
   char *s = short_opts;
 
   *s++ = ':';                           // return missing argument as ':'
-  for ( struct option const *opt = opts; opt->name != NULL; ++opt ) {
+  FOREACH_CLI_OPTION( opt, opts ) {
     assert( opt->val > 0 && opt->val < 128 );
     *s++ = STATIC_CAST( char, opt->val );
     switch ( opt->has_arg ) {
@@ -581,7 +626,7 @@ static char const* opt_format( char short_opt, char buf[const], size_t size ) {
  */
 NODISCARD
 static char const* opt_get_long( char short_opt ) {
-  for ( struct option const *opt = OPTIONS; opt->name != NULL; ++opt ) {
+  FOREACH_CLI_OPTION( opt, OPTIONS ) {
     if ( opt->val == short_opt )
       return opt->name;
   } // for
@@ -691,10 +736,10 @@ NODISCARD
 unsigned parse_comment_alignment( char const *s ) {
   assert( s != NULL );
   unsigned long long ull = parse_ull( s );
-  if ( ull > COMMENT_ALIGN_MAX ) {
+  if ( ull > OPT_COMMENT_ALIGN_MAX ) {
     fatal_error( EX_USAGE,
-      "\"%s\": invalid value for --align/-a; must be 0-%u\n",
-      s, COMMENT_ALIGN_MAX
+      "\"%s\": invalid value for --align/-a; must be 0-%d\n",
+      s, OPT_COMMENT_ALIGN_MAX
     );
   }
   return STATIC_CAST( unsigned, ull );
@@ -710,10 +755,10 @@ NODISCARD
 unsigned parse_line_length( char const *s ) {
   assert( s != NULL );
   unsigned long long ull = parse_ull( s );
-  if ( ull > LINE_LENGTH_MAX ) {
+  if ( ull > OPT_LINE_LENGTH_MAX ) {
     fatal_error( EX_USAGE,
-      "\"%s\": invalid value for --line-length/-l; must be 1-%u\n",
-      s, LINE_LENGTH_MAX
+      "\"%s\": invalid value for --line-length/-l; must be 1-%d\n",
+      s, OPT_LINE_LENGTH_MAX
     );
   }
   return STATIC_CAST( unsigned, ull );
@@ -751,23 +796,80 @@ unsigned long long parse_ull( char const *s ) {
  */
 _Noreturn
 static void print_usage( int status ) {
+  // pre-flight to calculate longest long option length
+  size_t longest_opt_len = 0;
+  FOREACH_CLI_OPTION( opt, OPTIONS ) {
+    size_t opt_len = strlen( opt->name );
+    switch ( opt->has_arg ) {
+      case no_argument:
+        break;
+      case optional_argument:
+        opt_len += STRLITLEN( "[=ARG]" );
+        break;
+      case required_argument:
+        opt_len += STRLITLEN( "=ARG" );
+        break;
+    } // switch
+    if ( opt_len > longest_opt_len )
+      longest_opt_len = opt_len;
+  } // for
+
   FILE *const fout = status == EX_OK ? stdout : stderr;
 
-  FPRINTF( fout,
+  fprintf( fout,
     "usage: %s [-Xtidy tidy-option]... [clang-option]... source-file\n"
+    "       %s other-option\n"
     "\n"
-    "global options:\n"
-    "  --help              Print this help and exit.\n"
-    "  --version           Print version and exit.\n"
-    "\n"
-    "include-tidy options:\n"
-    "  --clang=arg    (-" SOPT(CLANG) ") Path of clang to use; default \"clang\".\n"
-    "  --comments=arg (-" SOPT(COMMENTS) ") Comment delimiters: \"//\", \"/*\", or \"none\".\n"
-    "  --verbose      (-" SOPT(VERBOSE) ") Print verbose output.\n"
+    "-Xtidy options:\n"
+    , prog_name, prog_name
+  );
+
+  FOREACH_CLI_OPTION( opt, OPTIONS ) {
+    switch ( opt->val ) {
+      case COPT(HELP):
+      case COPT(VERSION):
+        // These are special in that they are allowed directly rather than
+        // following -Xtidy.  Consequently, they don't have short options and
+        // also must be printed seperately (below).
+        continue;
+    } // switch
+    fprintf( fout, "  --%s", opt->name );
+    size_t opt_len = strlen( opt->name );
+    switch ( opt->has_arg ) {
+      case no_argument:
+        break;
+      case optional_argument:
+        opt_len += STATIC_CAST( size_t, fprintf( fout, "[=ARG]" ) );
+        break;
+      case required_argument:
+        opt_len += STATIC_CAST( size_t, fprintf( fout, "=ARG" ) );
+        break;
+    } // switch
+    assert( opt_len <= longest_opt_len );
+    FPUTNSP( longest_opt_len - opt_len, fout );
+    fprintf( fout, " (-%c) %s.\n", opt->val, get_opt_help( opt->val ) );
+  } // for
+
+  fputs( "\nother options:\n", fout );
+
+  FOREACH_CLI_OPTION( opt, OPTIONS ) {
+    switch ( opt->val ) {
+      case COPT(HELP):
+      case COPT(VERSION):
+        assert( opt->has_arg == no_argument );
+        fprintf( fout, "  --%s", opt->name );
+        size_t const opt_len = strlen( opt->name );
+        assert( opt_len <= longest_opt_len );
+        FPUTNSP( longest_opt_len - opt_len + STRLITLEN( " (-?) " ), fout );
+        fprintf( fout, "%s.\n", get_opt_help( opt->val ) );
+    } // switch
+  } // for
+
+  fputs(
     "\n"
     PACKAGE_NAME " home page: " PACKAGE_URL "\n"
     "Report bugs to: " PACKAGE_BUGREPORT "\n",
-    prog_name
+    fout
   );
 
   exit( status );
