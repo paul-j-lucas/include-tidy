@@ -192,12 +192,16 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
     goto done;
 
   if ( include->is_needed ) {
-    symbols_declared declared = { 0 };
-    rb_tree_visit( &include->symbol_set, &symbols_declared_visitor, &declared );
-    include_print( include, declared.symbols );
-    free( declared.symbols );
+    if ( include->depth > 1 || opt_all_includes ) {
+      symbols_declared declared = { 0 };
+      rb_tree_visit(
+        &include->symbol_set, &symbols_declared_visitor, &declared
+      );
+      include_print( include, declared.symbols );
+      free( declared.symbols );
+    }
   }
-  else if ( include->depth == 1 ) {     // directly included, but not needed
+  else if ( include->depth == 1 ) {
     char *delete_line = NULL;
     check_asprintf( &delete_line, "DELETE line %u", include->line );
     include_print( include, delete_line );
