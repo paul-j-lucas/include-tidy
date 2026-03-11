@@ -75,17 +75,17 @@ static rb_tree_t include_set;           ///< Set of included files.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Gets the `#include` path delimiters that should be used for \a full_path.
+ * Gets whether \a full_path is a local include file (as opposed to a system
+ * include file).
  *
  * @param full_path The full path of a file that's included.
- * @param delims A 2-element array to receive the opening and closing
- * delimiters.
+ * @return Returns `true` only if \a full_path is a local include file.
  */
-static void include_delims( char const *full_path, char delims[static 2] ) {
-  assert( full_path != NULL );
-
+static bool is_include_local( char const *full_path ) {
   static char   cwd_buf[ PATH_MAX + 1 ];
   static size_t cwd_len;
+
+  assert( full_path != NULL );
 
   if ( cwd_len == 0 ) {
     if ( getcwd( cwd_buf, PATH_MAX ) == NULL ) {
@@ -98,45 +98,51 @@ static void include_delims( char const *full_path, char delims[static 2] ) {
       strcpy( cwd_buf + cwd_len++, "/" );
   }
 
-  if ( strncmp( full_path, cwd_buf, cwd_len ) == 0 ) {
-    delims[0] = '"';
-    delims[1] = '"';
-  }
-  else {
-    delims[0] = '<';
-    delims[1] = '>';
-  }
+  return strncmp( full_path, cwd_buf, cwd_len ) == 0;
 }
 
 /**
  * Prints a `#include` preprocessor directive.
  *
- * @param real_path The include file's real path.
+ * @param include TODO.
  * @param comment The text of the comment (not including the delimiters).
  */
-static void include_print( char const *real_path, char const *comment ) {
-  assert( real_path != NULL );
+static void include_print( tidy_include const *include, char const *comment ) {
+  assert( include != NULL );
   assert( comment != NULL );
 
-  char inc_delim[2];
-  include_delims( real_path, inc_delim );
+  CXString          file_str  = tidy_File_getRealPathName( include->file );
+  char const *const file_cstr = clang_getCString( file_str );
 
-  char const *const resolved_path = include_resolve( real_path );
+  char inc_delim[2];
+  if ( is_include_local( file_cstr ) ) {
+    inc_delim[0] = '"';
+    inc_delim[1] = '"';
+  }
+  else {
+    inc_delim[0] = '<';
+    inc_delim[1] = '>';
+  }
+
+  char const *const resolved_path = include_resolve( file_cstr );
 
   if ( opt_comment_style[0] == NULL ) {
     PRINTF( "#include %c%s%c\n", inc_delim[0], resolved_path, inc_delim[1] );
-    return;
+    goto done;
   }
 
-  char *include = NULL;
-  unsigned len = check_asprintf( &include,
+  char *include_directive = NULL;
+  unsigned len = check_asprintf( &include_directive,
     "#include %c%s%c", inc_delim[0], resolved_path, inc_delim[1]
   );
-  PUTS( include );
-  free( include );
+  PUTS( include_directive );
+  free( include_directive );
   if ( ++len < opt_comment_align )
     FPUTNSP( opt_comment_align - len, stdout );
   PRINTF( "%s%s%s\n", opt_comment_style[0], comment, opt_comment_style[1] );
+
+done:
+  clang_disposeString( file_str );
 }
 
 /**
@@ -206,23 +212,18 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
   tidy_include const *const include = node_data;
   (void)visit_data;
 
-  CXString          file_str  = tidy_File_getRealPathName( include->file );
-  char const *const file_cstr = clang_getCString( file_str );
-
   if ( include->is_needed ) {
     symbols_declared declared = { 0 };
     rb_tree_visit( &include->symbol_set, &ti_symbol_visitor, &declared );
-    include_print( file_cstr, declared.symbols );
+    include_print( include, declared.symbols );
     free( declared.symbols );
   }
   else if ( include->depth == 1 ) {     // directly included, but not needed
     char *delete_line = NULL;
     check_asprintf( &delete_line, "DELETE line %u", include->line );
-    include_print( file_cstr, delete_line );
+    include_print( include, delete_line );
     free( delete_line );
   }
-
-  clang_disposeString( file_str );
 
   return false;
 }
