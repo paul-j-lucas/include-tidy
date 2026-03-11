@@ -21,12 +21,10 @@
 // local
 #include "pjl_config.h"
 #include "includes.h"
-#include "clang_util.h"
 #include "include-tidy.h"
 #include "options.h"
 #include "red_black.h"
 #include "symbols.h"
-#include "tidy_util.h"
 #include "util.h"
 
 // libclang
@@ -65,10 +63,12 @@ struct symbols_declared {
 typedef struct symbols_declared symbols_declared;
 
 // local functions
-static void tidy_include_cleanup( tidy_include* );
+NODISCARD
+static bool     ti_symbol_visitor( void*, void* );
 
 NODISCARD
-static bool ti_symbol_visitor( void*, void* );
+static CXString tidy_File_getRealPathName( CXFile );
+static void     tidy_include_cleanup( tidy_include* );
 
 static rb_tree_t include_set;           ///< Set of included files.
 
@@ -225,6 +225,27 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
   clang_disposeString( file_str );
 
   return false;
+}
+
+/**
+ * Gets the real path of \a file.
+ *
+ * @param file The file to get the real path of.
+ * @return Returns the string containing the real path of \a file.  The caller
+ * _must_ call `clang_disposeString()` on it.
+ *
+ */
+NODISCARD
+static CXString tidy_File_getRealPathName( CXFile file ) {
+  CXString    file_str  = clang_File_tryGetRealPathName( file );
+  char const *file_cstr = clang_getCString( file_str );
+
+  if ( file_cstr == NULL || file_cstr[0] == '\0' ) {
+    clang_disposeString( file_str );
+    file_str = clang_getFileName( file );
+  }
+
+  return file_str;
 }
 
 /**
