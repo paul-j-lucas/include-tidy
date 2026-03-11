@@ -41,6 +41,7 @@ char const *tidy_source_path;
 
 /// @endcond
 
+void              config_init( char const* );
 CXTranslationUnit tu_new( int, char const *const[] );
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -55,6 +56,7 @@ CXTranslationUnit tu_new( int, char const *const[] );
 int main( int argc, char const *argv[] ) {
   prog_name = base_name( argv[0] );
   options_init( &argc, &argv );
+  config_init( opt_config_path );
 
   CXTranslationUnit tu = tu_new( argc, argv );
   includes_init( tu );
