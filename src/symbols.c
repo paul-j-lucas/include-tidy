@@ -43,10 +43,10 @@
 /**
  * Additional data passed to symbols_init_visitor.
  */
-struct symbol_visitor_data {
+struct symbols_init_visitor_data {
   CXFile source_file;                   ///< The file being tidied.
 };
-typedef struct symbol_visitor_data symbol_visitor_data;
+typedef struct symbols_init_visitor_data symbols_init_visitor_data;
 
 // local functions
 static void tidy_symbol_cleanup( tidy_symbol* );
@@ -61,7 +61,7 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
  *
  * @param cursor The cursor for the symbol.
  * @param file The file of interest.
- * @return Returns `true` only if the symbol is referenced from file.
+ * @return Returns `true` only if the symbol is referenced from \a file.
  */
 static bool is_symbol_in_file( CXCursor cursor, CXFile file ) {
   CXSourceLocation  sym_loc = clang_getCursorLocation( cursor );
@@ -86,7 +86,7 @@ static void symbols_cleanup( void ) {
  *
  * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent Not used.
- * @param data A pointer to a symbol_visitor_data.
+ * @param data A pointer to a symbols_init_visitor_data.
  * @return Always returns `CXChildVisit_Recurse`.
  */
 static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
@@ -94,10 +94,10 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
                                                      CXClientData data ) {
   (void)parent;
   assert( data != NULL );
-  symbol_visitor_data const *const svd =
-    POINTER_CAST( symbol_visitor_data const*, data );
+  symbols_init_visitor_data const *const sivd =
+    POINTER_CAST( symbols_init_visitor_data const*, data );
 
-  if ( !is_symbol_in_file( cursor, svd->source_file ) )
+  if ( !is_symbol_in_file( cursor, sivd->source_file ) )
     goto skip;
 
   switch ( clang_getCursorKind( cursor ) ) {
@@ -114,7 +114,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   if ( clang_isInvalid( decl_cursor.kind ) )
     goto skip;
 
-  // Gets the cursor for the first time the symbol was seen.
+  // Gets the cursor for the _first_ declaration of the symbol.
   CXCursor          first_cursor = clang_getCanonicalCursor( decl_cursor );
   CXSourceLocation  first_loc = clang_getCursorLocation( first_cursor );
   CXFile            first_file;
@@ -125,14 +125,11 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   if ( first_file == NULL )
     goto skip;
 
-  // If the symbol was first seen in the file being tidied, we don't care.
-  if ( clang_File_isEqual( first_file, svd->source_file ) )
+  // If the symbol was first declared in the file being tidied, we don't care.
+  if ( clang_File_isEqual( first_file, sivd->source_file ) )
     goto skip;
 
-  tidy_symbol sym = {
-    .name = clang_getCursorSpelling( first_cursor )
-  };
-
+  tidy_symbol sym = { .name = clang_getCursorSpelling( first_cursor ) };
   rb_insert_rv_t const rv_rbi = rb_tree_insert( &symbol_set, &sym, sizeof sym );
   if ( !(rv_rbi.inserted &&
          include_add_symbol( first_file, RB_DINT( rv_rbi.node ) )) ) {
@@ -163,10 +160,10 @@ void symbols_init( CXTranslationUnit tu ) {
   );
   ATEXIT( &symbols_cleanup );
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
-  symbol_visitor_data svd = {
+  symbols_init_visitor_data sivd = {
     .source_file = clang_getFile( tu, tidy_source_path )
   };
-  clang_visitChildren( cursor, &symbols_init_visitor, &svd );
+  clang_visitChildren( cursor, &symbols_init_visitor, &sivd );
 }
 
 NODISCARD
