@@ -159,7 +159,7 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
 void symbols_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
   rb_tree_init(
-    &symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &ti_symbol_cmp )
+    &symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
   );
   ATEXIT( &symbols_cleanup );
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
@@ -170,7 +170,7 @@ void symbols_init( CXTranslationUnit tu ) {
 }
 
 NODISCARD
-int ti_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
+int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
   assert( i_sym != NULL );
   assert( j_sym != NULL );
 

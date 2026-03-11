@@ -56,7 +56,7 @@ void symbols_init( CXTranslationUnit tu );
  * respectively.
  */
 NODISCARD
-int ti_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym );
+int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym );
 
 ///////////////////////////////////////////////////////////////////////////////
 

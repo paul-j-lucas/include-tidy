@@ -182,7 +182,7 @@ static void includes_init_visitor( CXFile included_file,
     }
     rb_tree_init(
       &new_include->symbol_set, RB_DPTR,
-      POINTER_CAST( rb_cmp_fn_t, &ti_symbol_cmp )
+      POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
     );
   }
   else {
