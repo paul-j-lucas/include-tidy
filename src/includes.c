@@ -65,8 +65,8 @@ typedef struct symbols_declared symbols_declared;
 
 // local functions
 NODISCARD
-static bool     is_include_file_local( CXFile ),
-                ti_symbol_visitor( void*, void* );
+static bool     symbols_declared_visitor( void*, void* ),
+                tidy_File_isLocalInclude( CXFile );
 
 NODISCARD
 static CXString tidy_File_getRealPathName( CXFile );
@@ -161,9 +161,7 @@ static void includes_init_visitor( CXFile included_file,
         /*offset=*/NULL
       );
     }
-
-    new_include->is_local = is_include_file_local( new_include->file );
-
+    new_include->is_local = tidy_File_isLocalInclude( new_include->file );
     rb_tree_init(
       &new_include->symbol_set, RB_DPTR,
       POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
@@ -192,7 +190,7 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
 
   if ( include->is_needed ) {
     symbols_declared declared = { 0 };
-    rb_tree_visit( &include->symbol_set, &ti_symbol_visitor, &declared );
+    rb_tree_visit( &include->symbol_set, &symbols_declared_visitor, &declared );
     include_print( include, declared.symbols );
     free( declared.symbols );
   }
@@ -213,7 +211,7 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
  * @param include_file The included file.
  * @return Returns `true` only if \a full_path is a local include file.
  */
-static bool is_include_file_local( CXFile include_file ) {
+static bool tidy_File_isLocalInclude( CXFile include_file ) {
   static char   cwd_buf[ PATH_MAX + 1 ];
   static size_t cwd_len;
 
@@ -312,7 +310,7 @@ static tidy_include* tidy_include_find( CXFile file ) {
  * @return Returns TODO.
  */
 NODISCARD
-static bool ti_symbol_visitor( void *node_data, void *visit_data ) {
+static bool symbols_declared_visitor( void *node_data, void *visit_data ) {
   assert( node_data != NULL );
   assert( visit_data != NULL );
   tidy_symbol const *const sym = node_data;
