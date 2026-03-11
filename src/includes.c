@@ -48,6 +48,7 @@ struct tidy_include {
   unsigned        count;                ///< Number of times included.
   unsigned        depth;                ///< "Depth" of include.
   unsigned        line;                 ///< Line included from.
+  bool            is_local;             ///< Local include file?
   bool            is_needed;            ///< Is this include needed?
   rb_tree_t       symbol_set;           ///< Symbols referenced from this file.
 };
@@ -64,7 +65,8 @@ typedef struct symbols_declared symbols_declared;
 
 // local functions
 NODISCARD
-static bool     ti_symbol_visitor( void*, void* );
+static bool     is_include_file_local( CXFile ),
+                ti_symbol_visitor( void*, void* );
 
 NODISCARD
 static CXString tidy_File_getRealPathName( CXFile );
@@ -73,33 +75,6 @@ static void     tidy_include_cleanup( tidy_include* );
 static rb_tree_t include_set;           ///< Set of included files.
 
 ////////// local functions ////////////////////////////////////////////////////
-
-/**
- * Gets whether \a full_path is a local include file (as opposed to a system
- * include file).
- *
- * @param full_path The full path of a file that's included.
- * @return Returns `true` only if \a full_path is a local include file.
- */
-static bool is_include_local( char const *full_path ) {
-  static char   cwd_buf[ PATH_MAX + 1 ];
-  static size_t cwd_len;
-
-  assert( full_path != NULL );
-
-  if ( cwd_len == 0 ) {
-    if ( getcwd( cwd_buf, PATH_MAX ) == NULL ) {
-      fatal_error( EX_UNAVAILABLE,
-        "could not get current working directory: %s\n", STRERROR()
-      );
-    }
-    cwd_len = strlen( cwd_buf );
-    if ( cwd_len > 0 && cwd_buf[ cwd_len - 1 ] != '/' )
-      strcpy( cwd_buf + cwd_len++, "/" );
-  }
-
-  return strncmp( full_path, cwd_buf, cwd_len ) == 0;
-}
 
 /**
  * Prints a `#include` preprocessor directive.
@@ -115,7 +90,7 @@ static void include_print( tidy_include const *include, char const *comment ) {
   char const *const file_cstr = clang_getCString( file_str );
 
   char inc_delim[2];
-  if ( is_include_local( file_cstr ) ) {
+  if ( include->is_local ) {
     inc_delim[0] = '"';
     inc_delim[1] = '"';
   }
@@ -186,6 +161,9 @@ static void includes_init_visitor( CXFile included_file,
         /*offset=*/NULL
       );
     }
+
+    new_include->is_local = is_include_file_local( new_include->file );
+
     rb_tree_init(
       &new_include->symbol_set, RB_DPTR,
       POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
@@ -226,6 +204,36 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
   }
 
   return false;
+}
+
+/**
+ * Gets whether \a include_file is a local include file (as opposed to a system
+ * include file).
+ *
+ * @param include_file The included file.
+ * @return Returns `true` only if \a full_path is a local include file.
+ */
+static bool is_include_file_local( CXFile include_file ) {
+  static char   cwd_buf[ PATH_MAX + 1 ];
+  static size_t cwd_len;
+
+  if ( cwd_len == 0 ) {
+    if ( getcwd( cwd_buf, PATH_MAX ) == NULL ) {
+      fatal_error( EX_UNAVAILABLE,
+        "could not get current working directory: %s\n", STRERROR()
+      );
+    }
+    cwd_len = strlen( cwd_buf );
+    if ( cwd_len > 0 && cwd_buf[ cwd_len - 1 ] != '/' )
+      strcpy( cwd_buf + cwd_len++, "/" );
+  }
+
+  CXString          file_str  = tidy_File_getRealPathName( include_file );
+  char const *const file_cstr = clang_getCString( file_str );
+  bool const        is_local  = strncmp( file_cstr, cwd_buf, cwd_len ) == 0;
+
+  clang_disposeString( file_str );
+  return is_local;
 }
 
 /**
