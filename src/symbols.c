@@ -21,12 +21,9 @@
 // local
 #include "pjl_config.h"
 #include "symbols.h"
-#include "clang_util.h"
 #include "include-tidy.h"
 #include "includes.h"
-#include "options.h"
 #include "red_black.h"
-#include "tidy_util.h"
 #include "util.h"
 
 // libclang
@@ -34,8 +31,7 @@
 
 // standard
 #include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h>                     /* for atexit() */
 #include <string.h>
 
 ///////////////////////////////////////////////////////////////////////////////
