@@ -129,7 +129,7 @@ static void includes_cleanup( void ) {
 }
 
 /**
- * TODO
+ * Visits each file included.
  *
  * @param included_file The file being included.
  * @param inclusion_stack The stack of all files being included.
@@ -307,11 +307,13 @@ static tidy_include* tidy_include_find( CXFile file ) {
 }
 
 /**
- * TODO.
+ * Visits each symbol in an included file that is referenced from the file
+ * being tidied.
  *
  * @param node_data The tidy_symbol to visit.
  * @param visit_data The symbols_declared to use.
- * @return Returns TODO.
+ * @return Returns `false` to keep visiting or `true` if the comment would be
+ * too long.
  */
 NODISCARD
 static bool symbols_declared_visitor( void *node_data, void *visit_data ) {
@@ -328,8 +330,10 @@ static bool symbols_declared_visitor( void *node_data, void *visit_data ) {
     declared->len = name_len;
   }
   else {
-    size_t const add_len = 3 +3 +  STRLITLEN( ", " ) + name_len;
-    if ( declared->len + add_len >= opt_line_length )
+    size_t const add_len = STRLITLEN( ", " ) + name_len;
+    size_t const comment_len =
+      strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
+    if ( comment_len + declared->len + add_len >= opt_line_length )
       return true;
     REALLOC( declared->symbols, char, declared->len + add_len + 1 );
     sprintf( declared->symbols + declared->len, ", %s", name_cstr );
@@ -363,9 +367,8 @@ void includes_init( CXTranslationUnit tu ) {
 
 void includes_print( void ) {
   bool reset_opt_comment_style = false;
-  if ( opt_comment_style[0] == NULL ) {
+  if ( opt_comment_style[0][0] == '\0' ) {
     opt_comment_style[0] = "// ";
-    opt_comment_style[1] = "";
     reset_opt_comment_style = true;
   }
 
@@ -378,10 +381,8 @@ void includes_print( void ) {
     /*visit_data=*/(void*)/*is_local=*/false
   );
 
-  if ( reset_opt_comment_style ) {
-    opt_comment_style[0] = NULL;
-    opt_comment_style[1] = NULL;
-  }
+  if ( reset_opt_comment_style )
+    opt_comment_style[0] = "";
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -653,8 +653,8 @@ static void parse_comment_style( char const *comment_delim ) {
   assert( comment_delim != NULL );
 
   if ( strcmp( comment_delim, "none" ) == 0 ) {
-    opt_comment_style[0] = NULL;
-    opt_comment_style[1] = NULL;
+    opt_comment_style[0] = "";
+    opt_comment_style[1] = "";
   }
   else if ( strcmp( comment_delim, "//" ) == 0 ) {
     opt_comment_style[0] = "// ";
