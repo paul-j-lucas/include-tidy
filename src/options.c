@@ -47,6 +47,7 @@
 
 // in ascending option character ASCII order; sort using: sort -bdfk3
 #define OPT_ALIGN                 a
+#define OPT_ALL_INCLUDES          A
 #define OPT_CLANG                 c
 #define OPT_COMMENT_STYLE         C
 #define OPT_HELP                  h
@@ -93,6 +94,7 @@
  */
 static struct option const OPTIONS[] = {
   { "align",          required_argument,  NULL, COPT(ALIGN)         },
+  { "all-includes",   no_argument,        NULL, COPT(ALL_INCLUDES)  },
   { "clang",          required_argument,  NULL, COPT(CLANG)         },
   { "comment-style",  required_argument,  NULL, COPT(COMMENT_STYLE) },
   { "help",           no_argument,        NULL, COPT(HELP)          },
@@ -112,6 +114,7 @@ static struct option const OPTIONS[] = {
  */
 static char const *const OPTIONS_HELP[] = {
   [ COPT(ALIGN) ] = "Align comments to this column; default: " STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
+  [ COPT(ALL_INCLUDES) ] = "Print all include files",
   [ COPT(CLANG) ] = "Path of clang to use; default \"clang\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
   [ COPT(HELP) ] = "Print this help and exit",
@@ -121,6 +124,7 @@ static char const *const OPTIONS_HELP[] = {
 };
 
 // extern option variables
+bool                opt_all_includes;
 unsigned            opt_comment_align = OPT_COMMENT_ALIGN_DEFAULT;
 char const         *opt_comment_style[2] = { "// ", "" };
 unsigned            opt_line_length = OPT_LINE_LENGTH_DEFAULT;
@@ -983,6 +987,9 @@ void options_init( int *pargc, char const **pargv[] ) {
     switch ( opt ) {
       case COPT(ALIGN):;
         opt_comment_align = parse_comment_alignment( optarg );
+        break;
+      case COPT(ALL_INCLUDES):
+        opt_all_includes = true;
         break;
       case COPT(CLANG):                 // already handled
         break;

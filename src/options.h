@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // extern option variables
+extern bool        opt_all_includes;    ///< Print all includes?
 extern unsigned    opt_comment_align;   ///< Comment alignment column.
 extern char const *opt_comment_style[2];///< Comment delimiters to use.
 extern unsigned    opt_line_length;     ///< Line length.
