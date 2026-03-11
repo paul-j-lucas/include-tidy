@@ -86,9 +86,6 @@ static void include_print( tidy_include const *include, char const *comment ) {
   assert( include != NULL );
   assert( comment != NULL );
 
-  CXString          file_str  = tidy_File_getRealPathName( include->file );
-  char const *const file_cstr = clang_getCString( file_str );
-
   char inc_delim[2];
   if ( include->is_local ) {
     inc_delim[0] = '"';
@@ -99,6 +96,8 @@ static void include_print( tidy_include const *include, char const *comment ) {
     inc_delim[1] = '>';
   }
 
+  CXString          file_str  = tidy_File_getRealPathName( include->file );
+  char const *const file_cstr = clang_getCString( file_str );
   char const *const resolved_path = include_resolve( file_cstr );
 
   if ( opt_comment_style[0] == NULL ) {
