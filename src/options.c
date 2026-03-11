@@ -820,7 +820,7 @@ static void print_usage( int status ) {
     "usage: %s [-Xtidy tidy-option]... [clang-option]... source-file\n"
     "       %s other-option\n"
     "\n"
-    "-Xtidy options:\n"
+    "tidy options:\n"
     , prog_name, prog_name
   );
 
