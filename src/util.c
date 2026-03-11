@@ -208,6 +208,7 @@ char* str_trim( char *s ) {
 extern inline char const* empty_if_null( char const* );
 extern inline bool is_digits( char const* );
 extern inline char const* null_if_empty( char const* );
+extern inline char* strncpy_0( char*, char const*, size_t );
 extern inline bool true_or_set( bool* );
 extern inline bool true_clear( bool* );
 
