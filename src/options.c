@@ -48,7 +48,7 @@
 // in ascending option character ASCII order; sort using: sort -bdfk3
 #define OPT_ALIGN                 a
 #define OPT_CLANG                 c
-#define OPT_COMMENTS              C
+#define OPT_COMMENT_STYLE         C
 #define OPT_HELP                  h
 #define OPT_LINE_LENGTH           l
 #define OPT_VERBOSE               V
@@ -92,14 +92,14 @@
  * @sa OPTIONS_HELP
  */
 static struct option const OPTIONS[] = {
-  { "align",        required_argument,  NULL, COPT(ALIGN)       },
-  { "clang",        required_argument,  NULL, COPT(CLANG)       },
-  { "comments",     required_argument,  NULL, COPT(COMMENTS)    },
-  { "help",         no_argument,        NULL, COPT(HELP)        },
-  { "line-length",  required_argument,  NULL, COPT(LINE_LENGTH) },
-  { "verbose",      no_argument,        NULL, COPT(VERBOSE)     },
-  { "version",      no_argument,        NULL, COPT(VERSION)     },
-  { NULL,           0,                  NULL, 0                 }
+  { "align",          required_argument,  NULL, COPT(ALIGN)         },
+  { "clang",          required_argument,  NULL, COPT(CLANG)         },
+  { "comment-style",  required_argument,  NULL, COPT(COMMENT_STYLE) },
+  { "help",           no_argument,        NULL, COPT(HELP)          },
+  { "line-length",    required_argument,  NULL, COPT(LINE_LENGTH)   },
+  { "verbose",        no_argument,        NULL, COPT(VERBOSE)       },
+  { "version",        no_argument,        NULL, COPT(VERSION)       },
+  { NULL,             0,                  NULL, 0                   }
 };
 
 /**
@@ -113,7 +113,7 @@ static struct option const OPTIONS[] = {
 static char const *const OPTIONS_HELP[] = {
   [ COPT(ALIGN) ] = "Align comments to this column; default: " STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
   [ COPT(CLANG) ] = "Path of clang to use; default \"clang\"",
-  [ COPT(COMMENTS) ] = "Comment delimiters: \"//\", \"/*\", or \"none\"",
+  [ COPT(COMMENT_STYLE) ] = "Comment delimiters: \"//\", \"/*\", or \"none\"",
   [ COPT(HELP) ] = "Print this help and exit",
   [ COPT(LINE_LENGTH) ] = "Line length; default: " STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
   [ COPT(VERBOSE) ] = "Print verbose output",
@@ -666,7 +666,7 @@ static void parse_comment_style( char const *comment_delim ) {
   }
   else {
     fatal_error( EX_USAGE,
-      "\"%s\": invalid value for --comments;"
+      "\"%s\": invalid value for --comment-style;"
       " must be one of \"//\", \"/*\", or \"none\"\n",
       comment_delim
     );
@@ -986,7 +986,7 @@ void options_init( int *pargc, char const **pargv[] ) {
         break;
       case COPT(CLANG):                 // already handled
         break;
-      case COPT(COMMENTS):
+      case COPT(COMMENT_STYLE):
         if ( *SKIP_WS( optarg ) == '\0' )
           goto missing_arg;
         parse_comment_style( optarg );
