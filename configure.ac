@@ -56,7 +56,7 @@ xdarwin*)
   ;;
 esac
 
-# Checks for libraries.
+# Checks for headers.
 AC_CHECK_HEADER([clang-c/Index.h], [], [
   AC_MSG_ERROR([libclang headers not found; use --with-libclang=DIR])
 ])
