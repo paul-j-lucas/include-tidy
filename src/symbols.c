@@ -98,7 +98,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     POINTER_CAST( symbols_init_visitor_data const*, data );
 
   if ( !is_symbol_in_file( cursor, sivd->source_file ) )
-    goto skip;
+    goto done;
 
   switch ( clang_getCursorKind( cursor ) ) {
     case CXCursor_CallExpr:
@@ -106,13 +106,13 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     case CXCursor_MacroExpansion:;
       break;
     default:
-      goto skip;
+      goto done;
   } // switch
 
   // Gets the cursor for _a_ declaration of the symbol.
   CXCursor decl_cursor = clang_getCursorReferenced( cursor );
   if ( clang_isInvalid( decl_cursor.kind ) )
-    goto skip;
+    goto done;
 
   // Gets the cursor for the _first_ declaration of the symbol.
   CXCursor          first_cursor = clang_getCanonicalCursor( decl_cursor );
@@ -123,20 +123,22 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     first_loc, &first_file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
   );
   if ( first_file == NULL )
-    goto skip;
+    goto done;
 
   // If the symbol was first declared in the file being tidied, we don't care.
   if ( clang_File_isEqual( first_file, sivd->source_file ) )
-    goto skip;
+    goto done;
 
   tidy_symbol sym = { .name = clang_getCursorSpelling( first_cursor ) };
   rb_insert_rv_t const rv_rbi = rb_tree_insert( &symbol_set, &sym, sizeof sym );
-  if ( !(rv_rbi.inserted &&
-         include_add_symbol( first_file, RB_DINT( rv_rbi.node ) )) ) {
-    tidy_symbol_cleanup( &sym );
+  if ( rv_rbi.inserted ) {
+    tidy_symbol *const new_sym = RB_DINT( rv_rbi.node );
+    if ( include_add_symbol( first_file, new_sym ) )
+      goto done;
   }
+  tidy_symbol_cleanup( &sym );
 
-skip:
+done:
   return CXChildVisit_Recurse;
 }
 
