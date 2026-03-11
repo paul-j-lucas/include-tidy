@@ -113,12 +113,12 @@ static struct option const OPTIONS[] = {
  * @sa OPTIONS
  */
 static char const *const OPTIONS_HELP[] = {
-  [ COPT(ALIGN) ] = "Align comments to this column; default: " STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
+  [ COPT(ALIGN) ] = "Align comments to this column; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
   [ COPT(ALL_INCLUDES) ] = "Print all include files",
-  [ COPT(CLANG) ] = "Path of clang to use; default \"clang\"",
+  [ COPT(CLANG) ] = "Path of clang to use; default=\"clang\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
   [ COPT(HELP) ] = "Print this help and exit",
-  [ COPT(LINE_LENGTH) ] = "Line length; default: " STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
+  [ COPT(LINE_LENGTH) ] = "Line length; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
   [ COPT(VERBOSE) ] = "Print verbose output",
   [ COPT(VERSION) ] = "Print version and exit",
 };
