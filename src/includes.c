@@ -178,14 +178,18 @@ static void includes_init_visitor( CXFile included_file,
  * Visits each include file that was included.
  *
  * @param node_data The tidy_include to visit.
- * @param visit_data Not used.
+ * @param visit_data Contains a `bool` specifying whether to print only local
+ * includes.
  * @return Always returns `false` (keep visiting).
  */
 NODISCARD
 static bool includes_print_visitor( void *node_data, void *visit_data ) {
   assert( node_data != NULL );
   tidy_include const *const include = node_data;
-  (void)visit_data;
+  bool const print_local = (bool)visit_data;
+
+  if ( print_local != include->is_local )
+    goto done;
 
   if ( include->is_needed ) {
     symbols_declared declared = { 0 };
@@ -200,6 +204,7 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
     free( delete_line );
   }
 
+done:
   return false;
 }
 
@@ -364,7 +369,14 @@ void includes_print( void ) {
     reset_opt_comment_style = true;
   }
 
-  rb_tree_visit( &include_set, &includes_print_visitor, /*visit_data=*/NULL );
+  rb_tree_visit(
+    &include_set, &includes_print_visitor,
+    /*visit_data=*/(void*)/*is_local=*/true
+  );
+  rb_tree_visit(
+    &include_set, &includes_print_visitor,
+    /*visit_data=*/(void*)/*is_local=*/false
+  );
 
   if ( reset_opt_comment_style ) {
     opt_comment_style[0] = NULL;
