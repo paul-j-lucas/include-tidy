@@ -45,15 +45,16 @@
 #include <sysexits.h>
 #include <string.h>
 
-// in ascending option character ASCII order; sort using: sort -bdfk3
+// in ascending option character ASCII order; sort using: sort -k3b,3f -k3b,3r
 #define OPT_ALIGN                 a
 #define OPT_ALL_INCLUDES          A
-#define OPT_CLANG                 c
-#define OPT_COMMENT_STYLE         C
+#define OPT_CONFIG                c
+#define OPT_CLANG                 C
 #define OPT_HELP                  h
 #define OPT_LINE_LENGTH           l
-#define OPT_VERBOSE               V
+#define OPT_COMMENT_STYLE         s
 #define OPT_VERSION               v
+#define OPT_VERBOSE               V
 
 /// Command-line option character as a character literal.
 #define COPT(X)                   CHARIFY(OPT_##X)
@@ -97,6 +98,7 @@ static struct option const OPTIONS[] = {
   { "all-includes",   no_argument,        NULL, COPT(ALL_INCLUDES)  },
   { "clang",          required_argument,  NULL, COPT(CLANG)         },
   { "comment-style",  required_argument,  NULL, COPT(COMMENT_STYLE) },
+  { "config",         required_argument,  NULL, COPT(CONFIG)        },
   { "help",           no_argument,        NULL, COPT(HELP)          },
   { "line-length",    required_argument,  NULL, COPT(LINE_LENGTH)   },
   { "verbose",        no_argument,        NULL, COPT(VERBOSE)       },
@@ -117,6 +119,7 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(ALL_INCLUDES) ] = "Print all include files",
   [ COPT(CLANG) ] = "Path of clang to use; default=\"clang\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
+  [ COPT(CONFIG) ] = "Configuration file path",
   [ COPT(HELP) ] = "Print this help and exit",
   [ COPT(LINE_LENGTH) ] = "Line length; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
   [ COPT(VERBOSE) ] = "Print verbose output",
@@ -127,6 +130,7 @@ static char const *const OPTIONS_HELP[] = {
 bool                opt_all_includes;
 unsigned            opt_comment_align = OPT_COMMENT_ALIGN_DEFAULT;
 char const         *opt_comment_style[2] = { "// ", "" };
+char const         *opt_config_path;
 unsigned            opt_line_length = OPT_LINE_LENGTH_DEFAULT;
 
 // option variables
@@ -997,6 +1001,11 @@ void options_init( int *pargc, char const **pargv[] ) {
         if ( *SKIP_WS( optarg ) == '\0' )
           goto missing_arg;
         parse_comment_style( optarg );
+        break;
+      case COPT(CONFIG):
+        if ( *SKIP_WS( optarg ) == '\0' )
+          goto missing_arg;
+        opt_config_path = optarg;
         break;
       case COPT(HELP):
         opt_help = true;
