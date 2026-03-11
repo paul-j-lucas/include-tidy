@@ -70,7 +70,7 @@
 
 // extern variables
 extern char const  *prog_name;            ///< Program name.
-extern char const  *tidy_source_path;     ///< TODO.
+extern char const  *tidy_source_path;     ///< The file being tidied.
 
 ///////////////////////////////////////////////////////////////////////////////
 
