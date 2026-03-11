@@ -118,10 +118,9 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   CXCursor          first_cursor = clang_getCanonicalCursor( decl_cursor );
   CXSourceLocation  first_loc = clang_getCursorLocation( first_cursor );
   CXFile            first_file;
-  unsigned          first_line;
 
   clang_getSpellingLocation(
-    first_loc, &first_file, &first_line, /*column=*/NULL, /*offset=*/NULL
+    first_loc, &first_file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
   );
   if ( first_file == NULL )
     goto skip;
@@ -131,9 +130,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     goto skip;
 
   tidy_symbol sym = {
-    .name = clang_getCursorSpelling( first_cursor ),
-    .decl_file = first_file,
-    .decl_line = first_line
+    .name = clang_getCursorSpelling( first_cursor )
   };
 
   rb_insert_rv_t const rv_rbi = rb_tree_insert( &symbol_set, &sym, sizeof sym );

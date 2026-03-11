@@ -30,12 +30,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * TODO
+ * A symbol declared in a translation unit.
  */
 struct tidy_symbol {
   CXString  name;                       ///< Symbol name.
-  CXFile    decl_file;                  ///< File declared in.
-  unsigned  decl_line;                  ///< Line declared on.
 };
 typedef struct tidy_symbol tidy_symbol;
 
@@ -43,6 +41,8 @@ typedef struct tidy_symbol tidy_symbol;
 
 /**
  * Initializes the internal set of all symbols from the given translation unit.
+ *
+ * @param tu The translation unit to use.
  */
 void symbols_init( CXTranslationUnit tu );
 
