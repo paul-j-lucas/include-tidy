@@ -59,6 +59,41 @@ static inline bool is_toml_space( int c ) {
   return c == ' ' || c == '\t';
 }
 
+/**
+ * Gets the next character, if any.
+ *
+ * @param toml The toml_file to get the next character from.
+ * @return Returns the next character or `EOF`.
+ */
+NODISCARD
+static int toml_getc( toml_file *toml ) {
+  int const c = fgetc( toml->file );
+  toml->col_prev = toml->col;
+  if ( c == '\n' ) {
+    ++toml->line;
+    toml->col = 1;
+  }
+  else {
+    ++toml->col;
+  }
+  return c;
+}
+
+/**
+ * Ungets \a c.
+ *
+ * @param toml The toml_file to unget \a c.
+ * @param c The character to unget.
+ */
+static void toml_ungetc( toml_file *toml, int c ) {
+  ungetc( c, toml->file );
+  if ( c == '\n' ) {
+    assert( toml->line > 0 );
+    --toml->line;
+  }
+  toml->col = toml->col_prev;
+}
+
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
@@ -108,13 +143,13 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
 
   while ( true ) {
     PJL_DISCARD_RV( toml_space_skip( toml ) );
-    int c = fgetc( toml->file );
+    int c = toml_getc( toml );
     if ( c == ']' )
       break;
 
     if ( c == EOF )
 
-    ungetc( c, toml->file );
+    toml_ungetc( toml, c );
     toml_value value;
     if ( !toml_value_parse( toml, &value ) )
       goto error;
@@ -126,7 +161,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
     a.values[ a.size++ ] = value;
 
     PJL_DISCARD_RV( toml_space_skip( toml ) );
-    c = fgetc( toml->file );
+    c = toml_getc( toml );
     if ( c == EOF ) {
       toml->error = "unexpected end of array";
       goto error;
@@ -191,7 +226,7 @@ NODISCARD
 static bool toml_char_parse( toml_file *toml, char c ) {
   assert( toml != NULL );
 
-  if ( fgetc( toml->file ) != c ) {
+  if ( toml_getc( toml ) != c ) {
     toml->error = "unexpected character";
     return false;
   }
@@ -213,7 +248,7 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
   size_t  buf_len = 0;
 
   int base = 10;
-  int c = fgetc( toml->file );
+  int c = toml_getc( toml );
 
   switch ( c ) {
     case EOF:
@@ -224,7 +259,7 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
       buf[ buf_len++ ] = '-';
       break;
     case '0':
-      c = fgetc( toml->file );
+      c = toml_getc( toml );
       switch ( c ) {
         case 'b':
           base = 2;
@@ -245,7 +280,7 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
       break;
   } // switch
 
-  while ( (c = fgetc( toml->file )) != EOF ) {
+  while ( (c = toml_getc( toml )) != EOF ) {
     if ( c == '_' )
       continue;
     if ( buf_len + 1 == MAX_DEC_INT_DIGITS( long ) ) {
@@ -291,7 +326,7 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
     "0123456789"
     "-._";
 
-  int c = fgetc( toml->file );
+  int c = toml_getc( toml );
   switch ( c ) {
     case '"':
       return toml_string_parse( toml, pkey );
@@ -309,7 +344,7 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
   do {
     if ( !is_toml_space( c ) ) {
       if ( strchr( BARE_KEY_CHARS, c ) == NULL ) {
-        ungetc( c, toml->file );
+        toml_ungetc( toml, c );
         break;
       }
       if ( key_len + 1 >= key_cap ) {
@@ -318,7 +353,7 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
       }
       key[ key_len++ ] = STATIC_CAST( char, c );
     }
-    c = fgetc( toml->file );
+    c = toml_getc( toml );
   } while ( c != EOF );
 
   if ( key_len == 0 ) {
@@ -415,18 +450,15 @@ NODISCARD
 static bool toml_space_skip( toml_file *toml ) {
   assert( toml != NULL );
 
-  for ( int c; (c = fgetc( toml->file )) != EOF; ) {
-    ++toml->col;
+  for ( int c; (c = toml_getc( toml )) != EOF; ) {
     if ( c == '\n' ) {
       if ( toml->in_key_value && toml->array_depth == 0 ) {
         toml->error = "unexpected newline";
         return false;
       }
-      ++toml->line;
-      toml->col = 1;
     }
     else if ( !is_toml_space( c ) ) {
-      ungetc( c, toml->file );
+      toml_ungetc( toml, c );
       break;
     }
   } // for
@@ -450,7 +482,7 @@ static bool toml_string_parse( toml_file *toml, char **ps ) {
   int       c;
   unsigned  i = 0;
 
-  while ( (c = fgetc( toml->file )) != EOF ) {
+  while ( (c = toml_getc( toml )) != EOF ) {
     ++toml->col;
     if ( i >= sizeof buf ) {
       // error
@@ -459,7 +491,7 @@ static bool toml_string_parse( toml_file *toml, char **ps ) {
     if ( c == '"' )
       break;
     if ( c == '\\' ) {
-      if ( (c = fgetc( toml->file )) == EOF ) {
+      if ( (c = toml_getc( toml )) == EOF ) {
         /* error */;
         return false;
       }
@@ -525,7 +557,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
   assert( toml != NULL );
   assert( v != NULL );
 
-  int const c = fgetc( toml->file );
+  int const c = toml_getc( toml );
   switch ( c ) {
     case '"':;
       char *s;
@@ -544,7 +576,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
     case '7':
     case '8':
     case '9':
-      ungetc( c, toml->file );
+      toml_ungetc( toml, c );
       long i;
       if ( !toml_integer_parse( toml, &i ) )
         return false;
@@ -553,7 +585,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
 
     case 'f':
     case 't':
-      ungetc( c, toml->file );
+      toml_ungetc( toml, c );
       bool b;
       if ( !toml_bool_parse( toml, &b ) )
         return false;
@@ -623,7 +655,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   toml_key_value kv;
 
   while ( true ) {
-    int c = fgetc( toml->file );
+    int c = toml_getc( toml );
     if ( c == '[' && !toml_table_name_parse( toml, (char**)&table->name ) )
       return false;
     if ( !toml_space_skip( toml ) )

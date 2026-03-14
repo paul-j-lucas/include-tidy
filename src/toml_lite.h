@@ -97,6 +97,7 @@ struct toml_file {
   bool        in_key_value;             ///< Started parsing _key_ = _value_?
   unsigned    line;                     ///< Current line within file.
   unsigned    col;                      ///< Current column within file.
+  unsigned    col_prev;                 ///< Previous column within file.
 };
 
 /**
