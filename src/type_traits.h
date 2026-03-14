@@ -27,7 +27,7 @@
  */
 
 // local
-#include "pjl_config.h"                 /* IWYU pragma: keep */
+#include "pjl_config.h"
 
 /**
  * @defgroup type-traits-group Type Traits
@@ -73,6 +73,33 @@
   )
 
 /**
+ * Checks (at compile-time) whether the type of \a EXPR is an integral type.
+ *
+ * @param EXPR An expression. It is _not_ evaluated.
+ * @return Returns 1 (true) only if \a EXPR is an integral type; 0 (false)
+ * otherwise.
+ *
+ * @sa #IS_INTEGRAL_TYPE()
+ * @sa #IS_SIGNED_EXPR()
+ * @sa #IS_UNSIGNED_EXPR()
+ */
+#define IS_INTEGRAL_EXPR(EXPR) \
+  (IS_SIGNED_EXPR((EXPR)) || IS_UNSIGNED_EXPR((EXPR)))
+
+/**
+ * Checks (at compile-time) whether \a TYPE is an integral type.
+ *
+ * @param TYPE A type.
+ * @return Returns 1 (true) only if \a TYPE is an integral type; 0 (false)
+ * otherwise.
+ *
+ * @sa #IS_INTEGRAL_EXPR()
+ * @sa #IS_SIGNED_TYPE()
+ * @sa #IS_UNSIGNED_TYPE()
+ */
+#define IS_INTEGRAL_TYPE(TYPE)    IS_INTEGRAL_EXPR( (TYPE)0 )
+
+/**
  * Checks (at compile-time) whether \a P is a pointer.
  *
  * @param P The alleged pointer to check.
@@ -91,13 +118,59 @@
 #endif /* HAVE_TYPEOF */
 
 /**
+ * Checks (at compile-time) whether the type of \a EXPR is a signed integral
+ * type.
+ *
+ * @param EXPR An expression. It is _not_ evaluated.
+ * @return Returns 1 (true) only if \a EXPR is of a signed integral type; 0
+ * (false) otherwise.
+ *
+ * @sa #IS_SIGNED_TYPE()
+ * @sa #IS_UNSIGNED_EXPR()
+ */
+#define IS_SIGNED_EXPR(EXPR)              \
+  _Generic( (EXPR),                       \
+    char       : IS_SIGNED_TYPE(char),    \
+    signed char: 1,                       \
+    short      : 1,                       \
+    int        : 1,                       \
+    long       : 1,                       \
+    long long  : 1,                       \
+    default    : 0                        \
+  )
+
+/**
  * Checks (at compile-time) whether \a TYPE is a signed type.
  *
  * @return Returns 1 (true) only if \a TYPE is signed; 0 (false) otherwise.
  *
  * @sa #IS_SIGNED_EXPR()
+ * @sa #IS_UNSIGNED_TYPE()
  */
 #define IS_SIGNED_TYPE(TYPE)      !IS_UNSIGNED_TYPE(TYPE)
+
+/**
+ * Checks (at compile-time) whether the type of \a EXPR is an unsigned integral
+ * type.
+ *
+ * @param EXPR An expression. It is _not_ evaluated.
+ * @return Returns 1 (true) only if \a EXPR is of an unsigned integral type; 0
+ * (false) otherwise.
+ *
+ * @sa #IS_SIGNED_EXPR()
+ * @sa #IS_UNSIGNED_TYPE()
+ */
+#define IS_UNSIGNED_EXPR(EXPR)                  \
+  _Generic( (EXPR),                             \
+    _Bool             : 1,                      \
+    char              : IS_UNSIGNED_TYPE(char), \
+    unsigned char     : 1,                      \
+    unsigned short    : 1,                      \
+    unsigned int      : 1,                      \
+    unsigned long     : 1,                      \
+    unsigned long long: 1,                      \
+    default           : 0                       \
+  )
 
 /**
  * Checks (at compile-time) whether \a TYPE is an unsigned type.
@@ -105,6 +178,7 @@
  * @return Returns 1 (true) only if \a TYPE is signed; 0 (false) otherwise.
  *
  * @sa #IS_SIGNED_TYPE()
+ * @sa #IS_UNSIGNED_EXPR()
  */
 #define IS_UNSIGNED_TYPE(TYPE)    ((TYPE)-1 > 0)
 

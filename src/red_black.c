@@ -29,7 +29,7 @@
  */
 
 // local
-#include "pjl_config.h"                 /* IWYU pragma: keep */
+#include "pjl_config.h"
 #include "red_black.h"
 
 /// @cond DOXYGEN_IGNORE

@@ -207,7 +207,7 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
   assert( toml != NULL );
   assert( pi != NULL );
 
-  // TODO
+  char buf[ MAX_DEC_INT_DIGITS( long ) + 1 ];
 
   return false;
 }

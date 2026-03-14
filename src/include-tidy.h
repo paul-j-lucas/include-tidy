@@ -27,7 +27,7 @@
  */
 
 // local
-#include "pjl_config.h"                 /* IWYU pragma: keep */
+#include "pjl_config.h"
 
 /**
  * @defgroup misc-globals Miscellaneous Globals

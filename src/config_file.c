@@ -24,7 +24,7 @@
  */
 
 // local
-#include "pjl_config.h"                 /* IWYU pragma: keep */
+#include "pjl_config.h"
 #include "include-tidy.h"
 #include "util.h"
 
