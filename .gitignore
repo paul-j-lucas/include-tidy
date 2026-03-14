@@ -1,6 +1,8 @@
 *.a
 *.in
+*.log
 *.o
+*.trs
 *~
 .*.swp
 .deps/
@@ -24,3 +26,4 @@ Makefile
 /INSTALL
 /install-sh
 /missing
+/test-driver
