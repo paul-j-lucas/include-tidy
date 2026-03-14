@@ -50,6 +50,7 @@ AS_IF([test x$LLVM_CONFIG = xno || test ! -x "$LLVM_CONFIG"], [
 ])
 
 LIBCLANG_CPPFLAGS=`$LLVM_CONFIG --cppflags`
+LIBCLANG_LIBDIR=`$LLVM_CONFIG --libdir`
 LIBCLANG_LDFLAGS=`$LLVM_CONFIG --ldflags`
 LIBCLANG_LIBS="-lclang"
 
@@ -99,7 +100,6 @@ AC_CHECK_LIB([clang], [clang_createIndex], [CLANG_LIBS="-lclang"], [
 AX_C___ATTRIBUTE__
 
 # Compiler warnings.
-AC_SUBST([INCLUDE_TIDY_CFLAGS])
 INCLUDE_TIDY_CFLAGS="-D_ISOC11_SOURCE"
 AX_CFLAGS_WARN_ALL([INCLUDE_TIDY_CFLAGS])
 PJL_CHECK_COMPILE_FLAG([-Wcast-align], [INCLUDE_TIDY_CFLAGS])
@@ -144,6 +144,8 @@ PJL_CHECK_COMPILE_FLAG([-Wunused], [INCLUDE_TIDY_CFLAGS])
 PJL_CHECK_COMPILE_FLAG([-Wwrite-strings], [INCLUDE_TIDY_CFLAGS])
 
 # Generate files.
+AC_SUBST([INCLUDE_TIDY_CFLAGS])
+AC_SUBST([LIBCLANG_LIBDIR])
 AH_TOP([#ifndef include_tidy_config_H
 #define include_tidy_config_H])
 AH_BOTTOM([#endif /* include_tidy_config_H */])

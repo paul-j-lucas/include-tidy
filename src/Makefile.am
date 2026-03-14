@@ -26,6 +26,7 @@ check_PROGRAMS =	red_black_test
 
 AM_CFLAGS =		$(INCLUDE_TIDY_CFLAGS)
 AM_CPPFLAGS =		-I$(top_srcdir)/lib -I$(top_builddir)/lib
+AM_LDFLAGS =		-Wl,-rpath,$(LIBCLANG_LIBDIR)
 LDADD =			$(top_builddir)/lib/libgnu.a
 TESTS =         	$(check_PROGRAMS)
 
