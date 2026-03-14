@@ -18,11 +18,16 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
+# Suppress printing of "--- target ---" when -j is given to BSD's make.
+.MAKE.JOB.PREFIX=
+
 bin_PROGRAMS =		include-tidy
+check_PROGRAMS =	red_black_test
 
 AM_CFLAGS =		$(INCLUDE_TIDY_CFLAGS)
 AM_CPPFLAGS =		-I$(top_srcdir)/lib -I$(top_builddir)/lib
 LDADD =			-lclang $(top_builddir)/lib/libgnu.a
+TESTS =         	$(check_PROGRAMS)
 
 include_tidy_SOURCES =	config_file.c \
 			include-tidy.c include-tidy.h \
@@ -31,8 +36,18 @@ include_tidy_SOURCES =	config_file.c \
 			pjl_config.h config.h \
 			red_black.c red_black.h \
 			symbols.c symbols.h \
+			toml_lite.c toml_lite.h \
 			trans_unit.c \
 			type_traits.h \
 			util.c util.h
+
+BASE_TEST_SOURCES =	pjl_config.h config.h \
+			type_traits.h \
+			util.c util.h \
+			unit_test.c unit_test.h
+
+red_black_test_SOURCES=	$(BASE_TEST_SOURCES) \
+			red_black.c red_black.h \
+			red_black_test.c
 
 # vim:set noet sw=8 ts=8:
