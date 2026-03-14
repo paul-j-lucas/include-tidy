@@ -33,6 +33,7 @@
 /// @cond DOXYGEN_IGNORE
 
 // standard
+#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>                     /* IWYU pragma: keep */
