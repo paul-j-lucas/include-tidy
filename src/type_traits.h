@@ -91,6 +91,24 @@
 #endif /* HAVE_TYPEOF */
 
 /**
+ * Checks (at compile-time) whether \a TYPE is a signed type.
+ *
+ * @return Returns 1 (true) only if \a TYPE is signed; 0 (false) otherwise.
+ *
+ * @sa #IS_SIGNED_EXPR()
+ */
+#define IS_SIGNED_TYPE(TYPE)      !IS_UNSIGNED_TYPE(TYPE)
+
+/**
+ * Checks (at compile-time) whether \a TYPE is an unsigned type.
+ *
+ * @return Returns 1 (true) only if \a TYPE is signed; 0 (false) otherwise.
+ *
+ * @sa #IS_SIGNED_TYPE()
+ */
+#define IS_UNSIGNED_TYPE(TYPE)    ((TYPE)-1 > 0)
+
+/**
  * Like C11's `_Static_assert()` except that is can be used in an expression.
  *
  * @param EXPR The expression to check.

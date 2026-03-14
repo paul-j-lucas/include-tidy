@@ -385,6 +385,41 @@
 #define MALLOC(TYPE,N)            check_realloc( NULL, sizeof(TYPE) * (N) )
 
 /**
+ * Gets the number of characters needed to represent the largest magnitide
+ * value of the integral \a TYPE in decimal.
+ *
+ * @remarks
+ * @parblock
+ * The number of decimal digits _d_ required to represent a binary number with
+ * _b_ bits is:
+ *
+ *      d = ceil(b * log10(2))
+ *
+ * where _log10(2)_ &asymp; .30102999; hence multiply _b_ by .30102999.  Since
+ * the compiler can't do floating-point math at compile-time, that has to be
+ * simulated using only integer math.
+ *
+ * The expression 1233 / 4096 = .30102539 is a close approximation of
+ * .30102999.  Integer division by 4096 is the same as right-shifting by 12.
+ * The number of bits _b_ = <code>sizeof(</code><i>TYPE</i><code>)</code> *
+ * `CHAR_BIT`.  Therefore, multiply that by 1233, then right-shift by 12.
+ *
+ * The `STATIC_ASSERT_EXPR` (if true) adds 1 that rounds up since shifting
+ * truncates.  The `IS_SIGNED_TYPE` (if true) adds another 1 to accomodate the
+ * possible `-` (minus sign) for a negative number if \a TYPE is signed.
+ * @endparblock
+ *
+ * @param TYPE The integral type.
+ *
+ * @sa https://stackoverflow.com/a/13546502/99089
+ */
+#define MAX_DEC_INT_DIGITS(TYPE)                              \
+  (((sizeof(TYPE) * CHAR_BIT * 1233) >> 12)                   \
+    + STATIC_ASSERT_EXPR( IS_INTEGRAL_TYPE(TYPE),             \
+                          #TYPE " must be an integral type" ) \
+    + IS_SIGNED_TYPE(TYPE))
+
+/**
  * Zeros the memory pointed to by \a PTR.  The number of bytes to zero is given
  * by `sizeof *(PTR)`.
  *
