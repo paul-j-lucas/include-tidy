@@ -54,10 +54,6 @@ LIBCLANG_LIBDIR=`$LLVM_CONFIG --libdir`
 LIBCLANG_LDFLAGS=`$LLVM_CONFIG --ldflags`
 LIBCLANG_LIBS="-lclang"
 
-CPPFLAGS="$LIBCLANG_CPPFLAGS $CPPFLAGS"
-LDFLAGS="$LIBCLANG_LDFLAGS $LDFLAGS"
-LIBS="$LIBCLANG_LIBS $LIBS"
-
 # Check host type.
 AC_CANONICAL_HOST
 case "x$host_os" in
@@ -70,9 +66,12 @@ xdarwin*)
 esac
 
 # Checks for headers.
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$LIBCLANG_CPPFLAGS $CPPFLAGS"
 AC_CHECK_HEADER([clang-c/Index.h], [], [
   AC_MSG_ERROR([libclang headers not found; use --with-libclang=DIR])
 ])
+CPPFLAGS="$save_CPPFLAGS"
 AC_CHECK_HEADERS([getopt.h])
 AC_CHECK_HEADERS([pwd.h])
 AC_CHECK_HEADERS([sysexits.h])
@@ -90,9 +89,15 @@ PJL_COMPILE([__builtin_expect],[], [(void)__builtin_expect(1,1);])
 
 # Checks for library functions.
 AC_CHECK_FUNCS([geteuid getpwuid perror strerror strndup])
-AC_CHECK_LIB([clang], [clang_createIndex], [CLANG_LIBS="-lclang"], [
+save_LDFLAGS="$LDFLAGS"
+save_LIBS="$LIBS"
+LDFLAGS="$LIBCLANG_LDFLAGS $LDFLAGS"
+LIBS="$LIBCLANG_LIBS $LIBS"
+AC_CHECK_LIB([clang], [clang_createIndex], [:], [
   AC_MSG_ERROR([libclang library not found; use --with-libclang=DIR])
 ])
+LDFLAGS="$save_LDFLAGS"
+LIBS="$save_LIBS"
 
 # Makefile conditionals.
 
@@ -145,7 +150,10 @@ PJL_CHECK_COMPILE_FLAG([-Wwrite-strings], [INCLUDE_TIDY_CFLAGS])
 
 # Generate files.
 AC_SUBST([INCLUDE_TIDY_CFLAGS])
+AC_SUBST([LIBCLANG_CPPFLAGS])
+AC_SUBST([LIBCLANG_LDFLAGS])
 AC_SUBST([LIBCLANG_LIBDIR])
+AC_SUBST([LIBCLANG_LIBS])
 AH_TOP([#ifndef include_tidy_config_H
 #define include_tidy_config_H])
 AH_BOTTOM([#endif /* include_tidy_config_H */])

@@ -24,10 +24,10 @@
 bin_PROGRAMS =		include-tidy
 check_PROGRAMS =	red_black_test
 
-AM_CFLAGS =		$(INCLUDE_TIDY_CFLAGS)
+AM_CFLAGS =		$(INCLUDE_TIDY_CFLAGS) $(LIBCLANG_CPPFLAGS)
 AM_CPPFLAGS =		-I$(top_srcdir)/lib -I$(top_builddir)/lib
-AM_LDFLAGS =		-Wl,-rpath,$(LIBCLANG_LIBDIR)
-LDADD =			$(top_builddir)/lib/libgnu.a
+AM_LDFLAGS =		$(LIBCLANG_LDFLAGS) -Wl,-rpath,$(LIBCLANG_LIBDIR)
+LDADD =			$(LIBCLANG_LIBS) $(top_builddir)/lib/libgnu.a
 TESTS =         	$(check_PROGRAMS)
 
 include_tidy_SOURCES =	config_file.c \
