@@ -31,6 +31,8 @@
 // standard
 #include <assert.h>
 #include <ctype.h>
+#include <errno.h>
+#include <inttypes.h>                   /* for strtol */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -197,7 +199,7 @@ static bool toml_char_parse( toml_file *toml, char c ) {
 }
 
 /**
- * TODO.
+ * Parses a TOML integer.
  *
  * @param pi A pointer to receive the integer.
  * @return Returns `true` only if an integer was parsed successfully.
@@ -207,9 +209,67 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
   assert( toml != NULL );
   assert( pi != NULL );
 
-  char buf[ MAX_DEC_INT_DIGITS( long ) + 1 ];
+  char    buf[ MAX_DEC_INT_DIGITS( long ) + 1 ];
+  size_t  buf_len = 0;
 
-  return false;
+  int base = 10;
+  int c = fgetc( toml->file );
+
+  switch ( c ) {
+    case EOF:
+      return false;
+    case '+':
+      break;
+    case '-':
+      buf[ buf_len++ ] = '-';
+      break;
+    case '0':
+      c = fgetc( toml->file );
+      switch ( c ) {
+        case 'b':
+          base = 2;
+          break;
+        case 'o':
+          base = 8;
+          break;
+        case 'x':
+          base = 16;
+          break;
+        case EOF:
+          *pi = 0;
+          return true;
+        default:
+          toml->error = "unknown integer prefix";
+          return false;
+      } // switch
+      break;
+  } // switch
+
+  while ( (c = fgetc( toml->file )) != EOF ) {
+    if ( c == '_' )
+      continue;
+    if ( buf_len + 1 == MAX_DEC_INT_DIGITS( long ) ) {
+      toml->error = "integer too long";
+      return false;
+    }
+    buf[ buf_len++ ] = STATIC_CAST( char, c );
+  } // while
+
+  if ( buf[ buf_len - 1 ] == '_' ) {
+    toml->error = "invalid integer";
+    return false;
+  }
+
+  buf[ buf_len ] = '\0';
+  errno = 0;
+  long const rv = strtol( buf, /*endptr=*/NULL, base );
+  if ( errno != 0 ) {
+    toml->error = "invalid integer";
+    return false;
+  }
+
+  *pi = rv;
+  return true;
 }
 
 /**
