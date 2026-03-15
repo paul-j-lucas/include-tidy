@@ -59,6 +59,21 @@
 // allow forward declarations of enums.
 
 /**
+ * TOML error.
+ */
+enum toml_error {
+  TOML_ERR_NONE,                        ///< No error.
+  TOML_ERR_INT_INVALID,                 ///< Invalid integer.
+  TOML_ERR_INT_RANGE,                   ///< Integer out of range.
+  TOML_ERR_KEY_DUPLICATE,               ///< Duplicate key.
+  TOML_ERR_KEY_INVALID,                 ///< Invalid key.
+  TOML_ERR_UNEX_CHAR,                   ///< Unexpected character.
+  TOML_ERR_UNEX_EOF,                    ///< Unexpected end of file.
+  TOML_ERR_UNEX_NEWLINE,                ///< Unexpected newline.
+  TOML_ERR_UNEX_VALUE,                  ///< Unexpected value.
+};
+
+/**
  * TOML value type.
  */
 enum toml_type {
@@ -71,6 +86,7 @@ enum toml_type {
 ////////// typedefs ///////////////////////////////////////////////////////////
 
 typedef struct  toml_array      toml_array;
+typedef enum    toml_error      toml_error;
 typedef struct  toml_file       toml_file;
 typedef struct  toml_key_value  toml_key_value;
 typedef struct  toml_table      toml_table;
@@ -92,7 +108,8 @@ struct toml_array {
  */
 struct toml_file {
   FILE       *file;                     ///< `FILE` to read.
-  char const *error;                    ///< Error message, if any.
+  toml_error  error;                    ///< Error code, if any.
+  char const *error_msg;                ///< Error message, if any.
   unsigned    array_depth;              ///< Array depth.
   bool        in_key_value;             ///< Started parsing _key_ = _value_?
   unsigned    line;                     ///< Current line within file.
@@ -134,11 +151,20 @@ struct toml_table {
 /**
  * Closes a toml_file.
  *
- * @param toml The toml_file to close.
+ * @param toml The toml_file to close.  If already closed, does nothing.
  *
  * @sa toml_open()
  */
 void toml_close( toml_file *toml );
+
+/**
+ * Gets the error message corresponding to \ref toml_file::error "error".
+ *
+ * @param toml The toml_file to get the error message for.
+ * @return Returns said message.
+ */
+NODISCARD
+char const* toml_error_msg( toml_file const *toml );
 
 /**
  * Initializes a toml_file.

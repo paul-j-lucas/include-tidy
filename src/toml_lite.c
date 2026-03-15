@@ -39,6 +39,24 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * TOML error messages.
+ *
+ * @note If \ref toml_file::error_msg is non-NULL, it overrides this message
+ * with a more specific one.
+ */
+static char const *const TOML_ERROR_MSGS[] = {
+  [ TOML_ERR_NONE           ] = "no error",
+  [ TOML_ERR_INT_INVALID    ] = "invalid integer",
+  [ TOML_ERR_INT_RANGE      ] = "integer out of range",
+  [ TOML_ERR_KEY_DUPLICATE  ] = "duplicate key",
+  [ TOML_ERR_KEY_INVALID    ] = "invalid key",
+  [ TOML_ERR_UNEX_CHAR      ] = "unexpected character",
+  [ TOML_ERR_UNEX_EOF       ] = "unexpected end of file",
+  [ TOML_ERR_UNEX_NEWLINE   ] = "unexpected newline",
+  [ TOML_ERR_UNEX_VALUE     ] = "unexpected value",
+};
+
 // local functions
 NODISCARD
 static bool toml_space_skip( toml_file* ),
@@ -163,7 +181,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
     PJL_DISCARD_RV( toml_space_skip( toml ) );
     c = toml_getc( toml );
     if ( c == EOF ) {
-      toml->error = "unexpected end of array";
+      toml->error = TOML_ERR_UNEX_EOF;
       goto error;
     }
     if ( c == ',' )
@@ -206,7 +224,7 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
        !next_c_is_ok ||
        ( is_f && strncmp( buf, "false", STRLITLEN( "false" ) ) != 0) ||
        (!is_f && strncmp( buf, "true" , STRLITLEN( "true"  ) ) != 0) ) {
-    toml->error = "unexpected value";
+    toml->error = TOML_ERR_UNEX_VALUE;
     return false;
   }
 
@@ -216,21 +234,32 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
 }
 
 /**
- * Parses \a c.
+ * Parses a character.
  *
  * @param toml The toml_file to use.
- * @param c The character to parse.
- * @return Returns `true` only if \a c was parsed successfully.
+ * @param want_c The character wanted.
+ * @return Returns `true` only if \a want_c was parsed successfully.
  */
 NODISCARD
-static bool toml_char_parse( toml_file *toml, char c ) {
+static bool toml_char_parse( toml_file *toml, char want_c ) {
   assert( toml != NULL );
 
-  if ( toml_getc( toml ) != c ) {
-    toml->error = "unexpected character";
-    return false;
-  }
-  return true;
+  int const got_c = toml_getc( toml );
+  if ( got_c == want_c )
+    return true;
+
+  switch ( got_c ) {
+    case EOF:
+      toml->error = TOML_ERR_UNEX_EOF;
+      break;
+    case '\n':
+      toml->error = TOML_ERR_UNEX_NEWLINE;
+      break;
+    default:
+      toml->error = TOML_ERR_UNEX_CHAR;
+      break;
+  } // switch
+  return false;
 }
 
 /**
@@ -274,7 +303,7 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
           *pi = 0;
           return true;
         default:
-          toml->error = "unknown integer prefix";
+          toml->error = TOML_ERR_INT_INVALID;
           return false;
       } // switch
       break;
@@ -284,14 +313,14 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
     if ( c == '_' )
       continue;
     if ( buf_len + 1 == MAX_DEC_INT_DIGITS( long ) ) {
-      toml->error = "integer too long";
+      toml->error = TOML_ERR_INT_RANGE;
       return false;
     }
     buf[ buf_len++ ] = STATIC_CAST( char, c );
   } // while
 
   if ( buf[ buf_len - 1 ] == '_' ) {
-    toml->error = "invalid integer";
+    toml->error = TOML_ERR_INT_INVALID;
     return false;
   }
 
@@ -299,7 +328,7 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
   errno = 0;
   long const rv = strtol( buf, /*endptr=*/NULL, base );
   if ( errno != 0 ) {
-    toml->error = "invalid integer";
+    toml->error = TOML_ERR_INT_INVALID;
     return false;
   }
 
@@ -331,7 +360,8 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
     case '"':
       return toml_string_parse( toml, pkey );
     case '.':
-      toml->error = "bare key can not begin with '.'";
+      toml->error = TOML_ERR_KEY_INVALID;
+      toml->error_msg = "bare key can not begin with '.'";
       return false;
     case EOF:
       return false;
@@ -357,12 +387,13 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
   } while ( c != EOF );
 
   if ( key_len == 0 ) {
-    toml->error = "empty key";
+    toml->error = TOML_ERR_KEY_INVALID;
+    toml->error_msg = "empty key";
     goto error;
   }
 
   if ( key[ key_len - 1 ] == '.' ) {
-    toml->error = "invalid key";
+    toml->error = TOML_ERR_KEY_INVALID;
     goto error;
   }
 
@@ -453,7 +484,7 @@ static bool toml_space_skip( toml_file *toml ) {
   for ( int c; (c = toml_getc( toml )) != EOF; ) {
     if ( c == '\n' ) {
       if ( toml->in_key_value && toml->array_depth == 0 ) {
-        toml->error = "unexpected newline";
+        toml->error = TOML_ERR_UNEX_NEWLINE;
         return false;
       }
     }
@@ -602,7 +633,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
       return true;
 
     default:
-      toml->error = "unexpected character";
+      toml->error = TOML_ERR_UNEX_CHAR;
       return false;
   } // switch
 }
@@ -614,6 +645,17 @@ void toml_close( toml_file *toml ) {
   if ( toml->file != NULL )
     fclose( toml->file );
   *toml = (toml_file){ 0 };
+}
+
+NODISCARD
+char const* toml_error_msg( toml_file const *toml ) {
+  assert( toml != NULL );
+  if ( toml->error_msg != NULL )
+    return toml->error_msg;
+  assert( toml->error < ARRAY_SIZE( TOML_ERROR_MSGS ) );
+  char const *const msg = TOML_ERROR_MSGS[ toml->error ];
+  assert( msg != NULL );
+  return msg;
 }
 
 void toml_init( toml_file *toml, FILE *file ) {
@@ -672,7 +714,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
       rb_tree_insert( &table->keys_values, &kv, sizeof kv );
     if ( !rb_rbi.inserted ) {
       toml_key_value_cleanup( &kv );
-      toml->error = "duplicate key";
+      toml->error = TOML_ERR_KEY_DUPLICATE;
       return false;
     }
 
