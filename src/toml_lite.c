@@ -654,8 +654,6 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
 
   toml_table_cleanup( table );
 
-  toml_key_value kv;
-
   while ( true ) {
     int c = toml_getc( toml );
     if ( c == '[' ) {
@@ -666,6 +664,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
     }
     if ( !toml_space_skip( toml ) )
       return false;
+    toml_key_value kv;
     if ( !toml_key_value_parse( toml, &kv ) )
       return false;
 
