@@ -67,8 +67,8 @@ static inline bool is_toml_space( int c ) {
  */
 NODISCARD
 static int toml_getc( toml_file *toml ) {
-  int const c = fgetc( toml->file );
   toml->col_prev = toml->col;
+  int const c = fgetc( toml->file );
   if ( c == '\n' ) {
     ++toml->line;
     toml->col = 1;
@@ -510,6 +510,8 @@ static bool toml_string_parse( toml_file *toml, char **ps ) {
  *
  * @param pname A pointer to receive the table name.
  * @return Returns `true` only if a table name was parsed successfully.
+ *
+ * @note Assumes the caller has already parsed the `[`.
  */
 NODISCARD
 static bool toml_table_name_parse( toml_file *toml, char **pname ) {
@@ -656,8 +658,12 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
 
   while ( true ) {
     int c = toml_getc( toml );
-    if ( c == '[' && !toml_table_name_parse( toml, (char**)&table->name ) )
-      return false;
+    if ( c == '[' ) {
+      if ( !toml_space_skip( toml ) )
+        return false;
+      if ( !toml_table_name_parse( toml, (char**)&table->name ) )
+        return false;
+    }
     if ( !toml_space_skip( toml ) )
       return false;
     if ( !toml_key_value_parse( toml, &kv ) )

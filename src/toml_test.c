@@ -59,10 +59,10 @@ static void toml_test_init( toml_test *test, char const *buf ) {
 
 ////////// test functions /////////////////////////////////////////////////////
 
-static bool test_1( char const *buf ) {
+static bool test_table_names( char const *toml_str ) {
   TEST_FUNC_BEGIN();
   toml_test test;
-  toml_test_init( &test, buf );
+  toml_test_init( &test, toml_str );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
     if ( TEST( test.table.name != NULL ) )
@@ -82,7 +82,7 @@ int main( int argc, char const *const argv[] ) {
     "[table-1]\n"
     "bare-bool = true\n";
 
-  test_1( TOML_1 );
+  test_table_names( TOML_1 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
