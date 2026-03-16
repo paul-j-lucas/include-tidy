@@ -27,6 +27,7 @@
 // standard
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,6 +39,27 @@ struct toml_test {
 typedef struct toml_test toml_test;
 
 ////////// local functions ////////////////////////////////////////////////////
+
+static void strip_table_name( char *s ) {
+  char *t = s;
+  do {
+    switch ( *s ) {
+      case ' ':
+      case '\n':
+      case '[':
+      case ']':
+        continue;
+      default:
+        *t++ = *s;
+    } // switch
+  } while ( *s++ != '\0' );
+}
+
+static void toml_print_error( toml_file const *toml ) {
+  assert( toml != NULL );
+  if ( toml->error )
+    EPRINTF( "%u:%u: %s\n", toml->line, toml->col, toml_error_msg( toml ) );
+}
 
 static void toml_test_cleanup( toml_test *test ) {
   if ( test == NULL )
@@ -59,17 +81,24 @@ static void toml_test_init( toml_test *test, char const *buf ) {
 
 ////////// test functions /////////////////////////////////////////////////////
 
-static bool test_table_names( char const *toml_str ) {
+static bool test_valid_table_names( char const *const table_names[] ) {
   TEST_FUNC_BEGIN();
-  toml_test test;
-  toml_test_init( &test, toml_str );
 
-  if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
-    if ( TEST( test.table.name != NULL ) )
-      TEST( strcmp( test.table.name, "table-1" ) == 0 );
-  }
-    
-  toml_test_cleanup( &test );
+  for ( char const *const *table_name = table_names;
+        *table_name != NULL; ++table_name ) {
+    toml_test test;
+    toml_test_init( &test, *table_name );
+    if ( TEST( toml_table_next( &test.toml, &test.table ) ) &&
+         TEST( test.table.name != NULL ) ) {
+      char *const expected_name = strdup( *table_name );
+      strip_table_name( expected_name );
+      TEST( strcmp( test.table.name, expected_name ) == 0 );
+      free( expected_name );
+    }
+    toml_print_error( &test.toml );
+    toml_test_cleanup( &test );
+  } // while
+
   TEST_FUNC_END();
 }
 
@@ -78,11 +107,20 @@ static bool test_table_names( char const *toml_str ) {
 int main( int argc, char const *const argv[] ) {
   test_prog_init( argc, argv );
 
-  char const TOML_1[] =
-    "[table-1]\n"
-    "bare-bool = true\n";
+  char const *const TABLE_NAMES[] = {
+    "[ab]",
+    "[ ab ]",
+    "[a.b]",
+    "[a .b]",
+    "[a  .b]",
+    "[a . b]",
+    "[a  .  b]",
+    "[a. b]",
+    "[a.  b]",
+    NULL
+  };
 
-  test_table_names( TOML_1 );
+  test_valid_table_names( TABLE_NAMES );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
