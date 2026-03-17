@@ -81,7 +81,28 @@ static void toml_test_init( toml_test *test, char const *buf ) {
 
 ////////// test functions /////////////////////////////////////////////////////
 
-static bool test_key_bool( void ) {
+static bool test_valid_table_names( char const *const table_names[] ) {
+  TEST_FUNC_BEGIN();
+
+  for ( char const *const *table_name = table_names;
+        *table_name != NULL; ++table_name ) {
+    toml_test test;
+    toml_test_init( &test, *table_name );
+    if ( TEST( toml_table_next( &test.toml, &test.table ) ) &&
+         TEST( test.table.name != NULL ) ) {
+      char *const expected_name = strdup( *table_name );
+      strip_table_name( expected_name );
+      TEST( strcmp( test.table.name, expected_name ) == 0 );
+      free( expected_name );
+    }
+    toml_print_error( &test.toml );
+    toml_test_cleanup( &test );
+  } // while
+
+  TEST_FUNC_END();
+}
+
+static bool test_value_bool( void ) {
   TEST_FUNC_BEGIN();
   toml_test test;
   static char const *const TOML =
@@ -109,24 +130,48 @@ static bool test_key_bool( void ) {
   TEST_FUNC_END();
 }
 
-static bool test_valid_table_names( char const *const table_names[] ) {
+static bool test_value_int( void ) {
   TEST_FUNC_BEGIN();
+  toml_test test;
+  static char const *const TOML =
+    "[test-int]\n"
+    "i2 = 0b101010\n"
+    "i8 = 0o52\n"
+    "i10 = 42\n"
+    "i16 = 0x2A\n"
+    "underscores = 4_2\n";
 
-  for ( char const *const *table_name = table_names;
-        *table_name != NULL; ++table_name ) {
-    toml_test test;
-    toml_test_init( &test, *table_name );
-    if ( TEST( toml_table_next( &test.toml, &test.table ) ) &&
-         TEST( test.table.name != NULL ) ) {
-      char *const expected_name = strdup( *table_name );
-      strip_table_name( expected_name );
-      TEST( strcmp( test.table.name, expected_name ) == 0 );
-      free( expected_name );
-    }
-    toml_print_error( &test.toml );
-    toml_test_cleanup( &test );
-  } // while
+  toml_test_init( &test, TOML );
 
+  if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
+    toml_value const *value;
+
+    value = toml_table_find( &test.table, "i2" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 42 );
+
+    value = toml_table_find( &test.table, "i8" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 42 );
+
+    value = toml_table_find( &test.table, "i10" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 42 );
+
+    value = toml_table_find( &test.table, "i16" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 42 );
+
+    value = toml_table_find( &test.table, "underscores" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 42 );
+  }
+  toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
 
@@ -148,7 +193,8 @@ int main( int argc, char const *const argv[] ) {
     NULL
   };
   test_valid_table_names( VALID_TABLE_NAMES );
-  test_key_bool();
+  test_value_bool();
+  test_value_int();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

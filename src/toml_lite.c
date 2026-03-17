@@ -319,6 +319,8 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
           return false;
       } // switch
       break;
+    default:
+      toml_ungetc( toml, c );
   } // switch
 
   while ( (c = toml_getc( toml )) != EOF ) {
@@ -350,6 +352,7 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
         }
         break;
     } // switch
+
     if ( buf_len + 1 == MAX_DEC_INT_DIGITS( long ) ) {
       toml->error = TOML_ERR_INT_RANGE;
       return false;
