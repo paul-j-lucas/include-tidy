@@ -70,6 +70,7 @@ static bool toml_space_skip( toml_file* ),
 NODISCARD
 static int  toml_getc( toml_file* );
 
+static void toml_comment_parse( toml_file* );
 static void toml_ungetc( toml_file*, int );
 static void toml_value_cleanup( toml_value* );
 
@@ -103,6 +104,16 @@ static inline bool isodigit( int c ) {
  */
 static inline bool is_toml_space( int c ) {
   return c == ' ' || c == '\t';
+}
+
+/**
+ * Performs a newline.
+ *
+ * @param toml The toml_file to use.
+ */
+static inline void toml_newline( toml_file *toml ) {
+  ++toml->line;
+  toml->col = 1;
 }
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -151,27 +162,35 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
 
   toml_array  a = { 0 };
   unsigned    array_cap = 16;
+  int         c = '\0';
+  char        prev_c;
 
   ++toml->array_depth;
   a.values = MALLOC( toml_value, array_cap );
 
-  while ( true ) {
+  for (;;) {
     PJL_DISCARD_RV( toml_space_skip( toml ) );
-    int c = toml_getc( toml );
-    if ( c == EOF ) {
-      toml->error = TOML_ERR_UNEX_EOF;
-      goto error;
-    }
-    if ( c == ']' )
-      break;
-    if ( c != ',' ) {
-      if ( a.size > 0 ) {
-        toml->error = TOML_ERR_UNEX_CHAR;
+    prev_c = STATIC_CAST( char, c );
+    c = toml_getc( toml );
+    switch ( c ) {
+      case EOF:
+        toml->error = TOML_ERR_UNEX_EOF;
         goto error;
-      }
-      toml_ungetc( toml, c );
-    }
-    PJL_DISCARD_RV( toml_space_skip( toml ) );
+      case '#':
+        toml_comment_parse( toml );
+        continue;
+      case ',':
+        if ( a.size == 0 || prev_c == ',' ) {
+          toml->error = TOML_ERR_UNEX_CHAR;
+          goto error;
+        }
+        continue;
+      case ']':
+        goto done;
+      default:
+        toml_ungetc( toml, c );
+        break;
+    } // switch
 
     toml_value value;
     if ( !toml_value_parse( toml, &value ) )
@@ -180,8 +199,9 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
     if ( a.size + 1 >= array_cap )
       REALLOC( a.values, toml_value, array_cap *= 2 );
     a.values[ a.size++ ] = value;
-  } // while
+  } // for
 
+done:
   *pa = a;
   --toml->array_depth;
   return true;
@@ -257,6 +277,22 @@ static bool toml_char_parse( toml_file *toml, char want_c ) {
 }
 
 /**
+ * Parses a TOML comment.
+ *
+ * @param toml The toml_file to use.
+ */
+static void toml_comment_parse( toml_file *toml ) {
+  assert( toml != NULL );
+
+  for ( int c; (c = fgetc( toml->file )) != EOF; ) {
+    if ( c == '\n' ) {
+      toml_newline( toml );
+      break;
+    }
+  } // for
+}
+
+/**
  * Gets the next character, if any.
  *
  * @param toml The toml_file to get the next character from.
@@ -266,13 +302,10 @@ NODISCARD
 static int toml_getc( toml_file *toml ) {
   toml->col_prev = toml->col;
   int const c = fgetc( toml->file );
-  if ( c == '\n' ) {
-    ++toml->line;
-    toml->col = 1;
-  }
-  else {
+  if ( c == '\n' )
+    toml_newline( toml );
+  else
     ++toml->col;
-  }
   return c;
 }
 
@@ -673,52 +706,58 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
   assert( toml != NULL );
   assert( v != NULL );
 
-  int const c = toml_getc( toml );
-  switch ( c ) {
-    case '"':;
-      char *s;
-      if ( !toml_string_parse( toml, &s ) )
-        return false;
-      *v = (toml_value){ .type = TOML_STRING, .s = s };
-      return true;
+  for (;;) {
+    int const c = toml_getc( toml );
+    switch ( c ) {
+      case '"':;
+        char *s;
+        if ( !toml_string_parse( toml, &s ) )
+          return false;
+        *v = (toml_value){ .type = TOML_STRING, .s = s };
+        return true;
 
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9':
-      toml_ungetc( toml, c );
-      long i;
-      if ( !toml_integer_parse( toml, &i ) )
-        return false;
-      *v = (toml_value){ .type = TOML_INT, .i = i };
-      return true;
+      case '#':
+        toml_comment_parse( toml );
+        continue;
 
-    case 'f':
-    case 't':
-      toml_ungetc( toml, c );
-      bool b;
-      if ( !toml_bool_parse( toml, &b ) )
-        return false;
-      *v = (toml_value){ .type = TOML_BOOL, .b = b };
-      return true;
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+        toml_ungetc( toml, c );
+        long i;
+        if ( !toml_integer_parse( toml, &i ) )
+          return false;
+        *v = (toml_value){ .type = TOML_INT, .i = i };
+        return true;
 
-    case '[':;
-      toml_array a;
-      if ( !toml_array_parse( toml, &a ) )
-        return false;
-      *v = (toml_value){ .type = TOML_ARRAY, .a = a };
-      return true;
+      case 'f':
+      case 't':
+        toml_ungetc( toml, c );
+        bool b;
+        if ( !toml_bool_parse( toml, &b ) )
+          return false;
+        *v = (toml_value){ .type = TOML_BOOL, .b = b };
+        return true;
 
-    default:
-      toml->error = TOML_ERR_UNEX_CHAR;
-      return false;
-  } // switch
+      case '[':;
+        toml_array a;
+        if ( !toml_array_parse( toml, &a ) )
+          return false;
+        *v = (toml_value){ .type = TOML_ARRAY, .a = a };
+        return true;
+
+      default:
+        toml->error = TOML_ERR_UNEX_CHAR;
+        return false;
+    } // switch
+  } // for
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
