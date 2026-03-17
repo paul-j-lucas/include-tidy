@@ -859,7 +859,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
 
   char *table_name;
   if ( !toml_table_name_parse( toml, &table_name ) )
-    goto error;
+    return false;
 
   toml_table_cleanup( table );
   toml_table_init( table );
@@ -869,24 +869,21 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
     toml_space_comments_skip( toml );
     int const c = fpeekc( toml->file );
     if ( c == EOF || c == '[' )
-      break;
+      return true;
 
     toml_key_value kv;
     if ( !toml_key_value_parse( toml, &kv ) )
-      goto error;
+      break;
 
     rb_insert_rv_t const rb_rbi =
       rb_tree_insert( &table->keys_values, &kv, sizeof kv );
     if ( !rb_rbi.inserted ) {
       toml_key_value_cleanup( &kv );
       toml->error = TOML_ERR_KEY_DUPLICATE;
-      goto error;
+      break;
     }
   } // for
 
-  return true;
-
-error:
   toml_table_cleanup( table );
   return false;
 }
