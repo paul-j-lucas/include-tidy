@@ -81,6 +81,34 @@ static void toml_test_init( toml_test *test, char const *buf ) {
 
 ////////// test functions /////////////////////////////////////////////////////
 
+static bool test_key_bool( void ) {
+  TEST_FUNC_BEGIN();
+  toml_test test;
+  static char const *const TOML =
+    "[test-bool]\n"
+    "bf = false\n"
+    "bt = true\n";
+
+  toml_test_init( &test, TOML );
+
+  if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
+    toml_value const *value;
+
+    value = toml_table_find( &test.table, "bf" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_BOOL ) &&
+      TEST( value->b == false );
+
+    value = toml_table_find( &test.table, "bt" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_BOOL ) &&
+      TEST( value->b == true );
+  }
+
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_valid_table_names( char const *const table_names[] ) {
   TEST_FUNC_BEGIN();
 
@@ -107,7 +135,7 @@ static bool test_valid_table_names( char const *const table_names[] ) {
 int main( int argc, char const *const argv[] ) {
   test_prog_init( argc, argv );
 
-  char const *const TABLE_NAMES[] = {
+  static char const *const VALID_TABLE_NAMES[] = {
     "[ab]",
     "[ ab ]",
     "[a.b]",
@@ -119,8 +147,8 @@ int main( int argc, char const *const argv[] ) {
     "[a.  b]",
     NULL
   };
-
-  test_valid_table_names( TABLE_NAMES );
+  test_valid_table_names( VALID_TABLE_NAMES );
+  test_key_bool();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
