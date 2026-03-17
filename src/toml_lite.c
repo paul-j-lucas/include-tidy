@@ -590,6 +590,8 @@ static void toml_space_comments_skip( toml_file *toml ) {
   for (;;) {
     PJL_DISCARD_RV( toml_space_skip( toml ) );
     int const c = toml_getc( toml );
+    if ( c == EOF )
+      break;
     if ( c != '#' ) {
       toml_ungetc( toml, c );
       break;
@@ -863,9 +865,12 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   toml_table_init( table );
   table->name = table_name;
 
-  toml_space_comments_skip( toml );
+  for (;;) {
+    toml_space_comments_skip( toml );
+    int const c = fpeekc( toml->file );
+    if ( c == EOF || c == '[' )
+      break;
 
-  while ( !feof( toml->file ) ) {
     toml_key_value kv;
     if ( !toml_key_value_parse( toml, &kv ) )
       goto error;
@@ -877,12 +882,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
       toml->error = TOML_ERR_KEY_DUPLICATE;
       goto error;
     }
-
-    toml_space_comments_skip( toml );
-    int const c = fpeekc( toml->file );
-    if ( c == '[' )
-      break;
-  } // while
+  } // for
 
   return true;
 
