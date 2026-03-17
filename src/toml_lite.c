@@ -68,6 +68,26 @@ static void toml_value_cleanup( toml_value* );
 ////////// inline functions ///////////////////////////////////////////////////
 
 /**
+ * Gets whether \a c is a binary digit.
+ *
+ * @param c The character to check.
+ * @return Returns `true` only if \c is either `'0'` or `'1'`.
+ */
+static inline bool isbdigit( int c ) {
+  return c == '0' || c == '1';
+}
+
+/**
+ * Gets whether \a c is a binary digit.
+ *
+ * @param c The character to check.
+ * @return Returns `true` only if \c is one of `01234567`.
+ */
+static inline bool isodigit( int c ) {
+  return strchr( "01234567", c ) != NULL;
+}
+
+/**
  * Checks whether \a c is a whitespace character according to TOML.
  *
  * @param c The character to check.
@@ -162,30 +182,21 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
   while ( true ) {
     PJL_DISCARD_RV( toml_space_skip( toml ) );
     int c = toml_getc( toml );
+    if ( c == EOF )
+      goto error;
     if ( c == ']' )
       break;
-
-    if ( c == EOF )
-
+    if ( a.size > 0 && c != ',' )
+      goto error;
     toml_ungetc( toml, c );
+
     toml_value value;
     if ( !toml_value_parse( toml, &value ) )
       goto error;
 
-    if ( a.size + 1 >= array_cap ) {
-      array_cap *= 2;
-      REALLOC( a.values, toml_value, array_cap );
-    }
+    if ( a.size + 1 >= array_cap )
+      REALLOC( a.values, toml_value, array_cap *= 2 );
     a.values[ a.size++ ] = value;
-
-    PJL_DISCARD_RV( toml_space_skip( toml ) );
-    c = toml_getc( toml );
-    if ( c == EOF ) {
-      toml->error = TOML_ERR_UNEX_EOF;
-      goto error;
-    }
-    if ( c == ',' )
-      continue;
   } // while
 
   *pa = a;
@@ -195,6 +206,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
 error:
   toml_array_cleanup( &a );
   --toml->array_depth;
+  toml->error = TOML_ERR_UNEX_EOF;
   return false;
 }
 
@@ -312,6 +324,32 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
   while ( (c = toml_getc( toml )) != EOF ) {
     if ( c == '_' )
       continue;
+    switch ( base ) {
+      case 2:
+        if ( !isbdigit( c ) ) {
+          toml_ungetc( toml, c );
+          goto done;
+        }
+        break;
+      case 8:
+        if ( !isodigit( c ) ) {
+          toml_ungetc( toml, c );
+          goto done;
+        }
+        break;
+      case 10:
+        if ( !isdigit( c ) ) {
+          toml_ungetc( toml, c );
+          goto done;
+        }
+        break;
+      case 16:
+        if ( !isxdigit( c ) ) {
+          toml_ungetc( toml, c );
+          goto done;
+        }
+        break;
+    } // switch
     if ( buf_len + 1 == MAX_DEC_INT_DIGITS( long ) ) {
       toml->error = TOML_ERR_INT_RANGE;
       return false;
@@ -319,6 +357,7 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
     buf[ buf_len++ ] = STATIC_CAST( char, c );
   } // while
 
+done:
   if ( buf[ buf_len - 1 ] == '_' ) {
     toml->error = TOML_ERR_INT_INVALID;
     return false;
@@ -370,19 +409,27 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
   size_t  key_cap = 16;
   char   *key = MALLOC( char, key_cap + 1 );
   size_t  key_len = 0;
+  char    prev_c = '\0';
 
   do {
-    if ( !is_toml_space( c ) ) {
-      if ( strchr( BARE_KEY_CHARS, c ) == NULL ) {
+    if ( is_toml_space( c ) ) {
+      PJL_DISCARD_RV( toml_space_skip( toml ) );
+      c = toml_getc( toml );
+      if ( prev_c != '.' && c != '.' ) {
         toml_ungetc( toml, c );
         break;
       }
-      if ( key_len + 1 >= key_cap ) {
-        key_cap *= 2;
-        REALLOC( key, char, key_cap + 1 );
-      }
-      key[ key_len++ ] = STATIC_CAST( char, c );
     }
+
+    if ( strchr( BARE_KEY_CHARS, c ) == NULL ) {
+      toml_ungetc( toml, c );
+      break;
+    }
+    if ( key_len + 1 >= key_cap )
+      REALLOC( key, char, (key_cap *= 2) + 1 );
+    key[ key_len++ ] = STATIC_CAST( char, c );
+
+    prev_c = STATIC_CAST( char, c );
     c = toml_getc( toml );
   } while ( c != EOF );
 
@@ -394,6 +441,7 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
 
   if ( key[ key_len - 1 ] == '.' ) {
     toml->error = TOML_ERR_KEY_INVALID;
+    toml->error_msg = "bare key can not end with '.'";
     goto error;
   }
 
@@ -514,7 +562,6 @@ static bool toml_string_parse( toml_file *toml, char **ps ) {
   unsigned  i = 0;
 
   while ( (c = toml_getc( toml )) != EOF ) {
-    ++toml->col;
     if ( i >= sizeof buf ) {
       // error
       return false;
@@ -552,7 +599,10 @@ static bool toml_table_name_parse( toml_file *toml, char **pname ) {
   char *key = NULL;
 
   bool const ok =
+    toml_char_parse( toml, '[' ) &&
+    toml_space_skip( toml ) &&
     toml_key_parse( toml, &key ) &&
+    toml_space_skip( toml ) &&
     toml_char_parse( toml, ']' );
 
   if ( ok )
@@ -677,6 +727,16 @@ void toml_table_cleanup( toml_table *table ) {
   );
 }
 
+NODISCARD
+toml_value const* toml_table_find( toml_table const *table, char const *key ) {
+  assert( table != NULL );
+  assert( key != NULL );
+
+  toml_key_value const kv = { .key = key };
+  rb_node_t const *const found_rb = rb_tree_find( &table->keys_values, &kv );
+  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
+}
+
 void toml_table_init( toml_table *table ) {
   assert( table != NULL );
   table->name = NULL;
@@ -691,40 +751,40 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   assert( toml != NULL );
   assert( table != NULL );
 
-  if ( !toml_space_skip( toml ) )
-    return false;
+  PJL_DISCARD_RV( toml_space_skip( toml ) );
+
+  char *table_name;
+  if ( !toml_table_name_parse( toml, &table_name ) )
+    goto error;
 
   toml_table_cleanup( table );
+  toml_table_init( table );
+  table->name = table_name;
 
-  while ( true ) {
-    int c = toml_getc( toml );
-    if ( c == '[' ) {
-      if ( !toml_space_skip( toml ) )
-        return false;
-      if ( !toml_table_name_parse( toml, (char**)&table->name ) )
-        return false;
-    }
-    if ( !toml_space_skip( toml ) )
-      return false;
+  PJL_DISCARD_RV( toml_space_skip( toml ) );
+  while ( !feof( toml->file ) ) {
     toml_key_value kv;
     if ( !toml_key_value_parse( toml, &kv ) )
-      return false;
+      goto error;
 
     rb_insert_rv_t const rb_rbi =
       rb_tree_insert( &table->keys_values, &kv, sizeof kv );
     if ( !rb_rbi.inserted ) {
       toml_key_value_cleanup( &kv );
       toml->error = TOML_ERR_KEY_DUPLICATE;
-      return false;
+      goto error;
     }
 
-    if ( !toml_space_skip( toml ) )
-      return false;
-    c = fpeekc( toml->file );
-    if ( c == EOF || c == '[' )
-      return true;
+    PJL_DISCARD_RV( toml_space_skip( toml ) );
+    int const c = fpeekc( toml->file );
+    if ( c == '[' )
+      break;
   } // while
 
+  return true;
+
+error:
+  toml_table_cleanup( table );
   return false;
 }
 

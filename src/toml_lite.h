@@ -186,9 +186,19 @@ void toml_init( toml_file *toml, FILE *file );
 void toml_table_cleanup( toml_table *table );
 
 /**
+ * Attempts to find \a key in \a table.
+ *
+ * @param table The toml_table to find \a key in.
+ * @param key The key to find in \a table.
+ * @return Returns the associated value if \a key is found or NULL if not.
+ */
+NODISCARD
+toml_value const* toml_table_find( toml_table const *table, char const *key );
+
+/**
  * Initialzes a toml_table.
  *
- * @param table the toml_tablt to initialize.
+ * @param table The toml_table to initialize.
  *
  * @sa toml_table_cleanup()
  */
