@@ -136,7 +136,7 @@ static bool test_valid_table_names( char const *const table_names[] ) {
     }
     toml_error_print( &test.toml );
     toml_test_cleanup( &test );
-  } // while
+  } // for
 
   TEST_FUNC_END();
 }
