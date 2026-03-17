@@ -137,6 +137,9 @@ static void toml_array_cleanup( toml_array *a ) {
 /**
  * Parses a TOML array.
  *
+ * @remarks Assumes the `'['` has already been parsed and is _not_ in the input
+ * stream.
+ *
  * @param toml The toml_file to use.
  * @param pa The toml_array to parse into.
  * @return Returns `true` only if all values were parsed successfully.
@@ -155,13 +158,20 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
   while ( true ) {
     PJL_DISCARD_RV( toml_space_skip( toml ) );
     int c = toml_getc( toml );
-    if ( c == EOF )
+    if ( c == EOF ) {
+      toml->error = TOML_ERR_UNEX_EOF;
       goto error;
+    }
     if ( c == ']' )
       break;
-    if ( a.size > 0 && c != ',' )
-      goto error;
-    toml_ungetc( toml, c );
+    if ( c != ',' ) {
+      if ( a.size > 0 ) {
+        toml->error = TOML_ERR_UNEX_CHAR;
+        goto error;
+      }
+      toml_ungetc( toml, c );
+    }
+    PJL_DISCARD_RV( toml_space_skip( toml ) );
 
     toml_value value;
     if ( !toml_value_parse( toml, &value ) )
@@ -179,7 +189,6 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
 error:
   toml_array_cleanup( &a );
   --toml->array_depth;
-  toml->error = TOML_ERR_UNEX_EOF;
   return false;
 }
 
