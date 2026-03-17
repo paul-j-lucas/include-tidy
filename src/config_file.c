@@ -26,6 +26,7 @@
 // local
 #include "pjl_config.h"
 #include "include-tidy.h"
+#include "toml_lite.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -71,10 +72,8 @@ static FILE*            config_open( char const*, config_opts_t );
 NODISCARD
 static char const*      home_dir( void );
 
+static void             map_symbol_to_header( char const*, char const* );
 static void             path_append( char*, size_t, char const* );
-
-NODISCARD
-static char*            strip_comment( char* );
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -108,7 +107,8 @@ static FILE* config_find( char const *config_path,
   if ( config_file != NULL )
     strcpy( path_buf, config_path );
 
-  // 2. Try $XDG_CONFIG_HOME/include-tidy and $HOME/.config/include-tidy.
+  // 2. Try $XDG_CONFIG_HOME/include-tidy.toml and
+  //    $HOME/.config/include-tidy.toml.
   if ( config_file == NULL && (home = home_dir()) != NULL ) {
     char const *const config_dir = null_if_empty( getenv( "XDG_CONFIG_HOME" ) );
     if ( config_dir != NULL ) {
@@ -121,7 +121,7 @@ static FILE* config_find( char const *config_path,
       // LCOV_EXCL_STOP
     }
     if ( path_buf[0] != '\0' ) {
-      path_append( path_buf, SIZE_MAX, PACKAGE );
+      path_append( path_buf, SIZE_MAX, PACKAGE ".toml" );
       config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
       path_buf[0] = '\0';
     }
@@ -198,39 +198,60 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   assert( config_path != NULL );
   assert( config_file != NULL );
 
-  // parse configuration file
-  char line_buf[ 8192 ];
-  unsigned line_no = 0;
-  while ( fgets( line_buf, sizeof line_buf, config_file ) != NULL ) {
-    ++line_no;
-    char *line = strip_comment( line_buf );
-    if ( line == NULL ) {
+  toml_file toml;
+  toml_init( &toml, config_file );
+
+  toml_table table;
+  toml_table_init( &table );
+
+  while ( toml_table_next( &toml, &table ) ) {
+    if ( table.name == NULL ) {
       fatal_error( EX_CONFIG,
-        "%s:%u: \"%s\": unclosed quote\n",
-        config_path, line_no, str_trim( line_buf )
+        "%s: required table (header) name missing\n",
+        config_path
       );
     }
-    line = str_trim( line );
-
-#if 0
-    switch ( line[0] ) {
-      case '\0':                        // line was entirely whitespace
-        continue;
-      case '[':                         // parse section line
-        curr_section = section_parse( line );
-        if ( curr_section == CONFIG_SECTION_NONE ) {
-          fatal_error( EX_CONFIG,
-            "%s:%u: \"%s\": invalid section\n",
-            config_path, line_no, line
-          );
-        }
-        continue;
+    toml_value const *const value = toml_table_find( &table, "symbols" );
+    if ( value == NULL ) {
+      fatal_error( EX_CONFIG,
+        "%s: required \"symbols\" key for \"%s\" missing\n",
+        config_path, table.name
+      );
+    }
+    switch ( value->type ) {
+      case TOML_STRING:
+        map_symbol_to_header( value->s, table.name );
+        break;
+      case TOML_ARRAY:
+        for ( unsigned i = 0; i < value->a.size; ++i ) {
+          toml_value const *const a_value = &value->a.values[i];
+          if ( a_value->type != TOML_STRING ) {
+            fatal_error( EX_CONFIG,
+              "%s: invalid value for \"symbols\" key; expected string\n",
+              config_path
+            );
+          }
+          map_symbol_to_header( a_value->s, table.name );
+        } // for
+        break;
+      default:
+        fatal_error( EX_CONFIG,
+          "%s: invalid value for \"symbols\" key; expected string or array\n",
+          config_path
+        );
     } // switch
-#endif
   } // while
 
-  if ( unlikely( ferror( config_file ) ) )
-    fatal_error( EX_IOERR, "%s: %s\n", config_path, STRERROR() );
+  toml_table_cleanup( &table );
+
+  if ( toml.error ) {
+    fatal_error( EX_CONFIG,
+      "%s:%u:%u: %s\n",
+      config_path, toml.line, toml.col, toml_error_msg( &toml )
+    );
+  }
+
+  toml_close( &toml );
 }
 
 /**
@@ -257,6 +278,21 @@ static char const* home_dir( void ) {
 }
 
 /**
+ * Maps \a symbol_name to \a header_name so that if \a symbol_name is
+ * referenced, it'll require \a header_name.
+ *
+ * @param symbol_name The name of the symbol.
+ * @param header_name The name of the header.
+ */
+static void map_symbol_to_header( char const *symbol_name,
+                                  char const *header_name ) {
+  assert( header_name != NULL );
+  assert( symbol_name != NULL );
+
+  // TODO
+}
+
+/**
  * Appends a component to a path ensuring that exactly one `/ `separates them.
  *
  * @param path The path to append to.  The buffer pointed to must be big enough
@@ -278,41 +314,6 @@ static void path_append( char *path, size_t path_len, char const *component ) {
       *++path = '/';
     strcpy( ++path, component );
   }
-}
-
-/**
- * Strips a `#` comment from a line minding quotes and backslashes.
- *
- * @param s The null-terminated line to strip the comment from.
- * @return Returns \a s on success or NULL for an unclosed quote.
- */
-NODISCARD
-static char* strip_comment( char *s ) {
-  assert( s != NULL );
-  char *const s0 = s;
-  char quote = '\0';
-
-  for ( ; *s != '\0'; ++s ) {
-    switch ( *s ) {
-      case '#':
-        if ( quote != '\0' )
-          break;
-        *s = '\0';
-        return s0;
-      case '"':
-      case '\'':
-        if ( quote == '\0' )
-          quote = *s;
-        else if ( *s == quote )
-          quote = '\0';
-        break;
-      case '\\':
-        ++s;
-        break;
-    } // switch
-  } // for
-
-  return quote != '\0' ? NULL : s0;
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
