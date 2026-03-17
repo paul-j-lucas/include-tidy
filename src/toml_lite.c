@@ -71,6 +71,7 @@ NODISCARD
 static int  toml_getc( toml_file* );
 
 static void toml_comment_parse( toml_file* );
+static void toml_space_comments_skip( toml_file* );
 static void toml_ungetc( toml_file*, int );
 static void toml_value_cleanup( toml_value* );
 
@@ -572,6 +573,24 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *kv ) {
 }
 
 /**
+ * Skips all whitespace and comments.
+ *
+ * @param toml The toml_file to use.
+ */
+static void toml_space_comments_skip( toml_file *toml ) {
+  assert( toml != NULL );
+  for (;;) {
+    PJL_DISCARD_RV( toml_space_skip( toml ) );
+    int const c = toml_getc( toml );
+    if ( c != '#' ) {
+      toml_ungetc( toml, c );
+      break;
+    }
+    toml_comment_parse( toml );
+  } // for
+}
+
+/**
  * Skips all whitespace.
  *
  * @param toml The toml_file to use.
@@ -826,7 +845,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   assert( toml != NULL );
   assert( table != NULL );
 
-  PJL_DISCARD_RV( toml_space_skip( toml ) );
+  toml_space_comments_skip( toml );
 
   char *table_name;
   if ( !toml_table_name_parse( toml, &table_name ) )
@@ -836,7 +855,8 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   toml_table_init( table );
   table->name = table_name;
 
-  PJL_DISCARD_RV( toml_space_skip( toml ) );
+  toml_space_comments_skip( toml );
+
   while ( !feof( toml->file ) ) {
     toml_key_value kv;
     if ( !toml_key_value_parse( toml, &kv ) )
@@ -850,7 +870,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
       goto error;
     }
 
-    PJL_DISCARD_RV( toml_space_skip( toml ) );
+    toml_space_comments_skip( toml );
     int const c = fpeekc( toml->file );
     if ( c == '[' )
       break;

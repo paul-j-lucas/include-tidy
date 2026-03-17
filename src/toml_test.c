@@ -81,6 +81,45 @@ static void toml_test_init( toml_test *test, char const *buf ) {
 
 ////////// test functions /////////////////////////////////////////////////////
 
+static bool test_comments( void ) {
+  TEST_FUNC_BEGIN();
+
+  static char const *const TOML =
+    "#1                   \n"
+    " #2                  \n"
+    "[test-comments]  #3  \n"
+    "bf = false       #4  \n"
+    "ab = [           #5  \n"
+    "  false,         #6  \n"
+    "  true           #7  \n"
+    "]                #8  \n";
+
+  toml_test test;
+  toml_test_init( &test, TOML );
+
+  if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
+    toml_value const *value;
+
+    value = toml_table_find( &test.table, "bf" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_BOOL ) &&
+      TEST( value->b == false );
+
+    value = toml_table_find( &test.table, "ab" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_ARRAY ) &&
+      TEST( value->a.size == 2 ) &&
+      TEST( value->a.values[0].type == TOML_BOOL ) &&
+      TEST( value->a.values[0].b == false ) &&
+      TEST( value->a.values[1].type == TOML_BOOL ) &&
+      TEST( value->a.values[1].b == true );
+  }
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_valid_table_names( char const *const table_names[] ) {
   TEST_FUNC_BEGIN();
 
@@ -251,12 +290,15 @@ int main( int argc, char const *const argv[] ) {
     "[a.  b]",
     NULL
   };
+
   test_valid_table_names( VALID_TABLE_NAMES );
   test_value_bool();
   test_value_int();
   test_value_string();
-  if ( test_failures == 0 )
+  if ( test_failures == 0 ) {
     test_value_array();
+    test_comments();
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
