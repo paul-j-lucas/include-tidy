@@ -55,7 +55,7 @@ static void strip_table_name( char *s ) {
   } while ( *s++ != '\0' );
 }
 
-static void toml_print_error( toml_file const *toml ) {
+static void toml_error_print( toml_file const *toml ) {
   assert( toml != NULL );
   if ( toml->error )
     EPRINTF( "%u:%u: %s\n", toml->line, toml->col, toml_error_msg( toml ) );
@@ -95,7 +95,7 @@ static bool test_valid_table_names( char const *const table_names[] ) {
       TEST( strcmp( test.table.name, expected_name ) == 0 );
       free( expected_name );
     }
-    toml_print_error( &test.toml );
+    toml_error_print( &test.toml );
     toml_test_cleanup( &test );
   } // while
 
@@ -104,12 +104,13 @@ static bool test_valid_table_names( char const *const table_names[] ) {
 
 static bool test_value_bool( void ) {
   TEST_FUNC_BEGIN();
-  toml_test test;
+
   static char const *const TOML =
     "[test-bool]\n"
     "bf = false\n"
     "bt = true\n";
 
+  toml_test test;
   toml_test_init( &test, TOML );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
@@ -126,13 +127,14 @@ static bool test_value_bool( void ) {
       TEST( value->b == true );
   }
 
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
 
 static bool test_value_int( void ) {
   TEST_FUNC_BEGIN();
-  toml_test test;
+
   static char const *const TOML =
     "[test-int]\n"
     "i2 = 0b101010\n"
@@ -141,6 +143,7 @@ static bool test_value_int( void ) {
     "i16 = 0x2A\n"
     "underscores = 4_2\n";
 
+  toml_test test;
   toml_test_init( &test, TOML );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
@@ -171,6 +174,31 @@ static bool test_value_int( void ) {
       TEST( value->type == TOML_INT ) &&
       TEST( value->i == 42 );
   }
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_value_string( void ) {
+  TEST_FUNC_BEGIN();
+  static char const *const TOML =
+    "[test-string]\n"
+    "s1 = \"ab\"\n";
+
+  toml_test test;
+  toml_test_init( &test, TOML );
+
+  if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
+    toml_value const *value;
+
+    value = toml_table_find( &test.table, "s1" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "ab" ) == 0 );
+  }
+
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -195,6 +223,7 @@ int main( int argc, char const *const argv[] ) {
   test_valid_table_names( VALID_TABLE_NAMES );
   test_value_bool();
   test_value_int();
+  test_value_string();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

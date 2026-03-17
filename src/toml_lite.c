@@ -39,6 +39,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#define TOML_KEY_LEN_MAX          128   /* Maximum key length. */
+#define TOML_STRING_LEN_MAX       1024  /* Maximum string length. */
+
 /**
  * TOML error messages.
  *
@@ -51,6 +54,7 @@ static char const *const TOML_ERROR_MSGS[] = {
   [ TOML_ERR_INT_RANGE      ] = "integer out of range",
   [ TOML_ERR_KEY_DUPLICATE  ] = "duplicate key",
   [ TOML_ERR_KEY_INVALID    ] = "invalid key",
+  [ TOML_ERR_STR_INVALID    ] = "invalid string",
   [ TOML_ERR_UNEX_CHAR      ] = "unexpected character",
   [ TOML_ERR_UNEX_EOF       ] = "unexpected end of file",
   [ TOML_ERR_UNEX_NEWLINE   ] = "unexpected newline",
@@ -173,10 +177,10 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
   assert( toml != NULL );
   assert( pa != NULL );
 
-  ++toml->array_depth;
+  toml_array  a = { 0 };
+  unsigned    array_cap = 16;
 
-  toml_array a = { 0 };
-  unsigned array_cap = 16;
+  ++toml->array_depth;
   a.values = MALLOC( toml_value, array_cap );
 
   while ( true ) {
@@ -285,7 +289,7 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
   assert( toml != NULL );
   assert( pi != NULL );
 
-  char    buf[ MAX_DEC_INT_DIGITS( long ) + 1 ];
+  char    buf[ MAX_DEC_INT_DIGITS( long ) + 1/*'\0'*/ ];
   size_t  buf_len = 0;
 
   int base = 10;
@@ -299,6 +303,7 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
     case '-':
       buf[ buf_len++ ] = '-';
       break;
+
     case '0':
       c = toml_getc( toml );
       switch ( c ) {
@@ -311,14 +316,25 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
         case 'x':
           base = 16;
           break;
+
+        case '#':
+        case ',':
+        case ']':
+          toml_ungetc( toml, c );
+          FALLTHROUGH;
+        case ' ':
+        case '\t':
+        case '\n':
         case EOF:
           *pi = 0;
           return true;
+
         default:
           toml->error = TOML_ERR_INT_INVALID;
           return false;
       } // switch
       break;
+
     default:
       toml_ungetc( toml, c );
   } // switch
@@ -353,7 +369,7 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
         break;
     } // switch
 
-    if ( buf_len + 1 == MAX_DEC_INT_DIGITS( long ) ) {
+    if ( buf_len + 1 == sizeof buf - 1 ) {
       toml->error = TOML_ERR_INT_RANGE;
       return false;
     }
@@ -409,8 +425,7 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
       return false;
   } // switch
 
-  size_t  key_cap = 16;
-  char   *key = MALLOC( char, key_cap + 1 );
+  char    key[ TOML_STRING_LEN_MAX + 1/*'\0'*/ ];
   size_t  key_len = 0;
   char    prev_c = '\0';
 
@@ -428,8 +443,12 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
       toml_ungetc( toml, c );
       break;
     }
-    if ( key_len + 1 >= key_cap )
-      REALLOC( key, char, (key_cap *= 2) + 1 );
+
+    if ( key_len + 1 == sizeof key - 1 ) {
+      toml->error = TOML_ERR_KEY_INVALID;
+      toml->error_msg = "key too long";
+      goto error;
+    }
     key[ key_len++ ] = STATIC_CAST( char, c );
 
     prev_c = STATIC_CAST( char, c );
@@ -449,11 +468,10 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
   }
 
   key[ key_len ] = '\0';
-  *pkey = key;
+  *pkey = check_strdup( key );
   return true;
 
 error:
-  free( key );
   return false;
 }
 
@@ -513,12 +531,12 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *kv ) {
     toml_space_skip( toml ) &&
     toml_value_parse( toml, &value );
 
-  toml->in_key_value = false;
   if ( ok )
     *kv = (toml_key_value){ .key = key, .value = value };
   else
     free( key );
 
+  toml->in_key_value = false;
   return ok;
 }
 
@@ -560,13 +578,13 @@ static bool toml_string_parse( toml_file *toml, char **ps ) {
   assert( toml != NULL );
   assert( ps != NULL );
 
-  char      buf[ 1024 ];
-  int       c;
-  unsigned  i = 0;
+  char    buf[ TOML_STRING_LEN_MAX + 1/*'\0'*/ ];
+  size_t  buf_len = 0;
 
-  while ( (c = toml_getc( toml )) != EOF ) {
-    if ( i >= sizeof buf ) {
-      // error
+  for ( int c; (c = toml_getc( toml )) != EOF; ) {
+    if ( buf_len == sizeof buf - 1 ) {
+      toml->error = TOML_ERR_STR_INVALID;
+      toml->error_msg = "string too long";
       return false;
     }
     if ( c == '"' )
@@ -577,11 +595,10 @@ static bool toml_string_parse( toml_file *toml, char **ps ) {
         return false;
       }
     }
-    buf[ i++ ] = STATIC_CAST( char, c );
-  } // while
+    buf[ buf_len++ ] = STATIC_CAST( char, c );
+  } // for
 
-  buf[i] = '\0';
-
+  buf[ buf_len ] = '\0';
   *ps = check_strdup( buf );
   return true;
 }
