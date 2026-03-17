@@ -112,10 +112,10 @@ struct toml_file {
   toml_error  error;                    ///< Error code, if any.
   char const *error_msg;                ///< Error message, if any.
   unsigned    array_depth;              ///< Array depth.
-  bool        in_key_value;             ///< Started parsing _key_ = _value_?
   unsigned    line;                     ///< Current line within file.
   unsigned    col;                      ///< Current column within file.
   unsigned    col_prev;                 ///< Previous column within file.
+  bool        in_key_value;             ///< Started parsing _key_ = _value_?
 };
 
 /**

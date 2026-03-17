@@ -67,6 +67,10 @@ static bool toml_space_skip( toml_file* ),
             toml_string_parse( toml_file*, char** ),
             toml_value_parse( toml_file*, toml_value* );
 
+NODISCARD
+static int  toml_getc( toml_file* );
+
+static void toml_ungetc( toml_file*, int );
 static void toml_value_cleanup( toml_value* );
 
 ////////// inline functions ///////////////////////////////////////////////////
@@ -88,7 +92,7 @@ static inline bool isbdigit( int c ) {
  * @return Returns `true` only if \c is one of `01234567`.
  */
 static inline bool isodigit( int c ) {
-  return strchr( "01234567", c ) != NULL;
+  return c >= '0' && c <= '7';
 }
 
 /**
@@ -99,41 +103,6 @@ static inline bool isodigit( int c ) {
  */
 static inline bool is_toml_space( int c ) {
   return c == ' ' || c == '\t';
-}
-
-/**
- * Gets the next character, if any.
- *
- * @param toml The toml_file to get the next character from.
- * @return Returns the next character or `EOF`.
- */
-NODISCARD
-static int toml_getc( toml_file *toml ) {
-  toml->col_prev = toml->col;
-  int const c = fgetc( toml->file );
-  if ( c == '\n' ) {
-    ++toml->line;
-    toml->col = 1;
-  }
-  else {
-    ++toml->col;
-  }
-  return c;
-}
-
-/**
- * Ungets \a c.
- *
- * @param toml The toml_file to unget \a c.
- * @param c The character to unget.
- */
-static void toml_ungetc( toml_file *toml, int c ) {
-  ungetc( c, toml->file );
-  if ( c == '\n' ) {
-    assert( toml->line > 0 );
-    --toml->line;
-  }
-  toml->col = toml->col_prev;
 }
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -276,6 +245,26 @@ static bool toml_char_parse( toml_file *toml, char want_c ) {
       break;
   } // switch
   return false;
+}
+
+/**
+ * Gets the next character, if any.
+ *
+ * @param toml The toml_file to get the next character from.
+ * @return Returns the next character or `EOF`.
+ */
+NODISCARD
+static int toml_getc( toml_file *toml ) {
+  toml->col_prev = toml->col;
+  int const c = fgetc( toml->file );
+  if ( c == '\n' ) {
+    ++toml->line;
+    toml->col = 1;
+  }
+  else {
+    ++toml->col;
+  }
+  return c;
 }
 
 /**
@@ -631,6 +620,21 @@ static bool toml_table_name_parse( toml_file *toml, char **pname ) {
     free( key );
 
   return ok;
+}
+
+/**
+ * Ungets \a c.
+ *
+ * @param toml The toml_file to unget \a c.
+ * @param c The character to unget.
+ */
+static void toml_ungetc( toml_file *toml, int c ) {
+  ungetc( c, toml->file );
+  if ( c == '\n' ) {
+    assert( toml->line > 0 );
+    --toml->line;
+  }
+  toml->col = toml->col_prev;
 }
 
 /**
