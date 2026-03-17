@@ -301,12 +301,20 @@ static void toml_comment_parse( toml_file *toml ) {
  */
 NODISCARD
 static int toml_getc( toml_file *toml ) {
-  toml->col_prev = toml->col;
   int const c = fgetc( toml->file );
-  if ( c == '\n' )
-    toml_newline( toml );
-  else
-    ++toml->col;
+
+  switch ( c ) {
+    case EOF:
+      break;
+    case '\n':
+      toml->col_prev = toml->col;
+      toml_newline( toml );
+      break;
+    default:
+      ++toml->col;
+      break;
+  } // switch
+
   return c;
 }
 
