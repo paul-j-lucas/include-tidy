@@ -734,7 +734,10 @@ toml_value const* toml_table_find( toml_table const *table, char const *key ) {
 
   toml_key_value const kv = { .key = key };
   rb_node_t const *const found_rb = rb_tree_find( &table->keys_values, &kv );
-  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
+  if ( found_rb == NULL )
+    return NULL;
+  toml_key_value const *const found_kv = RB_DINT( found_rb );
+  return &found_kv->value;
 }
 
 void toml_table_init( toml_table *table ) {
