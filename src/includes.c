@@ -246,6 +246,43 @@ done:
 }
 
 /**
+ * Visits each symbol in an included file that is referenced from the file
+ * being tidied.
+ *
+ * @param node_data The tidy_symbol to visit.
+ * @param visit_data The symbols_declared to use.
+ * @return Returns `false` to keep visiting or `true` if the comment would be
+ * too long.
+ */
+NODISCARD
+static bool symbols_declared_visitor( void *node_data, void *visit_data ) {
+  assert( node_data != NULL );
+  assert( visit_data != NULL );
+  tidy_symbol const *const sym = node_data;
+  symbols_declared *const declared = visit_data;
+
+  char const *const name_cstr = clang_getCString( sym->name );
+  size_t const      name_len  = strlen( name_cstr );
+
+  if ( declared->symbols_len == 0 ) {
+    declared->symbols = check_strdup( name_cstr );
+    declared->symbols_len = name_len;
+  }
+  else {
+    size_t const add_len = STRLITLEN( ", " ) + name_len;
+    size_t const comment_len =
+      strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
+    if ( comment_len + declared->symbols_len + add_len >= opt_line_length )
+      return true;
+    REALLOC( declared->symbols, char, declared->symbols_len + add_len + 1 );
+    sprintf( declared->symbols + declared->symbols_len, ", %s", name_cstr );
+    declared->symbols_len += add_len;
+  }
+
+  return false;
+}
+
+/**
  * Gets whether \a include_file is a local include file (as opposed to a system
  * include file).
  *
@@ -320,43 +357,6 @@ static tidy_include* tidy_include_find( CXFile file ) {
 
   rb_node_t const *const found_rb = rb_tree_find( &include_set, &include );
   return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
-}
-
-/**
- * Visits each symbol in an included file that is referenced from the file
- * being tidied.
- *
- * @param node_data The tidy_symbol to visit.
- * @param visit_data The symbols_declared to use.
- * @return Returns `false` to keep visiting or `true` if the comment would be
- * too long.
- */
-NODISCARD
-static bool symbols_declared_visitor( void *node_data, void *visit_data ) {
-  assert( node_data != NULL );
-  assert( visit_data != NULL );
-  tidy_symbol const *const sym = node_data;
-  symbols_declared *const declared = visit_data;
-
-  char const *const name_cstr = clang_getCString( sym->name );
-  size_t const      name_len  = strlen( name_cstr );
-
-  if ( declared->symbols_len == 0 ) {
-    declared->symbols = check_strdup( name_cstr );
-    declared->symbols_len = name_len;
-  }
-  else {
-    size_t const add_len = STRLITLEN( ", " ) + name_len;
-    size_t const comment_len =
-      strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
-    if ( comment_len + declared->symbols_len + add_len >= opt_line_length )
-      return true;
-    REALLOC( declared->symbols, char, declared->symbols_len + add_len + 1 );
-    sprintf( declared->symbols + declared->symbols_len, ", %s", name_cstr );
-    declared->symbols_len += add_len;
-  }
-
-  return false;
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
