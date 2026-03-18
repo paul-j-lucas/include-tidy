@@ -371,8 +371,7 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
   if ( include == NULL )
     return false;
   include->is_needed = true;
-  rb_insert_rv_t const rv_rbi = rb_tree_insert( &include->symbol_set, sym, 0 );
-  (void)rv_rbi;
+  PJL_DISCARD_RV( rb_tree_insert( &include->symbol_set, sym, 0 ) );
   return true;
 }
 
