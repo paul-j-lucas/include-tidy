@@ -44,6 +44,14 @@
 bool include_add_symbol( CXFile include_file, tidy_symbol *sym );
 
 /**
+ * TODO.
+ *
+ * @param header_name TODO.
+ * @return TODO.
+ */
+CXFile include_find( char const *header_name );
+
+/**
  * Initializes the set of files included in the given translation unit.
  *
  * @param tu The translation unit to use.

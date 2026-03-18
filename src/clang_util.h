@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/include-tidy.c
+**      src/clang_util.h
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **
@@ -18,54 +18,30 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef include_tidy_clang_util_H
+#define include_tidy_clang_util_H
+
 // local
 #include "pjl_config.h"
-#include "include-tidy.h"
-#include "config_file.h"
-#include "includes.h"
-#include "options.h"
-#include "symbols.h"
-#include "util.h"
+#include "clang_util.h"
 
 // libclang
 #include <clang-c/Index.h>
 
-// standard
-#include <sysexits.h>
-
-/// @cond DOXYGEN_IGNORE
-/// Otherwise Doxygen generates two entries.
-
-// extern variable definitions
-char const *prog_name;
-char const *tidy_source_path;
-
-/// @endcond
-
-CXTranslationUnit tu_new( int, char const *const[] );
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * The main entry point.
+ * Gets the real path of \a file.
  *
- * @param argc The command-line argument count.
- * @param argv The command-line argument values.
- * @return Returns 0 on success, non-zero on failure.
+ * @param file The file to get the real path of.
+ * @return Returns the string containing the real path of \a file.  The caller
+ * _must_ call `clang_disposeString()` on it.
+ *
  */
-int main( int argc, char const *argv[] ) {
-  prog_name = base_name( argv[0] );
-  options_init( &argc, &argv );
-  config_init( opt_config_path );
-
-  CXTranslationUnit tu = tu_new( argc, argv );
-  includes_init( tu );
-  config_resolve_headers();
-  symbols_init( tu );
-  includes_print();
-
-  return EX_OK;
-}
+NODISCARD
+CXString tidy_File_getRealPathName( CXFile file );
 
 ///////////////////////////////////////////////////////////////////////////////
+
+#endif /* include_tidy_clang_util_H */
 /* vim:set et sw=2 ts=2: */

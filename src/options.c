@@ -27,7 +27,6 @@
 #include "pjl_config.h"                 /* must go first */
 #include "options.h"
 #include "include-tidy.h"
-#include "red_black.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -37,13 +36,13 @@
 #include <ctype.h>                      /* for islower(), toupper() */
 #include <getopt.h>
 #include <limits.h>                     /* for PATH_MAX */
+#include <stdbool.h>
 #include <stddef.h>                     /* for size_t */
 #include <stdio.h>                      /* for fdopen() */
 #include <stdlib.h>                     /* for exit() */
 #include <string.h>                     /* for str...() */
 #include <strings.h>                    /* for strcasecmp() */
 #include <sysexits.h>
-#include <string.h>
 
 // in ascending option character ASCII order; sort using: sort -k3b,3f -k3b,3r
 #define OPT_ALIGN                 a

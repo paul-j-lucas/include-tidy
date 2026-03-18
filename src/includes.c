@@ -21,6 +21,7 @@
 // local
 #include "pjl_config.h"
 #include "includes.h"
+#include "clang_util.h"
 #include "include-tidy.h"
 #include "options.h"
 #include "red_black.h"
@@ -38,6 +39,15 @@
 #include <unistd.h>                     /* for getcwd(3) */
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * TODO.
+ */
+struct include_find_data {
+  char const *header_name;
+  size_t      header_len;
+};
+typedef struct include_find_data include_find_data;
 
 /**
  * A file that was included.
@@ -68,13 +78,40 @@ NODISCARD
 static bool     symbols_declared_visitor( void*, void* ),
                 tidy_File_isLocalInclude( CXFile );
 
-NODISCARD
-static CXString tidy_File_getRealPathName( CXFile );
 static void     tidy_include_cleanup( tidy_include* );
 
 static rb_tree_t include_set;           ///< Set of included files.
 
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * TODO
+ *
+ * @param node_data TODO.
+ * @param visit_data TODO.
+ * @return Returns `true` if the header is found.
+ */
+static bool include_find_visitor( void *node_data, void *visit_data ) {
+  assert( node_data != NULL );
+  assert( visit_data != NULL );
+
+  tidy_include const *const       include = node_data;
+  include_find_data const *const  ifd = visit_data;
+
+  CXString          path_str  = clang_getFileName( include->file );
+  char const *const path_cstr = clang_getCString( path_str );
+  size_t const      path_len  = strlen( path_cstr );
+  bool              rv        = false;
+
+  if ( ifd->header_len <= path_len ) {
+    char const *const suffix = path_cstr + (path_len - ifd->header_len);
+    rv = strcmp( ifd->header_name, suffix ) == 0 &&
+         (suffix == path_cstr || suffix[-1] == '/');
+  }
+
+  clang_disposeString( path_str );
+  return rv;
+}
 
 /**
  * Prints a `#include` preprocessor directive.
@@ -147,7 +184,7 @@ static void includes_init_visitor( CXFile included_file,
     .depth = include_len
   };
   int const rv = clang_getFileUniqueID( included_file, &include.file_id );
-  (void)rv;
+  assert( rv == 0 );
 
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &include_set, &include, sizeof include );
@@ -240,27 +277,6 @@ static bool tidy_File_isLocalInclude( CXFile include_file ) {
 
   clang_disposeString( file_str );
   return is_local;
-}
-
-/**
- * Gets the real path of \a file.
- *
- * @param file The file to get the real path of.
- * @return Returns the string containing the real path of \a file.  The caller
- * _must_ call `clang_disposeString()` on it.
- *
- */
-NODISCARD
-static CXString tidy_File_getRealPathName( CXFile file ) {
-  CXString    file_str  = clang_File_tryGetRealPathName( file );
-  char const *file_cstr = clang_getCString( file_str );
-
-  if ( file_cstr == NULL || file_cstr[0] == '\0' ) {
-    clang_disposeString( file_str );
-    file_str = clang_getFileName( file );
-  }
-
-  return file_str;
 }
 
 /**
@@ -358,6 +374,22 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
   rb_insert_rv_t const rv_rbi = rb_tree_insert( &include->symbol_set, sym, 0 );
   (void)rv_rbi;
   return true;
+}
+
+CXFile include_find( char const *header_name ) {
+  assert( header_name != NULL );
+
+  include_find_data ifd = {
+    .header_name = header_name,
+    .header_len = strlen( header_name )
+  };
+  rb_node_t const *const found_rb = rb_tree_visit(
+    &include_set, &include_find_visitor, &ifd
+  );
+  if ( found_rb == NULL )
+    return NULL;
+  tidy_include const *const include = RB_DINT( found_rb );
+  return include->file;
 }
 
 void includes_init( CXTranslationUnit tu ) {

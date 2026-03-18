@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/include-tidy.c
+**      src/includes.c
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **
@@ -20,51 +20,32 @@
 
 // local
 #include "pjl_config.h"
-#include "include-tidy.h"
-#include "config_file.h"
-#include "includes.h"
-#include "options.h"
-#include "symbols.h"
-#include "util.h"
+#include "clang_util.h"
 
 // libclang
 #include <clang-c/Index.h>
 
-// standard
-#include <sysexits.h>
-
-/// @cond DOXYGEN_IGNORE
-/// Otherwise Doxygen generates two entries.
-
-// extern variable definitions
-char const *prog_name;
-char const *tidy_source_path;
-
-/// @endcond
-
-CXTranslationUnit tu_new( int, char const *const[] );
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * The main entry point.
+ * Gets the real path of \a file.
  *
- * @param argc The command-line argument count.
- * @param argv The command-line argument values.
- * @return Returns 0 on success, non-zero on failure.
+ * @param file The file to get the real path of.
+ * @return Returns the string containing the real path of \a file.  The caller
+ * _must_ call `clang_disposeString()` on it.
+ *
  */
-int main( int argc, char const *argv[] ) {
-  prog_name = base_name( argv[0] );
-  options_init( &argc, &argv );
-  config_init( opt_config_path );
+NODISCARD
+CXString tidy_File_getRealPathName( CXFile file ) {
+  CXString          file_str  = clang_File_tryGetRealPathName( file );
+  char const *const file_cstr = clang_getCString( file_str );
 
-  CXTranslationUnit tu = tu_new( argc, argv );
-  includes_init( tu );
-  config_resolve_headers();
-  symbols_init( tu );
-  includes_print();
+  if ( file_cstr == NULL || file_cstr[0] == '\0' ) {
+    clang_disposeString( file_str );
+    file_str = clang_getFileName( file );
+  }
 
-  return EX_OK;
+  return file_str;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -30,7 +30,8 @@ AM_LDFLAGS =		$(LIBCLANG_LDFLAGS) -Wl,-rpath,$(LIBCLANG_LIBDIR)
 LDADD =			$(LIBCLANG_LIBS) $(top_builddir)/lib/libgnu.a
 TESTS =         	$(check_PROGRAMS)
 
-include_tidy_SOURCES =	config_file.c \
+include_tidy_SOURCES =	clang_util.c clang_util.h \
+			config_file.c config_file.h \
 			include-tidy.c include-tidy.h \
 			includes.c includes.h \
 			options.c options.h \

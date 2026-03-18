@@ -25,11 +25,17 @@
 
 // local
 #include "pjl_config.h"
+#include "clang_util.h"
 #include "include-tidy.h"
+#include "includes.h"
+#include "red_black.h"
 #include "toml_lite.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
+
+// libclang
+#include <clang-c/Index.h>
 
 // standard
 #include <assert.h>
@@ -66,16 +72,42 @@ enum config_opts {
 };
 typedef enum config_opts config_opts_t;
 
+/**
+ * Mapping from a symbol name to the header name/file declares it from a
+ * configuration file.
+ */
+struct symbol_header {
+  char const   *symbol_name;            ///< Symbol name.
+  union {
+    char const *header_name;            ///< Header name.
+    CXFile      header_file;            ///< Corresponding header file.
+  };
+};
+typedef struct symbol_header symbol_header;
+
+// local functions
 NODISCARD
 static FILE*            config_open( char const*, config_opts_t );
 
 NODISCARD
 static char const*      home_dir( void );
 
-static void             map_symbol_to_header( char const*, char const* );
 static void             path_append( char*, size_t, char const* );
+static void             symbol_header_add( char const*, char const* );
+static void             symbol_header_cleanup( symbol_header* );
+
+static rb_tree_t symbol_header_map;     ///< Mapping from symbols to headers.
 
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Cleans-up all symbols.
+ */
+static void config_cleanup( void ) {
+  rb_tree_cleanup(
+    &symbol_header_map, POINTER_CAST( rb_free_fn_t, &symbol_header_cleanup )
+  );
+}
 
 /**
  * Finds and opens the configuration file.
@@ -207,10 +239,11 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   while ( toml_table_next( &toml, &table ) ) {
     if ( table.name == NULL ) {
       fatal_error( EX_CONFIG,
-        "%s: required table (header) name missing\n",
-        config_path
+        "%s:%u:%u required table (header) name missing\n",
+        config_path, toml.loc.line, toml.loc.col
       );
     }
+
     toml_value const *const value = toml_table_find( &table, "symbols" );
     if ( value == NULL ) {
       fatal_error( EX_CONFIG,
@@ -220,24 +253,26 @@ static void config_parse( char const *config_path, FILE *config_file ) {
     }
     switch ( value->type ) {
       case TOML_STRING:
-        map_symbol_to_header( value->s, table.name );
+        symbol_header_add( value->s, table.name );
         break;
       case TOML_ARRAY:
         for ( unsigned i = 0; i < value->a.size; ++i ) {
           toml_value const *const a_value = &value->a.values[i];
           if ( a_value->type != TOML_STRING ) {
             fatal_error( EX_CONFIG,
-              "%s: invalid value for \"symbols\" key; expected string\n",
-              config_path
+              "%s:%u:%u: "
+              "invalid value for \"symbols\" key array; expected string\n",
+              config_path, a_value->loc.line, a_value->loc.col
             );
           }
-          map_symbol_to_header( a_value->s, table.name );
+          symbol_header_add( a_value->s, table.name );
         } // for
         break;
       default:
         fatal_error( EX_CONFIG,
-          "%s: invalid value for \"symbols\" key; expected string or array\n",
-          config_path
+          "%s:%u:%u "
+          "invalid value for \"symbols\" key; expected string or array\n",
+          config_path, value->loc.line, value->loc.col
         );
     } // switch
   } // while
@@ -278,21 +313,6 @@ static char const* home_dir( void ) {
 }
 
 /**
- * Maps \a symbol_name to \a header_name so that if \a symbol_name is
- * referenced, it'll require \a header_name.
- *
- * @param symbol_name The name of the symbol.
- * @param header_name The name of the header.
- */
-static void map_symbol_to_header( char const *symbol_name,
-                                  char const *header_name ) {
-  assert( header_name != NULL );
-  assert( symbol_name != NULL );
-
-  // TODO
-}
-
-/**
  * Appends a component to a path ensuring that exactly one `/ `separates them.
  *
  * @param path The path to append to.  The buffer pointed to must be big enough
@@ -316,18 +336,93 @@ static void path_append( char *path, size_t path_len, char const *component ) {
   }
 }
 
-////////// extern functions ///////////////////////////////////////////////////
+/**
+ * Visits each symbol_header and resolves its \ref symbol_header::header_name
+ * "header_name" to its corresponding \ref symbol_header::header_file
+ * "header_file".
+ *
+ * @param node_data The symbol_header.
+ * @param visit_data Not used.
+ * @return Always returns `false`.
+ */
+static bool resolve_headers_visitor( void *node_data, void *visit_data ) {
+  assert( node_data != NULL );
+  (void)visit_data;
+
+  symbol_header *const sh = node_data;
+  CXFile header_file = include_find( sh->header_name );
+  if ( header_file == NULL ) {
+    EPRINTF( "warning: %s not found\n", sh->header_name );
+  }
+
+  FREE( sh->header_name );
+  sh->header_file = header_file;
+
+  return false;
+}
 
 /**
- * Reads an **include-tidy**(1) configuration file, if any.
+ * Cleans-up a symbol_header.
  *
- * @param config_path The full path of the configuration file to read. May be
- * NULL.
- *
- * @note This function must be called at most once.
+ * @param sh The symbol_header to clean up.  If NULL, does nothing.
  */
+static void symbol_header_cleanup( symbol_header *sh ) {
+  if ( sh == NULL )
+    return;
+  FREE( sh->symbol_name );
+}
+
+/**
+ * Compares two \ref symbol_header objects.
+ *
+ * @param i_sh The first symbol.
+ * @param j_sh The second symbol.
+ * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
+ * i_sh is less than, equal to, or greater than the name of \a j_sh,
+ * respectively.
+ */
+NODISCARD
+static int symbol_header_cmp( symbol_header const *i_sh,
+                              symbol_header const *j_sh ) {
+  assert( i_sh != NULL );
+  assert( j_sh != NULL );
+  return strcmp( i_sh->symbol_name, j_sh->symbol_name );
+}
+
+/**
+ * Maps \a symbol_name to \a header_name so that if \a symbol_name is
+ * referenced, it'll require \a header_name.
+ *
+ * @param symbol_name The name of the symbol.
+ * @param header_name The header file.
+ */
+static void symbol_header_add( char const *symbol_name,
+                               char const *header_name ) {
+  assert( symbol_name != NULL );
+  assert( header_name != NULL );
+
+  symbol_header sh = {
+    .symbol_name = symbol_name,
+    .header_name = header_name
+  };
+  rb_insert_rv_t const rv_rbi =
+    rb_tree_insert( &symbol_header_map, &sh, sizeof sh );
+  if ( rv_rbi.inserted ) {
+    symbol_header *const new_sh = RB_DINT( rv_rbi.node );
+    new_sh->symbol_name = check_strdup( symbol_name );
+    new_sh->header_name = check_strdup( header_name );
+  }
+}
+
+////////// extern functions ///////////////////////////////////////////////////
+
 void config_init( char const *config_path ) {
   ASSERT_RUN_ONCE();
+
+  rb_tree_init(
+    &symbol_header_map, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &symbol_header_cmp )
+  );
+  ATEXIT( &config_cleanup );
 
   static char path_buf[ PATH_MAX ];
   FILE *const config_file = config_find( config_path, path_buf );
@@ -335,6 +430,23 @@ void config_init( char const *config_path ) {
     config_parse( path_buf, config_file );
     fclose( config_file );
   }
+}
+
+void config_resolve_headers( void ) {
+  rb_tree_visit(
+    &symbol_header_map, &resolve_headers_visitor, /*visit_data=*/NULL
+  );
+}
+
+CXFile config_symbol_header( char const *symbol_name ) {
+  assert( symbol_name != NULL );
+
+  symbol_header sh = { .symbol_name = symbol_name };
+  rb_node_t const *const found_rb = rb_tree_find( &symbol_header_map, &sh );
+  if ( found_rb == NULL )
+    return NULL;
+  symbol_header const *const found_sh = RB_DINT( found_rb );
+  return found_sh->header_file;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

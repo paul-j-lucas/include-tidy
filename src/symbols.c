@@ -21,6 +21,7 @@
 // local
 #include "pjl_config.h"
 #include "symbols.h"
+#include "config_file.h"
 #include "include-tidy.h"
 #include "includes.h"
 #include "red_black.h"
@@ -128,8 +129,13 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   tidy_symbol sym = { .name = clang_getCursorSpelling( first_cursor ) };
   rb_insert_rv_t const rv_rbi = rb_tree_insert( &symbol_set, &sym, sizeof sym );
   if ( rv_rbi.inserted ) {
-    tidy_symbol *const new_sym = RB_DINT( rv_rbi.node );
-    if ( include_add_symbol( first_file, new_sym ) )
+    tidy_symbol *const new_sym            = RB_DINT( rv_rbi.node );
+    char const  *const new_sym_name_cstr  = clang_getCString( new_sym->name );
+
+    CXFile header_file = config_symbol_header( new_sym_name_cstr );
+    if ( header_file == NULL )
+      header_file = first_file;
+    if ( include_add_symbol( header_file, new_sym ) )
       goto done;
   }
   tidy_symbol_cleanup( &sym );

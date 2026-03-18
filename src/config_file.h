@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/include-tidy.c
+**      src/config_file.h
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **
@@ -18,54 +18,42 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef include_tidy_config_file_H
+#define include_tidy_config_file_H
+
 // local
 #include "pjl_config.h"
-#include "include-tidy.h"
-#include "config_file.h"
-#include "includes.h"
-#include "options.h"
-#include "symbols.h"
-#include "util.h"
 
 // libclang
 #include <clang-c/Index.h>
 
-// standard
-#include <sysexits.h>
-
-/// @cond DOXYGEN_IGNORE
-/// Otherwise Doxygen generates two entries.
-
-// extern variable definitions
-char const *prog_name;
-char const *tidy_source_path;
-
-/// @endcond
-
-CXTranslationUnit tu_new( int, char const *const[] );
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * The main entry point.
+ * Reads an **include-tidy**(1) configuration file, if any.
  *
- * @param argc The command-line argument count.
- * @param argv The command-line argument values.
- * @return Returns 0 on success, non-zero on failure.
+ * @param config_path The full path of the configuration file to read. May be
+ * NULL.
+ *
+ * @note This function must be called at most once.
  */
-int main( int argc, char const *argv[] ) {
-  prog_name = base_name( argv[0] );
-  options_init( &argc, &argv );
-  config_init( opt_config_path );
+void config_init( char const *config_path );
 
-  CXTranslationUnit tu = tu_new( argc, argv );
-  includes_init( tu );
-  config_resolve_headers();
-  symbols_init( tu );
-  includes_print();
+/**
+ * Resolves all header names specified in a configuration file to their
+ * corresponding header files.
+ */
+void config_resolve_headers( void );
 
-  return EX_OK;
-}
+/**
+ * Gets the header file that \a symbol_name maps to, if any.
+ *
+ * @param symbol_name The symbol name.
+ * @return Returns said header file or NULL if none.
+ */
+CXFile config_symbol_header( char const *symbol_name );
 
 ///////////////////////////////////////////////////////////////////////////////
+
+#endif /* include_tidy_config_file_H */
 /* vim:set et sw=2 ts=2: */
