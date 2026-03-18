@@ -1,5 +1,98 @@
+2026-03-18  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.c, toml_lite.h: Added key & value locations.
+   * config_file.c, toml_lite.c, toml_lite.h, toml_test.c: Added toml_loc.
+
+2026-03-17  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.c: Fixed table name parsing.
+   * config_file.c: Preliminary TOML config file parsing.
+   * toml_lite.c: Now setting col_prev only upon newline.
+   * toml_lite.c, toml_test.c: Better comment handling.
+   * toml_lite.c: Added toml_comment_parse().
+   * toml_lite.c, toml_test.c: Fixed array parsing.
+
+2026-03-16  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_test.c: Added test_key_bool().
+   * toml_lite.c: Fixed toml_table_find().
+   * toml_test.c: Better toml_key_parse().
+
+2026-03-15  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.c, toml_lite.h: Added toml_error.
+
+2026-03-14  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.c, toml_lite.h: Added toml_getc() and toml_ungetc().
+   * toml_lite.c: Implemented toml_integer_parse().
+   * config_file.c, include-tidy.h, pjl_config.h, red_black.c, red_black.h,
+     toml_lite.c, type_traits.h, unit_test.c, util.c, util.h: Removed IWYU
+     comments.
+   * toml_lite.c: Rest of TOML commit.
+   * src/Makefile.am, toml_lite.h, toml_test.c, type_traits.h, util.h: Partial
+     TOML commit.
+   * configure.ac, src/Makefile.am: No longer polluting CFLAGS, etc.
+
+2026-03-13  Paul J. Lucas <paul@lucasmail.org>
+
+   * configure.ac, src/Makefile.am: Now using -rpath.
+   * configure.ac, src/Makefile.am: Now using llvm-config; removed
+     AC_FUNC_REALLOC.
+   * src/Makefile.am, red_black_test.c, unit_test.c, unit_test.h: Added
+     unit_test.[ch] and red_black_test.c.
+   * util.h: Added #include <assert.h>.
+
+2026-03-11  Paul J. Lucas <paul@lucasmail.org>
+
+   * src/Makefile.am, config_file.c, include-tidy.c: Initial config file.
+   * options.c, options.h: Added --config.
+   * util.c: Added missing extern inline char* strncpy_0( char*, char const*,
+     size_t )
+   * includes.c: Implemented opt_all_includes.
+   * options.c: s/default: /default=/
+   * options.c, options.h: Added --all-includes.
+   * options.c: s/-Xtidy/tidy/
+   * options.c: s/--comments/--comment-style/
+   * includes.c, options.c: opt_comment_style now uses empty strings.
+   * includes.c: Now printing local includes before system includes.
+
+2026-03-10  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c: Refactored.
+   * src/Makefile.am, includes.c: Removed unneeded files.
+   * trans_unit.c: #include clean-up.
+   * symbols.c: #include clean-up.
+   * symbols.c, symbols.h: Removed decl_file, decl_line.
+   * options.c: Proper print_usage().
+   * options.c: Betted parse_file_ext().
+   * util.h: Added ARRAY_END(), FOREACH_ARRAY_ELEMENT().
+   * options.c, options.h: Added --line-length.
+
+2026-03-09  Paul J. Lucas <paul@lucasmail.org>
+
+   * options.c: Now using -isystem.
+   * includes.c: Simplified.
+   * symbols.c: Now using first time symbol was seen.
+   * options.c: Added C++ header extensions.
+   * includes.c: Now correctly using file unique ID in include_find().
+   * includes.c, options.c, util.c, util.h: Added check_asprintf().
+   * includes.c: Now aligning comments at columns.
+   * options.c, options.h: Added OPT_ALIGN.
+   * src/Makefile.am, includes.c, includes.h, symbols.c, tidy_util.c,
+     tidy_util.h: Added include_print().
+   * options.c: Now using asprintf().
+   * options.c: move_tidy_args() now handles short options that take an
+     argument where the value is in the next argument.
+   * options.c: Added get_clang_path().
+
 2026-03-08  Paul J. Lucas <paul@lucasmail.org>
 
+   * options.c: Removed OPT_INCLUDE.
+   * options.c: Better usage.
+   * includes.c, options.c, options.h, symbols.c: Added --comments/-C.
+   * options.c: Option processing is done (I hope).
+   * options.c: Added get_x_opt_val().
    * options.c, util.c, util.h: Now using fput_list().
    * options.c: Added parse_file_ext().
    * util.c, util.h: Added empty_if_null().
