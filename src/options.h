@@ -62,6 +62,16 @@ char const* include_resolve( char const *included_path );
  */
 void options_init( int *pargc, char const **pargv[] );
 
+/**
+ * Prints verbose output.
+ *
+ * @param format The `printf()` format string literal to use.
+ * @param ... The `printf()` arguments.
+ * @return Returns the number of characters printed.
+ */
+PJL_PRINTF_LIKE_FUNC(1)
+int verbose_print( char const *format, ... );
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */

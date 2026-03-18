@@ -36,6 +36,7 @@
 #include <ctype.h>                      /* for islower(), toupper() */
 #include <getopt.h>
 #include <limits.h>                     /* for PATH_MAX */
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>                     /* for size_t */
 #include <stdio.h>                      /* for fdopen() */
@@ -1038,15 +1039,14 @@ void options_init( int *pargc, char const **pargv[] ) {
   FREE( short_opts );
 
   if ( opt_verbose ) {
-    int i;
-    PUTS( "/*\n" );
-    PUTS( "  clang argv\n" );
-    for ( i = 0; i < *pargc; ++i )
-      PRINTF( "    %2d %s\n", i, (*pargv)[i] );
-    PUTS( "\n  tidy argv\n" );
-    for ( i = 0; i < tidy_argc; ++i )
-      PRINTF( "    %2d %s\n", i, tidy_argv[i] );
-    PUTS( "*/\n" );
+    verbose_print( "clang argv\n" );
+    for ( int i = 0; i < *pargc; ++i )
+      verbose_print( "  %2d %s\n", i, (*pargv)[i] );
+    verbose_print( "\n" );
+    verbose_print( "tidy argv\n" );
+    for ( int i = 0; i < tidy_argc; ++i )
+      verbose_print( "  %2d %s\n", i, tidy_argv[i] );
+    verbose_print( "\n" );
   }
 
   tidy_argc -= optind - 1;
@@ -1090,6 +1090,17 @@ missing_arg:;
       opt_buf, sizeof opt_buf
     )
   );
+}
+
+int verbose_print( char const *format, ... ) {
+  if ( !opt_verbose )
+    return 0;
+  fputs( "// tidy | ", stdout );
+  va_list args;
+  va_start( args, format );
+  int const raw_len = vprintf( format, args );
+  va_end( args );
+  return raw_len;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
