@@ -90,6 +90,7 @@ typedef struct  toml_array      toml_array;
 typedef enum    toml_error      toml_error;
 typedef struct  toml_file       toml_file;
 typedef struct  toml_key_value  toml_key_value;
+typedef struct  toml_loc        toml_loc;
 typedef struct  toml_table      toml_table;
 typedef enum    toml_type       toml_type;
 typedef struct  toml_value      toml_value;
@@ -105,6 +106,14 @@ struct toml_array {
 };
 
 /**
+ * TOML file location.
+ */
+struct toml_loc {
+  unsigned  line;                       ///< Line number.
+  unsigned  col;                        ///< Column number (1 based).
+};
+
+/**
  * TOML file.
  */
 struct toml_file {
@@ -112,8 +121,7 @@ struct toml_file {
   toml_error  error;                    ///< Error code, if any.
   char const *error_msg;                ///< Error message, if any.
   unsigned    array_depth;              ///< Array depth.
-  unsigned    line;                     ///< Current line within file.
-  unsigned    col;                      ///< Current column within file.
+  toml_loc    loc;                      ///< Current location within file.
   unsigned    col_prev;                 ///< Previous column within file.
   bool        in_key_value;             ///< Started parsing _key_ = _value_?
 };

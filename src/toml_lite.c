@@ -113,8 +113,8 @@ static inline bool is_toml_space( int c ) {
  * @param toml The toml_file to use.
  */
 static inline void toml_newline( toml_file *toml ) {
-  ++toml->line;
-  toml->col = 1;
+  ++toml->loc.line;
+  toml->loc.col = 1;
 }
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -243,7 +243,7 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
     return false;
   }
 
-  toml->col += bytes_read;
+  toml->loc.col += bytes_read;
   *pb = !is_f;
   return true;
 }
@@ -307,11 +307,11 @@ static int toml_getc( toml_file *toml ) {
     case EOF:
       break;
     case '\n':
-      toml->col_prev = toml->col;
+      toml->col_prev = toml->loc.col;
       toml_newline( toml );
       break;
     default:
-      ++toml->col;
+      ++toml->loc.col;
       break;
   } // switch
 
@@ -701,10 +701,10 @@ static bool toml_table_name_parse( toml_file *toml, char **pname ) {
 static void toml_ungetc( toml_file *toml, int c ) {
   ungetc( c, toml->file );
   if ( c == '\n' ) {
-    assert( toml->line > 0 );
-    --toml->line;
+    assert( toml->loc.line > 0 );
+    --toml->loc.line;
   }
-  toml->col = toml->col_prev;
+  toml->loc.col = toml->col_prev;
 }
 
 /**
@@ -812,7 +812,7 @@ void toml_init( toml_file *toml, FILE *file ) {
   assert( toml != NULL );
   *toml = (toml_file){
     .file = file,
-    .line = 1
+    .loc = { .line = 1 }
   };
 }
 

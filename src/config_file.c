@@ -247,7 +247,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   if ( toml.error ) {
     fatal_error( EX_CONFIG,
       "%s:%u:%u: %s\n",
-      config_path, toml.line, toml.col, toml_error_msg( &toml )
+      config_path, toml.loc.line, toml.loc.col, toml_error_msg( &toml )
     );
   }
 

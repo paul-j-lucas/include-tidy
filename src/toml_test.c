@@ -57,8 +57,11 @@ static void strip_table_name( char *s ) {
 
 static void toml_error_print( toml_file const *toml ) {
   assert( toml != NULL );
-  if ( toml->error )
-    EPRINTF( "%u:%u: %s\n", toml->line, toml->col, toml_error_msg( toml ) );
+  if ( toml->error ) {
+    EPRINTF( "%u:%u: %s\n",
+      toml->loc.line, toml->loc.col, toml_error_msg( toml )
+    );
+  }
 }
 
 static void toml_test_cleanup( toml_test *test ) {
