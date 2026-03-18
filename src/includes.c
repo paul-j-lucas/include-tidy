@@ -85,10 +85,10 @@ static rb_tree_t include_set;           ///< Set of included files.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * TODO
+ * Visits each include file TODO.
  *
- * @param node_data TODO.
- * @param visit_data TODO.
+ * @param node_data The tidy_include to visit.
+ * @param visit_data The include_find_data to use.
  * @return Returns `true` if the header is found.
  */
 static bool include_find_visitor( void *node_data, void *visit_data ) {
@@ -325,7 +325,7 @@ static void tidy_include_cleanup( tidy_include *include ) {
 }
 
 /**
- * Compares two \ref tidy_include objects.
+ * Compares two \ref tidy_include objects by their unique file ID.
  *
  * @param i_include The first tidy_include.
  * @param j_include The second tidy_include.
@@ -334,8 +334,8 @@ static void tidy_include_cleanup( tidy_include *include ) {
  * j_include, respectively.
  */
 NODISCARD
-static int tidy_include_cmp( tidy_include const *i_include,
-                             tidy_include const *j_include ) {
+static int tidy_include_cmp_by_id( tidy_include const *i_include,
+                                   tidy_include const *j_include ) {
   assert( i_include != NULL );
   assert( j_include != NULL );
   return memcmp(
@@ -390,7 +390,7 @@ CXFile include_find( char const *header_name ) {
 void includes_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
   rb_tree_init(
-    &include_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp )
+    &include_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_id )
   );
   ATEXIT( &includes_cleanup );
   clang_getInclusions( tu, &includes_init_visitor, /*client_data=*/NULL );
