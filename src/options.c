@@ -132,12 +132,11 @@ char const         *opt_comment_style[2] = { "// ", "" };
 char const         *opt_config_path;
 unsigned            opt_line_length = OPT_LINE_LENGTH_DEFAULT;
 
-// option variables
+// local option variables
+static char       **opt_include_paths;  ///< List of `-I` paths.
 static unsigned     opt_verbose;
 
 // local variable definitions
-static char       **include_path_list;  ///< List of `-I` paths.
-static size_t       include_path_cap;
 static bool         opts_given[ 128 ];  ///< Table of options that were given.
 
 // local functions
@@ -410,27 +409,23 @@ static void include_add_path( char const *include_path ) {
   if ( realpath( include_path, real_path ) != NULL )
     include_path = real_path;
 
+  static size_t opt_include_paths_cap = 1;
   size_t i = 0;
 
-  if ( include_path_list == NULL ) {
-    include_path_cap = 1;
-    include_path_list = MALLOC( char*, include_path_cap + 1 );
-    goto add_path;
+  if ( opt_include_paths == NULL ) {
+    opt_include_paths = MALLOC( char*, opt_include_paths_cap + 1 );
+  }
+  else {
+    for ( ; opt_include_paths[i] != NULL; ++i ) {
+      if ( strcmp( include_path, opt_include_paths[i] ) == 0 )
+        return;
+    } // for
+    if ( i >= opt_include_paths_cap )
+      REALLOC( opt_include_paths, char*, (opt_include_paths_cap *= 2) + 1 );
   }
 
-  for ( ; include_path_list[i] != NULL; ++i ) {
-    if ( strcmp( include_path, include_path_list[i] ) == 0 )
-      return;
-  } // for
-
-  if ( i >= include_path_cap ) {
-    include_path_cap *= 2;
-    REALLOC( include_path_list, char*, include_path_cap + 1 );
-  }
-
-add_path:
-  include_path_list[  i] = check_strdup( include_path );
-  include_path_list[++i] = NULL;
+  opt_include_paths[  i] = check_strdup( include_path );
+  opt_include_paths[++i] = NULL;
 }
 
 /**
@@ -644,10 +639,10 @@ static char const* opt_get_long( char short_opt ) {
  * Cleans-up options.
  */
 static void options_cleanup( void ) {
-  if ( include_path_list != NULL ) {
-    for ( char **ppath = include_path_list; *ppath != NULL; ++ppath )
+  if ( opt_include_paths != NULL ) {
+    for ( char **ppath = opt_include_paths; *ppath != NULL; ++ppath )
       free( *ppath );
-    free( include_path_list );
+    free( opt_include_paths );
   }
 }
 
@@ -945,7 +940,7 @@ char const* include_resolve( char const *included_path ) {
   size_t      longest_include_path_len = 0;
   char const *shortest_include_path = included_path;
 
-  for ( char **ppath = include_path_list; *ppath != NULL; ++ppath ) {
+  for ( char **ppath = opt_include_paths; *ppath != NULL; ++ppath ) {
     char const *const include_path_i      = *ppath;
     size_t const      include_path_i_len  = strlen( include_path_i );
 
