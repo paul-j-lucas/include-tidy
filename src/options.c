@@ -131,10 +131,10 @@ unsigned            opt_comment_align = OPT_COMMENT_ALIGN_DEFAULT;
 char const         *opt_comment_style[2] = { "// ", "" };
 char const         *opt_config_path;
 unsigned            opt_line_length = OPT_LINE_LENGTH_DEFAULT;
+bool                opt_verbose;
 
 // local option variables
 static char       **opt_include_paths;  ///< List of `-I` paths.
-static unsigned     opt_verbose;
 
 // local variable definitions
 static bool         opts_given[ 128 ];  ///< Table of options that were given.
@@ -1013,7 +1013,7 @@ void options_init( int *pargc, char const **pargv[] ) {
         opt_line_length = parse_line_length( optarg );
         break;
       case COPT(VERBOSE):
-        ++opt_verbose;
+        opt_verbose = true;
         break;
       case COPT(VERSION):
         opt_version = true;
@@ -1037,7 +1037,7 @@ void options_init( int *pargc, char const **pargv[] ) {
   } // for
   FREE( short_opts );
 
-  if ( opt_verbose > 0 ) {
+  if ( opt_verbose ) {
     int i;
     PUTS( "/*\n" );
     PUTS( "  clang argv\n" );

@@ -40,6 +40,7 @@ extern unsigned    opt_comment_align;   ///< Comment alignment column.
 extern char const *opt_comment_style[2];///< Comment delimiters to use.
 extern char const *opt_config_path;     ///< Configuration file path.
 extern unsigned    opt_line_length;     ///< Line length.
+extern bool        opt_verbose;         ///< Print verbose output?
 
 ////////// extern functions ///////////////////////////////////////////////////
 
