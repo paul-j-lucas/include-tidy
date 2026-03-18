@@ -679,7 +679,6 @@ static bool toml_table_name_parse( toml_file *toml, char **pname ) {
   char *key = NULL;
 
   bool const ok =
-    toml_char_parse( toml, '[' ) &&
     toml_space_skip( toml ) &&
     toml_key_parse( toml, &key ) &&
     toml_space_skip( toml ) &&
@@ -856,6 +855,9 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   assert( table != NULL );
 
   toml_space_comments_skip( toml );
+  int c = toml_getc( toml );
+  if ( c != '[' )
+    return false;
 
   char *table_name;
   if ( !toml_table_name_parse( toml, &table_name ) )
@@ -867,7 +869,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
 
   for (;;) {
     toml_space_comments_skip( toml );
-    int const c = fpeekc( toml->file );
+    c = fpeekc( toml->file );
     if ( c == EOF || c == '[' )
       return true;
 
