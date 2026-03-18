@@ -121,7 +121,7 @@ struct toml_file {
   toml_error  error;                    ///< Error code, if any.
   char const *error_msg;                ///< Error message, if any.
   unsigned    array_depth;              ///< Array depth.
-  toml_loc    loc;                      ///< Current location within file.
+  toml_loc    loc;                      ///< Current source file location.
   unsigned    col_prev;                 ///< Previous column within file.
   bool        in_key_value;             ///< Started parsing _key_ = _value_?
 };
@@ -131,6 +131,7 @@ struct toml_file {
  */
 struct toml_value {
   toml_type     type;                   ///< The type of value.
+  toml_loc      loc;                    ///< Source file location.
   union {
     bool        b;                      ///< The Boolean value.
     long        i;                      ///< The integer value.
@@ -144,6 +145,7 @@ struct toml_value {
  */
 struct toml_key_value {
   char const *key;                      ///< Key.
+  toml_loc    key_loc;                  ///< Key's source file location.
   toml_value  value;                    ///< Value.
 };
 

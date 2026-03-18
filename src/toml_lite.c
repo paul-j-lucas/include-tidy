@@ -557,6 +557,7 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *kv ) {
   assert( kv != NULL );
 
   char       *key = NULL;
+  toml_loc    key_loc = toml->loc;
   toml_value  value = { 0 };
 
   if ( !toml_key_parse( toml, &key ) )
@@ -572,7 +573,7 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *kv ) {
     toml_value_parse( toml, &value );
 
   if ( ok )
-    *kv = (toml_key_value){ .key = key, .value = value };
+    *kv = (toml_key_value){ .key = key, .key_loc = key_loc, .value = value };
   else
     free( key );
 
@@ -735,13 +736,14 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
   assert( v != NULL );
 
   for (;;) {
+    toml_loc const value_loc = toml->loc;
     int const c = toml_getc( toml );
     switch ( c ) {
       case '"':;
         char *s;
         if ( !toml_string_parse( toml, &s ) )
           return false;
-        *v = (toml_value){ .type = TOML_STRING, .s = s };
+        *v = (toml_value){ .type = TOML_STRING, .loc = value_loc, .s = s };
         return true;
 
       case '#':
@@ -762,7 +764,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
         long i;
         if ( !toml_integer_parse( toml, &i ) )
           return false;
-        *v = (toml_value){ .type = TOML_INT, .i = i };
+        *v = (toml_value){ .type = TOML_INT, .loc = value_loc, .i = i };
         return true;
 
       case 'f':
@@ -771,14 +773,14 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
         bool b;
         if ( !toml_bool_parse( toml, &b ) )
           return false;
-        *v = (toml_value){ .type = TOML_BOOL, .b = b };
+        *v = (toml_value){ .type = TOML_BOOL, .loc = value_loc, .b = b };
         return true;
 
       case '[':;
         toml_array a;
         if ( !toml_array_parse( toml, &a ) )
           return false;
-        *v = (toml_value){ .type = TOML_ARRAY, .a = a };
+        *v = (toml_value){ .type = TOML_ARRAY, .loc = value_loc, .a = a };
         return true;
 
       default:
