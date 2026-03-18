@@ -57,7 +57,7 @@ CXTranslationUnit tu_new( int argc, char const *const argv[] ) {
   assert( argc > 0 );
 
   tidy_index = clang_createIndex(
-    /*excludeDeclarationsFromPCH*/false,
+    /*excludeDeclarationsFromPCH=*/false,
     /*displayDisgnostics=*/false
   );
 
