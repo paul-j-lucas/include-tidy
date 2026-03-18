@@ -135,22 +135,21 @@ static void include_print( tidy_include const *include, char const *comment ) {
 
   CXString          file_str  = tidy_File_getRealPathName( include->file );
   char const *const file_cstr = clang_getCString( file_str );
-  char const *const resolved_path = include_resolve( file_cstr );
+  char const *const file_path = include_resolve( file_cstr );
 
-  if ( opt_comment_style[0] == NULL ) {
-    printf( "#include %c%s%c\n", inc_delim[0], resolved_path, inc_delim[1] );
-  }
-  else {
-    int const raw_len =
-      printf( "#include %c%s%c", inc_delim[0], resolved_path, inc_delim[1] );
-    assert( raw_len >= 0 );
+  int const raw_len =
+    printf( "#include %c%s%c", inc_delim[0], file_path, inc_delim[1] );
+  assert( raw_len >= 0 );
+  clang_disposeString( file_str );
+
+  if ( opt_comment_style[0] != NULL ) {
     unsigned const len = STATIC_CAST( unsigned, raw_len ) + 1;
     if ( len < opt_comment_align )
       FPUTNSP( opt_comment_align - len, stdout );
-    printf( "%s%s%s\n", opt_comment_style[0], comment, opt_comment_style[1] );
+    printf( "%s%s%s", opt_comment_style[0], comment, opt_comment_style[1] );
   }
 
-  clang_disposeString( file_str );
+  putchar( '\n' );
 }
 
 /**
