@@ -41,13 +41,23 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * TODO.
+ * Additional data for include_find().
  */
 struct include_find_data {
   char const *header_name;
   size_t      header_len;
 };
 typedef struct include_find_data include_find_data;
+
+/**
+ * Additional data for includes_print_visitor().
+ */
+struct includes_print_visitor_data {
+  bool  print_blank_line;               ///< Print a blank line?
+  bool  print_local;                    ///< Print local includes?
+  bool  printed_any_includes;           ///< Did we print any includes?
+};
+typedef struct includes_print_visitor_data includes_print_visitor_data;
 
 /**
  * A file that was included.
@@ -224,33 +234,37 @@ NODISCARD
 static bool includes_print_visitor( void *node_data, void *visit_data ) {
   assert( node_data != NULL );
   tidy_include const *const include = node_data;
-  bool const print_local = (bool)visit_data;
+  includes_print_visitor_data *const ipvd = visit_data;
 
-  if ( print_local != include->is_local )
-    goto done;
+  if ( ipvd->print_local != include->is_local )
+    goto skip;
+
+  char *comment = NULL;
 
   if ( include->is_needed ) {
-    if ( include->depth > 1 || opt_all_includes ) {
-      size_t const comment_delimis_len =
-        strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
-      symbols_declared declared = {
-        .fixed_len = opt_comment_align + comment_delimis_len
-      };
-      rb_tree_visit(
-        &include->symbol_set, &symbols_declared_visitor, &declared
-      );
-      include_print( include, declared.symbols );
-      free( declared.symbols );
-    }
+    if ( !(include->depth > 1 || opt_all_includes) )
+      goto skip;
+    size_t const comment_delimis_len =
+      strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
+    symbols_declared declared = {
+      .fixed_len = opt_comment_align + comment_delimis_len
+    };
+    rb_tree_visit(
+      &include->symbol_set, &symbols_declared_visitor, &declared
+    );
+    comment = declared.symbols;
   }
   else if ( include->depth == 1 ) {
-    char *delete_line = NULL;
-    check_asprintf( &delete_line, "DELETE line %u", include->line );
-    include_print( include, delete_line );
-    free( delete_line );
+    check_asprintf( &comment, "DELETE line %u", include->line );
   }
 
-done:
+  if ( true_clear( &ipvd->print_blank_line ) )
+    putchar( '\n' );
+  include_print( include, comment );
+  free( comment );
+  ipvd->printed_any_includes = true;
+
+skip:
   return false;
 }
 
@@ -523,14 +537,12 @@ void includes_print( void ) {
     &include_set, &includes_sort_by_name_visitor, &include_set_by_name
   );
 
-  rb_tree_visit(
-    &include_set_by_name, &includes_print_visitor,
-    /*visit_data=*/(void*)/*is_local=*/true
-  );
-  rb_tree_visit(
-    &include_set_by_name, &includes_print_visitor,
-    /*visit_data=*/(void*)/*is_local=*/false
-  );
+  includes_print_visitor_data ipvd = { .print_local = true };
+  rb_tree_visit( &include_set_by_name, &includes_print_visitor, &ipvd );
+
+  ipvd.print_local = !ipvd.print_local;
+  ipvd.print_blank_line = ipvd.printed_any_includes;
+  rb_tree_visit( &include_set_by_name, &includes_print_visitor, &ipvd );
 
   // Because the nodes point to existing tidy_include objects, use NULL.
   rb_tree_cleanup( &include_set_by_name, /*free_fn=*/NULL );
