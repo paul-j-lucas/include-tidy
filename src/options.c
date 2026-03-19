@@ -79,6 +79,7 @@
 #define FOREACH_CLI_OPTION(VAR, OPTIONS) \
   for ( struct option const *VAR = (OPTIONS); (VAR)->name != NULL; ++(VAR) )
 
+#define OPT_CLANG_DEFAULT         "clang"
 #define OPT_COMMENT_ALIGN_DEFAULT 41
 #define OPT_COMMENT_ALIGN_MAX     256
 #define OPT_LINE_LENGTH_DEFAULT   80
@@ -117,7 +118,7 @@ static struct option const OPTIONS[] = {
 static char const *const OPTIONS_HELP[] = {
   [ COPT(ALIGN) ] = "Align comments to this column; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
   [ COPT(ALL_INCLUDES) ] = "Print all include files",
-  [ COPT(CLANG) ] = "Path of clang to use; default=\"clang\"",
+  [ COPT(CLANG) ] = "Path of clang to use; default=\"" OPT_CLANG_DEFAULT "\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
   [ COPT(CONFIG) ] = "Configuration file path",
   [ COPT(HELP) ] = "Print this help and exit",
@@ -158,7 +159,7 @@ unsigned long long  parse_ull( char const* );
  *
  * @param pargc A pointer to the argument count from \c main().
  * @param pargv A pointer to the argument values from \c main().
- * @param clang_path The path of the **clang** to use.  May be NULL.
+ * @param clang_path The path of the **clang** to use.
  * @param lang The language to use, either `"c"` or `"c++"`.
  */
 static void add_clang_include_paths( int *pargc, char const **pargv[],
@@ -167,8 +168,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
   ASSERT_RUN_ONCE();
   assert( pargc != NULL );
   assert( pargv != NULL );
-  if ( clang_path == NULL )
-    clang_path = "clang";
+  assert( clang_path != NULL );
   assert( lang != NULL );
 
   static char const CLANG_TEMPLATE[] =
@@ -177,14 +177,14 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
     " -v"         // show verbose output
     " -x%s"       // set langauge: c or c++
     " -"          // read from stdin
-    " </dev/null" // read from /dev/null
+    " </dev/null" // set stdin to /dev/null
     " 2>&1";      // redirect stderr to stdout
 
-  char *clang = NULL;
-  check_asprintf( &clang, CLANG_TEMPLATE, clang_path, lang );
+  char *clang_command = NULL;
+  check_asprintf( &clang_command, CLANG_TEMPLATE, clang_path, lang );
 
-  FILE *const fclang = popen( clang, "r" );
-  free( clang );
+  FILE *const fclang = popen( clang_command, "r" );
+  free( clang_command );
   if ( fclang == NULL )
     goto error;
 
@@ -297,10 +297,11 @@ static void check_options( void ) {
 }
 
 /**
- * Gets the path to clang, if given.
+ * Gets the path to **clang**, if given.
  *
  * @param argc The command-line argument count.
  * @param argv The command-line argument values.
+ * @return Returns the path to **clang**.
  */
 static char const* get_clang_path( int argc, char const *const argv[] ) {
   for ( int i = 1; i < argc; ++i ) {
@@ -311,7 +312,7 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
     if ( STRNCMPLIT( argv[i], "-" SOPT(CLANG) ) == 0 ) {
       if ( argv[i][2] == '\0' ) {       // -c <path>, not -c<path>
         if ( ++i >= argc )
-          fatal_error( EX_USAGE, "-%c requires an argument\n", argv[i][1] );
+          goto missing_arg;
         return argv[i];
       }
       return argv[i] + STRLITLEN( "-" SOPT(CLANG) );
@@ -326,10 +327,11 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
       return path;
     }
   } // for
-  return NULL;
+
+  return OPT_CLANG_DEFAULT;
 
 missing_arg:
-  fatal_error( EX_USAGE, "--clang requires an argument\n" );
+  fatal_error( EX_USAGE, "--clang/-%c requires an argument\n", COPT(CLANG) );
 }
 
 /**
