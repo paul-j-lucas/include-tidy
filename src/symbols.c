@@ -21,9 +21,11 @@
 // local
 #include "pjl_config.h"
 #include "symbols.h"
+#include "clang_util.h"
 #include "config_file.h"
 #include "include-tidy.h"
 #include "includes.h"
+#include "options.h"
 #include "red_black.h"
 #include "util.h"
 
@@ -135,9 +137,21 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     CXFile header_file = config_symbol_header( new_sym_name_cstr );
     if ( header_file == NULL )
       header_file = first_file;
-    if ( include_add_symbol( header_file, new_sym ) )
+    bool const added_symbol = include_add_symbol( header_file, new_sym );
+
+    if ( opt_verbose ) {
+      CXString          file_str  = tidy_File_getRealPathName( header_file );
+      char const *const file_cstr = clang_getCString( file_str );
+      verbose_print(
+        "  %s -> %s (%sadded)\n",
+        new_sym_name_cstr, file_cstr, added_symbol ? "" : "NOT "
+      );
+      clang_disposeString( file_str );
+    }
+    if ( added_symbol )
       goto done;
   }
+
   tidy_symbol_cleanup( &sym );
 
 done:
@@ -167,7 +181,9 @@ void symbols_init( CXTranslationUnit tu ) {
   symbols_init_visitor_data sivd = {
     .source_file = clang_getFile( tu, tidy_source_path )
   };
+  verbose_print( "symbols:\n" );
   clang_visitChildren( cursor, &symbols_init_visitor, &sivd );
+  verbose_print( "\n" );
 }
 
 NODISCARD
