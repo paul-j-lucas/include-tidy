@@ -513,12 +513,12 @@ void includes_print( void ) {
   }
 
   rb_tree_t include_set_by_name;
-
   rb_tree_init(
+    // Use RB_DPTR to make nodes point to existing tidy_include objects in
+    // include_set.
     &include_set_by_name, RB_DPTR,
     POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_name )
   );
-
   rb_tree_visit(
     &include_set, &includes_sort_by_name_visitor, &include_set_by_name
   );
@@ -527,12 +527,12 @@ void includes_print( void ) {
     &include_set_by_name, &includes_print_visitor,
     /*visit_data=*/(void*)/*is_local=*/true
   );
-
   rb_tree_visit(
     &include_set_by_name, &includes_print_visitor,
     /*visit_data=*/(void*)/*is_local=*/false
   );
 
+  // Because the nodes point to existing tidy_include objects, use NULL.
   rb_tree_cleanup( &include_set_by_name, /*free_fn=*/NULL );
 
   if ( reset_opt_comment_style )
