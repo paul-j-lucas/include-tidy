@@ -68,6 +68,7 @@ typedef struct tidy_include tidy_include;
  * TODO.
  */
 struct symbols_declared {
+  size_t  fixed_len;                    ///< TODO.
   char   *symbols;                      ///< TODO.
   size_t  symbols_len;                  ///< Length of \ref symbols.
 };
@@ -230,7 +231,11 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
 
   if ( include->is_needed ) {
     if ( include->depth > 1 || opt_all_includes ) {
-      symbols_declared declared = { 0 };
+      size_t const comment_delimis_len =
+        strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
+      symbols_declared declared = {
+        .fixed_len = opt_comment_align + comment_delimis_len
+      };
       rb_tree_visit(
         &include->symbol_set, &symbols_declared_visitor, &declared
       );
@@ -304,25 +309,32 @@ static bool symbols_declared_visitor( void *node_data, void *visit_data ) {
   tidy_symbol const *const sym = node_data;
   symbols_declared *const declared = visit_data;
 
-  char const *const name_cstr = clang_getCString( sym->name );
-  size_t const      name_len  = strlen( name_cstr );
+  char const   *name_cstr = clang_getCString( sym->name );
+  size_t const  name_len  = strlen( name_cstr );
+  bool          stop      = false;
 
   if ( declared->symbols_len == 0 ) {
     declared->symbols = check_strdup( name_cstr );
     declared->symbols_len = name_len;
   }
   else {
-    size_t const add_len = STRLITLEN( ", " ) + name_len;
-    size_t const comment_len =
-      strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
-    if ( comment_len + declared->symbols_len + add_len >= opt_line_length )
-      return true;
-    REALLOC( declared->symbols, char, declared->symbols_len + add_len + 1 );
+    size_t new_len = STRLITLEN( ", " ) + name_len;
+    size_t total_len = declared->fixed_len + declared->symbols_len + new_len;
+    if ( total_len > opt_line_length ) {
+      stop = true;
+      new_len = STRLITLEN( ", ..." );
+      total_len = declared->fixed_len + declared->symbols_len + new_len;
+      if ( total_len > opt_line_length )
+        goto done;
+      name_cstr = "...";
+    }
+    REALLOC( declared->symbols, char, declared->symbols_len + new_len + 1 );
     sprintf( declared->symbols + declared->symbols_len, ", %s", name_cstr );
-    declared->symbols_len += add_len;
+    declared->symbols_len += new_len;
   }
 
-  return false;
+done:
+  return stop;
 }
 
 #ifdef TIDY_MOVE_SYMBOLS
