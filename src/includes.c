@@ -187,7 +187,8 @@ static void includes_init_visitor( CXFile included_file,
 
   if ( rv_rbi.inserted ) {
     tidy_include *const new_include = RB_DINT( rv_rbi.node );
-    if ( include_len == 1 ) {           // file was directly included
+    if ( include_len == 1 ) {
+      // We care about line numbers only for files that were directly included.
       clang_getSpellingLocation(
         inclusion_stack[0], /*file=*/NULL, &new_include->line, /*column=*/NULL,
         /*offset=*/NULL
@@ -202,8 +203,6 @@ static void includes_init_visitor( CXFile included_file,
   else {
     tidy_include *const old_include = RB_DINT( rv_rbi.node );
     ++old_include->count;
-    if ( include_len < old_include->depth )
-      old_include->depth = include_len;
   }
 }
 
