@@ -896,14 +896,14 @@ static void print_usage( int status ) {
  * Ordinarily, a program would parse all options first, increment argv past
  * them, then look at (the new) argv[1] for the file; but the source file may
  * be needed before parsing options because its language (based on its filename
- * extension) affects the list of system include files and the corresponding -I
- * options needed by clang.
+ * extension) affects the list of system include files and the corresponding
+ * `-isystem` options needed by clang.
  *
  * We also have to pre-scan all options looking for clang's -x<language> option
  * because that has priority over whatever language is indicated by the source
  * file's extension.
  *
- * Finally, we have to call **clang** and insert `-I` options for the system
+ * Finally, we have to call **clang** and insert `-isystem` options for the
  * include paths it would use to compile the source file.
  * @endparblock
  *
@@ -944,6 +944,7 @@ static void print_version( void ) {
 
 char const* include_resolve( char const *included_path ) {
   assert( included_path != NULL );
+  assert( opt_include_paths != NULL );
 
   size_t      longest_include_path_len = 0;
   char const *shortest_include_path = included_path;
@@ -953,7 +954,7 @@ char const* include_resolve( char const *included_path ) {
     size_t const      include_path_i_len  = strlen( include_path_i );
 
     if ( include_path_i_len > longest_include_path_len &&
-        strncmp( included_path, include_path_i, include_path_i_len ) == 0 ) {
+         strncmp( included_path, include_path_i, include_path_i_len ) == 0 ) {
       longest_include_path_len = include_path_i_len;
       shortest_include_path = included_path + include_path_i_len;
 
