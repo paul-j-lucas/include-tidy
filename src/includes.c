@@ -50,6 +50,14 @@ struct include_find_data {
 typedef struct include_find_data include_find_data;
 
 /**
+ * Additional data passed to includes_init_visitor.
+ */
+struct includes_init_visitor_data {
+  bool  verbose_printed;                ///< Printed any verbose output?
+};
+typedef struct includes_init_visitor_data includes_init_visitor_data;
+
+/**
  * Additional data for includes_print_visitor().
  */
 struct includes_print_visitor_data {
@@ -101,7 +109,24 @@ static rb_tree_t include_set;           ///< Set of included files.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Visits each include file TODO.
+ * Gets the include delimiters, either local or system, to use.
+ *
+ * @param is_local `true` only if the include file is local.
+ * @param delim The 2-element array to receive the delimiters.
+ */
+static void get_include_delims( bool is_local, char delim[static 2] ) {
+  if ( is_local ) {
+    delim[0] = '"';
+    delim[1] = '"';
+  }
+  else {
+    delim[0] = '<';
+    delim[1] = '>';
+  }
+}
+
+/**
+ * Visits each file that's included.
  *
  * @param node_data The tidy_include to visit.
  * @param visit_data The include_find_data to use.
@@ -140,14 +165,7 @@ static void include_print( tidy_include const *include, char const *comment ) {
   assert( include != NULL );
 
   char inc_delim[2];
-  if ( include->is_local ) {
-    inc_delim[0] = '"';
-    inc_delim[1] = '"';
-  }
-  else {
-    inc_delim[0] = '<';
-    inc_delim[1] = '>';
-  }
+  get_include_delims( include->is_local, inc_delim );
 
   CXString          file_str  = tidy_File_getRealPathName( include->file );
   char const *const file_cstr = clang_getCString( file_str );
@@ -183,12 +201,14 @@ static void includes_cleanup( void ) {
  * @param included_file The file being included.
  * @param inclusion_stack The stack of all files being included.
  * @param include_len The length of \a inclusion_stack.
- * @param data Not used.
+ * @param data A pointer to a includes_init_visitor_data.
  */
 static void includes_init_visitor( CXFile included_file,
                                    CXSourceLocation inclusion_stack[],
                                    unsigned include_len, CXClientData data ) {
-  (void)data;
+  assert( data != NULL );
+  includes_init_visitor_data *const iivd =
+    POINTER_CAST( includes_init_visitor_data*, data );
 
   tidy_include include = {
     .file = included_file,
@@ -217,6 +237,26 @@ static void includes_init_visitor( CXFile included_file,
       &new_include->symbol_set, RB_DPTR,
       POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
     );
+
+    if ( opt_verbose ) {
+      if ( !iivd->verbose_printed ) {
+        verbose_printf( "includes:\n" );
+        iivd->verbose_printed = true;
+      }
+
+      char inc_delim[2];
+      get_include_delims( new_include->is_local, inc_delim );
+
+      CXString file_str = tidy_File_getRealPathName( new_include->file );
+      char const *const file_cstr = clang_getCString( file_str );
+
+      verbose_printf(
+        "  %2u %c%s%c\n",
+        include_len, inc_delim[0], file_cstr, inc_delim[1]
+      );
+
+      clang_disposeString( file_str );
+    }
   }
   else {
     tidy_include *const old_include = RB_DINT( rv_rbi.node );
@@ -528,7 +568,11 @@ void includes_init( CXTranslationUnit tu ) {
     &include_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_id )
   );
   ATEXIT( &includes_cleanup );
-  clang_getInclusions( tu, &includes_init_visitor, /*client_data=*/NULL );
+
+  includes_init_visitor_data iivd = { 0 };
+  clang_getInclusions( tu, &includes_init_visitor, &iivd );
+  if ( iivd.verbose_printed )
+    verbose_printf( "\n" );
 }
 
 void includes_print( void ) {
