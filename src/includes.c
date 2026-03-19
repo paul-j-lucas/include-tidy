@@ -76,7 +76,12 @@ typedef struct symbols_declared symbols_declared;
 // local functions
 NODISCARD
 static bool     symbols_declared_visitor( void*, void* ),
+#ifdef TIDY_MOVE_SYMBOLS
+                tidy_File_isLocalInclude( CXFile ),
+                tidy_symbol_move_visitor( void*, void* );
+#else
                 tidy_File_isLocalInclude( CXFile );
+#endif
 
 static void     tidy_include_cleanup( tidy_include* );
 
@@ -245,6 +250,45 @@ done:
 }
 
 /**
+ * Visits each include file and, if needed, inserts into a second set sorted by
+ * name.
+ *
+ * @param node_data The tidy_include to visit.
+ * @param visit_data The rb_tree_t to insert into.
+ * @return Always returns `false`.
+ */
+NODISCARD
+static bool includes_sort_by_name_visitor( void *node_data, void *visit_data ) {
+  assert( node_data != NULL );
+  assert( visit_data != NULL );
+
+  tidy_include *const include = node_data;
+
+  if ( include->is_needed ) {
+    rb_tree_t *const include_set_by_name = visit_data;
+#ifdef TIDY_MOVE_SYMBOLS
+    rb_insert_rv_t const rv_rbi =
+      rb_tree_insert( include_set_by_name, include, sizeof *include );
+    if ( !rv_rbi.inserted ) {
+      tidy_include *const old_include = RB_DPTR( rv_rbi.node );
+      rb_tree_visit(
+        &include->symbol_set, &tidy_symbol_move_visitor,
+        &old_include->symbol_set
+      );
+      old_include->is_needed = true;
+      include->is_needed = false;
+    }
+#else
+    PJL_DISCARD_RV(
+      rb_tree_insert( include_set_by_name, include, sizeof *include )
+    );
+#endif
+  }
+
+  return false;
+}
+
+/**
  * Visits each symbol in an included file that is referenced from the file
  * being tidied.
  *
@@ -280,6 +324,30 @@ static bool symbols_declared_visitor( void *node_data, void *visit_data ) {
 
   return false;
 }
+
+#ifdef TIDY_MOVE_SYMBOLS
+/**
+ * TODO.
+ *
+ * @param node_data TODO.
+ * @param visit_data TODO.
+ * @return Always returns `false`.
+ */
+NODISCARD
+static bool tidy_symbol_move_visitor( void *node_data, void *visit_data ) {
+  assert( node_data != NULL );
+  assert( visit_data != NULL );
+
+  tidy_symbol *const from_symbol    = node_data;
+  rb_tree_t   *const to_symbol_set  = visit_data;
+
+  PJL_DISCARD_RV(
+    rb_tree_insert( to_symbol_set, from_symbol, sizeof *from_symbol )
+  );
+
+  return false;
+}
+#endif
 
 /**
  * Gets whether \a include_file is a local include file (as opposed to a system
@@ -343,6 +411,35 @@ static int tidy_include_cmp_by_id( tidy_include const *i_include,
 }
 
 /**
+ * Compares two \ref tidy_include objects by their file names.
+ *
+ * @param i_include The first tidy_include.
+ * @param j_include The second tidy_include.
+ * @return Returns a number less than 0, 0, or greater than 0 if the file name
+ * of \a i_include is less than, equal to, or greater than the file name of \a
+ * j_include, respectively.
+ */
+NODISCARD
+static int tidy_include_cmp_by_name( tidy_include const *i_include,
+                                     tidy_include const *j_include ) {
+  assert( i_include != NULL );
+  assert( j_include != NULL );
+
+  CXString          i_file_str  = tidy_File_getRealPathName( i_include->file );
+  char const *const i_file_cstr = clang_getCString( i_file_str );
+  char const *const i_resolved_path = include_resolve( i_file_cstr );
+
+  CXString          j_file_str  = tidy_File_getRealPathName( j_include->file );
+  char const *const j_file_cstr = clang_getCString( j_file_str );
+  char const *const j_resolved_path = include_resolve( j_file_cstr );
+
+  int const cmp = strcmp( i_resolved_path, j_resolved_path );
+  clang_disposeString( i_file_str );
+  clang_disposeString( j_file_str );
+  return cmp;
+}
+
+/**
  * Attempts to find \a file among the set of files included.
  *
  * @param file The file to find.
@@ -402,14 +499,28 @@ void includes_print( void ) {
     reset_opt_comment_style = true;
   }
 
+  rb_tree_t include_set_by_name;
+
+  rb_tree_init(
+    &include_set_by_name, RB_DPTR,
+    POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_name )
+  );
+
   rb_tree_visit(
-    &include_set, &includes_print_visitor,
+    &include_set, &includes_sort_by_name_visitor, &include_set_by_name
+  );
+
+  rb_tree_visit(
+    &include_set_by_name, &includes_print_visitor,
     /*visit_data=*/(void*)/*is_local=*/true
   );
+
   rb_tree_visit(
-    &include_set, &includes_print_visitor,
+    &include_set_by_name, &includes_print_visitor,
     /*visit_data=*/(void*)/*is_local=*/false
   );
+
+  rb_tree_cleanup( &include_set_by_name, /*free_fn=*/NULL );
 
   if ( reset_opt_comment_style )
     opt_comment_style[0] = "";
