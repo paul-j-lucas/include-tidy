@@ -269,7 +269,8 @@ static bool includes_sort_by_name_visitor( void *node_data, void *visit_data ) {
 
   tidy_include *const include = node_data;
 
-  if ( include->is_needed ) {
+  if ( ( include->is_needed && (include->depth > 1 || opt_all_includes)) ||
+       (!include->is_needed && include->depth == 1) ) {
     rb_tree_t *const include_set_by_name = visit_data;
 #ifdef TIDY_MOVE_SYMBOLS
     rb_insert_rv_t const rv_rbi =
