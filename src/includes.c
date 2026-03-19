@@ -133,11 +133,11 @@ static bool include_find_visitor( void *node_data, void *visit_data ) {
  * Prints a `#include` preprocessor directive.
  *
  * @param include The tidy_include to print.
- * @param comment The text of the comment (not including the delimiters).
+ * @param comment The text of the comment (not including the delimiters).  May
+ * be NULL.
  */
 static void include_print( tidy_include const *include, char const *comment ) {
   assert( include != NULL );
-  assert( comment != NULL );
 
   char inc_delim[2];
   if ( include->is_local ) {
@@ -158,7 +158,7 @@ static void include_print( tidy_include const *include, char const *comment ) {
   assert( raw_len >= 0 );
   clang_disposeString( file_str );
 
-  if ( opt_comment_style[0] != NULL ) {
+  if ( comment != NULL ) {
     unsigned const len = STATIC_CAST( unsigned, raw_len ) + 1;
     if ( len < opt_comment_align )
       FPUTNSP( opt_comment_align - len, stdout );
@@ -240,21 +240,28 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
     goto skip;
 
   char *comment = NULL;
+  bool  reset_opt_comment_style = false;
 
   if ( include->is_needed ) {
     if ( !(include->depth > 1 || opt_all_includes) )
       goto skip;
-    size_t const comment_delimis_len =
-      strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
-    symbols_declared declared = {
-      .fixed_len = opt_comment_align + comment_delimis_len
-    };
-    rb_tree_visit(
-      &include->symbol_set, &symbols_declared_visitor, &declared
-    );
-    comment = declared.symbols;
+    if ( opt_comment_style[0][0] != '\0' ) {
+      size_t const comment_delimis_len =
+        strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
+      symbols_declared declared = {
+        .fixed_len = opt_comment_align + comment_delimis_len
+      };
+      rb_tree_visit(
+        &include->symbol_set, &symbols_declared_visitor, &declared
+      );
+      comment = declared.symbols;
+    }
   }
   else if ( include->depth == 1 ) {
+    if ( opt_comment_style[0][0] == '\0' ) {
+      opt_comment_style[0] = "// ";
+      reset_opt_comment_style = true;
+    }
     check_asprintf( &comment, "DELETE line %u", include->line );
   }
 
@@ -263,6 +270,8 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
   include_print( include, comment );
   free( comment );
   ipvd->printed_any_includes = true;
+  if ( reset_opt_comment_style )
+    opt_comment_style[0] = "";
 
 skip:
   return false;
@@ -520,12 +529,6 @@ void includes_init( CXTranslationUnit tu ) {
 }
 
 void includes_print( void ) {
-  bool reset_opt_comment_style = false;
-  if ( opt_comment_style[0][0] == '\0' ) {
-    opt_comment_style[0] = "// ";
-    reset_opt_comment_style = true;
-  }
-
   rb_tree_t include_set_by_name;
   rb_tree_init(
     // Use RB_DPTR to make nodes point to existing tidy_include objects in
@@ -546,9 +549,6 @@ void includes_print( void ) {
 
   // Because the nodes point to existing tidy_include objects, use NULL.
   rb_tree_cleanup( &include_set_by_name, /*free_fn=*/NULL );
-
-  if ( reset_opt_comment_style )
-    opt_comment_style[0] = "";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
