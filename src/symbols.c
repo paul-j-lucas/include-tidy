@@ -142,7 +142,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     if ( opt_verbose ) {
       CXString          file_str  = tidy_File_getRealPathName( header_file );
       char const *const file_cstr = clang_getCString( file_str );
-      verbose_print(
+      verbose_printf(
         "  %s -> %s (%sadded)\n",
         new_sym_name_cstr, file_cstr, added_symbol ? "" : "NOT "
       );
@@ -181,9 +181,9 @@ void symbols_init( CXTranslationUnit tu ) {
   symbols_init_visitor_data sivd = {
     .source_file = clang_getFile( tu, tidy_source_path )
   };
-  verbose_print( "symbols:\n" );
+  verbose_printf( "symbols:\n" );
   clang_visitChildren( cursor, &symbols_init_visitor, &sivd );
-  verbose_print( "\n" );
+  verbose_printf( "\n" );
 }
 
 NODISCARD

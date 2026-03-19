@@ -70,7 +70,7 @@ void options_init( int *pargc, char const **pargv[] );
  * @return Returns the number of characters printed.
  */
 PJL_PRINTF_LIKE_FUNC(1)
-int verbose_print( char const *format, ... );
+int verbose_printf( char const *format, ... );
 
 ///////////////////////////////////////////////////////////////////////////////
 

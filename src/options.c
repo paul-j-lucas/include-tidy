@@ -1047,14 +1047,14 @@ void options_init( int *pargc, char const **pargv[] ) {
   FREE( short_opts );
 
   if ( opt_verbose ) {
-    verbose_print( "clang argv:\n" );
+    verbose_printf( "clang argv:\n" );
     for ( int i = 0; i < *pargc; ++i )
-      verbose_print( "  %2d %s\n", i, (*pargv)[i] );
-    verbose_print( "\n" );
-    verbose_print( "tidy argv:\n" );
+      verbose_printf( "  %2d %s\n", i, (*pargv)[i] );
+    verbose_printf( "\n" );
+    verbose_printf( "tidy argv:\n" );
     for ( int i = 0; i < tidy_argc; ++i )
-      verbose_print( "  %2d %s\n", i, tidy_argv[i] );
-    verbose_print( "\n" );
+      verbose_printf( "  %2d %s\n", i, tidy_argv[i] );
+    verbose_printf( "\n" );
   }
 
   tidy_argc -= optind - 1;
@@ -1100,7 +1100,7 @@ missing_arg:;
   );
 }
 
-int verbose_print( char const *format, ... ) {
+int verbose_printf( char const *format, ... ) {
   if ( !opt_verbose )
     return 0;
   fputs( "// tidy | ", stdout );
