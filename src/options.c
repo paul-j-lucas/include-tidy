@@ -136,7 +136,7 @@ unsigned            opt_line_length = OPT_LINE_LENGTH_DEFAULT;
 bool                opt_verbose;
 
 // local option variables
-static char       **opt_include_paths;  ///< List of `-I` paths.
+static char       **opt_include_paths;  ///< Null-terminated list of `-I` paths.
 
 // local variable definitions
 static bool         opts_given[ 128 ];  ///< Table of options that were given.
