@@ -212,6 +212,8 @@ static void includes_init_visitor( CXFile included_file,
     }
     new_include->is_local = tidy_File_isLocalInclude( new_include->file );
     rb_tree_init(
+      // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
+      // symbol_set in symbols.c
       &new_include->symbol_set, RB_DPTR,
       POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
     );
@@ -424,6 +426,7 @@ static bool tidy_File_isLocalInclude( CXFile include_file ) {
 static void tidy_include_cleanup( tidy_include *include ) {
   if ( include == NULL )
     return;
+  // Because the nodes point to existing tidy_symbol objects, use NULL.
   rb_tree_cleanup( &include->symbol_set, /*free_fn=*/NULL );
 }
 
