@@ -1,5 +1,14 @@
 2026-03-18  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c: Now truncating symbols with ...
+   * includes.c: Now sorting includes.
+   * symbols.c: Added verbose output.
+   * options.c, options.h: Added verbose_print().
+   * options.c, options.h: Made opt_verbose be bool and not be static.
+   * includes.c: Now using PJL_DISCARD_RV.
+   * src/Makefile.am, clang_util.c, clang_util.h, config_file.c, config_file.h,
+     include-tidy.c, includes.c, includes.h, options.c, symbols.c: Now parsing
+     TOML configuration file.
    * toml_lite.c, toml_lite.h: Added key & value locations.
    * config_file.c, toml_lite.c, toml_lite.h, toml_test.c: Added toml_loc.
 
