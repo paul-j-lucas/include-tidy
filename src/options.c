@@ -220,8 +220,8 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
         continue;
 #endif /* __APPLE__ */
 
-      char const *const abs_include_path = str_trim( line_buf );
-      if ( abs_include_path[0] != '/' )
+      char const *const include_path = str_trim( line_buf );
+      if ( include_path[0] != '/' )
         continue;
 
       size_t const old_argc = STATIC_CAST( size_t, *pargc );
@@ -238,7 +238,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
       }
       else {
         *pargv = realloc( *pargv, new_size );
-        if ( *pargv == NULL )
+        if ( unlikely( *pargv == NULL ) )
           goto error;
       }
 
@@ -247,7 +247,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
                STATIC_CAST( size_t, *pargc - argi + 1 ) * sizeof(char*) );
 
       char *new_arg = NULL;
-      check_asprintf( &new_arg, "-isystem%s", abs_include_path );
+      check_asprintf( &new_arg, "-isystem%s", include_path );
       (*pargv)[ argi++ ] = new_arg;
       ++*pargc;
     } // while
@@ -262,7 +262,10 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
   return;
 
 error:
-  fatal_error( EX_UNAVAILABLE, "invoking clang failed%s\n", STRERROR() );
+  fatal_error(
+    EX_UNAVAILABLE, "invoking %s failed: %s\n",
+    clang_path, STRERROR()
+  );
 }
 
 /**
@@ -416,15 +419,17 @@ static void include_add_path( char const *include_path ) {
   size_t i = 0;
 
   if ( opt_include_paths == NULL ) {
-    opt_include_paths = MALLOC( char*, opt_include_paths_cap + 1 );
+    opt_include_paths = MALLOC( char*, opt_include_paths_cap + 1/*NULL*/ );
   }
   else {
     for ( ; opt_include_paths[i] != NULL; ++i ) {
       if ( strcmp( include_path, opt_include_paths[i] ) == 0 )
         return;
     } // for
-    if ( i >= opt_include_paths_cap )
-      REALLOC( opt_include_paths, char*, (opt_include_paths_cap *= 2) + 1 );
+    if ( i >= opt_include_paths_cap ) {
+      opt_include_paths_cap *= 2;
+      REALLOC( opt_include_paths, char*, opt_include_paths_cap + 1/*NULL*/ );
+    }
   }
 
   opt_include_paths[  i] = check_strdup( include_path );
