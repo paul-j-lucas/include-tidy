@@ -43,7 +43,8 @@
  * Additional data passed to symbols_init_visitor.
  */
 struct symbols_init_visitor_data {
-  CXFile source_file;                   ///< The file being tidied.
+  CXFile  source_file;                  ///< The file being tidied.
+  bool    verbose_printed;              ///< Printed any verbose output?
 };
 typedef struct symbols_init_visitor_data symbols_init_visitor_data;
 
@@ -93,8 +94,8 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
                                                      CXClientData data ) {
   (void)parent;
   assert( data != NULL );
-  symbols_init_visitor_data const *const sivd =
-    POINTER_CAST( symbols_init_visitor_data const*, data );
+  symbols_init_visitor_data *const sivd =
+    POINTER_CAST( symbols_init_visitor_data*, data );
 
   if ( !is_symbol_in_file( cursor, sivd->source_file ) )
     goto done;
@@ -140,6 +141,10 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     bool const added_symbol = include_add_symbol( header_file, new_sym );
 
     if ( opt_verbose ) {
+      if ( !sivd->verbose_printed ) {
+        verbose_printf( "symbols:\n" );
+        sivd->verbose_printed = true;
+      }
       CXString          file_str  = tidy_File_getRealPathName( header_file );
       char const *const file_cstr = clang_getCString( file_str );
       verbose_printf(
@@ -148,6 +153,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       );
       clang_disposeString( file_str );
     }
+
     if ( added_symbol )
       goto done;
   }
@@ -181,9 +187,9 @@ void symbols_init( CXTranslationUnit tu ) {
   symbols_init_visitor_data sivd = {
     .source_file = clang_getFile( tu, tidy_source_path )
   };
-  verbose_printf( "symbols:\n" );
   clang_visitChildren( cursor, &symbols_init_visitor, &sivd );
-  verbose_printf( "\n" );
+  if ( sivd.verbose_printed )
+    verbose_printf( "\n" );
 }
 
 NODISCARD
