@@ -40,13 +40,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Additional data passed to symbols_visitor.
+ * Additional data passed to symbol_visitor.
  */
-struct symbols_visitor_data {
+struct symbol_visitor_data {
   CXFile  source_file;                  ///< The file being tidied.
   bool    verbose_printed;              ///< Printed any verbose output?
 };
-typedef struct symbols_visitor_data symbols_visitor_data;
+typedef struct symbol_visitor_data symbol_visitor_data;
 
 // local functions
 static void tidy_symbol_cleanup( tidy_symbol* );
@@ -56,8 +56,8 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Helper function for symbols_visitor that gets whether the symbol at \a
- * cursor is referenced from \a file.
+ * Helper function for symbol_visitor that gets whether the symbol at \a cursor
+ * is referenced from \a file.
  *
  * @param cursor The cursor for the symbol.
  * @param file The file of interest.
@@ -86,15 +86,15 @@ static void symbols_cleanup( void ) {
  *
  * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent Not used.
- * @param data A pointer to a symbols_visitor_data.
+ * @param data A pointer to a symbol_visitor_data.
  * @return Always returns `CXChildVisit_Recurse`.
  */
-static enum CXChildVisitResult symbols_visitor( CXCursor cursor,
-                                                CXCursor parent,
-                                                CXClientData data ) {
+static enum CXChildVisitResult symbol_visitor( CXCursor cursor,
+                                               CXCursor parent,
+                                               CXClientData data ) {
   (void)parent;
   assert( data != NULL );
-  symbols_visitor_data *const svd = POINTER_CAST( symbols_visitor_data*, data );
+  symbol_visitor_data *const svd = POINTER_CAST( symbol_visitor_data*, data );
 
   switch ( clang_getCursorKind( cursor ) ) {
     case CXCursor_CallExpr:
@@ -183,10 +183,10 @@ void symbols_init( CXTranslationUnit tu ) {
   );
   ATEXIT( &symbols_cleanup );
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
-  symbols_visitor_data svd = {
+  symbol_visitor_data svd = {
     .source_file = clang_getFile( tu, tidy_source_path )
   };
-  clang_visitChildren( cursor, &symbols_visitor, &svd );
+  clang_visitChildren( cursor, &symbol_visitor, &svd );
   if ( svd.verbose_printed )
     verbose_printf( "\n" );
 }
