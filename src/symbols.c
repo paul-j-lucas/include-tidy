@@ -182,6 +182,7 @@ void symbols_init( CXTranslationUnit tu ) {
     &symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
   );
   ATEXIT( &symbols_cleanup );
+
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
   symbol_visitor_data svd = {
     .source_file = clang_getFile( tu, tidy_source_path )
