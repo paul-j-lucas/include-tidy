@@ -74,10 +74,10 @@ struct tidy_include {
   CXFile          file;                 ///< File that was included.
   CXFileUniqueID  file_id;              ///< Unique file ID.
   unsigned        count;                ///< Number of times included.
-  unsigned        depth;                ///< "Depth" of include.
   unsigned        line;                 ///< Line included from.
+  bool            is_direct;            ///< Directly included?
   bool            is_local;             ///< Local include file?
-  bool            is_needed;            ///< Is this include needed?
+  bool            is_needed;            ///< Include needed?
   rb_tree_t       symbol_set;           ///< Symbols referenced from this file.
 };
 typedef struct tidy_include tidy_include;
@@ -215,7 +215,7 @@ static void includes_init_visitor( CXFile included_file,
   tidy_include include = {
     .file = included_file,
     .count = 1,
-    .depth = include_len
+    .is_direct = include_len == 1
   };
   int const rv = clang_getFileUniqueID( included_file, &include.file_id );
   assert( rv == 0 );
@@ -287,7 +287,7 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
   bool  reset_opt_comment_style = false;
 
   if ( include->is_needed ) {
-    if ( !(include->depth > 1 || opt_all_includes) )
+    if ( !(!include->is_direct || opt_all_includes) )
       goto skip;
     if ( opt_comment_style[0][0] != '\0' ) {
       size_t const comment_delimis_len =
@@ -299,7 +299,7 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
       comment = used.symbols;
     }
   }
-  else if ( include->depth == 1 ) {
+  else if ( include->is_direct ) {
     if ( opt_comment_style[0][0] == '\0' ) {
       opt_comment_style[0] = "// ";
       reset_opt_comment_style = true;
@@ -334,8 +334,8 @@ static bool includes_sort_by_name_visitor( void *node_data, void *visit_data ) {
 
   tidy_include *const include = node_data;
 
-  if ( ( include->is_needed && (include->depth > 1 || opt_all_includes)) ||
-       (!include->is_needed && include->depth == 1) ) {
+  if ( ( include->is_needed && (!include->is_direct || opt_all_includes)) ||
+       (!include->is_needed && include->is_direct) ) {
     rb_tree_t *const include_set_by_name = visit_data;
 #ifdef TIDY_MOVE_SYMBOLS
     rb_insert_rv_t const rv_rbi =
