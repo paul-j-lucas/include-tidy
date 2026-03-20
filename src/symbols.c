@@ -96,9 +96,6 @@ static enum CXChildVisitResult symbols_visitor( CXCursor cursor,
   assert( data != NULL );
   symbols_visitor_data *const svd = POINTER_CAST( symbols_visitor_data*, data );
 
-  if ( !is_symbol_in_file( cursor, svd->source_file ) )
-    goto done;
-
   switch ( clang_getCursorKind( cursor ) ) {
     case CXCursor_CallExpr:
     case CXCursor_DeclRefExpr:
@@ -107,6 +104,9 @@ static enum CXChildVisitResult symbols_visitor( CXCursor cursor,
     default:
       goto done;
   } // switch
+
+  if ( !is_symbol_in_file( cursor, svd->source_file ) )
+    goto done;
 
   // Gets the cursor for _a_ declaration of the symbol.
   CXCursor decl_cursor = clang_getCursorReferenced( cursor );
