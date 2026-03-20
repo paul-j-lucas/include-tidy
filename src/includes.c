@@ -206,6 +206,8 @@ static void includes_cleanup( void ) {
 static void includes_init_visitor( CXFile included_file,
                                    CXSourceLocation inclusion_stack[],
                                    unsigned include_len, CXClientData data ) {
+  if ( include_len == 0 )               // the file being tidied
+    return;
   assert( data != NULL );
   includes_init_visitor_data *const iivd =
     POINTER_CAST( includes_init_visitor_data*, data );
