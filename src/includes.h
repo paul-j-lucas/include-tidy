@@ -44,12 +44,13 @@
 bool include_add_symbol( CXFile include_file, tidy_symbol *sym );
 
 /**
- * TODO.
+ * Given a relative path to an include file, e.g.: `clang-c/Index.h`, gets its
+ * corresponding file.
  *
- * @param header_name TODO.
- * @return TODO.
+ * @param rel_path The relative path of the include file to find.
+ * @return Returns its corresponding file or NULL if not found.
  */
-CXFile include_find( char const *header_name );
+CXFile include_getFile( char const *rel_path );
 
 /**
  * Initializes the set of files included in the given translation unit.

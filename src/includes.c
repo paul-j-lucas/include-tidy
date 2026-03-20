@@ -41,16 +41,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Additional data for include_find().
+ * Additional data for include_getFile().
  */
-struct include_find_data {
-  char const *header_name;
-  size_t      header_len;
+struct include_getFile_data {
+  char const *rel_path;
+  size_t      rel_path_len;
 };
-typedef struct include_find_data include_find_data;
+typedef struct include_getFile_data include_getFile_data;
 
 /**
- * Additional data passed to includes_init_visitor.
+ * Additional data passed to includes_init_visitor().
  */
 struct includes_init_visitor_data {
   bool  verbose_printed;                ///< Printed any verbose output?
@@ -83,23 +83,23 @@ struct tidy_include {
 typedef struct tidy_include tidy_include;
 
 /**
- * TODO.
+ * The symbols used from an include file.
  */
-struct symbols_declared {
+struct symbols_used {
   size_t  fixed_len;                    ///< TODO.
   char   *symbols;                      ///< TODO.
   size_t  symbols_len;                  ///< Length of \ref symbols.
 };
-typedef struct symbols_declared symbols_declared;
+typedef struct symbols_used symbols_used;
 
 // local functions
 NODISCARD
-static bool     symbols_declared_visitor( void*, void* ),
+static bool     symbols_used_visitor( void*, void* ),
 #ifdef TIDY_MOVE_SYMBOLS
-                tidy_File_isLocalInclude( CXFile ),
+                tidy_File_is_local_include( CXFile ),
                 tidy_symbol_move_visitor( void*, void* );
 #else
-                tidy_File_isLocalInclude( CXFile );
+                tidy_File_is_local_include( CXFile );
 #endif
 
 static void     tidy_include_cleanup( tidy_include* );
@@ -129,24 +129,24 @@ static void get_include_delims( bool is_local, char delim[static 2] ) {
  * Visits each file that's included.
  *
  * @param node_data The tidy_include to visit.
- * @param visit_data The include_find_data to use.
+ * @param visit_data The include_getFile_data to use.
  * @return Returns `true` if the header is found.
  */
-static bool include_find_visitor( void *node_data, void *visit_data ) {
+static bool include_getFile_visitor( void *node_data, void *visit_data ) {
   assert( node_data != NULL );
   assert( visit_data != NULL );
 
-  tidy_include const *const       include = node_data;
-  include_find_data const *const  ifd = visit_data;
+  tidy_include const *const         include = node_data;
+  include_getFile_data const *const igfd = visit_data;
 
   CXString          path_str  = clang_getFileName( include->file );
   char const *const path_cstr = clang_getCString( path_str );
   size_t const      path_len  = strlen( path_cstr );
   bool              rv        = false;
 
-  if ( ifd->header_len <= path_len ) {
-    char const *const suffix = path_cstr + (path_len - ifd->header_len);
-    rv = strcmp( ifd->header_name, suffix ) == 0 &&
+  if ( igfd->rel_path_len <= path_len ) {
+    char const *const suffix = path_cstr + (path_len - igfd->rel_path_len);
+    rv = strcmp( igfd->rel_path, suffix ) == 0 &&
          (suffix == path_cstr || suffix[-1] == '/');
   }
 
@@ -230,7 +230,7 @@ static void includes_init_visitor( CXFile included_file,
         /*offset=*/NULL
       );
     }
-    new_include->is_local = tidy_File_isLocalInclude( new_include->file );
+    new_include->is_local = tidy_File_is_local_include( new_include->file );
     rb_tree_init(
       // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
       // symbol_set in symbols.c
@@ -290,13 +290,11 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
     if ( opt_comment_style[0][0] != '\0' ) {
       size_t const comment_delimis_len =
         strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
-      symbols_declared declared = {
+      symbols_used used = {
         .fixed_len = opt_comment_align + comment_delimis_len
       };
-      rb_tree_visit(
-        &include->symbol_set, &symbols_declared_visitor, &declared
-      );
-      comment = declared.symbols;
+      rb_tree_visit( &include->symbol_set, &symbols_used_visitor, &used );
+      comment = used.symbols;
     }
   }
   else if ( include->depth == 1 ) {
@@ -364,39 +362,39 @@ static bool includes_sort_by_name_visitor( void *node_data, void *visit_data ) {
  * being tidied.
  *
  * @param node_data The tidy_symbol to visit.
- * @param visit_data The symbols_declared to use.
+ * @param visit_data The symbols_used to use.
  * @return Returns `false` to keep visiting or `true` if the comment would be
  * too long.
  */
 NODISCARD
-static bool symbols_declared_visitor( void *node_data, void *visit_data ) {
+static bool symbols_used_visitor( void *node_data, void *visit_data ) {
   assert( node_data != NULL );
   assert( visit_data != NULL );
   tidy_symbol const *const sym = node_data;
-  symbols_declared *const declared = visit_data;
+  symbols_used *const used = visit_data;
 
   char const   *name_cstr = clang_getCString( sym->name );
   size_t const  name_len  = strlen( name_cstr );
   bool          stop      = false;
 
-  if ( declared->symbols_len == 0 ) {
-    declared->symbols = check_strdup( name_cstr );
-    declared->symbols_len = name_len;
+  if ( used->symbols_len == 0 ) {
+    used->symbols = check_strdup( name_cstr );
+    used->symbols_len = name_len;
   }
   else {
     size_t new_len = STRLITLEN( ", " ) + name_len;
-    size_t total_len = declared->fixed_len + declared->symbols_len + new_len;
+    size_t total_len = used->fixed_len + used->symbols_len + new_len;
     if ( total_len > opt_line_length ) {
       stop = true;
       new_len = STRLITLEN( ", ..." );
-      total_len = declared->fixed_len + declared->symbols_len + new_len;
+      total_len = used->fixed_len + used->symbols_len + new_len;
       if ( total_len > opt_line_length )
         goto done;
       name_cstr = "...";
     }
-    REALLOC( declared->symbols, char, declared->symbols_len + new_len + 1 );
-    sprintf( declared->symbols + declared->symbols_len, ", %s", name_cstr );
-    declared->symbols_len += new_len;
+    REALLOC( used->symbols, char, used->symbols_len + new_len + 1 );
+    sprintf( used->symbols + used->symbols_len, ", %s", name_cstr );
+    used->symbols_len += new_len;
   }
 
 done:
@@ -434,7 +432,7 @@ static bool tidy_symbol_move_visitor( void *node_data, void *visit_data ) {
  * @param include_file The included file.
  * @return Returns `true` only if \a full_path is a local include file.
  */
-static bool tidy_File_isLocalInclude( CXFile include_file ) {
+static bool tidy_File_is_local_include( CXFile include_file ) {
   static char   cwd_buf[ PATH_MAX + 1 ];
   static size_t cwd_len;
 
@@ -537,25 +535,26 @@ static tidy_include* tidy_include_find( CXFile file ) {
 ////////// extern functions ///////////////////////////////////////////////////
 
 bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
+  assert( include_file != NULL );
   assert( sym != NULL );
+
   tidy_include *const include = tidy_include_find( include_file );
   if ( include == NULL )
     return false;
   include->is_needed = true;
-  PJL_DISCARD_RV( rb_tree_insert( &include->symbol_set, sym, 0 ) );
+  PJL_DISCARD_RV( rb_tree_insert( &include->symbol_set, sym, sizeof *sym ) );
   return true;
 }
 
-CXFile include_find( char const *header_name ) {
-  assert( header_name != NULL );
+CXFile include_getFile( char const *rel_path ) {
+  assert( rel_path != NULL );
 
-  include_find_data ifd = {
-    .header_name = header_name,
-    .header_len = strlen( header_name )
+  include_getFile_data igfd = {
+    .rel_path = rel_path,
+    .rel_path_len = strlen( rel_path )
   };
-  rb_node_t const *const found_rb = rb_tree_visit(
-    &include_set, &include_find_visitor, &ifd
-  );
+  rb_node_t const *const found_rb =
+    rb_tree_visit( &include_set, &include_getFile_visitor, &igfd );
   if ( found_rb == NULL )
     return NULL;
   tidy_include const *const include = RB_DINT( found_rb );

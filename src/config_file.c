@@ -73,13 +73,13 @@ enum config_opts {
 typedef enum config_opts config_opts_t;
 
 /**
- * Mapping from a symbol name to the header name/file declares it from a
- * configuration file.
+ * Mapping from a symbol name to the header relative path _or_ file that
+ * declares it from a configuration file.
  */
 struct symbol_header {
   char const   *symbol_name;            ///< Symbol name.
   union {
-    char const *header_name;            ///< Header name.
+    char const *rel_path;               ///< Header relative path.
     CXFile      header_file;            ///< Corresponding header file.
   };
 };
@@ -87,21 +87,22 @@ typedef struct symbol_header symbol_header;
 
 // local functions
 NODISCARD
-static FILE*            config_open( char const*, config_opts_t );
+static FILE*        config_open( char const*, config_opts_t );
 
 NODISCARD
-static char const*      home_dir( void );
+static char const*  home_dir( void );
 
-static void             path_append( char*, size_t, char const* );
-static void             symbol_header_add( char const*, char const* );
-static void             symbol_header_cleanup( symbol_header* );
+static void         path_append( char*, size_t, char const* );
+static void         symbol_header_add( char const*, char const* );
+static void         symbol_header_cleanup( symbol_header* );
 
+// local variables
 static rb_tree_t symbol_header_map;     ///< Mapping from symbols to headers.
 
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Cleans-up all symbols.
+ * Cleans-up all configuration data.
  */
 static void config_cleanup( void ) {
   rb_tree_cleanup(
@@ -337,8 +338,8 @@ static void path_append( char *path, size_t path_len, char const *component ) {
 }
 
 /**
- * Visits each symbol_header and resolves its \ref symbol_header::header_name
- * "header_name" to its corresponding \ref symbol_header::header_file
+ * Visits each symbol_header and resolves its \ref symbol_header::rel_path
+ * "rel_path" to its corresponding \ref symbol_header::header_file
  * "header_file".
  *
  * @param node_data The symbol_header.
@@ -350,12 +351,12 @@ static bool resolve_headers_visitor( void *node_data, void *visit_data ) {
   (void)visit_data;
 
   symbol_header *const sh = node_data;
-  CXFile header_file = include_find( sh->header_name );
+  CXFile header_file = include_getFile( sh->rel_path );
   if ( header_file == NULL ) {
-    EPRINTF( "warning: %s not found\n", sh->header_name );
+    EPRINTF( "warning: %s not found\n", sh->rel_path );
   }
 
-  FREE( sh->header_name );
+  FREE( sh->rel_path );
   sh->header_file = header_file;
 
   return false;
@@ -390,27 +391,29 @@ static int symbol_header_cmp( symbol_header const *i_sh,
 }
 
 /**
- * Maps \a symbol_name to \a header_name so that if \a symbol_name is
- * referenced, it'll require \a header_name.
+ * Maps \a symbol_name to \a rel_path so that if \a symbol_name is referenced,
+ * it'll require \a rel_path.
  *
  * @param symbol_name The name of the symbol.
- * @param header_name The header file.
+ * @param rel_path The header file.
  */
 static void symbol_header_add( char const *symbol_name,
-                               char const *header_name ) {
+                               char const *rel_path ) {
   assert( symbol_name != NULL );
-  assert( header_name != NULL );
+  assert( rel_path != NULL );
 
   symbol_header sh = {
     .symbol_name = symbol_name,
-    .header_name = header_name
+    .rel_path = rel_path
   };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_header_map, &sh, sizeof sh );
   if ( rv_rbi.inserted ) {
     symbol_header *const new_sh = RB_DINT( rv_rbi.node );
-    new_sh->symbol_name = check_strdup( symbol_name );
-    new_sh->header_name = check_strdup( header_name );
+    *new_sh = (symbol_header){
+      .symbol_name = check_strdup( symbol_name ),
+      .rel_path = check_strdup( rel_path )
+    };
   }
 }
 
