@@ -140,16 +140,17 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   if ( clang_File_isEqual( first_file, vcvd->source_file ) )
     goto done;
 
-  tidy_symbol sym = { .name = clang_getCursorSpelling( first_cursor ) };
-  rb_insert_rv_t const rv_rbi = rb_tree_insert( &symbol_set, &sym, sizeof sym );
+  tidy_symbol new_symbol = { .name = clang_getCursorSpelling( first_cursor ) };
+  rb_insert_rv_t const rv_rbi =
+    rb_tree_insert( &symbol_set, &new_symbol, sizeof new_symbol );
   if ( rv_rbi.inserted ) {
-    tidy_symbol *const new_sym            = RB_DINT( rv_rbi.node );
-    char const  *const new_sym_name_cstr  = clang_getCString( new_sym->name );
+    tidy_symbol *const symbol            = RB_DINT( rv_rbi.node );
+    char const  *const symbol_name_cstr  = clang_getCString( symbol->name );
 
-    CXFile header_file = config_symbol_header( new_sym_name_cstr );
+    CXFile header_file = config_symbol_header( symbol_name_cstr );
     if ( header_file == NULL )
       header_file = first_file;
-    bool const added_symbol = include_add_symbol( header_file, new_sym );
+    bool const added_symbol = include_add_symbol( header_file, symbol );
 
     if ( opt_verbose ) {
       if ( !vcvd->verbose_printed ) {
@@ -160,7 +161,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       char const *const file_cstr = clang_getCString( file_str );
       verbose_printf(
         "  %s -> %s (%sadded)\n",
-        new_sym_name_cstr, file_cstr, added_symbol ? "" : "NOT "
+        symbol_name_cstr, file_cstr, added_symbol ? "" : "NOT "
       );
       clang_disposeString( file_str );
     }
@@ -169,7 +170,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       goto done;
   }
 
-  tidy_symbol_cleanup( &sym );
+  tidy_symbol_cleanup( &new_symbol );
 
 done:
   return CXChildVisit_Recurse;
