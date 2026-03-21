@@ -34,6 +34,7 @@
 // standard
 #include <assert.h>
 #include <ctype.h>                      /* for islower(), toupper() */
+#include <errno.h>
 #include <getopt.h>
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdarg.h>
