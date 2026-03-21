@@ -50,12 +50,12 @@ struct include_getFile_data {
 typedef struct include_getFile_data include_getFile_data;
 
 /**
- * Additional data passed to getInclusions_visitor().
+ * Additional data passed to visitChildren_visitor().
  */
-struct getInclusions_visitor_data {
+struct visitChildren_visitor_data {
   bool  verbose_printed;                ///< Printed any verbose output?
 };
-typedef struct getInclusions_visitor_data getInclusions_visitor_data;
+typedef struct visitChildren_visitor_data visitChildren_visitor_data;
 
 /**
  * Additional data for includes_print_visitor().
@@ -122,73 +122,6 @@ static void get_include_delims( bool is_local, char delim[static 2] ) {
   else {
     delim[0] = '<';
     delim[1] = '>';
-  }
-}
-
-/**
- * Visits each file included.
- *
- * @param included_file The file being included.
- * @param inclusion_stack The stack of all files being included.
- * @param include_len The length of \a inclusion_stack.
- * @param data A pointer to a getInclusions_visitor_data.
- */
-static void getInclusions_visitor( CXFile included_file,
-                                   CXSourceLocation inclusion_stack[],
-                                   unsigned include_len, CXClientData data ) {
-  if ( include_len == 0 )               // the file being tidied
-    return;
-  assert( data != NULL );
-  getInclusions_visitor_data *const givd =
-    POINTER_CAST( getInclusions_visitor_data*, data );
-
-  tidy_include include = {
-    .file = included_file,
-    .count = 1,
-    .is_direct = include_len == 1
-  };
-  int const rv = clang_getFileUniqueID( included_file, &include.file_id );
-  assert( rv == 0 );
-
-  rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &include_set, &include, sizeof include );
-  if ( !rv_rbi.inserted )
-    return;
-
-  tidy_include *const new_include = RB_DINT( rv_rbi.node );
-  if ( include_len == 1 ) {
-    // We care about line numbers only for files that were directly included.
-    clang_getSpellingLocation(
-      inclusion_stack[0], /*file=*/NULL, &new_include->line, /*column=*/NULL,
-      /*offset=*/NULL
-    );
-  }
-  new_include->is_local = tidy_File_is_local_include( new_include->file );
-  rb_tree_init(
-    // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
-    // symbol_set in symbols.c
-    &new_include->symbol_set, RB_DPTR,
-    POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
-  );
-
-  if ( opt_verbose ) {
-    if ( !givd->verbose_printed ) {
-      verbose_printf( "includes:\n" );
-      givd->verbose_printed = true;
-    }
-
-    char inc_delim[2];
-    get_include_delims( new_include->is_local, inc_delim );
-
-    CXString file_str = tidy_File_getRealPathName( new_include->file );
-    char const *const file_cstr = clang_getCString( file_str );
-
-    verbose_printf(
-      "  %2u %c%s%c\n",
-      include_len, inc_delim[0], file_cstr, inc_delim[1]
-    );
-
-    clang_disposeString( file_str );
   }
 }
 
@@ -530,6 +463,83 @@ static tidy_include* tidy_include_find( CXFile file ) {
   return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }
 
+/**
+ * Visits each `#include` directive in a translation unit.
+ *
+ * @param cursor The cursor for the symbol in the AST being visited.
+ * @param parent Not used.
+ * @param data Not used.
+ * @return Always returns `CXChildVisit_Continue`.
+ */
+static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
+                                                      CXCursor parent,
+                                                      CXClientData data ) {
+  (void)parent;
+  assert( data != NULL );
+
+  if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
+    goto done;
+
+  visitChildren_visitor_data *const vcvd =
+    POINTER_CAST( visitChildren_visitor_data*, data );
+
+  CXSourceLocation  include_loc = clang_getCursorLocation( cursor );
+  CXFile            included_file = clang_getIncludedFile( cursor );
+  bool const        is_direct = clang_Location_isFromMainFile( include_loc );
+
+  tidy_include new_include = { 0 };
+  int const rv = clang_getFileUniqueID( included_file, &new_include.file_id );
+  assert( rv == 0 );
+
+  rb_insert_rv_t const rv_rbi =
+    rb_tree_insert( &include_set, &new_include, sizeof new_include );
+  tidy_include *const include = RB_DINT( rv_rbi.node );
+  if ( !rv_rbi.inserted ) {
+    if ( is_direct ) {
+      include->is_direct = true;
+    }
+    goto print;
+  }
+
+  include->file = included_file;
+  include->is_direct = is_direct;
+  include->is_local = tidy_File_is_local_include( included_file );
+  clang_getSpellingLocation(
+    include_loc, /*file=*/NULL, &include->line, /*column=*/NULL, /*offset=*/NULL
+  );
+
+  rb_tree_init(
+    // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
+    // symbol_set in symbols.c
+    &include->symbol_set, RB_DPTR,
+    POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
+  );
+
+print:
+  if ( opt_verbose ) {
+    if ( !vcvd->verbose_printed ) {
+      verbose_printf( "includes:\n" );
+      vcvd->verbose_printed = true;
+    }
+
+    char inc_delim[2];
+    get_include_delims( include->is_local, inc_delim );
+
+    CXString file_str = tidy_File_getRealPathName( include->file );
+    char const *const file_cstr = clang_getCString( file_str );
+
+    verbose_printf(
+      "  %c %c%s%c\n",
+      is_direct ? '*' : ' ', inc_delim[0], file_cstr, inc_delim[1]
+    );
+
+    clang_disposeString( file_str );
+  }
+
+done:
+  return CXChildVisit_Continue;
+}
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
@@ -566,9 +576,10 @@ void includes_init( CXTranslationUnit tu ) {
   );
   ATEXIT( &includes_cleanup );
 
-  getInclusions_visitor_data givd = { 0 };
-  clang_getInclusions( tu, &getInclusions_visitor, &givd );
-  if ( givd.verbose_printed )
+  visitChildren_visitor_data vcvd = { 0 };
+  CXCursor cursor = clang_getTranslationUnitCursor( tu );
+  clang_visitChildren( cursor, &visitChildren_visitor, &vcvd );
+  if ( vcvd.verbose_printed )
     verbose_printf( "\n" );
 }
 
