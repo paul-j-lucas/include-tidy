@@ -427,7 +427,7 @@ void config_init( char const *config_path ) {
   );
   ATEXIT( &config_cleanup );
 
-  static char path_buf[ PATH_MAX ];
+  char path_buf[ PATH_MAX ];
   FILE *const config_file = config_find( config_path, path_buf );
   if ( config_file != NULL ) {
     config_parse( path_buf, config_file );
