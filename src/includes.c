@@ -516,7 +516,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   );
 
 print:
-  if ( opt_verbose ) {
+  if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
     if ( !vcvd->verbose_printed ) {
       verbose_printf( "includes:\n" );
       vcvd->verbose_printed = true;

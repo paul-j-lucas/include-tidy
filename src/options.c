@@ -85,6 +85,7 @@
 #define OPT_COMMENT_ALIGN_MAX     256
 #define OPT_LINE_LENGTH_DEFAULT   80
 #define OPT_LINE_LENGTH_MAX       256
+#define OPT_VERBOSE_ALL           "ais"
 
 #define OPT_BUF_SIZE              32    /**< Maximum size for an option. */
 
@@ -103,7 +104,7 @@ static struct option const OPTIONS[] = {
   { "config",         required_argument,  NULL, COPT(CONFIG)        },
   { "help",           no_argument,        NULL, COPT(HELP)          },
   { "line-length",    required_argument,  NULL, COPT(LINE_LENGTH)   },
-  { "verbose",        no_argument,        NULL, COPT(VERBOSE)       },
+  { "verbose",        required_argument,  NULL, COPT(VERBOSE)       },
   { "version",        no_argument,        NULL, COPT(VERSION)       },
   { NULL,             0,                  NULL, 0                   }
 };
@@ -134,7 +135,7 @@ unsigned            opt_comment_align = OPT_COMMENT_ALIGN_DEFAULT;
 char const         *opt_comment_style[2] = { "// ", "" };
 char const         *opt_config_path;
 unsigned            opt_line_length = OPT_LINE_LENGTH_DEFAULT;
-bool                opt_verbose;
+tidy_verbose        opt_verbose;
 
 // local option variables
 static char       **opt_include_paths;  ///< Null-terminated list of `-I` paths.
@@ -143,7 +144,7 @@ static char       **opt_include_paths;  ///< Null-terminated list of `-I` paths.
 static bool         opts_given[ 128 ];  ///< Table of options that were given.
 
 // local functions
-static void         include_add_path( char const* );
+static void               include_add_path( char const* );
 
 NODISCARD
 static char const*        opt_format( char, char[const], size_t ),
@@ -151,6 +152,8 @@ static char const*        opt_format( char, char[const], size_t ),
 
 NODISCARD
 static unsigned long long parse_ull( char const* );
+
+static void               set_all_or_none( char const**, char const* );
 
 /////////// local functions ///////////////////////////////////////////////////
 
@@ -800,6 +803,52 @@ static unsigned long long parse_ull( char const *s ) {
 }
 
 /**
+ * Parses the value of the **include-tidy** verbose option.
+ *
+ * @param verbose_format
+ * @parblock
+ * The null-terminated **include-tidy** debug format string to parse.
+ * Value format are:
+ *
+ * Format | Meaning
+ * -------|-----------------------------------------------------------------
+ * `a`    | Be verbose about command-line arguments.
+ * `i`    | Be verbose about include files.
+ * `s`    | Be verbose about symbols referenced.
+ *
+ * Multiple formats may be given, one immediately after the other, e.g., `ai`.
+ * Alternatively, `*` may be given to mean "all" or either the empty string or
+ * `-` may be given to mean "none."
+ * @endparblock
+ * @return Returns the parsed value.
+ */
+NODISCARD
+static tidy_verbose parse_tidy_verbose( char const *verbose_format ) {
+  assert( verbose_format != NULL );
+
+  set_all_or_none( &verbose_format, OPT_VERBOSE_ALL );
+  tidy_verbose verbose = TIDY_VERBOSE_NONE;
+
+    for ( char const *s = verbose_format; *s != '\0'; ++s ) {
+    switch ( *s ) {
+      case 'a':
+        verbose |= TIDY_VERBOSE_ARGS;
+        break;
+      case 'i':
+        verbose |= TIDY_VERBOSE_INCLUDES;
+        break;
+      case 's':
+        verbose |= TIDY_VERBOSE_SYMBOLS;
+        break;
+      default:
+        ;
+    } // switch
+  } // for
+
+  return verbose;
+}
+
+/**
  * Prints the usage message to standard error and exits.
  *
  * @param status The status to exit with.  If it is `EX_OK`, prints to standard
@@ -941,6 +990,29 @@ static void print_version( void ) {
   );
 }
 
+/**
+ * If \a *pformat is:
+ *
+ *  + `"*"`: sets \a *pformat to \a all_value.
+ *  + `"-"`: sets \a *pformat to `""` (the empty string).
+ *
+ * Otherwise does nothing.
+ *
+ * @param pformat A pointer to the format string to possibly set.
+ * @param all_value The "all" value for when \a *pformat is `"*"`.
+ */
+static void set_all_or_none( char const **pformat, char const *all_value ) {
+  assert( pformat != NULL );
+  assert( *pformat != NULL );
+  assert( all_value != NULL );
+  assert( all_value[0] != '\0' );
+
+  if ( strcmp( *pformat, "*" ) == 0 )
+    *pformat = all_value;
+  else if ( strcmp( *pformat, "-" ) == 0 )
+    *pformat = "";
+}
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 char const* include_resolve( char const *included_path ) {
@@ -1023,7 +1095,9 @@ void options_init( int *pargc, char const **pargv[] ) {
         opt_line_length = parse_line_length( optarg );
         break;
       case COPT(VERBOSE):
-        opt_verbose = true;
+        if ( *SKIP_WS( optarg ) == '\0' )
+          goto missing_arg;
+        opt_verbose = parse_tidy_verbose( optarg );
         break;
       case COPT(VERSION):
         opt_version = true;
@@ -1047,7 +1121,7 @@ void options_init( int *pargc, char const **pargv[] ) {
   } // for
   FREE( short_opts );
 
-  if ( opt_verbose ) {
+  if ( (opt_verbose & TIDY_VERBOSE_ARGS) != 0 ) {
     verbose_printf( "clang argv:\n" );
     for ( int i = 0; i < *pargc; ++i )
       verbose_printf( "  %2d %s\n", i, (*pargv)[i] );
@@ -1102,7 +1176,7 @@ missing_arg:;
 }
 
 int verbose_printf( char const *format, ... ) {
-  if ( !opt_verbose )
+  if ( opt_verbose == TIDY_VERBOSE_NONE )
     return 0;
   fputs( "// tidy | ", stdout );
   va_list args;

@@ -152,7 +152,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       header_file = first_file;
     bool const added_symbol = include_add_symbol( header_file, symbol );
 
-    if ( opt_verbose ) {
+    if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
       if ( !vcvd->verbose_printed ) {
         verbose_printf( "symbols:\n" );
         vcvd->verbose_printed = true;

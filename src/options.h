@@ -34,13 +34,24 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Verbose mode.
+ */
+enum tidy_verbose {
+  TIDY_VERBOSE_NONE,                    ///< Don't be verbose.
+  TIDY_VERBOSE_ARGS     = 1 << 0,       ///< Command-line arguments.
+  TIDY_VERBOSE_INCLUDES = 1 << 1,       ///< Files includes.
+  TIDY_VERBOSE_SYMBOLS  = 1 << 2,       ///< Symbols referenced.
+};
+typedef enum tidy_verbose tidy_verbose;
+
 // extern option variables
-extern bool        opt_all_includes;    ///< Print all includes?
-extern unsigned    opt_comment_align;   ///< Comment alignment column.
-extern char const *opt_comment_style[2];///< Comment delimiters to use.
-extern char const *opt_config_path;     ///< Configuration file path.
-extern unsigned    opt_line_length;     ///< Line length.
-extern bool        opt_verbose;         ///< Print verbose output?
+extern bool         opt_all_includes;     ///< Print all includes?
+extern unsigned     opt_comment_align;    ///< Comment alignment column.
+extern char const  *opt_comment_style[2]; ///< Comment delimiters to use.
+extern char const  *opt_config_path;      ///< Configuration file path.
+extern unsigned     opt_line_length;      ///< Line length.
+extern tidy_verbose opt_verbose;          ///< Print verbose output?
 
 ////////// extern functions ///////////////////////////////////////////////////
 
