@@ -146,11 +146,11 @@ static bool         opts_given[ 128 ];  ///< Table of options that were given.
 static void         include_add_path( char const* );
 
 NODISCARD
-static char const*  opt_format( char, char[const], size_t ),
-                 *  opt_get_long( char );
+static char const*        opt_format( char, char[const], size_t ),
+                 *        opt_get_long( char );
 
 NODISCARD
-unsigned long long  parse_ull( char const* );
+static unsigned long long parse_ull( char const* );
 
 /////////// local functions ///////////////////////////////////////////////////
 
@@ -786,7 +786,7 @@ unsigned parse_line_length( char const *s ) {
  * number or prints an error message and exits if there was an error.
  */
 NODISCARD
-unsigned long long parse_ull( char const *s ) {
+static unsigned long long parse_ull( char const *s ) {
   assert( s != NULL );
   SKIP_WS( s );
   if ( likely( s[0] != '\0' || s[0] != '-' ) ) {
