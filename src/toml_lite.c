@@ -321,6 +321,7 @@ static int toml_getc( toml_file *toml ) {
 /**
  * Parses a TOML integer.
  *
+ * @param toml The toml_file to use.
  * @param pi A pointer to receive the integer.
  * @return Returns `true` only if an integer was parsed successfully.
  */
@@ -667,6 +668,7 @@ static bool toml_string_parse( toml_file *toml, char **ps ) {
 /**
  * Parses a table name.
  *
+ * @param toml The toml_file to use.
  * @param pname A pointer to receive the table name.
  * @return Returns `true` only if a table name was parsed successfully.
  *
