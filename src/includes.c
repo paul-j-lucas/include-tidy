@@ -73,6 +73,8 @@ typedef struct includes_print_visitor_data includes_print_visitor_data;
 struct tidy_include {
   CXFile          file;                 ///< File that was included.
   CXFileUniqueID  file_id;              ///< Unique file ID.
+  CXString        real_path_str;        ///< Real path of \a file.
+  char const     *resolved_path;
   unsigned        count;                ///< Number of times included.
   unsigned        line;                 ///< Line included from.
   bool            is_direct;            ///< Directly included?
@@ -97,12 +99,11 @@ typedef struct symbols_used symbols_used;
 
 // local functions
 NODISCARD
-static bool     symbols_used_visitor( void*, void* ),
 #ifdef TIDY_MOVE_SYMBOLS
-                tidy_File_is_local_include( CXFile ),
+static bool     symbols_used_visitor( void*, void* ),
                 tidy_symbol_move_visitor( void*, void* );
 #else
-                tidy_File_is_local_include( CXFile );
+static bool     symbols_used_visitor( void*, void* );
 #endif
 
 static void     tidy_include_cleanup( tidy_include* );
@@ -170,19 +171,16 @@ static void include_print( tidy_include const *include, char const *comment ) {
   char inc_delim[2];
   get_include_delims( include->is_local, inc_delim );
 
-  CXString          file_str  = tidy_File_getRealPathName( include->file );
-  char const *const file_cstr = clang_getCString( file_str );
-  char const *const file_path = include_resolve( file_cstr );
-
-  int const raw_len =
-    printf( "#include %c%s%c", inc_delim[0], file_path, inc_delim[1] );
-  assert( raw_len >= 0 );
-  clang_disposeString( file_str );
+  int const raw_len = printf(
+    "#include %c%s%c", inc_delim[0], include->resolved_path, inc_delim[1]
+  );
+  if ( unlikely( raw_len < 0 ) )
+    perror_exit( EX_IOERR );
 
   if ( comment != NULL ) {
-    unsigned const len = STATIC_CAST( unsigned, raw_len ) + 1;
-    if ( len < opt_comment_align )
-      FPUTNSP( opt_comment_align - len, stdout );
+    unsigned const column = STATIC_CAST( unsigned, raw_len ) + 1;
+    if ( column < opt_comment_align )
+      FPUTNSP( opt_comment_align - column, stdout );
     printf( "%s%s%s", opt_comment_style[0], comment, opt_comment_style[1] );
   }
 
@@ -292,6 +290,31 @@ static bool includes_sort_by_name_visitor( void *node_data, void *visit_data ) {
 }
 
 /**
+ * Gets whether \a include_file is a local include file (as opposed to a system
+ * include file).
+ *
+ * @param include_file The included file.
+ * @return Returns `true` only if \a full_path is a local include file.
+ */
+static bool is_local_include( char const *include_file ) {
+  static char   cwd_buf[ PATH_MAX ];
+  static size_t cwd_len;
+
+  if ( cwd_len == 0 ) {
+    if ( getcwd( cwd_buf, sizeof cwd_buf ) == NULL ) {
+      fatal_error( EX_UNAVAILABLE,
+        "could not get current working directory: %s\n", STRERROR()
+      );
+    }
+    cwd_len = strlen( cwd_buf );
+    if ( cwd_len > 0 && cwd_buf[ cwd_len - 1 ] != '/' )
+      strcpy( cwd_buf + cwd_len++, "/" );
+  }
+
+  return strncmp( include_file, cwd_buf, cwd_len ) == 0;
+}
+
+/**
  * Visits each symbol in an included file that is referenced from the file
  * being tidied.
  *
@@ -360,36 +383,6 @@ static bool tidy_symbol_move_visitor( void *node_data, void *visit_data ) {
 #endif
 
 /**
- * Gets whether \a include_file is a local include file (as opposed to a system
- * include file).
- *
- * @param include_file The included file.
- * @return Returns `true` only if \a full_path is a local include file.
- */
-static bool tidy_File_is_local_include( CXFile include_file ) {
-  static char   cwd_buf[ PATH_MAX + 1 ];
-  static size_t cwd_len;
-
-  if ( cwd_len == 0 ) {
-    if ( getcwd( cwd_buf, PATH_MAX ) == NULL ) {
-      fatal_error( EX_UNAVAILABLE,
-        "could not get current working directory: %s\n", STRERROR()
-      );
-    }
-    cwd_len = strlen( cwd_buf );
-    if ( cwd_len > 0 && cwd_buf[ cwd_len - 1 ] != '/' )
-      strcpy( cwd_buf + cwd_len++, "/" );
-  }
-
-  CXString          file_str  = tidy_File_getRealPathName( include_file );
-  char const *const file_cstr = clang_getCString( file_str );
-  bool const        is_local  = strncmp( file_cstr, cwd_buf, cwd_len ) == 0;
-
-  clang_disposeString( file_str );
-  return is_local;
-}
-
-/**
  * Cleans-up all memory associated with \a include but does _not_ free \a
  * include itself.
  *
@@ -398,6 +391,7 @@ static bool tidy_File_is_local_include( CXFile include_file ) {
 static void tidy_include_cleanup( tidy_include *include ) {
   if ( include == NULL )
     return;
+  clang_disposeString( include->real_path_str );
   // Because the nodes point to existing tidy_symbol objects, use NULL.
   rb_tree_cleanup( &include->symbol_set, /*free_fn=*/NULL );
 }
@@ -436,18 +430,7 @@ static int tidy_include_cmp_by_name( tidy_include const *i_include,
   assert( i_include != NULL );
   assert( j_include != NULL );
 
-  CXString          i_file_str  = tidy_File_getRealPathName( i_include->file );
-  char const *const i_file_cstr = clang_getCString( i_file_str );
-  char const *const i_resolved_path = include_resolve( i_file_cstr );
-
-  CXString          j_file_str  = tidy_File_getRealPathName( j_include->file );
-  char const *const j_file_cstr = clang_getCString( j_file_str );
-  char const *const j_resolved_path = include_resolve( j_file_cstr );
-
-  int const cmp = strcmp( i_resolved_path, j_resolved_path );
-  clang_disposeString( i_file_str );
-  clang_disposeString( j_file_str );
-  return cmp;
+  return strcmp( i_include->resolved_path, j_include->resolved_path );
 }
 
 /**
@@ -505,8 +488,14 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   }
 
   include->file = included_file;
+  include->real_path_str = tidy_File_getRealPathName( included_file );
+
+  char const *const real_path_cstr = clang_getCString( include->real_path_str );
+  include->resolved_path = include_resolve( real_path_cstr );
+
   include->is_direct = is_direct;
-  include->is_local = tidy_File_is_local_include( included_file );
+  include->is_local = is_local_include( real_path_cstr );
+
   clang_getSpellingLocation(
     include_loc, /*file=*/NULL, &include->line, /*column=*/NULL, /*offset=*/NULL
   );
@@ -528,15 +517,11 @@ print:
     char inc_delim[2];
     get_include_delims( include->is_local, inc_delim );
 
-    CXString file_str = tidy_File_getRealPathName( include->file );
-    char const *const file_cstr = clang_getCString( file_str );
-
+    char const *const file_cstr = clang_getCString( include->real_path_str );
     verbose_printf(
       "  %c %c%s%c\n",
       is_direct ? '*' : ' ', inc_delim[0], file_cstr, inc_delim[1]
     );
-
-    clang_disposeString( file_str );
   }
 
 done:
