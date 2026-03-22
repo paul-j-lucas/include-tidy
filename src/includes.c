@@ -86,7 +86,10 @@ typedef struct tidy_include tidy_include;
  * The symbols used from an include file.
  */
 struct symbols_used {
-  size_t  fixed_len;                    ///< TODO.
+  /// Sum of \ref opt_comment_align and `strlen(`\ref opt_comment_style
+  /// "opt_comment_style"`[*])`.
+  size_t  fixed_len;
+
   char   *symbols;                      ///< TODO.
   size_t  symbols_len;                  ///< Length of \ref symbols.
 };
