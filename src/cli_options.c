@@ -342,7 +342,7 @@ static char const* get_opt_format( int short_opt ) {
 NODISCARD
 static char const* get_opt_help( int opt ) {
   assert( opt > 0 );
-  assert( (unsigned)opt < ARRAY_SIZE( OPTIONS_HELP ) );
+  assert( STATIC_CAST( unsigned, opt ) < ARRAY_SIZE( OPTIONS_HELP ) );
   char const *const help = OPTIONS_HELP[ opt ];
   assert( help != NULL );
   return help;
