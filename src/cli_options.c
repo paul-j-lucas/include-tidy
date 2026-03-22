@@ -128,7 +128,7 @@ static char const*  get_opt_format( int ),
                  *  get_opt_long( char );
 
 NODISCARD
-static bool         is_Xtidy_arg( int, char const *const[], int* );
+static bool         is_Xtidy_opt( int, char const *const[], int* );
 
 /////////// local functions ///////////////////////////////////////////////////
 
@@ -286,7 +286,7 @@ static void check_options( void ) {
  */
 static char const* get_clang_path( int argc, char const *const argv[] ) {
   for ( int i = 1; i < argc; ++i ) {
-    if ( !is_Xtidy_arg( argc, argv, &i ) )
+    if ( !is_Xtidy_opt( argc, argv, &i ) )
       continue;
     if ( STRNCMPLIT( argv[i], "-" SOPT(CLANG) ) == 0 ) {
       if ( argv[i][2] == '\0' ) {       // -c <path>, not -c<path>
@@ -424,7 +424,7 @@ static char const* get_x_language( int argc, char const *const argv[] ) {
  * @return Returns `true` only if `argv[*pargi]` is `-Xtidy` and is followed by
  * a subsequent option.
  */
-static bool is_Xtidy_arg( int argc, char const *const argv[], int *pargi ) {
+static bool is_Xtidy_opt( int argc, char const *const argv[], int *pargi ) {
   assert( argv != NULL );
   assert( pargi != NULL );
   assert( *pargi < argc );
@@ -548,7 +548,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
   tidy_argv[0] = argv[0];
 
   for ( int i = 1; i < argc; ++i ) {
-    if ( is_Xtidy_arg( argc, argv, &i ) ) {
+    if ( is_Xtidy_opt( argc, argv, &i ) ) {
       tidy_argv[ tidy_argc++ ] = argv[i];
       if ( argv[i][0] == '-' && isalnum( argv[i][1] ) ) {
         if ( argv[i][2] != '\0' )
