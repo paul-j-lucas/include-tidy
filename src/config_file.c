@@ -402,15 +402,12 @@ static void symbol_header_add( char const *symbol_name,
   assert( symbol_name != NULL );
   assert( rel_path != NULL );
 
-  symbol_header sh = {
-    .symbol_name = symbol_name,
-    .rel_path = rel_path
-  };
+  symbol_header new_sh = { .symbol_name = symbol_name };
   rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &symbol_header_map, &sh, sizeof sh );
+    rb_tree_insert( &symbol_header_map, &new_sh, sizeof new_sh );
   if ( rv_rbi.inserted ) {
-    symbol_header *const new_sh = RB_DINT( rv_rbi.node );
-    *new_sh = (symbol_header){
+    symbol_header *const sh = RB_DINT( rv_rbi.node );
+    *sh = (symbol_header){
       .symbol_name = check_strdup( symbol_name ),
       .rel_path = check_strdup( rel_path )
     };
