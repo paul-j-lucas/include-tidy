@@ -130,6 +130,19 @@ void* check_realloc( void *p, size_t size ) {
   return p;
 }
 
+void check_snprintf( char *buf, size_t buf_size, char const *format, ... ) {
+  assert( buf != NULL );
+  assert( format != NULL );
+
+  va_list args;
+  va_start( args, format );
+  int const raw_len = vsnprintf( buf, buf_size, format, args );
+  va_end( args );
+
+  PERROR_EXIT_IF( raw_len < 0, EX_OSERR );
+  PERROR_EXIT_IF( STATIC_CAST( size_t, raw_len ) >= buf_size, EX_SOFTWARE );
+}
+
 char* check_strdup( char const *s ) {
   assert( s != NULL );
   char *const dup = strdup( s );

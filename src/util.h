@@ -713,6 +713,17 @@ NODISCARD
 void* check_realloc( void *p, size_t size );
 
 /**
+ * Calls **snprintf**(3) and checks for failure.
+ *
+ * @param buf The destination buffer to print into.
+ * @param buf_size The size of \a buf.
+ * @param format The `printf()` style format string.
+ * @param ... The `printf()` arguments.
+ */
+PJL_PRINTF_LIKE_FUNC(3)
+void check_snprintf( char *buf, size_t buf_size, char const *format, ... );
+
+/**
  * Calls **strdup**(3) and checks for failure.
  * If memory allocation fails, prints an error message and exits.
  *
