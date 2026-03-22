@@ -124,11 +124,11 @@ static bool         opts_given[ 128 ];  ///< Table of options that were given.
 
 // local functions
 NODISCARD
-static bool         is_Xtidy_arg( int, char const *const[], int* );
-
-NODISCARD
 static char const*  get_opt_format( int ),
                  *  get_opt_long( char );
+
+NODISCARD
+static bool         is_Xtidy_arg( int, char const *const[], int* );
 
 /////////// local functions ///////////////////////////////////////////////////
 
