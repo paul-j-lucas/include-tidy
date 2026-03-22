@@ -78,8 +78,6 @@
 #define FOREACH_CLI_OPTION(VAR, OPTIONS) \
   for ( struct option const *VAR = (OPTIONS); (VAR)->name != NULL; ++(VAR) )
 
-#define OPT_BUF_SIZE              32    /**< Maximum size for an option. */
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -129,8 +127,8 @@ NODISCARD
 static bool         is_Xtidy_arg( int, char const *const[], int* );
 
 NODISCARD
-static char const*  opt_format( int ),
-                 *  opt_get_long( char );
+static char const*  get_opt_format( int ),
+                 *  get_opt_long( char );
 
 /////////// local functions ///////////////////////////////////////////////////
 
@@ -265,7 +263,7 @@ static void check_opt_exclusive( char opt ) {
     if ( opts_given[ STATIC_CAST( unsigned, curr_opt ) ] ) {
       fatal_error( EX_USAGE,
         "%s can be given only by itself\n",
-        opt_format( opt )
+        get_opt_format( opt )
       );
     }
   } // for
@@ -316,6 +314,26 @@ missing_arg:
 }
 
 /**
+ * Formats an option as `--%%s/-%%c` where `%%s` is the long option and `%%c`
+ * is the short option.
+ *
+ * @param short_opt The short option (along with its corresponding long option)
+ * to format.
+ * @return Returns the formatted string.
+ *
+ * @warning The pointer returned is to a static buffer, so you can't do
+ * something like call this twice in the same `printf()` statement.
+ */
+NODISCARD
+static char const* get_opt_format( int short_opt ) {
+  static char opt_buf[32];              // big enough
+
+  char const *const long_opt = get_opt_long( STATIC_CAST( char, short_opt ) );
+  check_snprintf( opt_buf, sizeof opt_buf, "--%s/-%c", long_opt, short_opt );
+  return opt_buf;
+}
+
+/**
  * Gets the help message for \a opt.
  *
  * @param opt The option to get the help for.
@@ -328,6 +346,21 @@ static char const* get_opt_help( int opt ) {
   char const *const help = OPTIONS_HELP[ opt ];
   assert( help != NULL );
   return help;
+}
+
+/**
+ * Gets the corresponding name of the long option for the given short option.
+ *
+ * @param short_opt The short option to get the corresponding long option for.
+ * @return Returns the said name.
+ */
+NODISCARD
+static char const* get_opt_long( char short_opt ) {
+  FOREACH_CLI_OPTION( opt, OPTIONS ) {
+    if ( opt->val == short_opt )
+      return opt->name;
+  } // for
+  assert( false && "option not found" );
 }
 
 /**
@@ -574,43 +607,6 @@ static void move_tidy_args( int *pargc, char const *argv[],
 }
 
 /**
- * Formats an option as <code>[--%s/]-%c</code> where \c %s is the long option
- * (if any) and %c is the short option.
- *
- * @param short_opt The short option (along with its corresponding long option,
- * if any) to format.
- * @return Returns the formatted string.
- *
- * @warning The pointer returned is to a static buffer, so you can't do
- * something like call this twice in the same `printf()` statement.
- */
-NODISCARD
-static char const* opt_format( int short_opt ) {
-  char const *const long_opt = opt_get_long( (char)short_opt );
-  static char opt_buf[ OPT_BUF_SIZE ];
-  check_snprintf(
-    opt_buf, sizeof opt_buf, "%s%s%s-%c",
-    *long_opt ? "--" : "", long_opt, *long_opt ? "/" : "", short_opt
-  );
-  return opt_buf;
-}
-
-/**
- * Gets the corresponding name of the long option for the given short option.
- *
- * @param short_opt The short option to get the corresponding long option for.
- * @return Returns the said name or the empty string if none.
- */
-NODISCARD
-static char const* opt_get_long( char short_opt ) {
-  FOREACH_CLI_OPTION( opt, OPTIONS ) {
-    if ( opt->val == short_opt )
-      return opt->name;
-  } // for
-  return "";
-}
-
-/**
  * Parses the file extension of \a path.
  *
  * @param path The pathname.
@@ -836,7 +832,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         if ( !parse_comment_alignment( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s; must be 0-%d\n",
-            optarg, opt_format( opt ), OPT_COMMENT_ALIGN_MAX
+            optarg, get_opt_format( opt ), OPT_COMMENT_ALIGN_MAX
           );
         }
         break;
@@ -852,7 +848,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s;"
             " must be one of \"//\", \"/*\", or \"none\"\n",
-            optarg, opt_format( opt )
+            optarg, get_opt_format( opt )
           );
         }
         break;
@@ -873,7 +869,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         if ( !parse_line_length( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s; must be 1-%d\n",
-            optarg, opt_format( opt ), OPT_LINE_LENGTH_MAX
+            optarg, get_opt_format( opt ), OPT_LINE_LENGTH_MAX
           );
         }
         break;
@@ -883,7 +879,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         if ( !parse_tidy_verbose( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s; must be [ais]\n",
-            optarg, opt_format( opt )
+            optarg, get_opt_format( opt )
           );
         }
         break;
@@ -955,7 +951,7 @@ invalid_opt:;
 missing_arg:
   fatal_error( EX_USAGE,
     "\"%s\" requires an argument\n",
-    opt_format( STATIC_CAST( char, opt == ':' ? optopt : opt ) )
+    get_opt_format( STATIC_CAST( char, opt == ':' ? optopt : opt ) )
   );
 }
 
