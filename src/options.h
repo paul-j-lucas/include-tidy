@@ -26,8 +26,14 @@
  * Declares global variables and functions for **include-tidy** options.
  */
 
+// local
+#include "pjl_config.h"                 /* must go first */
+
+// standard
+#include <stdbool.h>
+
 /**
- * @defgroup options-group Ad Options
+ * @defgroup options-group **include-tidy** Options
  * Global variables and functions for **include-tidy** options.
  * @{
  */
@@ -53,6 +59,12 @@ extern char const  *opt_config_path;      ///< Configuration file path.
 extern unsigned     opt_line_length;      ///< Line length.
 extern tidy_verbose opt_verbose;          ///< Print verbose output?
 
+#define OPT_CLANG_DEFAULT         "clang" /**< Default `clang` path. */
+#define OPT_COMMENT_ALIGN_DEFAULT 41      /**< Default column alignment. */
+#define OPT_COMMENT_ALIGN_MAX     256     /**< Maximum column alignment. */
+#define OPT_LINE_LENGTH_DEFAULT   80      /**< Default line length. */
+#define OPT_LINE_LENGTH_MAX       256     /**< Maximum line length. */
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
@@ -64,14 +76,68 @@ extern tidy_verbose opt_verbose;          ///< Print verbose output?
 char const* include_resolve( char const *included_path );
 
 /**
- * Initializes **include-tidy** options from the command-line.
+ * Adds \a include_path to the global list of include (`-I`) paths.
  *
- * @param pargc A pointer to the argument count from \c main().
- * @param pargv A pointer to the argument values from \c main().
+ * @param include_path The include path to add.
+ */
+void opt_include_paths_add( char const *include_path );
+
+/**
+ * Initializes **include-tidy** options.
  *
  * @note This function must be called exactly once.
  */
-void options_init( int *pargc, char const **pargv[] );
+void options_init( void );
+
+/**
+ * Parses the alignment column number for comments.
+ *
+ * @param s The string to parse.
+ * @return Returns `true` only if \a s was parsed successfully.
+ */
+NODISCARD
+bool parse_comment_alignment( char const *s );
+
+/**
+ * Parses a comment delimiter.
+ *
+ * @param delim_format The comment delimiter to parse.
+ * @return Returns `true` only if \a delim_format parsed successfully.
+ */
+NODISCARD
+bool parse_comment_style( char const *delim_format );
+
+/**
+ * Parses the line length.
+ *
+ * @param s The string to parse.
+ * @return Returns the line length.
+ */
+NODISCARD
+bool parse_line_length( char const *s );
+
+/**
+ * Parses the value of the **include-tidy** verbose option.
+ *
+ * @param verbose_format
+ * @parblock
+ * The null-terminated **include-tidy** debug format string to parse.
+ * Value format are:
+ *
+ * Format | Meaning
+ * -------|-----------------------------------------------------------------
+ * `a`    | Be verbose about command-line arguments.
+ * `i`    | Be verbose about include files.
+ * `s`    | Be verbose about symbols referenced.
+ *
+ * Multiple formats may be given, one immediately after the other, e.g., `ai`.
+ * Alternatively, `*` may be given to mean "all" or either the empty string or
+ * `-` may be given to mean "none."
+ * @endparblock
+ * @return Returns the parsed value.
+ */
+NODISCARD
+bool parse_tidy_verbose( char const *verbose_format );
 
 /**
  * Prints verbose output.

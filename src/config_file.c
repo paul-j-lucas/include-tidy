@@ -352,10 +352,6 @@ static bool resolve_headers_visitor( void *node_data, void *visit_data ) {
 
   symbol_header *const sh = node_data;
   CXFile header_file = include_getFile( sh->rel_path );
-  if ( header_file == NULL ) {
-    EPRINTF( "warning: %s not found\n", sh->rel_path );
-  }
-
   FREE( sh->rel_path );
   sh->header_file = header_file;
 

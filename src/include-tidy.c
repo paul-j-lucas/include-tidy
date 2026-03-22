@@ -21,6 +21,7 @@
 // local
 #include "pjl_config.h"
 #include "include-tidy.h"
+#include "cli_options.h"
 #include "config_file.h"
 #include "includes.h"
 #include "options.h"
@@ -55,7 +56,8 @@ CXTranslationUnit tu_new( int, char const *const[] );
  */
 int main( int argc, char const *argv[] ) {
   prog_name = base_name( argv[0] );
-  options_init( &argc, &argv );
+  options_init();
+  cli_options_init( &argc, &argv );
   config_init( opt_config_path );
 
   CXTranslationUnit tu = tu_new( argc, argv );
