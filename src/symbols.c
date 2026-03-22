@@ -187,7 +187,7 @@ void symbols_init( CXTranslationUnit tu ) {
 
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
   visitChildren_visitor_data vcvd = {
-    .source_file = clang_getFile( tu, tidy_source_path )
+    .source_file = clang_getFile( tu, arg_source_path )
   };
   clang_visitChildren( cursor, &visitChildren_visitor, &vcvd );
   if ( vcvd.verbose_printed )

@@ -63,6 +63,9 @@ char const         *opt_config_path;
 unsigned            opt_line_length = OPT_LINE_LENGTH_DEFAULT;
 tidy_verbose        opt_verbose;
 
+// extern argument variables
+char const         *arg_source_path;
+
 // local option variables
 static char       **opt_include_paths;  ///< Null-terminated list of `-I` paths.
 

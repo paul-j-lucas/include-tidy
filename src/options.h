@@ -59,6 +59,9 @@ extern char const  *opt_config_path;      ///< Configuration file path.
 extern unsigned     opt_line_length;      ///< Line length.
 extern tidy_verbose opt_verbose;          ///< Print verbose output?
 
+// extern argument variables
+extern char const  *arg_source_path;      ///< The file being tidied.
+
 #define OPT_CLANG_DEFAULT         "clang" /**< Default `clang` path. */
 #define OPT_COMMENT_ALIGN_DEFAULT 41      /**< Default column alignment. */
 #define OPT_COMMENT_ALIGN_MAX     256     /**< Maximum column alignment. */

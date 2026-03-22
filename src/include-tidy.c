@@ -39,7 +39,6 @@
 
 // extern variable definitions
 char const *prog_name;
-char const *tidy_source_path;
 
 /// @endcond
 

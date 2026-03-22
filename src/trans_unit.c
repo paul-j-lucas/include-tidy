@@ -20,7 +20,7 @@
 
 // local
 #include "pjl_config.h"
-#include "include-tidy.h"
+#include "options.h"
 #include "util.h"
 
 // libclang
@@ -63,7 +63,7 @@ CXTranslationUnit tu_new( int argc, char const *const argv[] ) {
 
   tidy_tu = clang_parseTranslationUnit(
     tidy_index, 
-    tidy_source_path,
+    arg_source_path,
     argv + 1, argc - 1,                 // skip argv[0] (program name)
     /*unsaved_files=*/NULL, 
     /*num_unsaved_files=*/0,

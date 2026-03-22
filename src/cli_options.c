@@ -816,12 +816,12 @@ static void preprocess_argv( int *pargc, char const **pargv[] ) {
   char const *const last_argv = (*pargv)[ *pargc - 1 ];
   if ( last_argv[0] == '-' )            // last doesn't look like a filename
     return;
-  tidy_source_path = last_argv;
+  arg_source_path = last_argv;
 
   char const *const clang_path = get_clang_path( *pargc, *pargv );
   char const *lang = get_x_language( *pargc, *pargv );
   if ( lang == NULL )
-    lang = parse_file_ext( tidy_source_path );
+    lang = parse_file_ext( arg_source_path );
 
   add_clang_include_paths( pargc, pargv, clang_path, lang );
   opt_include_paths_add( "." );
@@ -968,7 +968,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   }
 
   // argv[argc-1] is the source file, but we've already copied it into
-  // tidy_source_path, so just NULL it out.
+  // arg_source_path, so just NULL it out.
   (*pargv)[ --*pargc ] = NULL;
 
   return;
