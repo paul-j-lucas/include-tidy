@@ -75,9 +75,9 @@ CXTranslationUnit tu_new( int argc, char const *const argv[] ) {
     unsigned const diag_opts = clang_defaultDiagnosticDisplayOptions();
     for ( unsigned i = 0; i < num_diagnostics; ++i ) {
       CXDiagnostic diag = clang_getDiagnostic( tidy_tu, i );
-      CXString diag_str = clang_formatDiagnostic( diag, diag_opts );
-      EPRINTF( "%s\n", clang_getCString( diag_str ) );
-      clang_disposeString( diag_str );
+      CXString diag_cxs = clang_formatDiagnostic( diag, diag_opts );
+      EPRINTF( "%s\n", clang_getCString( diag_cxs ) );
+      clang_disposeString( diag_cxs );
       clang_disposeDiagnostic( diag );
     } // for
   }

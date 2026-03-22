@@ -144,10 +144,10 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_set, &new_symbol, sizeof new_symbol );
   if ( rv_rbi.inserted ) {
-    tidy_symbol *const symbol            = RB_DINT( rv_rbi.node );
-    char const  *const symbol_name_cstr  = clang_getCString( symbol->name );
+    tidy_symbol *const symbol         = RB_DINT( rv_rbi.node );
+    char const  *const symbol_name_cs = clang_getCString( symbol->name );
 
-    CXFile header_file = config_symbol_header( symbol_name_cstr );
+    CXFile header_file = config_symbol_header( symbol_name_cs );
     if ( header_file == NULL )
       header_file = first_file;
     bool const added_symbol = include_add_symbol( header_file, symbol );
@@ -157,13 +157,13 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
         verbose_printf( "symbols:\n" );
         vcvd->verbose_printed = true;
       }
-      CXString          file_str  = tidy_File_getRealPathName( header_file );
-      char const *const file_cstr = clang_getCString( file_str );
+      CXString          file_cxs  = tidy_File_getRealPathName( header_file );
+      char const *const file_cs   = clang_getCString( file_cxs );
       verbose_printf(
         "  %s -> %s (%sadded)\n",
-        symbol_name_cstr, file_cstr, added_symbol ? "" : "NOT "
+        symbol_name_cs, file_cs, added_symbol ? "" : "NOT "
       );
-      clang_disposeString( file_str );
+      clang_disposeString( file_cxs );
     }
 
     if ( added_symbol )
@@ -199,10 +199,10 @@ int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
   assert( i_sym != NULL );
   assert( j_sym != NULL );
 
-  char const *const i_sym_cstr = clang_getCString( i_sym->name );
-  char const *const j_sym_cstr = clang_getCString( j_sym->name );
+  char const *const i_sym_cs = clang_getCString( i_sym->name );
+  char const *const j_sym_cs = clang_getCString( j_sym->name );
 
-  return strcmp( i_sym_cstr, j_sym_cstr );
+  return strcmp( i_sym_cs, j_sym_cs );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

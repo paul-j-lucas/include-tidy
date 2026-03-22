@@ -73,7 +73,7 @@ typedef struct includes_print_visitor_data includes_print_visitor_data;
 struct tidy_include {
   CXFile          file;                 ///< File that was included.
   CXFileUniqueID  file_id;              ///< Unique file ID.
-  CXString        real_path_str;        ///< Real path of \a file.
+  CXString        real_path_cxs;        ///< Real path of \a file.
   char const     *resolved_path;
   unsigned        count;                ///< Number of times included.
   unsigned        line;                 ///< Line included from.
@@ -143,18 +143,18 @@ static bool include_getFile_visitor( void *node_data, void *visit_data ) {
   tidy_include const *const         include = node_data;
   include_getFile_data const *const igfd = visit_data;
 
-  CXString          path_str  = clang_getFileName( include->file );
-  char const *const path_cstr = clang_getCString( path_str );
-  size_t const      path_len  = strlen( path_cstr );
+  CXString          path_cxs  = clang_getFileName( include->file );
+  char const *const path_cs   = clang_getCString( path_cxs );
+  size_t const      path_len  = strlen( path_cs );
   bool              rv        = false;
 
   if ( igfd->rel_path_len <= path_len ) {
-    char const *const suffix = path_cstr + (path_len - igfd->rel_path_len);
+    char const *const suffix = path_cs + (path_len - igfd->rel_path_len);
     rv = strcmp( igfd->rel_path, suffix ) == 0 &&
-         (suffix == path_cstr || suffix[-1] == '/');
+         (suffix == path_cs || suffix[-1] == '/');
   }
 
-  clang_disposeString( path_str );
+  clang_disposeString( path_cxs );
   return rv;
 }
 
@@ -330,12 +330,12 @@ static bool symbols_used_visitor( void *node_data, void *visit_data ) {
   tidy_symbol const *const sym = node_data;
   symbols_used *const used = visit_data;
 
-  char const   *name_cstr = clang_getCString( sym->name );
-  size_t const  name_len  = strlen( name_cstr );
+  char const   *name_cs   = clang_getCString( sym->name );
+  size_t const  name_len  = strlen( name_cs );
   bool          stop      = false;
 
   if ( used->symbols_len == 0 ) {
-    used->symbols = check_strdup( name_cstr );
+    used->symbols = check_strdup( name_cs );
     used->symbols_len = name_len;
   }
   else {
@@ -347,10 +347,10 @@ static bool symbols_used_visitor( void *node_data, void *visit_data ) {
       total_len = used->fixed_len + used->symbols_len + new_len;
       if ( total_len > opt_line_length )
         goto done;
-      name_cstr = "...";
+      name_cs = "...";
     }
     REALLOC( used->symbols, char, used->symbols_len + new_len + 1 );
-    sprintf( used->symbols + used->symbols_len, ", %s", name_cstr );
+    sprintf( used->symbols + used->symbols_len, ", %s", name_cs );
     used->symbols_len += new_len;
   }
 
@@ -391,7 +391,7 @@ static bool tidy_symbol_move_visitor( void *node_data, void *visit_data ) {
 static void tidy_include_cleanup( tidy_include *include ) {
   if ( include == NULL )
     return;
-  clang_disposeString( include->real_path_str );
+  clang_disposeString( include->real_path_cxs );
   // Because the nodes point to existing tidy_symbol objects, use NULL.
   rb_tree_cleanup( &include->symbol_set, /*free_fn=*/NULL );
 }
@@ -488,13 +488,13 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   }
 
   include->file = included_file;
-  include->real_path_str = tidy_File_getRealPathName( included_file );
+  include->real_path_cxs = tidy_File_getRealPathName( included_file );
 
-  char const *const real_path_cstr = clang_getCString( include->real_path_str );
-  include->resolved_path = include_resolve( real_path_cstr );
+  char const *const real_path_cs = clang_getCString( include->real_path_cxs );
+  include->resolved_path = include_resolve( real_path_cs );
 
   include->is_direct = is_direct;
-  include->is_local = is_local_include( real_path_cstr );
+  include->is_local = is_local_include( real_path_cs );
 
   clang_getSpellingLocation(
     include_loc, /*file=*/NULL, &include->line, /*column=*/NULL, /*offset=*/NULL
@@ -517,10 +517,9 @@ print:
     char inc_delim[2];
     get_include_delims( include->is_local, inc_delim );
 
-    char const *const file_cstr = clang_getCString( include->real_path_str );
     verbose_printf(
       "  %c %c%s%c\n",
-      is_direct ? '*' : ' ', inc_delim[0], file_cstr, inc_delim[1]
+      is_direct ? '*' : ' ', inc_delim[0], real_path_cs, inc_delim[1]
     );
   }
 

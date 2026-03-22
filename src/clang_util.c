@@ -37,15 +37,15 @@
  */
 NODISCARD
 CXString tidy_File_getRealPathName( CXFile file ) {
-  CXString          file_str  = clang_File_tryGetRealPathName( file );
-  char const *const file_cstr = clang_getCString( file_str );
+  CXString          file_cxs  = clang_File_tryGetRealPathName( file );
+  char const *const file_cs   = clang_getCString( file_cxs );
 
-  if ( file_cstr == NULL || file_cstr[0] == '\0' ) {
-    clang_disposeString( file_str );
-    file_str = clang_getFileName( file );
+  if ( file_cs == NULL || file_cs[0] == '\0' ) {
+    clang_disposeString( file_cxs );
+    file_cxs = clang_getFileName( file );
   }
 
-  return file_str;
+  return file_cxs;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
