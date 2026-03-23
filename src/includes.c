@@ -477,7 +477,6 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   int const rv = clang_getFileUniqueID( included_file, &new_include.file_id );
   assert( rv == 0 );
 
-
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
   tidy_include *const include = RB_DINT( rv_rbi.node );
