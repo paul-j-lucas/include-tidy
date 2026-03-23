@@ -169,6 +169,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
   toml_array  a = { 0 };
   unsigned    array_cap = 16;
   int         c = '\0';
+  bool        ok = false;
   char        prev_c;
 
   ++toml->array_depth;
@@ -181,17 +182,18 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
     switch ( c ) {
       case EOF:
         toml->error = TOML_ERR_UNEX_EOF;
-        goto error;
+        goto done;
       case '#':
         toml_comment_parse( toml );
         continue;
       case ',':
         if ( a.size == 0 || prev_c == ',' ) {
           toml->error = TOML_ERR_UNEX_CHAR;
-          goto error;
+          goto done;
         }
         continue;
       case ']':
+        ok = true;
         goto done;
       default:
         toml_ungetc( toml, c );
@@ -200,22 +202,19 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
 
     toml_value value;
     if ( !toml_value_parse( toml, &value ) )
-      goto error;
-
+      break;
     if ( a.size + 1 >= array_cap )
       REALLOC( a.values, toml_value, array_cap *= 2 );
     a.values[ a.size++ ] = value;
   } // for
 
 done:
-  *pa = a;
   --toml->array_depth;
-  return true;
-
-error:
-  toml_array_cleanup( &a );
-  --toml->array_depth;
-  return false;
+  if ( ok )
+    *pa = a;
+  else
+    toml_array_cleanup( &a );
+  return ok;
 }
 
 /**
