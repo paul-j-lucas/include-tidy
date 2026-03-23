@@ -481,8 +481,10 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
   tidy_include *const include = RB_DINT( rv_rbi.node );
   if ( !rv_rbi.inserted ) {
-    if ( is_direct )
+    if ( is_direct && !include->is_direct ) {
       include->is_direct = true;
+      goto print;
+    }
     goto skip;
   }
 
@@ -506,6 +508,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
   );
 
+print:
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
     if ( !vcvd->verbose_printed ) {
       verbose_printf( "includes:\n" );
@@ -516,8 +519,9 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     get_include_delims( include->is_local, inc_delim );
 
     verbose_printf(
-      "  %c %c%s%c\n",
-      include->is_direct ? '*' : ' ', inc_delim[0], real_path_cs, inc_delim[1]
+      "  %s%c%s%c\n",
+      include->is_direct ? "" : "    ",
+      inc_delim[0], clang_getCString( include->real_path_cxs ), inc_delim[1]
     );
   }
 
