@@ -842,7 +842,7 @@ void toml_init( toml_file *toml, FILE *file ) {
 
   *toml = (toml_file){
     .file = file,
-    .loc = { .line = 1 }
+    .loc = { .line = 1, .col = 1 }
   };
 }
 
@@ -885,6 +885,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   assert( table != NULL );
 
   toml_space_comments_skip( toml );
+  toml_loc const table_loc = toml->loc;
   int c = toml_getc( toml );
   if ( c != '[' )
     return false;
@@ -896,6 +897,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   toml_table_cleanup( table );
   toml_table_init( table );
   table->name = table_name;
+  table->loc = table_loc;
 
   for (;;) {
     toml_space_comments_skip( toml );
