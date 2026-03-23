@@ -464,14 +464,13 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   assert( data != NULL );
 
   if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
-    goto done;
+    goto skip;
 
   visitChildren_visitor_data *const vcvd =
     POINTER_CAST( visitChildren_visitor_data*, data );
 
   CXSourceLocation  include_loc = clang_getCursorLocation( cursor );
   CXFile            included_file = clang_getIncludedFile( cursor );
-  bool const        is_direct = clang_Location_isFromMainFile( include_loc );
 
   tidy_include new_include = { 0 };
   int const rv = clang_getFileUniqueID( included_file, &new_include.file_id );
@@ -480,21 +479,17 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
   tidy_include *const include = RB_DINT( rv_rbi.node );
-  if ( !rv_rbi.inserted ) {
-    if ( is_direct ) {
-      include->is_direct = true;
-    }
-    goto print;
-  }
+  if ( !rv_rbi.inserted )
+    goto skip;
 
-  include->file = included_file;
-  include->real_path_cxs = tidy_File_getRealPathName( included_file );
+  CXString real_path_cxs = tidy_File_getRealPathName( included_file );
+  char const *const real_path_cs = clang_getCString( real_path_cxs );
 
-  char const *const real_path_cs = clang_getCString( include->real_path_cxs );
-  include->resolved_path = include_resolve( real_path_cs );
-
-  include->is_direct = is_direct;
-  include->is_local = is_local_include( real_path_cs );
+  include->file           = included_file;
+  include->is_direct      = clang_Location_isFromMainFile( include_loc );
+  include->is_local       = is_local_include( real_path_cs );
+  include->real_path_cxs  = real_path_cxs;
+  include->resolved_path  = include_resolve( real_path_cs );
 
   clang_getSpellingLocation(
     include_loc, /*file=*/NULL, &include->line, /*column=*/NULL, /*offset=*/NULL
@@ -507,7 +502,6 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
   );
 
-print:
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
     if ( !vcvd->verbose_printed ) {
       verbose_printf( "includes:\n" );
@@ -519,11 +513,11 @@ print:
 
     verbose_printf(
       "  %c %c%s%c\n",
-      is_direct ? '*' : ' ', inc_delim[0], real_path_cs, inc_delim[1]
+      include->is_direct ? '*' : ' ', inc_delim[0], real_path_cs, inc_delim[1]
     );
   }
 
-done:
+skip:
   return CXChildVisit_Continue;
 }
 
