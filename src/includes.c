@@ -471,22 +471,27 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
 
   CXSourceLocation  include_loc = clang_getCursorLocation( cursor );
   CXFile            included_file = clang_getIncludedFile( cursor );
+  bool const        is_direct = clang_Location_isFromMainFile( include_loc );
 
   tidy_include new_include = { 0 };
   int const rv = clang_getFileUniqueID( included_file, &new_include.file_id );
   assert( rv == 0 );
 
+
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
   tidy_include *const include = RB_DINT( rv_rbi.node );
-  if ( !rv_rbi.inserted )
+  if ( !rv_rbi.inserted ) {
+    if ( is_direct )
+      include->is_direct = true;
     goto skip;
+  }
 
   CXString real_path_cxs = tidy_File_getRealPathName( included_file );
   char const *const real_path_cs = clang_getCString( real_path_cxs );
 
   include->file           = included_file;
-  include->is_direct      = clang_Location_isFromMainFile( include_loc );
+  include->is_direct      = is_direct;
   include->is_local       = is_local_include( real_path_cs );
   include->real_path_cxs  = real_path_cxs;
   include->resolved_path  = include_resolve( real_path_cs );
