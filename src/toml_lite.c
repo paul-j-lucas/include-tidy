@@ -82,16 +82,20 @@ static void toml_value_cleanup( toml_value* );
  *
  * @param c The character to check.
  * @return Returns `true` only if \c is either `'0'` or `'1'`.
+ *
+ * @sa isodigit()
  */
 static inline bool isbdigit( int c ) {
   return c == '0' || c == '1';
 }
 
 /**
- * Gets whether \a c is a binary digit.
+ * Gets whether \a c is an octal digit.
  *
  * @param c The character to check.
  * @return Returns `true` only if \c is one of `01234567`.
+ *
+ * @sa isbdigit()
  */
 static inline bool isodigit( int c ) {
   return c >= '0' && c <= '7';
@@ -114,6 +118,7 @@ static inline bool is_toml_space( int c ) {
  */
 static inline void toml_newline( toml_file *toml ) {
   ++toml->loc.line;
+  toml->col_prev = toml->loc.col;
   toml->loc.col = 1;
 }
 
@@ -307,7 +312,6 @@ static int toml_getc( toml_file *toml ) {
     case EOF:
       break;
     case '\n':
-      toml->col_prev = toml->loc.col;
       toml_newline( toml );
       break;
     default:
@@ -732,6 +736,13 @@ static void toml_value_cleanup( toml_value *v ) {
   } // switch
 }
 
+/**
+ * Parses a TOML value.
+ *
+ * @param toml The toml_file to use.
+ * @param v The toml_value to receive into.
+ * @return Returns `true` only if the value parsed successfully.
+ */
 NODISCARD
 static bool toml_value_parse( toml_file *toml, toml_value *v ) {
   assert( toml != NULL );
