@@ -222,6 +222,50 @@ static FILE* config_open( char const *path, config_opts_t opts ) {
 }
 
 /**
+ * If present, parses the value of a `"symbols"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The toml_table to parse.
+ * @return Returns `true` only if a `"symbols"` key exists and was parsed
+ * successfully.
+ */
+static bool symbols_parse( char const *config_path, toml_table *table ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+
+  toml_value const *const value = toml_table_find( table, "symbols" );
+  if ( value == NULL )
+    return false;
+
+  switch ( value->type ) {
+    case TOML_STRING:
+      symbol_header_add( value->s, table->name );
+      break;
+    case TOML_ARRAY:
+      for ( unsigned i = 0; i < value->a.size; ++i ) {
+        toml_value const *const a_value = &value->a.values[i];
+        if ( a_value->type != TOML_STRING ) {
+          fatal_error( EX_CONFIG,
+            "%s:%u:%u: "
+            "invalid value for \"symbols\" key array; expected string\n",
+            config_path, a_value->loc.line, a_value->loc.col
+          );
+        }
+        symbol_header_add( a_value->s, table->name );
+      } // for
+      break;
+    default:
+      fatal_error( EX_CONFIG,
+        "%s:%u:%u "
+        "invalid value for \"symbols\" key; expected string or array\n",
+        config_path, value->loc.line, value->loc.col
+      );
+  } // switch
+
+  return true;
+}
+
+/**
  * Parses a configuration file.
  *
  * @param config_path The full path to the configurarion file.
@@ -245,37 +289,13 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       );
     }
 
-    toml_value const *const value = toml_table_find( &table, "symbols" );
-    if ( value == NULL ) {
-      fatal_error( EX_CONFIG,
-        "%s: required \"symbols\" key for \"%s\" missing\n",
-        config_path, table.name
-      );
-    }
-    switch ( value->type ) {
-      case TOML_STRING:
-        symbol_header_add( value->s, table.name );
-        break;
-      case TOML_ARRAY:
-        for ( unsigned i = 0; i < value->a.size; ++i ) {
-          toml_value const *const a_value = &value->a.values[i];
-          if ( a_value->type != TOML_STRING ) {
-            fatal_error( EX_CONFIG,
-              "%s:%u:%u: "
-              "invalid value for \"symbols\" key array; expected string\n",
-              config_path, a_value->loc.line, a_value->loc.col
-            );
-          }
-          symbol_header_add( a_value->s, table.name );
-        } // for
-        break;
-      default:
-        fatal_error( EX_CONFIG,
-          "%s:%u:%u "
-          "invalid value for \"symbols\" key; expected string or array\n",
-          config_path, value->loc.line, value->loc.col
-        );
-    } // switch
+    if ( symbols_parse( config_path, &table ) )
+      continue;
+
+    fatal_error( EX_CONFIG,
+      "%s:%u:%u required \"symbols\" key for \"%s\" missing\n",
+      config_path, table.loc.line, table.loc.col, table.name
+    );
   } // while
 
   toml_table_cleanup( &table );
