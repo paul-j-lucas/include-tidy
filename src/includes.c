@@ -434,13 +434,14 @@ static int tidy_include_cmp_by_name( tidy_include const *i_include,
 }
 
 /**
- * Attempts to find \a file among the set of files included.
+ * Attempts to find \a file by its unique file ID among the set of files
+ * included.
  *
  * @param file The file to find.
  * @return Returns the corresponding tidy_include if found or NULL if not.
  */
 NODISCARD
-static tidy_include* tidy_include_find( CXFile file ) {
+static tidy_include* tidy_include_find_by_id( CXFile file ) {
   tidy_include include = { .file = file };
   int const rv = clang_getFileUniqueID( file, &include.file_id );
   (void)rv;
@@ -534,7 +535,7 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
   assert( include_file != NULL );
   assert( sym != NULL );
 
-  tidy_include *const include = tidy_include_find( include_file );
+  tidy_include *const include = tidy_include_find_by_id( include_file );
   if ( include == NULL )
     return false;
   include->is_needed = true;
