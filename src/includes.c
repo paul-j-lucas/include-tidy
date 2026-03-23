@@ -480,35 +480,34 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
   tidy_include *const include = RB_DINT( rv_rbi.node );
-  if ( !rv_rbi.inserted ) {
-    if ( is_direct && !include->is_direct ) {
-      include->is_direct = true;
-      goto print;
-    }
-    goto skip;
+  if ( rv_rbi.inserted ) {
+    CXString real_path_cxs = tidy_File_getRealPathName( included_file );
+    char const *const real_path_cs = clang_getCString( real_path_cxs );
+
+    include->file           = included_file;
+    include->is_direct      = is_direct;
+    include->is_local       = is_local_include( real_path_cs );
+    include->real_path_cxs  = real_path_cxs;
+    include->resolved_path  = include_resolve( real_path_cs );
+
+    clang_getSpellingLocation(
+      include_loc, /*file=*/NULL, &include->line, /*column=*/NULL,
+      /*offset=*/NULL
+    );
+
+    rb_tree_init(
+      // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
+      // symbol_set in symbols.c
+      &include->symbol_set, RB_DPTR,
+      POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
+    );
+  }
+  else {
+    if ( !is_direct || include->is_direct )
+      goto skip;
+    include->is_direct = true;
   }
 
-  CXString real_path_cxs = tidy_File_getRealPathName( included_file );
-  char const *const real_path_cs = clang_getCString( real_path_cxs );
-
-  include->file           = included_file;
-  include->is_direct      = is_direct;
-  include->is_local       = is_local_include( real_path_cs );
-  include->real_path_cxs  = real_path_cxs;
-  include->resolved_path  = include_resolve( real_path_cs );
-
-  clang_getSpellingLocation(
-    include_loc, /*file=*/NULL, &include->line, /*column=*/NULL, /*offset=*/NULL
-  );
-
-  rb_tree_init(
-    // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
-    // symbol_set in symbols.c
-    &include->symbol_set, RB_DPTR,
-    POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
-  );
-
-print:
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
     if ( !vcvd->verbose_printed ) {
       verbose_printf( "includes:\n" );
