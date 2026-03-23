@@ -372,8 +372,8 @@ static void symbol_header_cleanup( symbol_header *sh ) {
 /**
  * Compares two \ref symbol_header objects.
  *
- * @param i_sh The first symbol.
- * @param j_sh The second symbol.
+ * @param i_sh The first symbol_header.
+ * @param j_sh The second symbol_header.
  * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
  * i_sh is less than, equal to, or greater than the name of \a j_sh,
  * respectively.
