@@ -83,6 +83,7 @@ static void toml_value_cleanup( toml_value* );
  * @param c The character to check.
  * @return Returns `true` only if \c is either `'0'` or `'1'`.
  *
+ * @sa is_ident()
  * @sa isodigit()
  */
 static inline bool isbdigit( int c ) {
@@ -95,10 +96,24 @@ static inline bool isbdigit( int c ) {
  * @param c The character to check.
  * @return Returns `true` only if \c is one of `01234567`.
  *
+ * @sa is_ident()
  * @sa isbdigit()
  */
 static inline bool isodigit( int c ) {
   return c >= '0' && c <= '7';
+}
+
+/**
+ * Gets whether \a c is an identifier character, i.e., alphanumeric or `'_'`.
+ *
+ * @param c The character to check.
+ * @return Returns `true` only if \c is an identifier character.
+ *
+ * @sa isbdigit()
+ * @sa isodigit()
+ */
+static inline bool is_ident( int c ) {
+  return isalnum( c ) || c == '_';
 }
 
 /**
@@ -237,7 +252,7 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
   size_t const bytes_read = fread( buf, 1, bytes_want, toml->file );
 
   c = fpeekc( toml->file );             // ensure not falsex or truex
-  bool const next_c_is_ok = c == EOF || !isalnum( c );
+  bool const next_c_is_ok = c == EOF || !is_ident( c );
 
   if ( bytes_read < bytes_want ||
        !next_c_is_ok ||
