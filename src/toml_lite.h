@@ -160,13 +160,16 @@ struct toml_table {
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Closes a toml_file.
+ * Cleans-up the resources of a toml_file.
  *
- * @param toml The toml_file to close.  If already closed, does nothing.
+ * @param toml The toml_file to clean up.  If NULL, does nothing.
+ *
+ * @note The `FILE` that the toml_file was using is _not_ closed since
+ * toml_init() didn't open it.
  *
  * @sa toml_open()
  */
-void toml_close( toml_file *toml );
+void toml_cleanup( toml_file *toml );
 
 /**
  * Gets the error message corresponding to \ref toml_file::error "error".
@@ -183,7 +186,7 @@ char const* toml_error_msg( toml_file const *toml );
  * @param toml The toml_file to initialize.
  * @param file The `FILE` to read.
  *
- * @sa toml_close()
+ * @sa toml_cleanup()
  */
 void toml_init( toml_file *toml, FILE *file );
 

@@ -794,10 +794,9 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void toml_close( toml_file *toml ) {
-  assert( toml != NULL );
-  if ( toml->file != NULL )
-    fclose( toml->file );
+void toml_cleanup( toml_file *toml ) {
+  if ( toml == NULL )
+    return;
   *toml = (toml_file){ 0 };
 }
 

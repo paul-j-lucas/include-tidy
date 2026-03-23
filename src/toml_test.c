@@ -68,7 +68,8 @@ static void toml_test_cleanup( toml_test *test ) {
   if ( test == NULL )
     return;
   toml_table_cleanup( &test->table );
-  toml_close( &test->toml );
+  fclose( test->toml.file );
+  toml_cleanup( &test->toml );
 }
 
 static void toml_test_init( toml_test *test, char const *buf ) {

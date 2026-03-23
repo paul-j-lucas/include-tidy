@@ -287,7 +287,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
     );
   }
 
-  toml_close( &toml );
+  toml_cleanup( &toml );
 }
 
 /**
