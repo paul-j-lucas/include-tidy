@@ -813,6 +813,8 @@ char const* toml_error_msg( toml_file const *toml ) {
 
 void toml_init( toml_file *toml, FILE *file ) {
   assert( toml != NULL );
+  assert( file != NULL );
+
   *toml = (toml_file){
     .file = file,
     .loc = { .line = 1 }
