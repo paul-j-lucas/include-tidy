@@ -32,12 +32,9 @@
 /**
  * Reads an **include-tidy**(1) configuration file, if any.
  *
- * @param config_path The full path of the configuration file to read. May be
- * NULL.
- *
  * @note This function must be called at most once.
  */
-void config_init( char const *config_path );
+void config_init( void );
 
 /**
  * Resolves all header names specified in a configuration file to their

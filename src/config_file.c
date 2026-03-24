@@ -28,6 +28,7 @@
 #include "clang_util.h"
 #include "include-tidy.h"
 #include "includes.h"
+#include "options.h"
 #include "red_black.h"
 #include "toml_lite.h"
 #include "util.h"
@@ -432,7 +433,7 @@ static void symbol_header_add( char const *symbol_name,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void config_init( char const *config_path ) {
+void config_init( void ) {
   ASSERT_RUN_ONCE();
 
   rb_tree_init(
@@ -441,7 +442,7 @@ void config_init( char const *config_path ) {
   ATEXIT( &config_cleanup );
 
   char path_buf[ PATH_MAX ];
-  FILE *const config_file = config_find( config_path, path_buf );
+  FILE *const config_file = config_find( opt_config_path, path_buf );
   if ( config_file != NULL ) {
     config_parse( path_buf, config_file );
     fclose( config_file );
