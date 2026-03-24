@@ -56,7 +56,7 @@
  *
  * @par Example
  *  ```
- *  FILE *const ftoml = fopen( path, "r" );
+ *  FILE *const ftoml = fopen( "example.toml", "r" );
  *  if ( ftoml == NULL )
  *    // complain
  *  toml_file toml;
@@ -191,7 +191,7 @@ struct toml_table {
  * @note The `FILE` that the toml_file was using is _not_ closed since
  * toml_init() didn't open it.
  *
- * @sa toml_open()
+ * @sa toml_init()
  */
 void toml_cleanup( toml_file *toml );
 
