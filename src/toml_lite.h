@@ -101,7 +101,7 @@ enum toml_error {
  * TOML value type.
  */
 enum toml_type {
-  TOML_BOOL,                            ///< Boolean type.
+  TOML_BOOL = 1,                        ///< Boolean type.
   TOML_INT,                             ///< Integer type.
   TOML_STRING,                          ///< String type.
   TOML_ARRAY                            ///< Array type.
