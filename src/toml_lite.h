@@ -42,14 +42,37 @@
  * @defgroup toml-public-group TOML
  * Types and functions for reading a TOML file.
  *
- * This implements a "lite" version of the TOML 1.0.0 specification in that the
- * following are _not_ supported:
+ * @remarks
+ * @parblock
+ * This implements a "lite" version of the TOML 1.0.0 specification in
+ * that the following are **_not_** supported:
  *
  *  + Floating-point numbers.
  *  + Dates or times.
  *  + UTF-8.
  *  + Array of tables.
  *  + Inline tables.
+ * @endparblock
+ *
+ * @par Example
+ *  ```
+ *  FILE *const ftoml = fopen( path, "r" );
+ *  if ( ftoml == NULL )
+ *    // complain
+ *  toml_file toml;
+ *  toml_init( &toml, ftoml );
+ *  toml_table table;
+ *  toml_table_init( &table );
+ *
+ *  while ( toml_table_next( &toml, &table ) ) {
+ *    // ...
+ *  }
+ *
+ *  if ( toml.error )
+ *    // complain
+ *  toml_cleanup( &toml );
+ *  fclose( ftoml );
+ *  ```
  * @{
  */
 
