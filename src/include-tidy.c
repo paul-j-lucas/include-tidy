@@ -57,14 +57,12 @@ int main( int argc, char const *argv[] ) {
   prog_name = base_name( argv[0] );
   options_init();
   cli_options_init( &argc, &argv );
-  config_init( opt_config_path );
-
   CXTranslationUnit tu = tu_new( argc, argv );
+  config_init( opt_config_path );
   includes_init( tu );
   config_resolve_headers();
   symbols_init( tu );
   includes_print();
-
   return EX_OK;
 }
 
