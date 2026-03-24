@@ -397,6 +397,7 @@ static char const* get_x_language( int argc, char const *const argv[] ) {
  *
  * @param argc The command-line argument count.
  * @param argv The command-line argument values.
+ * @param opt The long option (without the `--`).
  * @param pargi A pointer to the current argument index variable.
  * @return Returns the value of the argument or NULL if \a argv[\a *pargi] is
  * not \a opt.
@@ -430,6 +431,7 @@ static char const* is_long_opt( int argc, char const *const argv[],
  *
  * @param argc The command-line argument count.
  * @param argv The command-line argument values.
+ * @param opt The short option character.
  * @param pargi A pointer to the current argument index variable.
  * @return Returns the value of the argument or NULL if \a argv[\a *pargi] is
  * not \a opt.
