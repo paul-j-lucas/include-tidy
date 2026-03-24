@@ -70,6 +70,10 @@ CXTranslationUnit tu_new( int argc, char const *const argv[] ) {
     CXTranslationUnit_DetailedPreprocessingRecord
   );
 
+  if ( tidy_tu == NULL )
+    fatal_error( EX_DATAERR, "error: failed to parse the translation unit\n" );
+  ATEXIT( &tu_cleanup );
+
   unsigned const num_diagnostics = clang_getNumDiagnostics( tidy_tu );
   if ( num_diagnostics > 0 ) {
     unsigned const diag_opts = clang_defaultDiagnosticDisplayOptions();
@@ -82,10 +86,6 @@ CXTranslationUnit tu_new( int argc, char const *const argv[] ) {
     } // for
   }
 
-  if ( tidy_tu == NULL )
-    fatal_error( EX_DATAERR, "error: failed to parse the translation unit\n" );
-
-  ATEXIT( &tu_cleanup );
   return tidy_tu;
 }
 
