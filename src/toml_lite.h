@@ -66,6 +66,9 @@
  *
  *  while ( toml_table_next( &toml, &table ) ) {
  *    // ...
+ *    // Use toml_table_find() for specific keys
+ *    // or toml_table_visit() for all keys.
+ *    // ...
  *  }
  *
  *  if ( toml.error )
