@@ -118,6 +118,18 @@ typedef struct  toml_table      toml_table;
 typedef enum    toml_type       toml_type;
 typedef struct  toml_value      toml_value;
 
+/**
+ * The signature for a function passed to toml_table_visit().
+ *
+ * @param table The \ref toml_table to visit.
+ * @param visit_data Optional data passed to the visitor.
+ * @return Returning `true` will cause traversal to stop and a pointer to the
+ * \ref c_typedef the visitor stopped on to be returned to the caller of
+ * toml_table_visit().
+ */
+typedef bool (*toml_table_visit_fn)( toml_key_value const *kv,
+                                     void *visit_data );
+
 ////////// structs ////////////////////////////////////////////////////////////
 
 /**
@@ -255,6 +267,16 @@ void toml_table_init( toml_table *table );
  */
 NODISCARD
 bool toml_table_next( toml_file *toml, toml_table *table );
+
+/**
+ * Does an in-order traversal of all keys & values in a TOML table.
+ *
+ * @param table The toml_table to visit.
+ * @param visit_fn The visitor function to use.
+ * @param visit_data Optional data passed to \a visit_fn.
+ */
+void toml_table_visit( toml_table const *table, toml_table_visit_fn visit_fn,
+                       void *visit_data );
 
 ///////////////////////////////////////////////////////////////////////////////
 
