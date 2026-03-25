@@ -359,27 +359,6 @@ static void path_append( char *path, size_t path_len, char const *component ) {
 }
 
 /**
- * Visits each symbol_header and resolves its \ref symbol_header::rel_path
- * "rel_path" to its corresponding \ref symbol_header::header_file
- * "header_file".
- *
- * @param node_data The symbol_header.
- * @param visit_data Not used.
- * @return Always returns `false`.
- */
-static bool resolve_headers_visitor( void *node_data, void *visit_data ) {
-  assert( node_data != NULL );
-  (void)visit_data;
-
-  symbol_header *const sh = node_data;
-  CXFile header_file = include_getFile( sh->rel_path );
-  FREE( sh->rel_path );
-  sh->header_file = header_file;
-
-  return false;
-}
-
-/**
  * Cleans-up a symbol_header.
  *
  * @param sh The symbol_header to clean up.  If NULL, does nothing.
@@ -450,9 +429,13 @@ void config_init( void ) {
 }
 
 void config_resolve_headers( void ) {
-  rb_tree_visit(
-    &symbol_header_map, &resolve_headers_visitor, /*visit_data=*/NULL
-  );
+  rb_iterator_t iter;
+  rb_iterator_init( &symbol_header_map, &iter );
+  for ( symbol_header *sh; (sh = rb_iterator_next( &iter )) != NULL; ) {
+    CXFile header_file = include_getFile( sh->rel_path );
+    FREE( sh->rel_path );
+    sh->header_file = header_file;
+  } // for
 }
 
 CXFile config_symbol_header( char const *symbol_name ) {
