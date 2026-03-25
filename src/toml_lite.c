@@ -43,15 +43,6 @@
 #define TOML_STRING_LEN_MAX       1024  /* Maximum string length. */
 
 /**
- * Data passed to the rb_visitor() function.
- */
-struct rb_visit_data {
-  toml_table_visit_fn   visit_fn;       ///< Caller's visitor function.
-  void                 *visit_data;     ///< Caller's optional data.
-};
-typedef struct rb_visit_data rb_visit_data;
-
-/**
  * TOML error messages.
  *
  * @note If \ref toml_file::error_msg is non-NULL, it overrides this message
@@ -160,26 +151,6 @@ static int fpeekc( FILE *file ) {
   if ( c != EOF )
     ungetc( c, file );
   return c;
-}
-
-/**
- * Red-black tree visitor function that forwards to the \ref
- * toml_table_visit_fn function.
- *
- * @param node_data A pointer to the node's data.
- * @param visit_data Data passed to to the visitor.
- * @return Returning `true` will cause traversal to stop and the current node
- * to be returned to the caller of rb_tree_visit().
- */
-NODISCARD
-static bool rb_visitor( void *node_data, void *visit_data ) {
-  assert( node_data != NULL );
-  assert( visit_data != NULL );
-
-  toml_key_value const *const kv = node_data;
-  rb_visit_data const *const rvd = visit_data;
-
-  return (*rvd->visit_fn)( kv, rvd->visit_data );
 }
 
 /**
@@ -951,14 +922,9 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   return false;
 }
 
-void toml_table_visit( toml_table const *table, toml_table_visit_fn visit_fn,
-                       void *visit_data ) {
-  assert( table != NULL );
-  assert( visit_fn != NULL );
-
-  rb_visit_data rvd = { visit_fn, visit_data };
-  rb_tree_visit( &table->keys_values, &rb_visitor, &rvd );
-}
-
 ///////////////////////////////////////////////////////////////////////////////
+
+extern inline void toml_key_value_iterator_init( toml_table*, toml_iterator* );
+extern inline toml_key_value const* toml_iterator_next( toml_iterator* );
+
 /* vim:set et sw=2 ts=2: */

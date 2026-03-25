@@ -115,23 +115,12 @@ enum toml_type {
 typedef struct  toml_array      toml_array;
 typedef enum    toml_error      toml_error;
 typedef struct  toml_file       toml_file;
+typedef rb_iterator_t           toml_iterator;
 typedef struct  toml_key_value  toml_key_value;
 typedef struct  toml_loc        toml_loc;
 typedef struct  toml_table      toml_table;
 typedef enum    toml_type       toml_type;
 typedef struct  toml_value      toml_value;
-
-/**
- * The signature for a function passed to toml_table_visit().
- *
- * @param kv The toml_key_value being visited.
- * @param visit_data Optional data passed to the visitor.
- * @return Returning `true` will cause traversal to stop and a pointer to the
- * \ref toml_key_value the visitor stopped on to be returned to the caller of
- * toml_table_visit().
- */
-typedef bool (*toml_table_visit_fn)( toml_key_value const *kv,
-                                     void *visit_data );
 
 ////////// structs ////////////////////////////////////////////////////////////
 
@@ -230,6 +219,32 @@ char const* toml_error_msg( toml_file const *toml );
 void toml_init( toml_file *toml, FILE *file );
 
 /**
+ * Initializes a toml_iterator.
+ *
+ * @param table The toml_table to iterate over.
+ * @param iter The toml_iterator to initialize.
+ *
+ * @sa toml_iterator_next()
+ */
+inline void toml_iterator_init( toml_table *table, toml_iterator *iter ) {
+  rb_iterator_init( &table->keys_values, iter );
+}
+
+/**
+ * Iterates to the next in-order toml_key_value in the table, if any.
+ *
+ * @param iter The toml_iterator.
+ * @return Returns a pointer to the next toml_key_value or NULL if the entire
+ * table was visited.
+ *
+ * @sa toml_iterator_init()
+ */
+NODISCARD
+inline toml_key_value const* toml_iterator_next( toml_iterator *iter ) {
+  return rb_iterator_next( iter );
+}
+
+/**
  * Cleans-up a toml_table.
  *
  * @param table The toml_table to clean up.  If NULL, does nothing.
@@ -270,16 +285,6 @@ void toml_table_init( toml_table *table );
  */
 NODISCARD
 bool toml_table_next( toml_file *toml, toml_table *table );
-
-/**
- * Does an in-order traversal of all keys & values in a TOML table.
- *
- * @param table The toml_table to visit.
- * @param visit_fn The visitor function to use.
- * @param visit_data Optional data passed to \a visit_fn.
- */
-void toml_table_visit( toml_table const *table, toml_table_visit_fn visit_fn,
-                       void *visit_data );
 
 ///////////////////////////////////////////////////////////////////////////////
 
