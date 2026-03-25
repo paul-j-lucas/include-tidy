@@ -130,35 +130,6 @@ static void get_include_delims( bool is_local, char delim[static 2] ) {
 }
 
 /**
- * Visits each file that's included.
- *
- * @param node_data The tidy_include to visit.
- * @param visit_data The include_getFile_data to use.
- * @return Returns `true` if the header is found.
- */
-static bool include_getFile_visitor( void *node_data, void *visit_data ) {
-  assert( node_data != NULL );
-  assert( visit_data != NULL );
-
-  tidy_include const *const         include = node_data;
-  include_getFile_data const *const igfd = visit_data;
-
-  CXString          path_cxs  = clang_getFileName( include->file );
-  char const *const path_cs   = clang_getCString( path_cxs );
-  size_t const      path_len  = strlen( path_cs );
-  bool              rv        = false;
-
-  if ( igfd->rel_path_len <= path_len ) {
-    char const *const suffix = path_cs + (path_len - igfd->rel_path_len);
-    rv = strcmp( igfd->rel_path, suffix ) == 0 &&
-         (suffix == path_cs || suffix[-1] == '/');
-  }
-
-  clang_disposeString( path_cxs );
-  return rv;
-}
-
-/**
  * Prints a `#include` preprocessor directive.
  *
  * @param include The tidy_include to print.
@@ -546,16 +517,29 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
 CXFile include_getFile( char const *rel_path ) {
   assert( rel_path != NULL );
 
-  include_getFile_data igfd = {
-    .rel_path = rel_path,
-    .rel_path_len = strlen( rel_path )
-  };
-  rb_node_t const *const found_rb =
-    rb_tree_visit( &include_set, &include_getFile_visitor, &igfd );
-  if ( found_rb == NULL )
-    return NULL;
-  tidy_include const *const include = RB_DINT( found_rb );
-  return include->file;
+  bool          found = false;
+  tidy_include *include;
+  rb_iterator_t iter;
+  size_t const  rel_path_len = strlen( rel_path );
+
+  rb_iterator_init( &include_set, &iter );
+  while ( (include = rb_iterator_next( &iter )) != NULL ) {
+    CXString          path_cxs  = clang_getFileName( include->file );
+    char const *const path_cs   = clang_getCString( path_cxs );
+    size_t const      path_len  = strlen( path_cs );
+
+    if ( rel_path_len <= path_len ) {
+      char const *const suffix = path_cs + (path_len - rel_path_len);
+      found = strcmp( rel_path, suffix ) == 0 &&
+              (suffix == path_cs || suffix[-1] == '/');
+    }
+
+    clang_disposeString( path_cxs );
+    if ( found )
+      return include->file;
+  } // while
+
+  return NULL;
 }
 
 void includes_init( CXTranslationUnit tu ) {
