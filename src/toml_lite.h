@@ -124,10 +124,10 @@ typedef struct  toml_value      toml_value;
 /**
  * The signature for a function passed to toml_table_visit().
  *
- * @param table The \ref toml_table to visit.
+ * @param kv The toml_key_value being visited.
  * @param visit_data Optional data passed to the visitor.
  * @return Returning `true` will cause traversal to stop and a pointer to the
- * \ref c_typedef the visitor stopped on to be returned to the caller of
+ * \ref toml_key_value the visitor stopped on to be returned to the caller of
  * toml_table_visit().
  */
 typedef bool (*toml_table_visit_fn)( toml_key_value const *kv,
