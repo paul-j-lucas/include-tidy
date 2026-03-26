@@ -217,32 +217,6 @@ skip:
 }
 
 /**
- * Visits each include file and, if needed, inserts into a second set sorted by
- * name.
- *
- * @param node_data The tidy_include to visit.
- * @param visit_data The rb_tree_t to insert into.
- * @return Always returns `false`.
- */
-NODISCARD
-static bool includes_sort_by_name_visitor( void *node_data, void *visit_data ) {
-  assert( node_data != NULL );
-  assert( visit_data != NULL );
-
-  tidy_include *const include = node_data;
-
-  if ( ( include->is_needed && (!include->is_direct || opt_all_includes)) ||
-       (!include->is_needed && include->is_direct) ) {
-    rb_tree_t *const include_set_by_name = visit_data;
-    PJL_DISCARD_RV(
-      rb_tree_insert( include_set_by_name, include, sizeof *include )
-    );
-  }
-
-  return false;
-}
-
-/**
  * Gets whether \a include_file is a local include file (as opposed to a system
  * include file).
  *
@@ -522,9 +496,17 @@ void includes_print( void ) {
     &include_set_by_name, RB_DPTR,
     POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_name )
   );
-  rb_tree_visit(
-    &include_set, &includes_sort_by_name_visitor, &include_set_by_name
-  );
+  rb_iterator_t iter;
+  rb_iterator_init( &include_set, &iter );
+  for ( tidy_include *include;
+        (include = rb_iterator_next( &iter )) != NULL; ) {
+    if ( ( include->is_needed && (!include->is_direct || opt_all_includes)) ||
+         (!include->is_needed && include->is_direct) ) {
+      PJL_DISCARD_RV(
+        rb_tree_insert( &include_set_by_name, include, sizeof *include )
+      );
+    }
+  } // for
 
   includes_print_visitor_data ipvd = { .print_local = true };
   rb_tree_visit( &include_set_by_name, &includes_print_visitor, &ipvd );
