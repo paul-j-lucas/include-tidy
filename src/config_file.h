@@ -30,11 +30,21 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * Gets the proxy include file for \a include_file, if any.
+ *
+ * @param include_file The include file to get the proxy include file for.
+ * @return Returns the proxy include file, if any, or \a include_file if none.
+ */
+CXFile config_get_include_proxy( CXFile include_file );
+
+/**
  * Reads an **include-tidy**(1) configuration file, if any.
+ *
+ * @param tu The translation unit to use.
  *
  * @note This function must be called at most once.
  */
-void config_init( void );
+void config_init( CXTranslationUnit tu );
 
 /**
  * Resolves all header names specified in a configuration file to their

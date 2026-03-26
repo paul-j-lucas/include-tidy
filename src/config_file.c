@@ -74,14 +74,29 @@ enum config_opts {
 typedef enum config_opts config_opts_t;
 
 /**
+ * Mapping from an original include file to another that's a proxy for it.
+ */
+struct proxy_include {
+  union {
+    char const     *orig_rel_path;      ///< Original include relative path.
+    CXFileUniqueID  orig_include_id;    ///< Corresponding include ID.
+  };
+  CXFile            proxy_include_file; ///< Proxy include file.
+};
+typedef struct proxy_include proxy_include;
+
+/**
  * Mapping from a symbol name to the header relative path _or_ file that
  * declares it from a configuration file.
  */
 struct symbol_header {
-  char const   *symbol_name;            ///< Symbol name.
+  char const         *symbol_name;      ///< Symbol name.
   union {
-    char const *rel_path;               ///< Header relative path.
-    CXFile      header_file;            ///< Corresponding header file.
+    char const       *rel_path;         ///< Header relative path.
+    struct {
+      CXFile          header_file;      ///< Corresponding header file.
+      CXFileUniqueID  header_id;        ///< Corresponding header ID.
+    };
   };
 };
 typedef struct symbol_header symbol_header;
@@ -94,11 +109,19 @@ NODISCARD
 static char const*  home_dir( void );
 
 static void         path_append( char*, size_t, char const* );
+static void         proxy_include_cleanup( proxy_include* );
+
+NODISCARD
+static bool         proxy_parse( char const*, toml_table* );
+
 static void         symbol_header_add( char const*, char const* );
 static void         symbol_header_cleanup( symbol_header* );
 
 // local variables
+static rb_tree_t proxy_include_map_by_rel_path;      ///< TODO.
+static rb_tree_t proxy_include_map_by_id;///< TODO.
 static rb_tree_t symbol_header_map;     ///< Mapping from symbols to headers.
+static CXTranslationUnit config_tu;
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -106,8 +129,14 @@ static rb_tree_t symbol_header_map;     ///< Mapping from symbols to headers.
  * Cleans-up all configuration data.
  */
 static void config_cleanup( void ) {
+  rb_tree_cleanup( &proxy_include_map_by_id, /*free_fn=*/NULL );
   rb_tree_cleanup(
-    &symbol_header_map, POINTER_CAST( rb_free_fn_t, &symbol_header_cleanup )
+    &proxy_include_map_by_rel_path,
+    POINTER_CAST( rb_free_fn_t, proxy_include_cleanup )
+  );
+  rb_tree_cleanup(
+    &symbol_header_map,
+    POINTER_CAST( rb_free_fn_t, &symbol_header_cleanup )
   );
 }
 
@@ -290,11 +319,13 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       );
     }
 
+    if ( proxy_parse( config_path, &table ) )
+      continue;
     if ( symbols_parse( config_path, &table ) )
       continue;
 
     fatal_error( EX_CONFIG,
-      "%s:%u:%u required \"symbols\" key for \"%s\" missing\n",
+      "%s:%u:%u required \"proxy\" or \"symbols\" key for \"%s\" missing\n",
       config_path, table.loc.line, table.loc.col, table.name
     );
   } // while
@@ -359,6 +390,171 @@ static void path_append( char *path, size_t path_len, char const *component ) {
 }
 
 /**
+ * Maps a header file to another header file that will be a proxy for the
+ * original.
+ *
+ * @param orig_rel_path The original header's relative path.
+ * @param proxy_include_file The proxy header file.
+ */
+static void proxy_include_add( char const *orig_rel_path,
+                               CXFile proxy_include_file ) {
+  assert( orig_rel_path != NULL );
+
+  proxy_include new_pi = {
+    .orig_rel_path = orig_rel_path,
+    .proxy_include_file = proxy_include_file
+  };
+  rb_insert_rv_t const rv_rbi =
+    rb_tree_insert( &proxy_include_map_by_rel_path, &new_pi, sizeof new_pi );
+  if ( rv_rbi.inserted ) {
+    proxy_include *const pi = RB_DINT( rv_rbi.node );
+    pi->orig_rel_path = check_strdup( orig_rel_path );
+  }
+}
+
+/**
+ * Cleans-up a proxy_include.
+ *
+ * @param pi The proxy_include to clean up.  If NULL, does nothing.
+ */
+static void proxy_include_cleanup( proxy_include *pi ) {
+  if ( pi == NULL )
+    return;
+  FREE( pi->orig_rel_path );
+}
+
+/**
+ * Compares two \ref proxy_include objects by ID.
+ *
+ * @param i_pi The first proxy_include.
+ * @param j_pi The second proxy_include.
+ * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
+ * i_pi is less than, equal to, or greater than the name of \a j_pi,
+ * respectively.
+ */
+NODISCARD
+static int proxy_include_cmp_by_id( proxy_include const *i_pi,
+                                    proxy_include const *j_pi ) {
+  assert( i_pi != NULL );
+  assert( j_pi != NULL );
+  return memcmp(
+    &i_pi->orig_include_id, &j_pi->orig_include_id, sizeof i_pi->orig_include_id
+  );
+}
+
+/**
+ * Compares two \ref proxy_include objects by relative path.
+ *
+ * @param i_pi The first proxy_include.
+ * @param j_pi The second proxy_include.
+ * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
+ * i_pi is less than, equal to, or greater than the name of \a j_pi,
+ * respectively.
+ */
+NODISCARD
+static int proxy_include_cmp_by_rel_path( proxy_include const *i_pi,
+                                          proxy_include const *j_pi ) {
+  assert( i_pi != NULL );
+  assert( j_pi != NULL );
+  return strcmp( i_pi->orig_rel_path, j_pi->orig_rel_path );
+}
+
+/**
+ * If present, parses the value of a `"proxy"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The toml_table to parse.
+ * @return Returns `true` only if a `"proxy"` key exists and was parsed
+ * successfully.
+ */
+static bool proxy_parse( char const *config_path, toml_table *table ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+
+  toml_value const *const value = toml_table_find( table, "proxy" );
+  if ( value == NULL )
+    return false;
+
+  CXFile proxy_include_file = clang_getFile( config_tu, table->name );
+  if ( proxy_include_file == NULL )
+    return true;
+
+  switch ( value->type ) {
+    case TOML_STRING:
+      proxy_include_add( value->s, proxy_include_file );
+      break;
+    case TOML_ARRAY:
+      for ( unsigned i = 0; i < value->a.size; ++i ) {
+        toml_value const *const a_value = &value->a.values[i];
+        if ( a_value->type != TOML_STRING ) {
+          fatal_error( EX_CONFIG,
+            "%s:%u:%u: "
+            "invalid value for \"proxy\" key array; expected string\n",
+            config_path, a_value->loc.line, a_value->loc.col
+          );
+        }
+        proxy_include_add( a_value->s, proxy_include_file );
+      } // for
+      break;
+    default:
+      fatal_error( EX_CONFIG,
+        "%s:%u:%u "
+        "invalid value for \"proxy\" key; expected string or array\n",
+        config_path, value->loc.line, value->loc.col
+      );
+  } // switch
+
+  return true;
+}
+
+/**
+ * Resolves each proxy_include's \ref proxy_include::orig_rel_path
+ * "orig_rel_path" to its corresponding \ref proxy_include::orig_include_id
+ * "orig_include_id".
+ */
+static void resolve_proxy_includes( void ) {
+  rb_iterator_t iter;
+  rb_iterator_init( &proxy_include_map_by_rel_path, &iter );
+  for ( proxy_include *pi; (pi = rb_iterator_next( &iter )) != NULL; ) {
+    CXFile include_file = include_getFile( pi->orig_rel_path );
+    if ( include_file != NULL ) {
+      CXFileUniqueID include_id;
+      int rv = clang_getFileUniqueID( include_file, &include_id );
+      assert( rv == 0 );
+
+      proxy_include new_pi = {
+        .orig_include_id = include_id,
+        .proxy_include_file = pi->proxy_include_file
+      };
+      PJL_DISCARD_RV(
+        rb_tree_insert( &proxy_include_map_by_id, &new_pi, sizeof new_pi )
+      );
+    }
+  } // for
+}
+
+/**
+ * Resolves each symbol_header's \ref symbol_header::rel_path "rel_path" to its
+ * corresponding \ref symbol_header::header_file "header_file".
+ */
+static void resolve_symbol_headers( void ) {
+  rb_iterator_t iter;
+  rb_iterator_init( &symbol_header_map, &iter );
+  for ( symbol_header *sh; (sh = rb_iterator_next( &iter )) != NULL; ) {
+    CXFile header_file = include_getFile( sh->rel_path );
+    FREE( sh->rel_path );
+    sh->header_file = header_file;
+
+    if ( header_file == NULL ) {
+      sh->header_id = (CXFileUniqueID){ 0 };
+    } else {
+      int rv = clang_getFileUniqueID( header_file, &sh->header_id );
+      assert( rv == 0 );
+    }
+  } // for
+}
+
+/**
  * Cleans-up a symbol_header.
  *
  * @param sh The symbol_header to clean up.  If NULL, does nothing.
@@ -412,9 +608,32 @@ static void symbol_header_add( char const *symbol_name,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void config_init( void ) {
-  ASSERT_RUN_ONCE();
+CXFile config_get_include_proxy( CXFile include_file ) {
+  CXFileUniqueID include_id;
+  int rv = clang_getFileUniqueID( include_file, &include_id );
+  assert( rv == 0 );
 
+  proxy_include find_pi = { .orig_include_id = include_id };
+  rb_node_t const *const found_rb =
+    rb_tree_find( &proxy_include_map_by_id, &find_pi );
+  if ( found_rb == NULL )
+    return include_file;
+  proxy_include const *const found_pi = RB_DINT( found_rb );
+  return found_pi->proxy_include_file;
+}
+
+void config_init( CXTranslationUnit tu ) {
+  ASSERT_RUN_ONCE();
+  config_tu = tu;
+
+  rb_tree_init(
+    &proxy_include_map_by_id, RB_DINT,
+    POINTER_CAST( rb_cmp_fn_t, &proxy_include_cmp_by_id )
+  );
+  rb_tree_init(
+    &proxy_include_map_by_rel_path, RB_DINT,
+    POINTER_CAST( rb_cmp_fn_t, &proxy_include_cmp_by_rel_path )
+  );
   rb_tree_init(
     &symbol_header_map, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &symbol_header_cmp )
   );
@@ -429,20 +648,16 @@ void config_init( void ) {
 }
 
 void config_resolve_headers( void ) {
-  rb_iterator_t iter;
-  rb_iterator_init( &symbol_header_map, &iter );
-  for ( symbol_header *sh; (sh = rb_iterator_next( &iter )) != NULL; ) {
-    CXFile header_file = include_getFile( sh->rel_path );
-    FREE( sh->rel_path );
-    sh->header_file = header_file;
-  } // for
+  resolve_proxy_includes();
+  resolve_symbol_headers();
 }
 
 CXFile config_symbol_header( char const *symbol_name ) {
   assert( symbol_name != NULL );
 
-  symbol_header sh = { .symbol_name = symbol_name };
-  rb_node_t const *const found_rb = rb_tree_find( &symbol_header_map, &sh );
+  symbol_header find_sh = { .symbol_name = symbol_name };
+  rb_node_t const *const found_rb =
+    rb_tree_find( &symbol_header_map, &find_sh );
   if ( found_rb == NULL )
     return NULL;
   symbol_header const *const found_sh = RB_DINT( found_rb );

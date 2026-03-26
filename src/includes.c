@@ -22,6 +22,7 @@
 #include "pjl_config.h"
 #include "includes.h"
 #include "clang_util.h"
+#include "config_file.h"
 #include "include-tidy.h"
 #include "options.h"
 #include "red_black.h"
@@ -506,6 +507,7 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
   assert( include_file != NULL );
   assert( sym != NULL );
 
+  include_file = config_get_include_proxy( include_file );
   tidy_include *const include = tidy_include_find_by_id( include_file );
   if ( include == NULL )
     return false;

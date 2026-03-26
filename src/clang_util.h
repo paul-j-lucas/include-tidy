@@ -25,10 +25,21 @@
 #include "pjl_config.h"
 #include "clang_util.h"
 
+// standard
+#include <stdio.h>
+
 // libclang
 #include <clang-c/Index.h>
 
 ////////// extern functions ///////////////////////////////////////////////////
+
+/**
+ * Prints \a id as a hexadecimal ineger.
+ *
+ * @param id The CXFileUniqueID to print.
+ * @param out The `FILE` to print to.
+ */
+void tidy_CXFileUniqueID_fput( CXFileUniqueID const *id, FILE *out );
 
 /**
  * Gets the real path of \a file.

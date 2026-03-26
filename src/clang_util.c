@@ -22,10 +22,23 @@
 #include "pjl_config.h"
 #include "clang_util.h"
 
+// standard
+#include <limits.h>
+#include <stdio.h>
+
 // libclang
 #include <clang-c/Index.h>
 
 ////////// extern functions ///////////////////////////////////////////////////
+
+void tidy_CXFileUniqueID_fput( CXFileUniqueID const *id, FILE *out ) {
+  static int const ID_HEX_WIDTH = (int)sizeof( id->data[0] ) * CHAR_BIT / 4;
+
+  fprintf( out, "%0*llX%0*llX",
+    ID_HEX_WIDTH, id->data[0],
+    ID_HEX_WIDTH, id->data[1]
+  );
+}
 
 /**
  * Gets the real path of \a file.

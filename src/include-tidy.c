@@ -58,7 +58,7 @@ int main( int argc, char const *argv[] ) {
   options_init();
   cli_options_init( &argc, &argv );
   CXTranslationUnit tu = tu_new( argc, argv );
-  config_init();
+  config_init( tu );
   includes_init( tu );
   config_resolve_headers();
   symbols_init( tu );
