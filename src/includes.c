@@ -223,12 +223,14 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
   size_t const fixed_len = opt_comment_align +
     strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
 
+  bool          done = false;
   rb_iterator_t iter;
   char         *symbols = NULL;
   size_t        symbols_len = 0;
 
   rb_iterator_init( &include->symbol_set, &iter );
-  for ( tidy_symbol const *sym; (sym = rb_iterator_next( &iter )) != NULL; ) {
+  for ( tidy_symbol const *sym;
+        !done && (sym = rb_iterator_next( &iter )) != NULL; ) {
     char const   *name_cs   = clang_getCString( sym->name );
     size_t const  name_len  = strlen( name_cs );
 
@@ -247,6 +249,7 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
       if ( line_len > opt_line_length )
         break;
       name_cs = "...";
+      done = true;
     }
     REALLOC( symbols, char, symbols_len + new_len + 1 );
     sprintf( symbols + symbols_len, ", %s", name_cs );
@@ -471,7 +474,9 @@ void includes_print( void ) {
   rb_iterator_init( &include_set, &iter );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( opt_all_includes || include->is_needed != include->is_direct ) {
+    if ( include->is_needed ?
+          (opt_all_includes || !include->is_direct) :
+          include->is_direct ) {
       PJL_DISCARD_RV(
         rb_tree_insert( &include_set_by_rel_path, include, sizeof *include )
       );
