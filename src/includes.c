@@ -100,12 +100,7 @@ typedef struct symbols_used symbols_used;
 
 // local functions
 NODISCARD
-#ifdef TIDY_MOVE_SYMBOLS
-static bool     symbols_used_visitor( void*, void* ),
-                tidy_symbol_move_visitor( void*, void* );
-#else
 static bool     symbols_used_visitor( void*, void* );
-#endif
 
 static void     tidy_include_cleanup( tidy_include* );
 
@@ -239,23 +234,9 @@ static bool includes_sort_by_name_visitor( void *node_data, void *visit_data ) {
   if ( ( include->is_needed && (!include->is_direct || opt_all_includes)) ||
        (!include->is_needed && include->is_direct) ) {
     rb_tree_t *const include_set_by_name = visit_data;
-#ifdef TIDY_MOVE_SYMBOLS
-    rb_insert_rv_t const rv_rbi =
-      rb_tree_insert( include_set_by_name, include, sizeof *include );
-    if ( !rv_rbi.inserted ) {
-      tidy_include *const old_include = RB_DPTR( rv_rbi.node );
-      rb_tree_visit(
-        &include->symbol_set, &tidy_symbol_move_visitor,
-        &old_include->symbol_set
-      );
-      old_include->is_needed = true;
-      include->is_needed = false;
-    }
-#else
     PJL_DISCARD_RV(
       rb_tree_insert( include_set_by_name, include, sizeof *include )
     );
-#endif
   }
 
   return false;
@@ -329,30 +310,6 @@ static bool symbols_used_visitor( void *node_data, void *visit_data ) {
 done:
   return stop;
 }
-
-#ifdef TIDY_MOVE_SYMBOLS
-/**
- * TODO.
- *
- * @param node_data TODO.
- * @param visit_data TODO.
- * @return Always returns `false`.
- */
-NODISCARD
-static bool tidy_symbol_move_visitor( void *node_data, void *visit_data ) {
-  assert( node_data != NULL );
-  assert( visit_data != NULL );
-
-  tidy_symbol *const from_symbol    = node_data;
-  rb_tree_t   *const to_symbol_set  = visit_data;
-
-  PJL_DISCARD_RV(
-    rb_tree_insert( to_symbol_set, from_symbol, sizeof *from_symbol )
-  );
-
-  return false;
-}
-#endif
 
 /**
  * Cleans-up all memory associated with \a include but does _not_ free \a
