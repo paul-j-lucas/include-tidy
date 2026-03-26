@@ -40,14 +40,6 @@ void tidy_CXFileUniqueID_fput( CXFileUniqueID const *id, FILE *out ) {
   );
 }
 
-/**
- * Gets the real path of \a file.
- *
- * @param file The file to get the real path of.
- * @return Returns the string containing the real path of \a file.  The caller
- * _must_ call `clang_disposeString()` on it.
- *
- */
 NODISCARD
 CXString tidy_File_getRealPathName( CXFile file ) {
   CXString          file_cxs  = clang_File_tryGetRealPathName( file );
