@@ -57,8 +57,8 @@ typedef struct includes_print_visitor_data includes_print_visitor_data;
 struct tidy_include {
   CXFile          file;                 ///< File that was included.
   CXFileUniqueID  file_id;              ///< Unique file ID.
-  CXString        real_path_cxs;        ///< Real path of \a file.
-  char const     *resolved_path;        ///< Resolved path of \a file.
+  CXString        abs_path_cxs;         ///< Absolute path of \a file.
+  char const     *rel_path;             ///< Relative path of \a file.
   unsigned        count;                ///< Number of times included.
   unsigned        line;                 ///< Line included from.
   bool            is_direct;            ///< Directly included?
@@ -117,7 +117,7 @@ static void include_print( tidy_include const *include, char const *comment ) {
   get_include_delims( include->is_local, inc_delim );
 
   int const raw_len = printf(
-    "#include %c%s%c", inc_delim[0], include->resolved_path, inc_delim[1]
+    "#include %c%s%c", inc_delim[0], include->rel_path, inc_delim[1]
   );
   if ( unlikely( raw_len < 0 ) )
     perror_exit( EX_IOERR );
@@ -265,7 +265,7 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
 static void tidy_include_cleanup( tidy_include *include ) {
   if ( include == NULL )
     return;
-  clang_disposeString( include->real_path_cxs );
+  clang_disposeString( include->abs_path_cxs );
   // Because the nodes point to existing tidy_symbol objects, use NULL.
   rb_tree_cleanup( &include->symbol_set, /*free_fn=*/NULL );
 }
@@ -290,20 +290,20 @@ static int tidy_include_cmp_by_id( tidy_include const *i_include,
 }
 
 /**
- * Compares two \ref tidy_include objects by their file names.
+ * Compares two \ref tidy_include objects by their relative paths.
  *
  * @param i_include The first tidy_include.
  * @param j_include The second tidy_include.
- * @return Returns a number less than 0, 0, or greater than 0 if the file name
- * of \a i_include is less than, equal to, or greater than the file name of \a
- * j_include, respectively.
+ * @return Returns a number less than 0, 0, or greater than 0 if the relative
+ * path of \a i_include is less than, equal to, or greater than the relative
+ * path of \a j_include, respectively.
  */
 NODISCARD
-static int tidy_include_cmp_by_name( tidy_include const *i_include,
-                                     tidy_include const *j_include ) {
+static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
+                                         tidy_include const *j_include ) {
   assert( i_include != NULL );
   assert( j_include != NULL );
-  return strcmp( i_include->resolved_path, j_include->resolved_path );
+  return strcmp( i_include->rel_path, j_include->rel_path );
 }
 
 /**
@@ -355,14 +355,14 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
   tidy_include *const include = RB_DINT( rv_rbi.node );
   if ( rv_rbi.inserted ) {
-    CXString real_path_cxs = tidy_File_getRealPathName( included_file );
-    char const *const real_path_cs = clang_getCString( real_path_cxs );
+    CXString          abs_path_cxs = tidy_File_getRealPathName( included_file );
+    char const *const abs_path_cs = clang_getCString( abs_path_cxs );
 
-    include->file           = included_file;
-    include->is_direct      = is_direct;
-    include->is_local       = is_local_include( real_path_cs );
-    include->real_path_cxs  = real_path_cxs;
-    include->resolved_path  = include_resolve( real_path_cs );
+    include->file         = included_file;
+    include->is_direct    = is_direct;
+    include->is_local     = is_local_include( abs_path_cs );
+    include->abs_path_cxs = abs_path_cxs;
+    include->rel_path     = opt_include_paths_relativize( abs_path_cs );
 
     clang_getSpellingLocation(
       include_loc, /*file=*/NULL, &include->line, /*column=*/NULL,
@@ -394,7 +394,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     verbose_printf(
       "  %s%c%s%c\n",
       include->is_direct ? "" : "    ",
-      inc_delim[0], clang_getCString( include->real_path_cxs ), inc_delim[1]
+      inc_delim[0], clang_getCString( include->abs_path_cxs ), inc_delim[1]
     );
   }
 
@@ -460,12 +460,12 @@ void includes_init( CXTranslationUnit tu ) {
 }
 
 void includes_print( void ) {
-  rb_tree_t include_set_by_name;
+  rb_tree_t include_set_by_rel_path;
   rb_tree_init(
     // Use RB_DPTR to make nodes point to existing tidy_include objects in
     // include_set.
-    &include_set_by_name, RB_DPTR,
-    POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_name )
+    &include_set_by_rel_path, RB_DPTR,
+    POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_rel_path )
   );
   rb_iterator_t iter;
   rb_iterator_init( &include_set, &iter );
@@ -473,20 +473,20 @@ void includes_print( void ) {
         (include = rb_iterator_next( &iter )) != NULL; ) {
     if ( opt_all_includes || include->is_needed != include->is_direct ) {
       PJL_DISCARD_RV(
-        rb_tree_insert( &include_set_by_name, include, sizeof *include )
+        rb_tree_insert( &include_set_by_rel_path, include, sizeof *include )
       );
     }
   } // for
 
   includes_print_visitor_data ipvd = { .print_local = true };
-  rb_tree_visit( &include_set_by_name, &includes_print_visitor, &ipvd );
+  rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
 
   ipvd.print_local = !ipvd.print_local;
   ipvd.print_blank_line = ipvd.printed_any_includes;
-  rb_tree_visit( &include_set_by_name, &includes_print_visitor, &ipvd );
+  rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
 
   // Because the nodes point to existing tidy_include objects, use NULL.
-  rb_tree_cleanup( &include_set_by_name, /*free_fn=*/NULL );
+  rb_tree_cleanup( &include_set_by_rel_path, /*free_fn=*/NULL );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -71,19 +71,20 @@ extern char const  *arg_source_path;      ///< The file being tidied.
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * TODO.
- *
- * @param included_path The path being included.
- * @return Returns TODO.
- */
-char const* include_resolve( char const *included_path );
-
-/**
  * Adds \a include_path to the global list of include (`-I`) paths.
  *
  * @param include_path The include path to add.
  */
 void opt_include_paths_add( char const *include_path );
+
+/**
+ * Relativizes \a abs_path against one of the `-I` absolute paths.
+ *
+ * @param abs_path The absolte path of a file being included.
+ * @return Returns the shorted path of \a abs_path relative to one of the `-I`
+ * absolute paths.
+ */
+char const* opt_include_paths_relativize( char const *abs_path );
 
 /**
  * Initializes **include-tidy** options.

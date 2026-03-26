@@ -139,33 +139,6 @@ static void set_all_or_none( char const **pformat, char const *all_value ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-char const* include_resolve( char const *included_path ) {
-  assert( included_path != NULL );
-  assert( opt_include_paths != NULL );
-
-  size_t      longest_include_path_len = 0;
-  char const *shortest_include_path = included_path;
-
-  for ( char **ppath = opt_include_paths; *ppath != NULL; ++ppath ) {
-    char const *const include_path_i      = *ppath;
-    size_t const      include_path_i_len  = strlen( include_path_i );
-
-    if ( include_path_i_len > longest_include_path_len &&
-         strncmp( included_path, include_path_i, include_path_i_len ) == 0 ) {
-      longest_include_path_len = include_path_i_len;
-      shortest_include_path = included_path + include_path_i_len;
-
-      if ( shortest_include_path[0] == '/' )
-        ++shortest_include_path;
-    }
-  } // for
-
-  if ( STRNCMPLIT( shortest_include_path, "./" ) == 0 )
-    shortest_include_path += STRLITLEN( "./" );
-
-  return shortest_include_path;
-}
-
 void options_init( void ) {
   ASSERT_RUN_ONCE();
   ATEXIT( &options_cleanup );
@@ -197,6 +170,33 @@ void opt_include_paths_add( char const *include_path ) {
 
   opt_include_paths[  i] = check_strdup( include_path );
   opt_include_paths[++i] = NULL;
+}
+
+char const* opt_include_paths_relativize( char const *abs_path ) {
+  assert( abs_path != NULL );
+  assert( opt_include_paths != NULL );
+
+  size_t      longest_include_path_len = 0;
+  char const *shortest_include_path = abs_path;
+
+  for ( char **ppath = opt_include_paths; *ppath != NULL; ++ppath ) {
+    char const *const include_path_i      = *ppath;
+    size_t const      include_path_i_len  = strlen( include_path_i );
+
+    if ( include_path_i_len > longest_include_path_len &&
+         strncmp( abs_path, include_path_i, include_path_i_len ) == 0 ) {
+      longest_include_path_len = include_path_i_len;
+      shortest_include_path = abs_path + include_path_i_len;
+
+      if ( shortest_include_path[0] == '/' )
+        ++shortest_include_path;
+    }
+  } // for
+
+  if ( STRNCMPLIT( shortest_include_path, "./" ) == 0 )
+    shortest_include_path += STRLITLEN( "./" );
+
+  return shortest_include_path;
 }
 
 NODISCARD
