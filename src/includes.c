@@ -42,14 +42,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Additional data passed to visitChildren_visitor().
- */
-struct visitChildren_visitor_data {
-  bool  verbose_printed;                ///< Printed any verbose output?
-};
-typedef struct visitChildren_visitor_data visitChildren_visitor_data;
-
-/**
  * Additional data for includes_print_visitor().
  */
 struct includes_print_visitor_data {
@@ -66,7 +58,7 @@ struct tidy_include {
   CXFile          file;                 ///< File that was included.
   CXFileUniqueID  file_id;              ///< Unique file ID.
   CXString        real_path_cxs;        ///< Real path of \a file.
-  char const     *resolved_path;
+  char const     *resolved_path;        ///< Resolved path of \a file.
   unsigned        count;                ///< Number of times included.
   unsigned        line;                 ///< Line included from.
   bool            is_direct;            ///< Directly included?
@@ -75,6 +67,14 @@ struct tidy_include {
   rb_tree_t       symbol_set;           ///< Symbols referenced from this file.
 };
 typedef struct tidy_include tidy_include;
+
+/**
+ * Additional data passed to visitChildren_visitor().
+ */
+struct visitChildren_visitor_data {
+  bool  verbose_printed;                ///< Printed any verbose output?
+};
+typedef struct visitChildren_visitor_data visitChildren_visitor_data;
 
 // local functions
 NODISCARD
