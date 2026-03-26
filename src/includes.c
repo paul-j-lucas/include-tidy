@@ -76,22 +76,9 @@ struct tidy_include {
 };
 typedef struct tidy_include tidy_include;
 
-/**
- * The symbols used from an include file.
- */
-struct symbols_used {
-  /// Sum of \ref opt_comment_align and `strlen(`\ref opt_comment_style
-  /// "opt_comment_style"`[*])`.
-  size_t  fixed_len;
-
-  char   *symbols;                      ///< TODO.
-  size_t  symbols_len;                  ///< Length of \ref symbols.
-};
-typedef struct symbols_used symbols_used;
-
 // local functions
 NODISCARD
-static bool     symbols_used_visitor( void*, void* );
+static char*    make_symbols_used_comment( tidy_include const* );
 
 static void     tidy_include_cleanup( tidy_include* );
 
@@ -175,17 +162,8 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
   bool  reset_opt_comment_style = false;
 
   if ( include->is_needed ) {
-    if ( !(!include->is_direct || opt_all_includes) )
-      goto skip;
-    if ( opt_comment_style[0][0] != '\0' ) {
-      size_t const comment_delimis_len =
-        strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
-      symbols_used used = {
-        .fixed_len = opt_comment_align + comment_delimis_len
-      };
-      rb_tree_visit( &include->symbol_set, &symbols_used_visitor, &used );
-      comment = used.symbols;
-    }
+    if ( opt_comment_style[0][0] != '\0' )
+      comment = make_symbols_used_comment( include );
   }
   else if ( include->is_direct ) {
     if ( opt_comment_style[0][0] == '\0' ) {
@@ -233,47 +211,49 @@ static bool is_local_include( char const *include_file ) {
 }
 
 /**
- * Visits each symbol in an included file that is referenced from the file
- * being tidied.
+ * For \a include, makes a comment containing a comma-separated list of the
+ * symbols used.
  *
- * @param node_data The tidy_symbol to visit.
- * @param visit_data The symbols_used to use.
- * @return Returns `false` to keep visiting or `true` if the comment would be
- * too long.
+ * @param include The tidy_include to make the comment for.
+ * @return Returns said comment.  The caller is responsible for freeing it.
  */
-NODISCARD
-static bool symbols_used_visitor( void *node_data, void *visit_data ) {
-  assert( node_data != NULL );
-  assert( visit_data != NULL );
-  tidy_symbol const *const sym = node_data;
-  symbols_used *const used = visit_data;
+static char* make_symbols_used_comment( tidy_include const *include ) {
+  assert( include != NULL );
 
-  char const   *name_cs   = clang_getCString( sym->name );
-  size_t const  name_len  = strlen( name_cs );
-  bool          stop      = false;
+  size_t const fixed_len = opt_comment_align +
+    strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
 
-  if ( used->symbols_len == 0 ) {
-    used->symbols = check_strdup( name_cs );
-    used->symbols_len = name_len;
-  }
-  else {
+  rb_iterator_t iter;
+  char         *symbols = NULL;
+  size_t        symbols_len = 0;
+
+  rb_iterator_init( &include->symbol_set, &iter );
+  for ( tidy_symbol const *sym; (sym = rb_iterator_next( &iter )) != NULL; ) {
+    char const   *name_cs   = clang_getCString( sym->name );
+    size_t const  name_len  = strlen( name_cs );
+
+    if ( symbols_len == 0 ) {
+      symbols = check_strdup( name_cs );
+      symbols_len = name_len;
+      continue;
+    }
+
     size_t new_len = STRLITLEN( ", " ) + name_len;
-    size_t total_len = used->fixed_len + used->symbols_len + new_len;
-    if ( total_len > opt_line_length ) {
-      stop = true;
+    size_t line_len = fixed_len + symbols_len + new_len;
+    if ( line_len > opt_line_length ) {
+      // The next symbol doesn't fit: try adding ", ..." instead.
       new_len = STRLITLEN( ", ..." );
-      total_len = used->fixed_len + used->symbols_len + new_len;
-      if ( total_len > opt_line_length )
-        goto done;
+      line_len = fixed_len + symbols_len + new_len;
+      if ( line_len > opt_line_length )
+        break;
       name_cs = "...";
     }
-    REALLOC( used->symbols, char, used->symbols_len + new_len + 1 );
-    sprintf( used->symbols + used->symbols_len, ", %s", name_cs );
-    used->symbols_len += new_len;
-  }
+    REALLOC( symbols, char, symbols_len + new_len + 1 );
+    sprintf( symbols + symbols_len, ", %s", name_cs );
+    symbols_len += new_len;
+  } // for
 
-done:
-  return stop;
+  return symbols;
 }
 
 /**
