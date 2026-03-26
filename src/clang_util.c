@@ -21,13 +21,35 @@
 // local
 #include "pjl_config.h"
 #include "clang_util.h"
+#include "util.h"
 
 // standard
 #include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 
 // libclang
 #include <clang-c/Index.h>
+
+static uint64_t FNV1A64_INIT  = 14695981039346656037UL;
+static uint64_t FNV1A64_PRIME = 1099511628211UL;
+
+////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Fowler-Noll-Vo hash function for a string.
+ *
+ * @param str The null-terminated string to calculate the hash of.
+ * @return Returns said hash.
+ *
+ * @sa [The FNV Non-Cryptographic Hash Algorithm](https://datatracker.ietf.org/doc/html/draft-eastlake-fnv-17.html)
+ */
+static uint64_t fnv1a64_str( char const *str ) {
+  uint64_t hash = FNV1A64_INIT;
+  for ( char const *c = str; *c != '\0'; ++c )
+    hash = FNV1A64_PRIME * (hash ^ (uint8_t)*c);
+  return hash;
+}
 
 ////////// extern functions ///////////////////////////////////////////////////
 
@@ -51,6 +73,21 @@ CXString tidy_File_getRealPathName( CXFile file ) {
   }
 
   return file_cxs;
+}
+
+NODISCARD
+CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
+  CXFileUniqueID id;
+  int const rv = clang_getFileUniqueID( file, &id );
+  if ( unlikely( rv != 0 ) ) {
+    CXString          abs_path_cxs = tidy_File_getRealPathName( file );
+    char const *const abs_path_cs = clang_getCString( abs_path_cxs );
+
+    uint64_t const hash = fnv1a64_str( abs_path_cs );
+    clang_disposeString( abs_path_cxs );
+    id = (CXFileUniqueID){ .data = { hash } };
+  }
+  return id;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

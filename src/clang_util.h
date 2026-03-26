@@ -52,6 +52,15 @@ void tidy_CXFileUniqueID_fput( CXFileUniqueID const *id, FILE *out );
 NODISCARD
 CXString tidy_File_getRealPathName( CXFile file );
 
+/**
+ * Gets a unique ID for \a file.
+ *
+ * @param file The file to get the unique ID for.
+ * @return Returns said unique ID.
+ */
+NODISCARD
+CXFileUniqueID tidy_getFileUniqueID( CXFile file );
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #endif /* include_tidy_clang_util_H */

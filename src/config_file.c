@@ -474,12 +474,8 @@ static void resolve_include_proxys( void ) {
   for ( include_proxy *ip; (ip = rb_iterator_next( &iter )) != NULL; ) {
     CXFile include_file = include_getFile( ip->from_rel_path );
     if ( include_file != NULL ) {
-      CXFileUniqueID include_id;
-      int rv = clang_getFileUniqueID( include_file, &include_id );
-      assert( rv == 0 );
-
       include_proxy new_ip = {
-        .from_include_id = include_id,
+        .from_include_id = tidy_getFileUniqueID( include_file ),
         .to_include_file = ip->to_include_file
       };
       PJL_DISCARD_RV(
@@ -501,12 +497,10 @@ static void resolve_symbol_includes( void ) {
     FREE( si->rel_path );
     si->include_file = include_file;
 
-    if ( include_file == NULL ) {
+    if ( include_file == NULL )
       si->include_id = (CXFileUniqueID){ 0 };
-    } else {
-      int rv = clang_getFileUniqueID( include_file, &si->include_id );
-      assert( rv == 0 );
-    }
+    else
+      si->include_id = tidy_getFileUniqueID( include_file );
   } // for
 }
 
@@ -609,11 +603,9 @@ static bool symbols_parse( char const *config_path, toml_table *table ) {
 ////////// extern functions ///////////////////////////////////////////////////
 
 CXFile config_get_include_proxy( CXFile include_file ) {
-  CXFileUniqueID include_id;
-  int rv = clang_getFileUniqueID( include_file, &include_id );
-  assert( rv == 0 );
-
-  include_proxy find_ip = { .from_include_id = include_id };
+  include_proxy find_ip = {
+    .from_include_id = tidy_getFileUniqueID( include_file )
+  };
   rb_node_t const *const found_rb =
     rb_tree_find( &include_proxy_map_by_id, &find_ip );
   if ( found_rb == NULL )

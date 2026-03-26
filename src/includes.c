@@ -318,11 +318,11 @@ static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
  */
 NODISCARD
 static tidy_include* tidy_include_find_by_id( CXFile file ) {
-  tidy_include include = { .file = file };
-  int const rv = clang_getFileUniqueID( file, &include.file_id );
-  (void)rv;
-
-  rb_node_t const *const found_rb = rb_tree_find( &include_set, &include );
+  tidy_include find_include = {
+    .file = file,
+    .file_id = tidy_getFileUniqueID( file )
+  };
+  rb_node_t const *const found_rb = rb_tree_find( &include_set, &find_include );
   return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }
 
@@ -350,10 +350,9 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   CXFile            included_file = clang_getIncludedFile( cursor );
   bool const        is_direct = clang_Location_isFromMainFile( include_loc );
 
-  tidy_include new_include = { 0 };
-  int const rv = clang_getFileUniqueID( included_file, &new_include.file_id );
-  assert( rv == 0 );
-
+  tidy_include new_include = {
+    .file_id = tidy_getFileUniqueID( included_file )
+  };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
   tidy_include *const include = RB_DINT( rv_rbi.node );
