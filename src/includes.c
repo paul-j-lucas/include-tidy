@@ -471,8 +471,7 @@ void includes_print( void ) {
   rb_iterator_init( &include_set, &iter );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( ( include->is_needed && (!include->is_direct || opt_all_includes)) ||
-         (!include->is_needed && include->is_direct) ) {
+    if ( opt_all_includes || include->is_needed != include->is_direct ) {
       PJL_DISCARD_RV(
         rb_tree_insert( &include_set_by_name, include, sizeof *include )
       );
