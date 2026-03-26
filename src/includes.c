@@ -401,7 +401,6 @@ static int tidy_include_cmp_by_name( tidy_include const *i_include,
                                      tidy_include const *j_include ) {
   assert( i_include != NULL );
   assert( j_include != NULL );
-
   return strcmp( i_include->resolved_path, j_include->resolved_path );
 }
 
