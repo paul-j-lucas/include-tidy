@@ -319,7 +319,6 @@ static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
 NODISCARD
 static tidy_include* tidy_include_find_by_id( CXFile file ) {
   tidy_include find_include = {
-    .file = file,
     .file_id = tidy_getFileUniqueID( file )
   };
   rb_node_t const *const found_rb = rb_tree_find( &include_set, &find_include );
