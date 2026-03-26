@@ -331,7 +331,7 @@ static tidy_include* tidy_include_find_by_id( CXFile file ) {
  *
  * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent Not used.
- * @param data Not used.
+ * @param data A pointer to a visitChildren_visitor_data.
  * @return Always returns `CXChildVisit_Continue`.
  */
 static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
