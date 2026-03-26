@@ -76,14 +76,14 @@ typedef enum config_opts config_opts_t;
 /**
  * Mapping from an original include file to another that's a proxy for it.
  */
-struct proxy_include {
+struct include_proxy {
   union {
     char const     *from_rel_path;      ///< From include relative path.
     CXFileUniqueID  from_include_id;    ///< Corresponding include ID.
   };
   CXFile            to_include_file;    ///< Proxy include file.
 };
-typedef struct proxy_include proxy_include;
+typedef struct include_proxy include_proxy;
 
 /**
  * Mapping from a symbol name to the include file's relative path _or_ file
@@ -108,8 +108,8 @@ static FILE*        config_open( char const*, config_opts_t );
 NODISCARD
 static char const*  home_dir( void );
 
+static void         include_proxy_cleanup( include_proxy* );
 static void         path_append( char*, size_t, char const* );
-static void         proxy_include_cleanup( proxy_include* );
 
 NODISCARD
 static bool         proxy_parse( char const*, toml_table* ),
@@ -120,8 +120,8 @@ static void         symbol_include_cleanup( symbol_include* );
 
 // local variables
 static CXTranslationUnit config_tu;     ///< Current translation unit.
-static rb_tree_t proxy_include_map_by_rel_path;      ///< TODO.
-static rb_tree_t proxy_include_map_by_id;///< TODO.
+static rb_tree_t include_proxy_map_by_rel_path;      ///< TODO.
+static rb_tree_t include_proxy_map_by_id;///< TODO.
 static rb_tree_t symbol_include_map;     ///< Mapping from symbols to includes.
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -130,10 +130,10 @@ static rb_tree_t symbol_include_map;     ///< Mapping from symbols to includes.
  * Cleans-up all configuration data.
  */
 static void config_cleanup( void ) {
-  rb_tree_cleanup( &proxy_include_map_by_id, /*free_fn=*/NULL );
+  rb_tree_cleanup( &include_proxy_map_by_id, /*free_fn=*/NULL );
   rb_tree_cleanup(
-    &proxy_include_map_by_rel_path,
-    POINTER_CAST( rb_free_fn_t, proxy_include_cleanup )
+    &include_proxy_map_by_rel_path,
+    POINTER_CAST( rb_free_fn_t, include_proxy_cleanup )
   );
   rb_tree_cleanup(
     &symbol_include_map,
@@ -323,6 +323,75 @@ static char const* home_dir( void ) {
 }
 
 /**
+ * Maps an include file to another that will be a proxy for the original.
+ *
+ * @param from_rel_path The original include's relative path.
+ * @param to_include_file The proxy include file.
+ */
+static void include_proxy_add( char const *from_rel_path,
+                               CXFile to_include_file ) {
+  assert( from_rel_path != NULL );
+
+  include_proxy new_ip = {
+    .from_rel_path = from_rel_path,
+    .to_include_file = to_include_file
+  };
+  rb_insert_rv_t const rv_rbi =
+    rb_tree_insert( &include_proxy_map_by_rel_path, &new_ip, sizeof new_ip );
+  if ( rv_rbi.inserted ) {
+    include_proxy *const ip = RB_DINT( rv_rbi.node );
+    ip->from_rel_path = check_strdup( from_rel_path );
+  }
+}
+
+/**
+ * Cleans-up a include_proxy.
+ *
+ * @param ip The include_proxy to clean up.  If NULL, does nothing.
+ */
+static void include_proxy_cleanup( include_proxy *ip ) {
+  if ( ip == NULL )
+    return;
+  FREE( ip->from_rel_path );
+}
+
+/**
+ * Compares two \ref include_proxy objects by ID.
+ *
+ * @param i_ip The first include_proxy.
+ * @param j_ip The second include_proxy.
+ * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
+ * i_ip is less than, equal to, or greater than the name of \a j_ip,
+ * respectively.
+ */
+NODISCARD
+static int include_proxy_cmp_by_id( include_proxy const *i_ip,
+                                    include_proxy const *j_ip ) {
+  assert( i_ip != NULL );
+  assert( j_ip != NULL );
+  return memcmp(
+    &i_ip->from_include_id, &j_ip->from_include_id, sizeof i_ip->from_include_id
+  );
+}
+
+/**
+ * Compares two \ref include_proxy objects by relative path.
+ *
+ * @param i_ip The first include_proxy.
+ * @param j_ip The second include_proxy.
+ * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
+ * i_ip is less than, equal to, or greater than the name of \a j_ip,
+ * respectively.
+ */
+NODISCARD
+static int include_proxy_cmp_by_rel_path( include_proxy const *i_ip,
+                                          include_proxy const *j_ip ) {
+  assert( i_ip != NULL );
+  assert( j_ip != NULL );
+  return strcmp( i_ip->from_rel_path, j_ip->from_rel_path );
+}
+
+/**
  * Appends a component to a path ensuring that exactly one `/ `separates them.
  *
  * @param path The path to append to.  The buffer pointed to must be big enough
@@ -347,75 +416,6 @@ static void path_append( char *path, size_t path_len, char const *component ) {
 }
 
 /**
- * Maps an include file to another that will be a proxy for the original.
- *
- * @param from_rel_path The original include's relative path.
- * @param to_include_file The proxy include file.
- */
-static void proxy_include_add( char const *from_rel_path,
-                               CXFile to_include_file ) {
-  assert( from_rel_path != NULL );
-
-  proxy_include new_pi = {
-    .from_rel_path = from_rel_path,
-    .to_include_file = to_include_file
-  };
-  rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &proxy_include_map_by_rel_path, &new_pi, sizeof new_pi );
-  if ( rv_rbi.inserted ) {
-    proxy_include *const pi = RB_DINT( rv_rbi.node );
-    pi->from_rel_path = check_strdup( from_rel_path );
-  }
-}
-
-/**
- * Cleans-up a proxy_include.
- *
- * @param pi The proxy_include to clean up.  If NULL, does nothing.
- */
-static void proxy_include_cleanup( proxy_include *pi ) {
-  if ( pi == NULL )
-    return;
-  FREE( pi->from_rel_path );
-}
-
-/**
- * Compares two \ref proxy_include objects by ID.
- *
- * @param i_pi The first proxy_include.
- * @param j_pi The second proxy_include.
- * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
- * i_pi is less than, equal to, or greater than the name of \a j_pi,
- * respectively.
- */
-NODISCARD
-static int proxy_include_cmp_by_id( proxy_include const *i_pi,
-                                    proxy_include const *j_pi ) {
-  assert( i_pi != NULL );
-  assert( j_pi != NULL );
-  return memcmp(
-    &i_pi->from_include_id, &j_pi->from_include_id, sizeof i_pi->from_include_id
-  );
-}
-
-/**
- * Compares two \ref proxy_include objects by relative path.
- *
- * @param i_pi The first proxy_include.
- * @param j_pi The second proxy_include.
- * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
- * i_pi is less than, equal to, or greater than the name of \a j_pi,
- * respectively.
- */
-NODISCARD
-static int proxy_include_cmp_by_rel_path( proxy_include const *i_pi,
-                                          proxy_include const *j_pi ) {
-  assert( i_pi != NULL );
-  assert( j_pi != NULL );
-  return strcmp( i_pi->from_rel_path, j_pi->from_rel_path );
-}
-
-/**
  * If present, parses the value of a `"proxy"` key.
  *
  * @param config_path The full path to the configurarion file.
@@ -437,7 +437,7 @@ static bool proxy_parse( char const *config_path, toml_table *table ) {
 
   switch ( value->type ) {
     case TOML_STRING:
-      proxy_include_add( value->s, to_include_file );
+      include_proxy_add( value->s, to_include_file );
       break;
     case TOML_ARRAY:
       for ( unsigned i = 0; i < value->a.size; ++i ) {
@@ -449,7 +449,7 @@ static bool proxy_parse( char const *config_path, toml_table *table ) {
             config_path, a_value->loc.line, a_value->loc.col
           );
         }
-        proxy_include_add( a_value->s, to_include_file );
+        include_proxy_add( a_value->s, to_include_file );
       } // for
       break;
     default:
@@ -464,26 +464,26 @@ static bool proxy_parse( char const *config_path, toml_table *table ) {
 }
 
 /**
- * Resolves each proxy_include's \ref proxy_include::from_rel_path
- * "from_rel_path" to its corresponding \ref proxy_include::from_include_id
+ * Resolves each include_proxy's \ref include_proxy::from_rel_path
+ * "from_rel_path" to its corresponding \ref include_proxy::from_include_id
  * "from_include_id".
  */
-static void resolve_proxy_includes( void ) {
+static void resolve_include_proxys( void ) {
   rb_iterator_t iter;
-  rb_iterator_init( &proxy_include_map_by_rel_path, &iter );
-  for ( proxy_include *pi; (pi = rb_iterator_next( &iter )) != NULL; ) {
-    CXFile include_file = include_getFile( pi->from_rel_path );
+  rb_iterator_init( &include_proxy_map_by_rel_path, &iter );
+  for ( include_proxy *ip; (ip = rb_iterator_next( &iter )) != NULL; ) {
+    CXFile include_file = include_getFile( ip->from_rel_path );
     if ( include_file != NULL ) {
       CXFileUniqueID include_id;
       int rv = clang_getFileUniqueID( include_file, &include_id );
       assert( rv == 0 );
 
-      proxy_include new_pi = {
+      include_proxy new_ip = {
         .from_include_id = include_id,
-        .to_include_file = pi->to_include_file
+        .to_include_file = ip->to_include_file
       };
       PJL_DISCARD_RV(
-        rb_tree_insert( &proxy_include_map_by_id, &new_pi, sizeof new_pi )
+        rb_tree_insert( &include_proxy_map_by_id, &new_ip, sizeof new_ip )
       );
     }
   } // for
@@ -613,13 +613,13 @@ CXFile config_get_include_proxy( CXFile include_file ) {
   int rv = clang_getFileUniqueID( include_file, &include_id );
   assert( rv == 0 );
 
-  proxy_include find_pi = { .from_include_id = include_id };
+  include_proxy find_ip = { .from_include_id = include_id };
   rb_node_t const *const found_rb =
-    rb_tree_find( &proxy_include_map_by_id, &find_pi );
+    rb_tree_find( &include_proxy_map_by_id, &find_ip );
   if ( found_rb == NULL )
     return include_file;
-  proxy_include const *const found_pi = RB_DINT( found_rb );
-  return found_pi->to_include_file;
+  include_proxy const *const found_ip = RB_DINT( found_rb );
+  return found_ip->to_include_file;
 }
 
 CXFile config_get_symbol_include( char const *symbol_name ) {
@@ -639,12 +639,12 @@ void config_init( CXTranslationUnit tu ) {
   config_tu = tu;
 
   rb_tree_init(
-    &proxy_include_map_by_id, RB_DINT,
-    POINTER_CAST( rb_cmp_fn_t, &proxy_include_cmp_by_id )
+    &include_proxy_map_by_id, RB_DINT,
+    POINTER_CAST( rb_cmp_fn_t, &include_proxy_cmp_by_id )
   );
   rb_tree_init(
-    &proxy_include_map_by_rel_path, RB_DINT,
-    POINTER_CAST( rb_cmp_fn_t, &proxy_include_cmp_by_rel_path )
+    &include_proxy_map_by_rel_path, RB_DINT,
+    POINTER_CAST( rb_cmp_fn_t, &include_proxy_cmp_by_rel_path )
   );
   rb_tree_init(
     &symbol_include_map, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &symbol_include_cmp )
@@ -660,7 +660,7 @@ void config_init( CXTranslationUnit tu ) {
 }
 
 void config_resolve_includes( void ) {
-  resolve_proxy_includes();
+  resolve_include_proxys();
   resolve_symbol_includes();
 }
 
