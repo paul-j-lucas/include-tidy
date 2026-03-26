@@ -42,15 +42,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Additional data for include_getFile().
- */
-struct include_getFile_data {
-  char const *rel_path;
-  size_t      rel_path_len;
-};
-typedef struct include_getFile_data include_getFile_data;
-
-/**
  * Additional data passed to visitChildren_visitor().
  */
 struct visitChildren_visitor_data {
