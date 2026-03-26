@@ -147,17 +147,17 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     tidy_symbol *const symbol         = RB_DINT( rv_rbi.node );
     char const  *const symbol_name_cs = clang_getCString( symbol->name );
 
-    CXFile header_file = config_get_symbol_include( symbol_name_cs );
-    if ( header_file == NULL )
-      header_file = first_file;
-    bool const added_symbol = include_add_symbol( header_file, symbol );
+    CXFile include_file = config_get_symbol_include( symbol_name_cs );
+    if ( include_file == NULL )
+      include_file = first_file;
+    bool const added_symbol = include_add_symbol( include_file, symbol );
 
     if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
       if ( !vcvd->verbose_printed ) {
         verbose_printf( "symbols:\n" );
         vcvd->verbose_printed = true;
       }
-      CXString          file_cxs  = tidy_File_getRealPathName( header_file );
+      CXString          file_cxs  = tidy_File_getRealPathName( include_file );
       char const *const file_cs   = clang_getCString( file_cxs );
       verbose_printf(
         "  %s -> %s (%sadded)\n",
