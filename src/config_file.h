@@ -38,6 +38,14 @@
 CXFile config_get_include_proxy( CXFile include_file );
 
 /**
+ * Gets the header file that \a symbol_name maps to, if any.
+ *
+ * @param symbol_name The symbol name.
+ * @return Returns said header file or NULL if none.
+ */
+CXFile config_get_symbol_include( char const *symbol_name );
+
+/**
  * Reads an **include-tidy**(1) configuration file, if any.
  *
  * @param tu The translation unit to use.
@@ -47,18 +55,10 @@ CXFile config_get_include_proxy( CXFile include_file );
 void config_init( CXTranslationUnit tu );
 
 /**
- * Resolves all header names specified in a configuration file to their
- * corresponding header files.
+ * Resolves all include file names specified in a configuration file to their
+ * corresponding files.
  */
-void config_resolve_headers( void );
-
-/**
- * Gets the header file that \a symbol_name maps to, if any.
- *
- * @param symbol_name The symbol name.
- * @return Returns said header file or NULL if none.
- */
-CXFile config_symbol_header( char const *symbol_name );
+void config_resolve_includes( void );
 
 ///////////////////////////////////////////////////////////////////////////////
 

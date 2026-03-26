@@ -147,7 +147,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     tidy_symbol *const symbol         = RB_DINT( rv_rbi.node );
     char const  *const symbol_name_cs = clang_getCString( symbol->name );
 
-    CXFile header_file = config_symbol_header( symbol_name_cs );
+    CXFile header_file = config_get_symbol_include( symbol_name_cs );
     if ( header_file == NULL )
       header_file = first_file;
     bool const added_symbol = include_add_symbol( header_file, symbol );

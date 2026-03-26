@@ -60,7 +60,7 @@ int main( int argc, char const *argv[] ) {
   CXTranslationUnit tu = tu_new( argc, argv );
   config_init( tu );
   includes_init( tu );
-  config_resolve_headers();
+  config_resolve_includes();
   symbols_init( tu );
   includes_print();
   return EX_OK;

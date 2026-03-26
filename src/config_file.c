@@ -78,28 +78,28 @@ typedef enum config_opts config_opts_t;
  */
 struct proxy_include {
   union {
-    char const     *orig_rel_path;      ///< Original include relative path.
-    CXFileUniqueID  orig_include_id;    ///< Corresponding include ID.
+    char const     *from_rel_path;      ///< From include relative path.
+    CXFileUniqueID  from_include_id;    ///< Corresponding include ID.
   };
-  CXFile            proxy_include_file; ///< Proxy include file.
+  CXFile            to_include_file;    ///< Proxy include file.
 };
 typedef struct proxy_include proxy_include;
 
 /**
- * Mapping from a symbol name to the header relative path _or_ file that
- * declares it from a configuration file.
+ * Mapping from a symbol name to the include file's relative path _or_ file
+ * that declares it from a configuration file.
  */
-struct symbol_header {
+struct symbol_include {
   char const         *symbol_name;      ///< Symbol name.
   union {
-    char const       *rel_path;         ///< Header relative path.
+    char const       *rel_path;         ///< Include relative path.
     struct {
-      CXFile          header_file;      ///< Corresponding header file.
-      CXFileUniqueID  header_id;        ///< Corresponding header ID.
+      CXFile          include_file;     ///< Corresponding include file.
+      CXFileUniqueID  include_id;       ///< Corresponding include ID.
     };
   };
 };
-typedef struct symbol_header symbol_header;
+typedef struct symbol_include symbol_include;
 
 // local functions
 NODISCARD
@@ -112,16 +112,17 @@ static void         path_append( char*, size_t, char const* );
 static void         proxy_include_cleanup( proxy_include* );
 
 NODISCARD
-static bool         proxy_parse( char const*, toml_table* );
+static bool         proxy_parse( char const*, toml_table* ),
+                    symbols_parse( char const*, toml_table* );
 
-static void         symbol_header_add( char const*, char const* );
-static void         symbol_header_cleanup( symbol_header* );
+static void         symbol_include_add( char const*, char const* );
+static void         symbol_include_cleanup( symbol_include* );
 
 // local variables
+static CXTranslationUnit config_tu;     ///< Current translation unit.
 static rb_tree_t proxy_include_map_by_rel_path;      ///< TODO.
 static rb_tree_t proxy_include_map_by_id;///< TODO.
-static rb_tree_t symbol_header_map;     ///< Mapping from symbols to headers.
-static CXTranslationUnit config_tu;
+static rb_tree_t symbol_include_map;     ///< Mapping from symbols to includes.
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -135,8 +136,8 @@ static void config_cleanup( void ) {
     POINTER_CAST( rb_free_fn_t, proxy_include_cleanup )
   );
   rb_tree_cleanup(
-    &symbol_header_map,
-    POINTER_CAST( rb_free_fn_t, &symbol_header_cleanup )
+    &symbol_include_map,
+    POINTER_CAST( rb_free_fn_t, &symbol_include_cleanup )
   );
 }
 
@@ -252,50 +253,6 @@ static FILE* config_open( char const *path, config_opts_t opts ) {
 }
 
 /**
- * If present, parses the value of a `"symbols"` key.
- *
- * @param config_path The full path to the configurarion file.
- * @param table The toml_table to parse.
- * @return Returns `true` only if a `"symbols"` key exists and was parsed
- * successfully.
- */
-static bool symbols_parse( char const *config_path, toml_table *table ) {
-  assert( config_path != NULL );
-  assert( table != NULL );
-
-  toml_value const *const value = toml_table_find( table, "symbols" );
-  if ( value == NULL )
-    return false;
-
-  switch ( value->type ) {
-    case TOML_STRING:
-      symbol_header_add( value->s, table->name );
-      break;
-    case TOML_ARRAY:
-      for ( unsigned i = 0; i < value->a.size; ++i ) {
-        toml_value const *const a_value = &value->a.values[i];
-        if ( a_value->type != TOML_STRING ) {
-          fatal_error( EX_CONFIG,
-            "%s:%u:%u: "
-            "invalid value for \"symbols\" key array; expected string\n",
-            config_path, a_value->loc.line, a_value->loc.col
-          );
-        }
-        symbol_header_add( a_value->s, table->name );
-      } // for
-      break;
-    default:
-      fatal_error( EX_CONFIG,
-        "%s:%u:%u "
-        "invalid value for \"symbols\" key; expected string or array\n",
-        config_path, value->loc.line, value->loc.col
-      );
-  } // switch
-
-  return true;
-}
-
-/**
  * Parses a configuration file.
  *
  * @param config_path The full path to the configurarion file.
@@ -390,25 +347,24 @@ static void path_append( char *path, size_t path_len, char const *component ) {
 }
 
 /**
- * Maps a header file to another header file that will be a proxy for the
- * original.
+ * Maps an include file to another that will be a proxy for the original.
  *
- * @param orig_rel_path The original header's relative path.
- * @param proxy_include_file The proxy header file.
+ * @param from_rel_path The original include's relative path.
+ * @param to_include_file The proxy include file.
  */
-static void proxy_include_add( char const *orig_rel_path,
-                               CXFile proxy_include_file ) {
-  assert( orig_rel_path != NULL );
+static void proxy_include_add( char const *from_rel_path,
+                               CXFile to_include_file ) {
+  assert( from_rel_path != NULL );
 
   proxy_include new_pi = {
-    .orig_rel_path = orig_rel_path,
-    .proxy_include_file = proxy_include_file
+    .from_rel_path = from_rel_path,
+    .to_include_file = to_include_file
   };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &proxy_include_map_by_rel_path, &new_pi, sizeof new_pi );
   if ( rv_rbi.inserted ) {
     proxy_include *const pi = RB_DINT( rv_rbi.node );
-    pi->orig_rel_path = check_strdup( orig_rel_path );
+    pi->from_rel_path = check_strdup( from_rel_path );
   }
 }
 
@@ -420,7 +376,7 @@ static void proxy_include_add( char const *orig_rel_path,
 static void proxy_include_cleanup( proxy_include *pi ) {
   if ( pi == NULL )
     return;
-  FREE( pi->orig_rel_path );
+  FREE( pi->from_rel_path );
 }
 
 /**
@@ -438,7 +394,7 @@ static int proxy_include_cmp_by_id( proxy_include const *i_pi,
   assert( i_pi != NULL );
   assert( j_pi != NULL );
   return memcmp(
-    &i_pi->orig_include_id, &j_pi->orig_include_id, sizeof i_pi->orig_include_id
+    &i_pi->from_include_id, &j_pi->from_include_id, sizeof i_pi->from_include_id
   );
 }
 
@@ -456,7 +412,7 @@ static int proxy_include_cmp_by_rel_path( proxy_include const *i_pi,
                                           proxy_include const *j_pi ) {
   assert( i_pi != NULL );
   assert( j_pi != NULL );
-  return strcmp( i_pi->orig_rel_path, j_pi->orig_rel_path );
+  return strcmp( i_pi->from_rel_path, j_pi->from_rel_path );
 }
 
 /**
@@ -475,13 +431,13 @@ static bool proxy_parse( char const *config_path, toml_table *table ) {
   if ( value == NULL )
     return false;
 
-  CXFile proxy_include_file = clang_getFile( config_tu, table->name );
-  if ( proxy_include_file == NULL )
+  CXFile to_include_file = clang_getFile( config_tu, table->name );
+  if ( to_include_file == NULL )
     return true;
 
   switch ( value->type ) {
     case TOML_STRING:
-      proxy_include_add( value->s, proxy_include_file );
+      proxy_include_add( value->s, to_include_file );
       break;
     case TOML_ARRAY:
       for ( unsigned i = 0; i < value->a.size; ++i ) {
@@ -493,7 +449,7 @@ static bool proxy_parse( char const *config_path, toml_table *table ) {
             config_path, a_value->loc.line, a_value->loc.col
           );
         }
-        proxy_include_add( a_value->s, proxy_include_file );
+        proxy_include_add( a_value->s, to_include_file );
       } // for
       break;
     default:
@@ -508,23 +464,23 @@ static bool proxy_parse( char const *config_path, toml_table *table ) {
 }
 
 /**
- * Resolves each proxy_include's \ref proxy_include::orig_rel_path
- * "orig_rel_path" to its corresponding \ref proxy_include::orig_include_id
- * "orig_include_id".
+ * Resolves each proxy_include's \ref proxy_include::from_rel_path
+ * "from_rel_path" to its corresponding \ref proxy_include::from_include_id
+ * "from_include_id".
  */
 static void resolve_proxy_includes( void ) {
   rb_iterator_t iter;
   rb_iterator_init( &proxy_include_map_by_rel_path, &iter );
   for ( proxy_include *pi; (pi = rb_iterator_next( &iter )) != NULL; ) {
-    CXFile include_file = include_getFile( pi->orig_rel_path );
+    CXFile include_file = include_getFile( pi->from_rel_path );
     if ( include_file != NULL ) {
       CXFileUniqueID include_id;
       int rv = clang_getFileUniqueID( include_file, &include_id );
       assert( rv == 0 );
 
       proxy_include new_pi = {
-        .orig_include_id = include_id,
-        .proxy_include_file = pi->proxy_include_file
+        .from_include_id = include_id,
+        .to_include_file = pi->to_include_file
       };
       PJL_DISCARD_RV(
         rb_tree_insert( &proxy_include_map_by_id, &new_pi, sizeof new_pi )
@@ -534,52 +490,52 @@ static void resolve_proxy_includes( void ) {
 }
 
 /**
- * Resolves each symbol_header's \ref symbol_header::rel_path "rel_path" to its
- * corresponding \ref symbol_header::header_file "header_file".
+ * Resolves each symbol_include's \ref symbol_include::rel_path "rel_path" to
+ * its corresponding \ref symbol_include::include_file "include_file".
  */
-static void resolve_symbol_headers( void ) {
+static void resolve_symbol_includes( void ) {
   rb_iterator_t iter;
-  rb_iterator_init( &symbol_header_map, &iter );
-  for ( symbol_header *sh; (sh = rb_iterator_next( &iter )) != NULL; ) {
-    CXFile header_file = include_getFile( sh->rel_path );
-    FREE( sh->rel_path );
-    sh->header_file = header_file;
+  rb_iterator_init( &symbol_include_map, &iter );
+  for ( symbol_include *si; (si = rb_iterator_next( &iter )) != NULL; ) {
+    CXFile include_file = include_getFile( si->rel_path );
+    FREE( si->rel_path );
+    si->include_file = include_file;
 
-    if ( header_file == NULL ) {
-      sh->header_id = (CXFileUniqueID){ 0 };
+    if ( include_file == NULL ) {
+      si->include_id = (CXFileUniqueID){ 0 };
     } else {
-      int rv = clang_getFileUniqueID( header_file, &sh->header_id );
+      int rv = clang_getFileUniqueID( include_file, &si->include_id );
       assert( rv == 0 );
     }
   } // for
 }
 
 /**
- * Cleans-up a symbol_header.
+ * Cleans-up a symbol_include.
  *
- * @param sh The symbol_header to clean up.  If NULL, does nothing.
+ * @param si The symbol_include to clean up.  If NULL, does nothing.
  */
-static void symbol_header_cleanup( symbol_header *sh ) {
-  if ( sh == NULL )
+static void symbol_include_cleanup( symbol_include *si ) {
+  if ( si == NULL )
     return;
-  FREE( sh->symbol_name );
+  FREE( si->symbol_name );
 }
 
 /**
- * Compares two \ref symbol_header objects.
+ * Compares two \ref symbol_include objects.
  *
- * @param i_sh The first symbol_header.
- * @param j_sh The second symbol_header.
+ * @param i_si The first symbol_include.
+ * @param j_si The second symbol_include.
  * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
- * i_sh is less than, equal to, or greater than the name of \a j_sh,
+ * i_si is less than, equal to, or greater than the name of \a j_si,
  * respectively.
  */
 NODISCARD
-static int symbol_header_cmp( symbol_header const *i_sh,
-                              symbol_header const *j_sh ) {
-  assert( i_sh != NULL );
-  assert( j_sh != NULL );
-  return strcmp( i_sh->symbol_name, j_sh->symbol_name );
+static int symbol_include_cmp( symbol_include const *i_si,
+                               symbol_include const *j_si ) {
+  assert( i_si != NULL );
+  assert( j_si != NULL );
+  return strcmp( i_si->symbol_name, j_si->symbol_name );
 }
 
 /**
@@ -587,23 +543,67 @@ static int symbol_header_cmp( symbol_header const *i_sh,
  * it'll require \a rel_path.
  *
  * @param symbol_name The name of the symbol.
- * @param rel_path The header file.
+ * @param rel_path The include file's relative path.
  */
-static void symbol_header_add( char const *symbol_name,
-                               char const *rel_path ) {
+static void symbol_include_add( char const *symbol_name,
+                                char const *rel_path ) {
   assert( symbol_name != NULL );
   assert( rel_path != NULL );
 
-  symbol_header new_sh = { .symbol_name = symbol_name };
+  symbol_include new_si = { .symbol_name = symbol_name };
   rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &symbol_header_map, &new_sh, sizeof new_sh );
+    rb_tree_insert( &symbol_include_map, &new_si, sizeof new_si );
   if ( rv_rbi.inserted ) {
-    symbol_header *const sh = RB_DINT( rv_rbi.node );
-    *sh = (symbol_header){
+    symbol_include *const si = RB_DINT( rv_rbi.node );
+    *si = (symbol_include){
       .symbol_name = check_strdup( symbol_name ),
       .rel_path = check_strdup( rel_path )
     };
   }
+}
+
+/**
+ * If present, parses the value of a `"symbols"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The toml_table to parse.
+ * @return Returns `true` only if a `"symbols"` key exists and was parsed
+ * successfully.
+ */
+static bool symbols_parse( char const *config_path, toml_table *table ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+
+  toml_value const *const value = toml_table_find( table, "symbols" );
+  if ( value == NULL )
+    return false;
+
+  switch ( value->type ) {
+    case TOML_STRING:
+      symbol_include_add( value->s, table->name );
+      break;
+    case TOML_ARRAY:
+      for ( unsigned i = 0; i < value->a.size; ++i ) {
+        toml_value const *const a_value = &value->a.values[i];
+        if ( a_value->type != TOML_STRING ) {
+          fatal_error( EX_CONFIG,
+            "%s:%u:%u: "
+            "invalid value for \"symbols\" key array; expected string\n",
+            config_path, a_value->loc.line, a_value->loc.col
+          );
+        }
+        symbol_include_add( a_value->s, table->name );
+      } // for
+      break;
+    default:
+      fatal_error( EX_CONFIG,
+        "%s:%u:%u "
+        "invalid value for \"symbols\" key; expected string or array\n",
+        config_path, value->loc.line, value->loc.col
+      );
+  } // switch
+
+  return true;
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -613,13 +613,25 @@ CXFile config_get_include_proxy( CXFile include_file ) {
   int rv = clang_getFileUniqueID( include_file, &include_id );
   assert( rv == 0 );
 
-  proxy_include find_pi = { .orig_include_id = include_id };
+  proxy_include find_pi = { .from_include_id = include_id };
   rb_node_t const *const found_rb =
     rb_tree_find( &proxy_include_map_by_id, &find_pi );
   if ( found_rb == NULL )
     return include_file;
   proxy_include const *const found_pi = RB_DINT( found_rb );
-  return found_pi->proxy_include_file;
+  return found_pi->to_include_file;
+}
+
+CXFile config_get_symbol_include( char const *symbol_name ) {
+  assert( symbol_name != NULL );
+
+  symbol_include find_si = { .symbol_name = symbol_name };
+  rb_node_t const *const found_rb =
+    rb_tree_find( &symbol_include_map, &find_si );
+  if ( found_rb == NULL )
+    return NULL;
+  symbol_include const *const found_si = RB_DINT( found_rb );
+  return found_si->include_file;
 }
 
 void config_init( CXTranslationUnit tu ) {
@@ -635,7 +647,7 @@ void config_init( CXTranslationUnit tu ) {
     POINTER_CAST( rb_cmp_fn_t, &proxy_include_cmp_by_rel_path )
   );
   rb_tree_init(
-    &symbol_header_map, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &symbol_header_cmp )
+    &symbol_include_map, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &symbol_include_cmp )
   );
   ATEXIT( &config_cleanup );
 
@@ -647,21 +659,9 @@ void config_init( CXTranslationUnit tu ) {
   }
 }
 
-void config_resolve_headers( void ) {
+void config_resolve_includes( void ) {
   resolve_proxy_includes();
-  resolve_symbol_headers();
-}
-
-CXFile config_symbol_header( char const *symbol_name ) {
-  assert( symbol_name != NULL );
-
-  symbol_header find_sh = { .symbol_name = symbol_name };
-  rb_node_t const *const found_rb =
-    rb_tree_find( &symbol_header_map, &find_sh );
-  if ( found_rb == NULL )
-    return NULL;
-  symbol_header const *const found_sh = RB_DINT( found_rb );
-  return found_sh->header_file;
+  resolve_symbol_includes();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
