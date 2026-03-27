@@ -26,12 +26,27 @@
 #include "clang_util.h"
 
 // standard
-#include <stdio.h>
+#include <stdio.h>                      /* for FILE */
+#include <string.h>                     /* for memcmp(3) */
 
 // libclang
 #include <clang-c/Index.h>
 
 ////////// extern functions ///////////////////////////////////////////////////
+
+/**
+ * Compares two CXFileUniqueID objects.
+ *
+ * @param i_id The first CXFileUniqueID.
+ * @param j_id The second CXFileUniqueID.
+ * @return Returns a number less than 0, 0, or greater than 0 if \a i_id is
+ * less than, equal to, or greater than \a j_id, respectively.
+ */
+NODISCARD
+inline int tidy_CXFileUniqueID_cmp( CXFileUniqueID const *i_id,
+                                    CXFileUniqueID const *j_id ) {
+  return memcmp( i_id, j_id, sizeof *i_id );
+}
 
 /**
  * Prints \a id as a hexadecimal ineger.

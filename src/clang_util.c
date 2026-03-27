@@ -109,4 +109,7 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+extern inline int tidy_CXFileUniqueID_cmp( CXFileUniqueID const*, CXFileUniqueID const* );
+
 /* vim:set et sw=2 ts=2: */
