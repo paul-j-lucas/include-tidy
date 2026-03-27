@@ -374,11 +374,12 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     if ( !is_direct ) {
       tidy_include *const includer = tidy_include_find_by_id( including_file );
       include->depth = includer->depth + 1;
-      if ( strcmp( include->rel_path, includer->rel_path ) == 0 ) {
+      if ( strcmp( base_name( include->rel_path ),
+                   base_name( includer->rel_path ) ) == 0 ) {
         //
         // This include file and the include file that included this one (the
-        // "original") have the same name. (The original was likely included
-        // via an #include_next.)
+        // "original") have the same base name. (The original was likely
+        // included via an #include_next.)
         //
         // Remember the original so when symbols in this include file are
         // referenced, add them to the symbol_set in the original instead.
