@@ -291,7 +291,8 @@ static int tidy_include_cmp_by_id( tidy_include const *i_include,
   assert( i_include != NULL );
   assert( j_include != NULL );
   return memcmp(
-    &i_include->file_id, &j_include->file_id, sizeof i_include->file_id
+    &i_include->file_id, &j_include->file_id,
+    sizeof i_include->file_id.data[0] + sizeof i_include->file_id.data[1]
   );
 }
 
