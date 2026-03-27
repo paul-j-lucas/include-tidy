@@ -369,8 +369,9 @@ static int include_proxy_cmp_by_id( include_proxy const *i_ip,
                                     include_proxy const *j_ip ) {
   assert( i_ip != NULL );
   assert( j_ip != NULL );
-  return memcmp(
-    &i_ip->from_include_id, &j_ip->from_include_id, sizeof i_ip->from_include_id
+  return tidy_CXFileUniqueID_cmp(
+    &i_ip->from_include_id,
+    &j_ip->from_include_id
   );
 }
 
