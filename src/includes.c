@@ -227,37 +227,37 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
   size_t const fixed_len = opt_comment_align +
     strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
 
-  bool          done = false;
-  rb_iterator_t iter;
-  char         *symbols = NULL;
-  size_t        symbols_len = 0;
+  bool            done = false;
+  rb_iterator_t   iter;
+  char           *symbols = NULL;
+  size_t          symbols_len = 0;
 
   rb_iterator_init( &include->symbol_set, &iter );
   for ( tidy_symbol const *sym;
         !done && (sym = rb_iterator_next( &iter )) != NULL; ) {
-    char const   *name_cs   = clang_getCString( sym->name_cxs );
-    size_t const  name_len  = strlen( name_cs );
+    char const   *sym_name = clang_getCString( sym->name_cxs );
+    size_t const  sym_name_len = strlen( sym_name );
 
     if ( symbols_len == 0 ) {
-      symbols = check_strdup( name_cs );
-      symbols_len = name_len;
+      symbols = check_strdup( sym_name );
+      symbols_len = sym_name_len;
       continue;
     }
 
-    size_t new_len = STRLITLEN( ", " ) + name_len;
-    size_t line_len = fixed_len + symbols_len + new_len;
+    size_t add_len = STRLITLEN( ", " ) + sym_name_len;
+    size_t line_len = fixed_len + symbols_len + add_len;
     if ( line_len > opt_line_length ) {
       // The next symbol doesn't fit: try adding ", ..." instead.
-      new_len = STRLITLEN( ", ..." );
-      line_len = fixed_len + symbols_len + new_len;
-      if ( line_len > opt_line_length )
+      add_len = STRLITLEN( ", ..." );
+      line_len = fixed_len + symbols_len + add_len;
+      if ( line_len > opt_line_length ) // ", ..." didn't fit either
         break;
-      name_cs = "...";
+      sym_name = "...";
       done = true;
     }
-    REALLOC( symbols, char, symbols_len + new_len + 1 );
-    sprintf( symbols + symbols_len, ", %s", name_cs );
-    symbols_len += new_len;
+    REALLOC( symbols, char, symbols_len + add_len + 1 );
+    sprintf( symbols + symbols_len, ", %s", sym_name );
+    symbols_len += add_len;
   } // for
 
   return symbols;
@@ -361,12 +361,12 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   tidy_include *const include = RB_DINT( rv_rbi.node );
   if ( rv_rbi.inserted ) {
     CXString          abs_path_cxs = tidy_File_getRealPathName( included_file );
-    char const *const abs_path_cs = clang_getCString( abs_path_cxs );
+    char const *const abs_path = clang_getCString( abs_path_cxs );
 
     include->file         = included_file;
-    include->is_local     = is_local_include( abs_path_cs );
+    include->is_local     = is_local_include( abs_path );
     include->abs_path_cxs = abs_path_cxs;
-    include->rel_path     = opt_include_paths_relativize( abs_path_cs );
+    include->rel_path     = opt_include_paths_relativize( abs_path );
 
     CXFile including_file;
     clang_getSpellingLocation(
@@ -439,13 +439,13 @@ CXFile include_getFile( char const *rel_path ) {
   rb_iterator_init( &include_set, &iter );
   while ( (include = rb_iterator_next( &iter )) != NULL ) {
     CXString          path_cxs  = clang_getFileName( include->file );
-    char const *const path_cs   = clang_getCString( path_cxs );
-    size_t const      path_len  = strlen( path_cs );
+    char const *const path      = clang_getCString( path_cxs );
+    size_t const      path_len  = strlen( path );
 
     if ( rel_path_len <= path_len ) {
-      char const *const suffix = path_cs + (path_len - rel_path_len);
+      char const *const suffix = path + (path_len - rel_path_len);
       found = strcmp( rel_path, suffix ) == 0 &&
-              (suffix == path_cs || suffix[-1] == '/');
+              (suffix == path || suffix[-1] == '/');
     }
 
     clang_disposeString( path_cxs );
