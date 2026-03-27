@@ -146,10 +146,10 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_set, &new_symbol, sizeof new_symbol );
   if ( rv_rbi.inserted ) {
-    tidy_symbol *const symbol         = RB_DINT( rv_rbi.node );
-    char const  *const symbol_name_cs = clang_getCString( symbol->name_cxs );
+    tidy_symbol *const symbol      = RB_DINT( rv_rbi.node );
+    char const  *const symbol_name = clang_getCString( symbol->name_cxs );
 
-    CXFile include_file = config_get_symbol_include( symbol_name_cs );
+    CXFile include_file = config_get_symbol_include( symbol_name );
     if ( include_file == NULL )
       include_file = first_file;
     bool const added_symbol = include_add_symbol( include_file, symbol );
@@ -159,11 +159,11 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
         verbose_printf( "symbols:\n" );
         vcvd->verbose_printed = true;
       }
-      CXString          file_cxs  = tidy_File_getRealPathName( include_file );
-      char const *const file_cs   = clang_getCString( file_cxs );
+      CXString          file_cxs = tidy_File_getRealPathName( include_file );
+      char const *const file_abs_path = clang_getCString( file_cxs );
       verbose_printf(
         "  %s -> %s (%sadded)\n",
-        symbol_name_cs, file_cs, added_symbol ? "" : "NOT "
+        symbol_name, file_abs_path, added_symbol ? "" : "NOT "
       );
       clang_disposeString( file_cxs );
     }
@@ -201,10 +201,9 @@ int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
   assert( i_sym != NULL );
   assert( j_sym != NULL );
 
-  char const *const i_sym_cs = clang_getCString( i_sym->name_cxs );
-  char const *const j_sym_cs = clang_getCString( j_sym->name_cxs );
-
-  return strcmp( i_sym_cs, j_sym_cs );
+  char const *const i_sym_name = clang_getCString( i_sym->name_cxs );
+  char const *const j_sym_name = clang_getCString( j_sym->name_cxs );
+  return strcmp( i_sym_name, j_sym_name );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

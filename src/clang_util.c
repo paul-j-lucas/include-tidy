@@ -39,15 +39,15 @@ static uint64_t FNV1A64_PRIME = 1099511628211UL;
 /**
  * Fowler-Noll-Vo hash function for a string.
  *
- * @param str The null-terminated string to calculate the hash of.
+ * @param s The null-terminated string to calculate the hash of.
  * @return Returns said hash.
  *
  * @sa [The FNV Non-Cryptographic Hash Algorithm](https://datatracker.ietf.org/doc/html/draft-eastlake-fnv-17.html)
  */
-static uint64_t fnv1a64_str( char const *str ) {
+static uint64_t fnv1a64_str( char const *s ) {
   uint64_t hash = FNV1A64_INIT;
-  for ( char const *c = str; *c != '\0'; ++c )
-    hash = FNV1A64_PRIME * (hash ^ (uint8_t)*c);
+  while ( *s != '\0' )
+    hash = FNV1A64_PRIME * (hash ^ STATIC_CAST( uint8_t, *s++ ));
   return hash;
 }
 
@@ -64,15 +64,15 @@ void tidy_CXFileUniqueID_fput( CXFileUniqueID const *id, FILE *out ) {
 
 NODISCARD
 CXString tidy_File_getRealPathName( CXFile file ) {
-  CXString          file_cxs  = clang_File_tryGetRealPathName( file );
-  char const *const file_cs   = clang_getCString( file_cxs );
+  CXString          abs_path_cxs = clang_File_tryGetRealPathName( file );
+  char const *const abs_path = clang_getCString( abs_path_cxs );
 
-  if ( file_cs == NULL || file_cs[0] == '\0' ) {
-    clang_disposeString( file_cxs );
-    file_cxs = clang_getFileName( file );
+  if ( abs_path == NULL || abs_path[0] == '\0' ) {
+    clang_disposeString( abs_path_cxs );
+    abs_path_cxs = clang_getFileName( file );
   }
 
-  return file_cxs;
+  return abs_path_cxs;
 }
 
 NODISCARD
@@ -81,11 +81,13 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
   int const rv = clang_getFileUniqueID( file, &id );
   if ( unlikely( rv != 0 ) ) {
     CXString          abs_path_cxs = tidy_File_getRealPathName( file );
-    char const *const abs_path_cs = clang_getCString( abs_path_cxs );
+    char const *const abs_path = clang_getCString( abs_path_cxs );
+    uint64_t const    hash = fnv1a64_str( abs_path );
 
-    uint64_t const hash = fnv1a64_str( abs_path_cs );
     clang_disposeString( abs_path_cxs );
-    id = (CXFileUniqueID){ .data = { hash } };
+    id = (CXFileUniqueID){
+      .data = { STATIC_CAST( unsigned long long, hash ) }
+    };
   }
   return id;
 }
