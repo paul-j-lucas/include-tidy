@@ -1,3 +1,89 @@
+2026-03-27  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c: Added "original". First seemingly bug-free version!
+   * config_file.c: Now using tidy_CXFileUniqueID_cmp().
+   * clang_util.c, clang_util.h, includes.c: Added tidy_CXFileUniqueID_cmp().
+   * includes.c: Now only memcmp'ing data[0] and data[1].
+   * clang_util.c: Now doing 128-bit hash if possible.
+   * configure.ac, pjl_unsigned_int128.m4: Added pjl_unsigned_int128.m4.
+   * includes.c: Eliminated includer.
+
+2026-03-26  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c: Replaced is_direct with includer.
+   * includes.c: Eliminated setting of .file.
+   * clang_util.c, clang_util.h, config_file.c, includes.c: Added
+     tidy_getFileUniqueID().
+   * includes.c: Fixed double ...; corrected "if" expression in
+     includes_print().
+   * includes.c: Simplified.
+   * includes.c: Now using rb_tree_iterator for symbols used comment.
+   * red_black.c, red_black.h: Made "tree" const.
+   * includes.c: Eliminated include_getFile_data.
+   * includes.c: Eliminated includes_sort_by_name_visitor().
+
+2026-03-25  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c, clang_util.h, config_file.c, config_file.h, include-tidy.c,
+     includes.c: Added proxy include support.
+   * includes.c: Replaced include_getFile_visitor with iterator.
+   * config_file.c: Now using rb_iterator.
+   * toml_lite.c, toml_lite.h: Replaced visitor with iterator.
+   * red_black.c, red_black.h, red_black_test.c: Added rb_iterator.
+
+2026-03-24  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.c, toml_lite.h: Added toml_table_visit().
+   * toml_lite.h: Set TOML_BOOL = 1 so "not set" would not match TOML_BOOL.
+   * toml_lite.h: Added example.
+   * include-tidy.css: Matches cdecl's.
+   * config_file.c, config_file.h, include-tidy.c: Removed config_path option
+     from config_init().
+
+2026-03-23  Paul J. Lucas <paul@lucasmail.org>
+
+   * include-tidy.c: Reordered initialization.
+   * trans_unit.c: Moved checking of tidy_tu == NULL earlier.
+   * config_file.c: Factored out symbols_parse().
+   * toml_lite.c, toml_lite.h: Added table location.
+   * includes.c: Retroactively setting is_direct.
+   * toml_lite.c: Added is_ident().
+   * toml_lite.c: Simplfied toml_array_parse().
+   * toml_lite.c: Added assert().
+   * config_file.c, toml_lite.c, toml_lite.h, toml_test.c:
+     s/toml_close/toml_cleanup/
+
+2026-03-22  Paul J. Lucas <paul@lucasmail.org>
+
+   * src/Makefile.am, cli_options.c, include-tidy.c: Removed cli_options.h.
+   * cli_options.c, include-tidy.c, include-tidy.h, options.c, options.h,
+     symbols.c, trans_unit.c: s/tidy_source_path/arg_source_path/
+   * cli_options.c: Added is_long_opt() and is_short_opt().
+   * includes.c: Now storing file's real path in tidy_include.
+   * src/Makefile.am, cli_options.c, cli_options.h, config_file.c,
+     include-tidy.c, options.c, options.h: Split options into cli_options.
+
+2026-03-21  Paul J. Lucas <paul@lucasmail.org>
+
+   * util.c, util.h: Added check_snprintf().
+   * includes.c, options.c, options.h, symbols.c: Preliminary tidy_verbose
+     enum.
+   * options.c: Made parse_ull static.
+   * config_file.c: Removed static.
+   * includes.c: Now using clang_visitChildren().
+   * options.c: Added #include <errno.h>.
+
+2026-03-20  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c: s/depth/is_direct/
+
+2026-03-19  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c: Added verbose output for includes.
+   * symbols.c: Added verbose_printed.
+   * includes.c: Proper opt_comment_style handling.
+   * includes.c: Now printing blank line between local and system includes.
+
 2026-03-18  Paul J. Lucas <paul@lucasmail.org>
 
    * includes.c: Now truncating symbols with ...
