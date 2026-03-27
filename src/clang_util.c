@@ -31,8 +31,19 @@
 // libclang
 #include <clang-c/Index.h>
 
-static uint64_t FNV1A64_INIT  = 14695981039346656037UL;
-static uint64_t FNV1A64_PRIME = 1099511628211UL;
+#if HAVE_UNSIGNED_INT128
+typedef unsigned __int128 fnv1a_t;
+
+static fnv1a_t FNV1A_INIT =
+  ((fnv1a_t)0x6C62272E07BB0142ULL << 64) | 0x62B821756295C58DULL;
+static fnv1a_t FNV1A_PRIME =
+  ((fnv1a_t)0x0000000001000000ULL << 64) | 0x000000000000013BULL;
+#else
+typedef uint64_t fnv1a_t;
+
+static fnv1a_t FNV1A_INIT  = 14695981039346656037UL;
+static fnv1a_t FNV1A_PRIME = 1099511628211UL;
+#endif /* HAVE_UNSIGNED_INT128 */
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -44,10 +55,10 @@ static uint64_t FNV1A64_PRIME = 1099511628211UL;
  *
  * @sa [The FNV Non-Cryptographic Hash Algorithm](https://datatracker.ietf.org/doc/html/draft-eastlake-fnv-17.html)
  */
-static uint64_t fnv1a64_str( char const *s ) {
-  uint64_t hash = FNV1A64_INIT;
+static fnv1a_t fnv1a_str( char const *s ) {
+  fnv1a_t hash = FNV1A_INIT;
   while ( *s != '\0' )
-    hash = FNV1A64_PRIME * (hash ^ STATIC_CAST( uint8_t, *s++ ));
+    hash = FNV1A_PRIME * (hash ^ STATIC_CAST( uint8_t, *s++ ));
   return hash;
 }
 
@@ -82,11 +93,16 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
   if ( unlikely( rv != 0 ) ) {
     CXString          abs_path_cxs = tidy_File_getRealPathName( file );
     char const *const abs_path = clang_getCString( abs_path_cxs );
-    uint64_t const    hash = fnv1a64_str( abs_path );
+    fnv1a_t const     hash = fnv1a_str( abs_path );
 
     clang_disposeString( abs_path_cxs );
     id = (CXFileUniqueID){
-      .data = { STATIC_CAST( unsigned long long, hash ) }
+      .data = {
+#if HAVE_UNSIGNED_INT128
+        STATIC_CAST( unsigned long long, hash >> 64 ),
+#endif /* HAVE_UNSIGNED_INT128 */
+        STATIC_CAST( unsigned long long, hash )
+      }
     };
   }
   return id;
