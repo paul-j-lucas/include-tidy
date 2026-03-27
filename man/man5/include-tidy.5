@@ -1,0 +1,140 @@
+.\"
+.\"     include-tidy -- #include tidier
+.\"     include-tidy.5 manual page
+.\"
+.\"     Copyright (C) 2026  Paul J. Lucas
+.\"
+.\"     This program is free software: you can redistribute it and/or modify
+.\"     it under the terms of the GNU General Public License as published by
+.\"     the Free Software Foundation, either version 3 of the License, or
+.\"     (at your option) any later version.
+.\"
+.\"     This program is distributed in the hope that it will be useful,
+.\"     but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\"     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\"     GNU General Public License for more details.
+.\"
+.\"     You should have received a copy of the GNU General Public License
+.\"     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+.\"
+.\" ---------------------------------------------------------------------------
+.\" define code-start macro
+.de cS
+.sp
+.nf
+.RS 5
+.ft CW
+..
+.\" define code-end macro
+.de cE
+.ft 1
+.RE
+.fi
+.if !'\\$1'0' .sp
+..
+.\" ---------------------------------------------------------------------------
+.TH \f3include-tidy\fP 1 "March 27, 2026" "PJL TOOLS"
+.SH NAME
+include-tidy.toml \- include tidier configuration file
+.SH DESCRIPTION
+The
+.B include-tidy.toml
+file is used to configure
+.BR include-tidy (1).
+The file is ``lite'' version of a TOML file.
+The file is broken down into sections
+where each section is started by a line of the form:
+.P
+.RS 5
+.RI [ table-name ]
+.RE
+.P
+that is a left bracket,
+a table name,
+and a right bracket.
+There must be no whitespace between the brackets.
+.SH ENVIRONMENT
+.TP
+.B HOME
+Used to locate a default configuration file
+under the user's home directory.
+If unset,
+the home directory is obtained from the password database entry
+for the effective user.
+If that fails,
+no default configuration file
+under the user's home directory
+is read.
+.TP
+.B XDG_CONFIG_DIRS
+If set to a colon separated list of paths,
+then for each
+.I path
+in it,
+the first of
+.IB path /include-tidy.toml
+to exist
+and be readable
+is used as the configuration file
+(see
+.BR FILES ).
+.TP
+.B XDG_CONFIG_HOME
+If set to a path
+of a directory
+and
+.B $XDG_CONFIG_HOME/include-tidy.toml
+exists and is readable,
+then that used as the configuration file
+(see
+.BR FILES ).
+.SH FILES
+A configuration file's full path
+is derived from the first of these files
+that exists
+and is readable:
+.nr step 1 1
+.IP \n[step]. 3
+The value of either the
+.B \-\-config
+or
+.B \-c
+option.
+.IP \n+[step].
+The first of these files:
+.RS 8
+.TP
+.PD 0
+.B $XDG_CONFIG_HOME/include-tidy.toml
+.TP
+.B ~/.config/include-tidy.toml
+.RE
+.PD
+.IP \n+[step].
+If the
+.B XDG_CONFIG_DIRS
+environment variable
+is set to a colon separated list of paths,
+then for each
+.I path
+in it,
+the first of
+.IB path /include-tidy.toml \f1.\fP
+.IP \n+[step].
+.B /etc/xdg/include-tidy.toml
+.SH EXAMPLE
+.nf
+.ft CW
+[pjl_config.h]
+proxy = [
+    "attribute.h",
+    "config.h"
+]
+.ft 1
+.fi
+.SH AUTHOR
+Paul J. Lucas
+.RI < paul@lucasmail.org >
+.SH SEE ALSO
+.BR include-tidy (1)
+.\" vim:set et sw=2 ts=2:
