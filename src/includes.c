@@ -363,9 +363,9 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     CXString          abs_path_cxs = tidy_File_getRealPathName( included_file );
     char const *const abs_path = clang_getCString( abs_path_cxs );
 
+    include->abs_path_cxs = abs_path_cxs;
     include->file         = included_file;
     include->is_local     = is_local_include( abs_path );
-    include->abs_path_cxs = abs_path_cxs;
     include->rel_path     = opt_include_paths_relativize( abs_path );
 
     CXFile including_file;
@@ -438,17 +438,15 @@ CXFile include_getFile( char const *rel_path ) {
 
   rb_iterator_init( &include_set, &iter );
   while ( (include = rb_iterator_next( &iter )) != NULL ) {
-    CXString          path_cxs  = clang_getFileName( include->file );
-    char const *const path      = clang_getCString( path_cxs );
-    size_t const      path_len  = strlen( path );
+    char const *const abs_path      = clang_getCString( include->abs_path_cxs );
+    size_t const      abs_path_len  = strlen( abs_path );
 
-    if ( rel_path_len <= path_len ) {
-      char const *const suffix = path + (path_len - rel_path_len);
+    if ( rel_path_len <= abs_path_len ) {
+      char const *const suffix = abs_path + (abs_path_len - rel_path_len);
       found = strcmp( rel_path, suffix ) == 0 &&
-              (suffix == path || suffix[-1] == '/');
+              (suffix == abs_path || suffix[-1] == '/');
     }
 
-    clang_disposeString( path_cxs );
     if ( found )
       return include->file;
   } // while
