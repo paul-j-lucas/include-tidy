@@ -64,6 +64,7 @@ struct tidy_include {
   CXFileUniqueID  file_id;              ///< Unique file ID.
   CXString        abs_path_cxs;         ///< Absolute path of \a file.
   char const     *rel_path;             ///< Relative path of \a file.
+  tidy_include   *original;             ///< Original include.
   unsigned        depth;                ///< Include depth.
   unsigned        count;                ///< Number of times included.
   unsigned        line;                 ///< Line included from.
@@ -371,9 +372,19 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       /*offset=*/NULL
     );
     if ( !is_direct ) {
-      tidy_include const *const includer =
-        tidy_include_find_by_id( including_file );
+      tidy_include *const includer = tidy_include_find_by_id( including_file );
       include->depth = includer->depth + 1;
+      if ( strcmp( include->rel_path, includer->rel_path ) == 0 ) {
+        //
+        // This include file and the include file that included this one (the
+        // "original") have the same name. (The original was likely included
+        // via an #include_next.)
+        //
+        // Remember the original so when symbols in this include file are
+        // referenced, add them to the symbol_set in the original instead.
+        //
+        include->original = includer;
+      }
     }
 
     rb_tree_init(
@@ -417,9 +428,11 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
   assert( sym != NULL );
 
   include_file = config_get_include_proxy( include_file );
-  tidy_include *const include = tidy_include_find_by_id( include_file );
+  tidy_include *include = tidy_include_find_by_id( include_file );
   if ( include == NULL )
     return false;
+  while ( include->original != NULL )
+    include = include->original;
   include->is_needed = true;
   PJL_DISCARD_RV( rb_tree_insert( &include->symbol_set, sym, sizeof *sym ) );
   return true;
