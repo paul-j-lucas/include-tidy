@@ -86,6 +86,7 @@ AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 AC_CHECK_MEMBERS([struct passwd.pw_dir],[],[],[[#include <pwd.h>]])
 PJL_COMPILE([__builtin_expect],[], [(void)__builtin_expect(1,1);])
+PJL_TYPE_UNSIGNED_INT128
 
 # Checks for library functions.
 AC_CHECK_FUNCS([geteuid getpwuid perror strerror strndup])
