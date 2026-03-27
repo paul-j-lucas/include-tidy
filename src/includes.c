@@ -41,6 +41,12 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#define VERBOSE_INCLUDE_INDENT    2     /**< Spaces per include depth. */
+
+typedef struct includes_print_visitor_data  includes_print_visitor_data;
+typedef struct tidy_include                 tidy_include;
+typedef struct visitChildren_visitor_data   visitChildren_visitor_data;
+
 /**
  * Additional data for includes_print_visitor().
  */
@@ -49,7 +55,6 @@ struct includes_print_visitor_data {
   bool  print_local;                    ///< Print local includes?
   bool  printed_any_includes;           ///< Did we print any includes?
 };
-typedef struct includes_print_visitor_data includes_print_visitor_data;
 
 /**
  * A file that was included.
@@ -59,14 +64,14 @@ struct tidy_include {
   CXFileUniqueID  file_id;              ///< Unique file ID.
   CXString        abs_path_cxs;         ///< Absolute path of \a file.
   char const     *rel_path;             ///< Relative path of \a file.
+  tidy_include   *includer;             ///< Include that included us, if any.
+  unsigned        depth;                ///< Include depth.
   unsigned        count;                ///< Number of times included.
   unsigned        line;                 ///< Line included from.
-  bool            is_direct;            ///< Directly included?
   bool            is_local;             ///< Local include file?
   bool            is_needed;            ///< Include needed?
   rb_tree_t       symbol_set;           ///< Symbols referenced from this file.
 };
-typedef struct tidy_include tidy_include;
 
 /**
  * Additional data passed to visitChildren_visitor().
@@ -74,7 +79,6 @@ typedef struct tidy_include tidy_include;
 struct visitChildren_visitor_data {
   bool  verbose_printed;                ///< Printed any verbose output?
 };
-typedef struct visitChildren_visitor_data visitChildren_visitor_data;
 
 // local functions
 NODISCARD
@@ -165,7 +169,7 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
     if ( opt_comment_style[0][0] != '\0' )
       comment = make_symbols_used_comment( include );
   }
-  else if ( include->is_direct ) {
+  else if ( include->includer == NULL ) {
     if ( opt_comment_style[0][0] == '\0' ) {
       opt_comment_style[0] = "// ";
       reset_opt_comment_style = true;
@@ -360,15 +364,19 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     char const *const abs_path_cs = clang_getCString( abs_path_cxs );
 
     include->file         = included_file;
-    include->is_direct    = is_direct;
     include->is_local     = is_local_include( abs_path_cs );
     include->abs_path_cxs = abs_path_cxs;
     include->rel_path     = opt_include_paths_relativize( abs_path_cs );
 
+    CXFile including_file;
     clang_getSpellingLocation(
-      include_loc, /*file=*/NULL, &include->line, /*column=*/NULL,
+      include_loc, &including_file, &include->line, /*column=*/NULL,
       /*offset=*/NULL
     );
+    if ( !is_direct ) {
+      include->includer = tidy_include_find_by_id( including_file );
+      include->depth = include->includer->depth + 1;
+    }
 
     rb_tree_init(
       // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
@@ -378,9 +386,10 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     );
   }
   else {
-    if ( !is_direct || include->is_direct )
+    if ( !is_direct || include->includer == NULL )
       goto skip;
-    include->is_direct = true;
+    include->includer = NULL;
+    include->depth = 0;
   }
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
@@ -393,8 +402,9 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     get_include_delims( include->is_local, inc_delim );
 
     verbose_printf(
-      "  %s%c%s%c\n",
-      include->is_direct ? "" : "    ",
+      "  %2u%*s %c%s%c\n",
+      include->depth,
+      STATIC_CAST( int, include->depth * VERBOSE_INCLUDE_INDENT ), "",
       inc_delim[0], clang_getCString( include->abs_path_cxs ), inc_delim[1]
     );
   }
@@ -473,8 +483,8 @@ void includes_print( void ) {
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
     if ( include->is_needed ?
-          (opt_all_includes || !include->is_direct) :
-          include->is_direct ) {
+          (opt_all_includes || include->includer != NULL) :
+          include->includer == NULL ) {
       PJL_DISCARD_RV(
         rb_tree_insert( &include_set_by_rel_path, include, sizeof *include )
       );
