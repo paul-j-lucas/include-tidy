@@ -89,7 +89,7 @@ static void symbols_cleanup( void ) {
 static void tidy_symbol_cleanup( tidy_symbol *sym ) {
   if ( sym == NULL )
     return;
-  clang_disposeString( sym->name );
+  clang_disposeString( sym->name_cxs );
 }
 
 /**
@@ -140,12 +140,14 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   if ( clang_File_isEqual( first_file, vcvd->source_file ) )
     goto done;
 
-  tidy_symbol new_symbol = { .name = clang_getCursorSpelling( first_cursor ) };
+  tidy_symbol new_symbol = {
+    .name_cxs = clang_getCursorSpelling( first_cursor )
+  };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_set, &new_symbol, sizeof new_symbol );
   if ( rv_rbi.inserted ) {
     tidy_symbol *const symbol         = RB_DINT( rv_rbi.node );
-    char const  *const symbol_name_cs = clang_getCString( symbol->name );
+    char const  *const symbol_name_cs = clang_getCString( symbol->name_cxs );
 
     CXFile include_file = config_get_symbol_include( symbol_name_cs );
     if ( include_file == NULL )
@@ -199,8 +201,8 @@ int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
   assert( i_sym != NULL );
   assert( j_sym != NULL );
 
-  char const *const i_sym_cs = clang_getCString( i_sym->name );
-  char const *const j_sym_cs = clang_getCString( j_sym->name );
+  char const *const i_sym_cs = clang_getCString( i_sym->name_cxs );
+  char const *const j_sym_cs = clang_getCString( j_sym->name_cxs );
 
   return strcmp( i_sym_cs, j_sym_cs );
 }

@@ -235,7 +235,7 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
   rb_iterator_init( &include->symbol_set, &iter );
   for ( tidy_symbol const *sym;
         !done && (sym = rb_iterator_next( &iter )) != NULL; ) {
-    char const   *name_cs   = clang_getCString( sym->name );
+    char const   *name_cs   = clang_getCString( sym->name_cxs );
     size_t const  name_len  = strlen( name_cs );
 
     if ( symbols_len == 0 ) {
