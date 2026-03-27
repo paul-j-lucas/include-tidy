@@ -64,7 +64,6 @@ struct tidy_include {
   CXFileUniqueID  file_id;              ///< Unique file ID.
   CXString        abs_path_cxs;         ///< Absolute path of \a file.
   char const     *rel_path;             ///< Relative path of \a file.
-  tidy_include   *includer;             ///< Include that included us, if any.
   unsigned        depth;                ///< Include depth.
   unsigned        count;                ///< Number of times included.
   unsigned        line;                 ///< Line included from.
@@ -169,7 +168,7 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
     if ( opt_comment_style[0][0] != '\0' )
       comment = make_symbols_used_comment( include );
   }
-  else if ( include->includer == NULL ) {
+  else if ( include->depth == 0 ) {
     if ( opt_comment_style[0][0] == '\0' ) {
       opt_comment_style[0] = "// ";
       reset_opt_comment_style = true;
@@ -374,8 +373,9 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       /*offset=*/NULL
     );
     if ( !is_direct ) {
-      include->includer = tidy_include_find_by_id( including_file );
-      include->depth = include->includer->depth + 1;
+      tidy_include const *const includer =
+        tidy_include_find_by_id( including_file );
+      include->depth = includer->depth + 1;
     }
 
     rb_tree_init(
@@ -386,9 +386,8 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     );
   }
   else {
-    if ( !is_direct || include->includer == NULL )
+    if ( !is_direct || include->depth == 0 )
       goto skip;
-    include->includer = NULL;
     include->depth = 0;
   }
 
@@ -481,8 +480,8 @@ void includes_print( void ) {
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
     if ( include->is_needed ?
-          (opt_all_includes || include->includer != NULL) :
-          include->includer == NULL ) {
+          (opt_all_includes || include->depth > 0) :
+          include->depth == 0 ) {
       PJL_DISCARD_RV(
         rb_tree_insert( &include_set_by_rel_path, include, sizeof *include )
       );
