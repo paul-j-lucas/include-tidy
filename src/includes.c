@@ -272,7 +272,10 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
 static void tidy_include_cleanup( tidy_include *include ) {
   if ( include == NULL )
     return;
+
   clang_disposeString( include->abs_path_cxs );
+  // rel_path points into abs_path_cxs, so it doesn't need to be freed.
+
   // Because the nodes point to existing tidy_symbol objects, use NULL.
   rb_tree_cleanup( &include->symbol_set, /*free_fn=*/NULL );
 }
