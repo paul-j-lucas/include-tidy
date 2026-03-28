@@ -814,6 +814,16 @@ inline char const* null_if_empty( char const *s ) {
 }
 
 /**
+ * Strips a leading `./`, if any, from \a path.
+ *
+ * @param path The path to strip `./` from.
+ * @return Returns \a path without a leading `./`.
+ */
+inline char const* path_no_dot_slash( char const *path ) {
+  return STRNCMPLIT( path, "./" ) == 0 ? path + STRLITLEN( "./" ) : path;
+}
+
+/**
  * Prints an error message for `errno` to standard error and exits.
  *
  * @param status The exit status code.

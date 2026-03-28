@@ -388,7 +388,8 @@ static void include_proxies_dump( void ) {
   rb_iterator_init( &include_proxy_map_by_rel_path, &iter );
   for ( include_proxy const *ip; (ip = rb_iterator_next( &iter )) != NULL; ) {
     CXString to_rel_path_cxs = clang_getFileName( ip->to_include_file );
-    char const *const to_rel_path = clang_getCString( to_rel_path_cxs );
+    char const *const to_rel_path =
+      path_no_dot_slash( clang_getCString( to_rel_path_cxs ) );
     verbose_printf( "  \"%s\" -> \"%s\"\n", ip->from_rel_path, to_rel_path );
     clang_disposeString( to_rel_path_cxs );
   } // for
@@ -501,7 +502,7 @@ static void proxy_parse( char const *config_path, char const *table_name,
   assert( table_name != NULL );
   assert( value != NULL );
 
-  CXFile to_include_file = clang_getFile( config_tu, table_name );
+  CXFile to_include_file = include_getFile( table_name );
   if ( to_include_file == NULL )
     return;
 

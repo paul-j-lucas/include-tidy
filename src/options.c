@@ -193,10 +193,7 @@ char const* opt_include_paths_relativize( char const *abs_path ) {
     }
   } // for
 
-  if ( STRNCMPLIT( shortest_include_path, "./" ) == 0 )
-    shortest_include_path += STRLITLEN( "./" );
-
-  return shortest_include_path;
+  return path_no_dot_slash( shortest_include_path );
 }
 
 NODISCARD
