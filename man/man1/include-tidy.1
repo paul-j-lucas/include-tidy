@@ -35,16 +35,45 @@
 .\" ---------------------------------------------------------------------------
 .TH \f3include-tidy\fP 1 "March 3, 2026" "PJL TOOLS"
 .SH NAME
-include-tidy \- include tidier
+include-tidy \- \f(CW#include\fP tidier
 .SH SYNOPSIS
 .B include-tidy
-.BI [ options ]
-.B source-file
+.BI "[-Xtidy " tidy-option ]...
+.BI [ clang-option ]...
+.I source-file
+.br
+.B include-tidy
+.I other-option
 .SH DESCRIPTION
 .B include-tidy
-is ...
-
+is a command-line tool
+that can be used to ``tidy'' the
+\f(CW#include\fP directives
+used in a \f(CW.c\fP file
+by ensuring that it directly includes
+header files where every symbol referenced
+is declared.
 .SH OPTIONS
+.B include-tidy
+has three kinds of command-line options:
+.nr step 1 1
+.IP \n[step]. 3
+.BR include-tidy -specific
+options.
+.IP \n+[step].
+.BR clang (1)
+options.
+.IP \n+[step].
+Other options.
+.SS Include-Tidy-Specific Options
+All
+.BR include-tidy -specific
+options are preceded by an
+.B -Xtidy
+option to distinguish them from
+.BR clang (1)
+options.
+.PP
 An option argument
 .I f
 means
@@ -56,6 +85,20 @@ and
 .I s
 means
 .IR string .
+.SS Clang Options
+Options that are neither one of
+.B "Other Options"
+nor preceded by
+.B -Xtidy
+are
+.BR clang (1)
+options
+and are passed to
+.B clang
+(libclang)
+verbatim.
+.SS Other Options
+These options are given directly as-is.
 .TP 5
 .BR \-\-help " | " \-h
 Prints a help message
@@ -65,27 +108,25 @@ and exits.
 .BR \-\-version " | " \-v
 Prints the version number
 and exits.
-If given twice,
-additionally prints
-the set of configure
-feature & package options.
 .SH EXIT STATUS
 .PD 0
 .IP 0
 Success.
 .IP 64
 Command-line usage error.
+.IP 65
+Source file has one or more errors.
 .IP 66
 Open file error.
 .IP 69
-A system resource is not available, e.g., a UTF-8 locale.
+Either could not invoke
+.BR clang (1)
+or get the current working directory.
 .IP 70
 Internal software error.
 (Please report the bug.)
 .IP 71
-System error.
-.IP 73
-Create file error.
+Operating system error.
 .IP 74
 I/O error.
 .IP 78
@@ -140,5 +181,6 @@ The default configuration file.
 Paul J. Lucas
 .RI < paul@lucasmail.org >
 .SH SEE ALSO
-.BR sysexits (3),
+.BR clang (1),
+.BR sysexits (3)
 .\" vim:set et sw=2 ts=2:
