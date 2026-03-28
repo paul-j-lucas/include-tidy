@@ -91,8 +91,8 @@ typedef struct include_proxy include_proxy;
 struct symbol_include {
   char const   *symbol_name;            ///< Symbol name.
   union {
-    char const *rel_path;               ///< Include relative path.
-    CXFile      include_file;           ///< Corresponding include file.
+    char const *to_rel_path;            ///< Include relative path.
+    CXFile      to_include_file;        ///< Corresponding include file.
   };
 };
 typedef struct symbol_include symbol_include;
@@ -558,16 +558,16 @@ static int symbol_include_cmp( symbol_include const *i_si,
 }
 
 /**
- * Maps \a symbol_name to \a rel_path so that if \a symbol_name is referenced,
- * it'll require \a rel_path.
+ * Maps \a symbol_name to \a to_rel_path so that if \a symbol_name is
+ * referenced, it'll require \a to_rel_path.
  *
  * @param symbol_name The name of the symbol.
- * @param rel_path The include file's relative path.
+ * @param to_rel_path The include file's relative path.
  */
 static void symbol_include_add( char const *symbol_name,
-                                char const *rel_path ) {
+                                char const *to_rel_path ) {
   assert( symbol_name != NULL );
-  assert( rel_path != NULL );
+  assert( to_rel_path != NULL );
 
   symbol_include new_si = { .symbol_name = symbol_name };
   rb_insert_rv_t const rv_rbi =
@@ -576,7 +576,7 @@ static void symbol_include_add( char const *symbol_name,
     symbol_include *const si = RB_DINT( rv_rbi.node );
     *si = (symbol_include){
       .symbol_name = check_strdup( symbol_name ),
-      .rel_path = check_strdup( rel_path )
+      .to_rel_path = check_strdup( to_rel_path )
     };
   }
 }
@@ -591,21 +591,22 @@ static void symbol_includes_dump( void ) {
   rb_iterator_t iter;
   rb_iterator_init( &symbol_include_map, &iter );
   for ( symbol_include const *si; (si = rb_iterator_next( &iter )) != NULL; )
-    verbose_printf( "  \"%s\" -> \"%s\"\n", si->symbol_name, si->rel_path );
+    verbose_printf( "  \"%s\" -> \"%s\"\n", si->symbol_name, si->to_rel_path );
   verbose_printf( "\n" );
 }
 
 /**
- * Resolves each symbol_include's \ref symbol_include::rel_path "rel_path" to
- * its corresponding \ref symbol_include::include_file "include_file".
+ * Resolves each symbol_include's \ref symbol_include::to_rel_path
+ * "to_rel_path" to its corresponding \ref symbol_include::to_include_file
+ * "to_include_file".
  */
 static void symbol_includes_resolve( void ) {
   rb_iterator_t iter;
   rb_iterator_init( &symbol_include_map, &iter );
   for ( symbol_include *si; (si = rb_iterator_next( &iter )) != NULL; ) {
-    CXFile include_file = include_getFile( si->rel_path );
-    FREE( si->rel_path );
-    si->include_file = include_file;
+    CXFile to_include_file = include_getFile( si->to_rel_path );
+    FREE( si->to_rel_path );
+    si->to_include_file = to_include_file;
   } // for
 }
 
@@ -649,14 +650,14 @@ static void symbols_parse( char const *config_path, char const *table_name,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-CXFile config_get_include_proxy( CXFile include_file ) {
+CXFile config_get_include_proxy( CXFile from_include_file ) {
   include_proxy find_ip = {
-    .from_include_id = tidy_getFileUniqueID( include_file )
+    .from_include_id = tidy_getFileUniqueID( from_include_file )
   };
   rb_node_t const *const found_rb =
     rb_tree_find( &include_proxy_map_by_id, &find_ip );
   if ( found_rb == NULL )
-    return include_file;
+    return from_include_file;
   include_proxy const *const found_ip = RB_DINT( found_rb );
   return found_ip->to_include_file;
 }
@@ -670,7 +671,7 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   if ( found_rb == NULL )
     return NULL;
   symbol_include const *const found_si = RB_DINT( found_rb );
-  return found_si->include_file;
+  return found_si->to_include_file;
 }
 
 void config_init( CXTranslationUnit tu ) {

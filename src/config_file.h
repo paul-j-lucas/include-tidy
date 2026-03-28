@@ -37,12 +37,13 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Gets the proxy include file for \a include_file, if any.
+ * Gets the proxy include file for \a from_include_file, if any.
  *
- * @param include_file The include file to get the proxy include file for.
- * @return Returns the proxy include file, if any, or \a include_file if none.
+ * @param from_include_file The include file to get the proxy include file for.
+ * @return Returns the proxy include file, if any, or \a from_include_file if
+ * none.
  */
-CXFile config_get_include_proxy( CXFile include_file );
+CXFile config_get_include_proxy( CXFile from_include_file );
 
 /**
  * Gets the header file that \a symbol_name maps to, if any.
