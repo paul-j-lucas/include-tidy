@@ -159,13 +159,13 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
         verbose_printf( "symbols:\n" );
         vcvd->verbose_printed = true;
       }
-      CXString const    file_cxs = tidy_File_getRealPathName( include_file );
-      char const *const file_abs_path = clang_getCString( file_cxs );
+      CXString const abs_path_cxs = tidy_File_getRealPathName( include_file );
+      char const *const abs_path = clang_getCString( abs_path_cxs );
       verbose_printf(
         "  %s -> %s (%sadded)\n",
-        symbol_name, file_abs_path, added_symbol ? "" : "NOT "
+        symbol_name, abs_path, added_symbol ? "" : "NOT "
       );
-      clang_disposeString( file_cxs );
+      clang_disposeString( abs_path_cxs );
     }
 
     if ( added_symbol )
