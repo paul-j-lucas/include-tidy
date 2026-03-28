@@ -89,13 +89,10 @@ typedef struct include_proxy include_proxy;
  * that declares it from a configuration file.
  */
 struct symbol_include {
-  char const         *symbol_name;      ///< Symbol name.
+  char const   *symbol_name;            ///< Symbol name.
   union {
-    char const       *rel_path;         ///< Include relative path.
-    struct {
-      CXFile          include_file;     ///< Corresponding include file.
-      CXFileUniqueID  include_id;       ///< Corresponding include ID.
-    };
+    char const *rel_path;               ///< Include relative path.
+    CXFile      include_file;           ///< Corresponding include file.
   };
 };
 typedef struct symbol_include symbol_include;
@@ -609,11 +606,6 @@ static void symbol_includes_resolve( void ) {
     CXFile include_file = include_getFile( si->rel_path );
     FREE( si->rel_path );
     si->include_file = include_file;
-
-    if ( include_file == NULL )
-      si->include_id = (CXFileUniqueID){ 0 };
-    else
-      si->include_id = tidy_getFileUniqueID( include_file );
   } // for
 }
 
