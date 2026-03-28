@@ -404,10 +404,10 @@ static void include_proxies_resolve( void ) {
   rb_iterator_t iter;
   rb_iterator_init( &include_proxy_map_by_rel_path, &iter );
   for ( include_proxy *ip; (ip = rb_iterator_next( &iter )) != NULL; ) {
-    CXFile include_file = include_getFile( ip->from_rel_path );
-    if ( include_file != NULL ) {
+    CXFile from_include_file = include_getFile( ip->from_rel_path );
+    if ( from_include_file != NULL ) {
       include_proxy new_ip = {
-        .from_include_id = tidy_getFileUniqueID( include_file ),
+        .from_include_id = tidy_getFileUniqueID( from_include_file ),
         .to_include_file = ip->to_include_file
       };
       PJL_DISCARD_RV(
