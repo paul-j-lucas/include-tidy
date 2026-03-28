@@ -20,6 +20,7 @@
 
 // local
 #include "pjl_config.h"
+#include "include-tidy.h"
 #include "options.h"
 #include "util.h"
 
@@ -34,7 +35,54 @@
 static CXIndex            tidy_index;
 static CXTranslationUnit  tidy_tu;
 
+////////// inline functions ///////////////////////////////////////////////////
+
+/**
+ * Returns an `"s"` or not based on \a n to pluralize a word.
+ *
+ * @param n A quantity.
+ * @return Returns the empty string only if \a n == 1; otherwise returns `"s"`.
+ */
+NODISCARD
+static inline char const* plural_s( unsigned long long n ) {
+  return n == 1 ? "" : "s";
+}
+
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Prints translation unit errors, if any.
+ */
+static void print_diagnostics( void ) {
+  unsigned const diag_count = clang_getNumDiagnostics( tidy_tu );
+  if ( diag_count == 0 )
+    return;
+
+  unsigned const diag_opts = clang_defaultDiagnosticDisplayOptions();
+  unsigned error_count = 0;
+
+  for ( unsigned i = 0; i < diag_count; ++i ) {
+    CXDiagnostic diag = clang_getDiagnostic( tidy_tu, i );
+    switch ( clang_getDiagnosticSeverity( diag ) ) {
+      case CXDiagnostic_Error:
+      case CXDiagnostic_Fatal:
+        ++error_count;
+        CXString diag_cxs = clang_formatDiagnostic( diag, diag_opts );
+        EPRINTF( "%s: %s\n", prog_name, clang_getCString( diag_cxs ) );
+        clang_disposeString( diag_cxs );
+        break;
+      default:
+        /* suppress warning */;
+    } // switch
+    clang_disposeDiagnostic( diag );
+  } // for
+
+  if ( error_count > 0 ) {
+    fatal_error( EX_DATAERR,
+      "%u error%s\n", error_count, plural_s( error_count )
+    );
+  }
+}
 
 /**
  * Cleans-up the translation unit.
@@ -74,18 +122,7 @@ CXTranslationUnit tu_new( int argc, char const *const argv[] ) {
     fatal_error( EX_DATAERR, "error: failed to parse the translation unit\n" );
   ATEXIT( &tu_cleanup );
 
-  unsigned const num_diagnostics = clang_getNumDiagnostics( tidy_tu );
-  if ( num_diagnostics > 0 ) {
-    unsigned const diag_opts = clang_defaultDiagnosticDisplayOptions();
-    for ( unsigned i = 0; i < num_diagnostics; ++i ) {
-      CXDiagnostic diag = clang_getDiagnostic( tidy_tu, i );
-      CXString diag_cxs = clang_formatDiagnostic( diag, diag_opts );
-      EPRINTF( "%s\n", clang_getCString( diag_cxs ) );
-      clang_disposeString( diag_cxs );
-      clang_disposeDiagnostic( diag );
-    } // for
-  }
-
+  print_diagnostics();
   return tidy_tu;
 }
 
