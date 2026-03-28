@@ -701,9 +701,7 @@ void config_init( CXTranslationUnit tu ) {
     include_proxies_dump();
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_SYMBOLS) != 0 )
     symbol_includes_dump();
-}
 
-void config_resolve_includes( void ) {
   include_proxies_resolve();
   symbol_includes_resolve();
 }

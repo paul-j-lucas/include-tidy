@@ -62,12 +62,6 @@ CXFile config_get_symbol_include( char const *symbol_name );
  */
 void config_init( CXTranslationUnit tu );
 
-/**
- * Resolves all include file names specified in a configuration file to their
- * corresponding files.
- */
-void config_resolve_includes( void );
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */
