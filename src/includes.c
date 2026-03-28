@@ -446,12 +446,12 @@ CXFile include_getFile( char const *rel_path ) {
   assert( rel_path != NULL );
 
   bool          found = false;
-  tidy_include *include;
   rb_iterator_t iter;
   size_t const  rel_path_len = strlen( rel_path );
 
   rb_iterator_init( &include_set, &iter );
-  while ( (include = rb_iterator_next( &iter )) != NULL ) {
+  for ( tidy_include const *include;
+        (include = rb_iterator_next( &iter )) != NULL; ) {
     char const *const abs_path      = clang_getCString( include->abs_path_cxs );
     size_t const      abs_path_len  = strlen( abs_path );
 
@@ -463,7 +463,7 @@ CXFile include_getFile( char const *rel_path ) {
 
     if ( found )
       return include->file;
-  } // while
+  } // for
 
   return NULL;
 }
