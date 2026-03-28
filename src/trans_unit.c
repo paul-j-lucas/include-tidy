@@ -87,9 +87,11 @@ static void print_diagnostics( void ) {
 /**
  * Cleans-up the translation unit.
  */
-static void tu_cleanup( void ) {
-  clang_disposeTranslationUnit( tidy_tu );
-  clang_disposeIndex( tidy_index );
+static void trans_unit_cleanup( void ) {
+  if ( tidy_tu != NULL )
+    clang_disposeTranslationUnit( tidy_tu );
+  if ( tidy_index != NULL )
+    clang_disposeIndex( tidy_index );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -101,8 +103,11 @@ static void tu_cleanup( void ) {
  * @param argv The command-line argument values.
  * @return Returns a new translation unit.
  */
-CXTranslationUnit tu_new( int argc, char const *const argv[] ) {
+CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
+  ASSERT_RUN_ONCE();
   assert( argc > 0 );
+
+  ATEXIT( &trans_unit_cleanup );
 
   tidy_index = clang_createIndex(
     /*excludeDeclarationsFromPCH=*/false,
@@ -120,7 +125,6 @@ CXTranslationUnit tu_new( int argc, char const *const argv[] ) {
 
   if ( tidy_tu == NULL )
     fatal_error( EX_DATAERR, "error: failed to parse the translation unit\n" );
-  ATEXIT( &tu_cleanup );
 
   print_diagnostics();
   return tidy_tu;

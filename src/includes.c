@@ -351,7 +351,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     POINTER_CAST( visitChildren_visitor_data*, data );
 
   CXSourceLocation  include_loc = clang_getCursorLocation( cursor );
-  CXFile            included_file = clang_getIncludedFile( cursor );
+  CXFile const      included_file = clang_getIncludedFile( cursor );
   bool const        is_direct = clang_Location_isFromMainFile( include_loc );
 
   tidy_include new_include = {
@@ -361,7 +361,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
   tidy_include *const include = RB_DINT( rv_rbi.node );
   if ( rv_rbi.inserted ) {
-    CXString          abs_path_cxs = tidy_File_getRealPathName( included_file );
+    CXString const    abs_path_cxs = tidy_File_getRealPathName( included_file );
     char const *const abs_path = clang_getCString( abs_path_cxs );
 
     include->abs_path_cxs = abs_path_cxs;

@@ -42,7 +42,7 @@ char const *prog_name;
 /// @endcond
 
 void              cli_options_init( int*, char const **[] );
-CXTranslationUnit tu_new( int, char const *const[] );
+CXTranslationUnit trans_unit_init( int, char const *const[] );
 
 ////////// extern functions ///////////////////////////////////////////////////
 
@@ -57,7 +57,7 @@ int main( int argc, char const *argv[] ) {
   prog_name = base_name( argv[0] );
   options_init();
   cli_options_init( &argc, &argv );
-  CXTranslationUnit tu = tu_new( argc, argv );
+  CXTranslationUnit tu = trans_unit_init( argc, argv );
   includes_init( tu );
   config_init( tu );
   config_resolve_includes();
