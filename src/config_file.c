@@ -363,6 +363,28 @@ static void include_proxies_dump( void ) {
 }
 
 /**
+ * Resolves each include_proxy's \ref include_proxy::from_rel_path
+ * "from_rel_path" to its corresponding \ref include_proxy::from_include_id
+ * "from_include_id".
+ */
+static void include_proxies_resolve( void ) {
+  rb_iterator_t iter;
+  rb_iterator_init( &include_proxy_map_by_rel_path, &iter );
+  for ( include_proxy *ip; (ip = rb_iterator_next( &iter )) != NULL; ) {
+    CXFile include_file = include_getFile( ip->from_rel_path );
+    if ( include_file != NULL ) {
+      include_proxy new_ip = {
+        .from_include_id = tidy_getFileUniqueID( include_file ),
+        .to_include_file = ip->to_include_file
+      };
+      PJL_DISCARD_RV(
+        rb_tree_insert( &include_proxy_map_by_id, &new_ip, sizeof new_ip )
+      );
+    }
+  } // for
+}
+
+/**
  * Cleans-up a include_proxy.
  *
  * @param ip The include_proxy to clean up.  If NULL, does nothing.
@@ -483,47 +505,6 @@ static bool proxy_parse( char const *config_path, toml_table *table ) {
 }
 
 /**
- * Resolves each include_proxy's \ref include_proxy::from_rel_path
- * "from_rel_path" to its corresponding \ref include_proxy::from_include_id
- * "from_include_id".
- */
-static void resolve_include_proxys( void ) {
-  rb_iterator_t iter;
-  rb_iterator_init( &include_proxy_map_by_rel_path, &iter );
-  for ( include_proxy *ip; (ip = rb_iterator_next( &iter )) != NULL; ) {
-    CXFile include_file = include_getFile( ip->from_rel_path );
-    if ( include_file != NULL ) {
-      include_proxy new_ip = {
-        .from_include_id = tidy_getFileUniqueID( include_file ),
-        .to_include_file = ip->to_include_file
-      };
-      PJL_DISCARD_RV(
-        rb_tree_insert( &include_proxy_map_by_id, &new_ip, sizeof new_ip )
-      );
-    }
-  } // for
-}
-
-/**
- * Resolves each symbol_include's \ref symbol_include::rel_path "rel_path" to
- * its corresponding \ref symbol_include::include_file "include_file".
- */
-static void resolve_symbol_includes( void ) {
-  rb_iterator_t iter;
-  rb_iterator_init( &symbol_include_map, &iter );
-  for ( symbol_include *si; (si = rb_iterator_next( &iter )) != NULL; ) {
-    CXFile include_file = include_getFile( si->rel_path );
-    FREE( si->rel_path );
-    si->include_file = include_file;
-
-    if ( include_file == NULL )
-      si->include_id = (CXFileUniqueID){ 0 };
-    else
-      si->include_id = tidy_getFileUniqueID( include_file );
-  } // for
-}
-
-/**
  * Cleans-up a symbol_include.
  *
  * @param si The symbol_include to clean up.  If NULL, does nothing.
@@ -587,6 +568,25 @@ static void symbol_includes_dump( void ) {
   for ( symbol_include const *si; (si = rb_iterator_next( &iter )) != NULL; )
     verbose_printf( "  \"%s\" -> \"%s\"\n", si->symbol_name, si->rel_path );
   verbose_printf( "\n" );
+}
+
+/**
+ * Resolves each symbol_include's \ref symbol_include::rel_path "rel_path" to
+ * its corresponding \ref symbol_include::include_file "include_file".
+ */
+static void symbol_includes_resolve( void ) {
+  rb_iterator_t iter;
+  rb_iterator_init( &symbol_include_map, &iter );
+  for ( symbol_include *si; (si = rb_iterator_next( &iter )) != NULL; ) {
+    CXFile include_file = include_getFile( si->rel_path );
+    FREE( si->rel_path );
+    si->include_file = include_file;
+
+    if ( include_file == NULL )
+      si->include_id = (CXFileUniqueID){ 0 };
+    else
+      si->include_id = tidy_getFileUniqueID( include_file );
+  } // for
 }
 
 /**
@@ -689,8 +689,8 @@ void config_init( CXTranslationUnit tu ) {
 }
 
 void config_resolve_includes( void ) {
-  resolve_include_proxys();
-  resolve_symbol_includes();
+  include_proxies_resolve();
+  symbol_includes_resolve();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
