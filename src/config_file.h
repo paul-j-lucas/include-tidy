@@ -27,6 +27,13 @@
 // libclang
 #include <clang-c/Index.h>
 
+/**
+ * @defgroup config-file-group Configuration File
+ * Functions to read **include-tidy**(1) a configuration file and look-up
+ * information specified therein.
+ * @{
+ */
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
@@ -61,6 +68,8 @@ void config_init( CXTranslationUnit tu );
 void config_resolve_includes( void );
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/** @} */
 
 #endif /* include_tidy_config_file_H */
 /* vim:set et sw=2 ts=2: */

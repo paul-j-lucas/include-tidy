@@ -56,8 +56,7 @@
 /// @endcond
 
 /**
- * @defgroup config-file-group Configuration File
- * Function to read **include-tidy**(1) a configuration file.
+ * @addtogroup config-file-group
  * @{
  */
 
