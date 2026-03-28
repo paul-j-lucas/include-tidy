@@ -109,13 +109,10 @@ static char const*  home_dir( void );
 
 static void         include_proxy_cleanup( include_proxy* );
 static void         path_append( char*, size_t, char const* );
-
-NODISCARD
-static bool         proxy_parse( char const*, toml_table* ),
-                    symbols_parse( char const*, toml_table* );
-
-static void         symbol_include_add( char const*, char const* );
+static void         proxy_parse( char const*, char const*, toml_value const* );
 static void         symbol_include_cleanup( symbol_include* );
+static void         symbols_parse( char const*, char const*,
+                                   toml_value const* );
 
 // local variables
 static CXTranslationUnit config_tu;     ///< Current translation unit.
@@ -275,15 +272,52 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       );
     }
 
-    if ( proxy_parse( config_path, &table ) )
-      continue;
-    if ( symbols_parse( config_path, &table ) )
-      continue;
+    enum known_keys {
+      KEY_NONE    = 0,
+      KEY_PROXY   = 1 << 0,
+      KEY_SYMBOLS = 1 << 1,
+    };
+    typedef enum known_keys known_keys;
 
-    fatal_error( EX_CONFIG,
-      "%s:%u:%u required \"proxy\" or \"symbols\" key for \"%s\" missing\n",
-      config_path, table.loc.line, table.loc.col, table.name
-    );
+    known_keys keys = KEY_NONE;
+
+    toml_iterator iter;
+    toml_iterator_init( &table, &iter );
+    for ( toml_key_value const *kv;
+          (kv = toml_iterator_next( &iter )) != NULL; ) {
+      if ( strcmp( kv->key, "proxy" ) == 0 ) {
+        if ( (keys & KEY_SYMBOLS) != 0 )
+          goto mutually_exclusive;
+        proxy_parse( config_path, table.name, &kv->value );
+        keys |= KEY_PROXY;
+        continue;
+      }
+      if ( strcmp( kv->key, "symbols" ) == 0 ) {
+        if ( (keys & KEY_PROXY) != 0 )
+          goto mutually_exclusive;
+        symbols_parse( config_path, table.name, &kv->value );
+        keys |= KEY_SYMBOLS;
+        continue;
+      }
+
+      fatal_error( EX_CONFIG,
+        "%s:%u:%u: \"%s\": unknown key\n",
+        config_path, kv->key_loc.line, kv->key_loc.col, table.name
+      );
+
+mutually_exclusive:
+      fatal_error( EX_CONFIG,
+        "%s:%u:%u: \"proxy\" and \"symbols\" keys are mutuall exclusive\n",
+        config_path, kv->key_loc.line, kv->key_loc.col
+      );
+    } // for
+
+    if ( keys == KEY_NONE ) {
+      fatal_error( EX_CONFIG,
+        "%s:%u:%u: required \"proxy\" or \"symbols\" key for \"%s\" missing\n",
+        config_path, table.loc.line, table.loc.col, table.name
+      );
+    }
   } // while
 
   toml_table_cleanup( &table );
@@ -460,20 +494,16 @@ static void path_append( char *path, size_t path_len, char const *component ) {
  *
  * @param config_path The full path to the configurarion file.
  * @param table The toml_table to parse.
- * @return Returns `true` only if a `"proxy"` key exists and was parsed
- * successfully.
  */
-static bool proxy_parse( char const *config_path, toml_table *table ) {
+static void proxy_parse( char const *config_path, char const *table_name,
+                         toml_value const *value ) {
   assert( config_path != NULL );
-  assert( table != NULL );
+  assert( table_name != NULL );
+  assert( value != NULL );
 
-  toml_value const *const value = toml_table_find( table, "proxy" );
-  if ( value == NULL )
-    return false;
-
-  CXFile to_include_file = clang_getFile( config_tu, table->name );
+  CXFile to_include_file = clang_getFile( config_tu, table_name );
   if ( to_include_file == NULL )
-    return true;
+    return;
 
   switch ( value->type ) {
     case TOML_STRING:
@@ -499,8 +529,6 @@ static bool proxy_parse( char const *config_path, toml_table *table ) {
         config_path, value->loc.line, value->loc.col
       );
   } // switch
-
-  return true;
 }
 
 /**
@@ -593,20 +621,16 @@ static void symbol_includes_resolve( void ) {
  *
  * @param config_path The full path to the configurarion file.
  * @param table The toml_table to parse.
- * @return Returns `true` only if a `"symbols"` key exists and was parsed
- * successfully.
  */
-static bool symbols_parse( char const *config_path, toml_table *table ) {
+static void symbols_parse( char const *config_path, char const *table_name,
+                           toml_value const *value ) {
   assert( config_path != NULL );
-  assert( table != NULL );
-
-  toml_value const *const value = toml_table_find( table, "symbols" );
-  if ( value == NULL )
-    return false;
+  assert( table_name != NULL );
+  assert( value != NULL );
 
   switch ( value->type ) {
     case TOML_STRING:
-      symbol_include_add( value->s, table->name );
+      symbol_include_add( value->s, table_name );
       break;
     case TOML_ARRAY:
       for ( unsigned i = 0; i < value->a.size; ++i ) {
@@ -618,7 +642,7 @@ static bool symbols_parse( char const *config_path, toml_table *table ) {
             config_path, a_value->loc.line, a_value->loc.col
           );
         }
-        symbol_include_add( a_value->s, table->name );
+        symbol_include_add( a_value->s, table_name );
       } // for
       break;
     default:
@@ -628,8 +652,6 @@ static bool symbols_parse( char const *config_path, toml_table *table ) {
         config_path, value->loc.line, value->loc.col
       );
   } // switch
-
-  return true;
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
