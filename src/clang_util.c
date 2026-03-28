@@ -24,6 +24,7 @@
 #include "util.h"
 
 // standard
+#include <assert.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -56,6 +57,8 @@ static fnv1a_t FNV1A_PRIME = 1099511628211UL;
  * @sa [The FNV Non-Cryptographic Hash Algorithm](https://datatracker.ietf.org/doc/html/draft-eastlake-fnv-17.html)
  */
 static fnv1a_t fnv1a_str( char const *s ) {
+  assert( s != NULL );
+
   fnv1a_t hash = FNV1A_INIT;
   while ( *s != '\0' )
     hash = FNV1A_PRIME * (hash ^ STATIC_CAST( uint8_t, *s++ ));
@@ -65,6 +68,9 @@ static fnv1a_t fnv1a_str( char const *s ) {
 ////////// extern functions ///////////////////////////////////////////////////
 
 void tidy_CXFileUniqueID_fput( CXFileUniqueID const *id, FILE *out ) {
+  assert( id != NULL );
+  assert( out != NULL );
+
   static int const ID_HEX_WIDTH = (int)sizeof( id->data[0] ) * CHAR_BIT / 4;
 
   fprintf( out, "%0*llX%0*llX",
@@ -75,6 +81,8 @@ void tidy_CXFileUniqueID_fput( CXFileUniqueID const *id, FILE *out ) {
 
 NODISCARD
 CXString tidy_File_getRealPathName( CXFile file ) {
+  assert( file != NULL );
+
   CXString          abs_path_cxs = clang_File_tryGetRealPathName( file );
   char const *const abs_path = clang_getCString( abs_path_cxs );
 
@@ -88,6 +96,8 @@ CXString tidy_File_getRealPathName( CXFile file ) {
 
 NODISCARD
 CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
+  assert( file != NULL );
+
   CXFileUniqueID id;
   int const rv = clang_getFileUniqueID( file, &id );
   if ( unlikely( rv != 0 ) ) {
