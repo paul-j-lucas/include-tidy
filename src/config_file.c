@@ -345,6 +345,24 @@ static void include_proxy_add( char const *from_rel_path,
 }
 
 /**
+ * Dumps all include proxies.
+ */
+static void include_proxies_dump( void ) {
+  if ( rb_tree_empty( &include_proxy_map_by_rel_path ) )
+    return;
+  verbose_printf( "configuration proxies:\n" );
+  rb_iterator_t iter;
+  rb_iterator_init( &include_proxy_map_by_rel_path, &iter );
+  for ( include_proxy const *ip; (ip = rb_iterator_next( &iter )) != NULL; ) {
+    CXString to_rel_path_cxs = clang_getFileName( ip->to_include_file );
+    char const *const to_rel_path = clang_getCString( to_rel_path_cxs );
+    verbose_printf( "  \"%s\" -> \"%s\"\n", ip->from_rel_path, to_rel_path );
+    clang_disposeString( to_rel_path_cxs );
+  } // for
+  verbose_printf( "\n" );
+}
+
+/**
  * Cleans-up a include_proxy.
  *
  * @param ip The include_proxy to clean up.  If NULL, does nothing.
@@ -558,6 +576,20 @@ static void symbol_include_add( char const *symbol_name,
 }
 
 /**
+ * Dumps all symbol includes.
+ */
+static void symbol_includes_dump( void ) {
+  if ( rb_tree_empty( &symbol_include_map ) )
+    return;
+  verbose_printf( "configuration symbols:\n" );
+  rb_iterator_t iter;
+  rb_iterator_init( &symbol_include_map, &iter );
+  for ( symbol_include const *si; (si = rb_iterator_next( &iter )) != NULL; )
+    verbose_printf( "  \"%s\" -> \"%s\"\n", si->symbol_name, si->rel_path );
+  verbose_printf( "\n" );
+}
+
+/**
  * If present, parses the value of a `"symbols"` key.
  *
  * @param config_path The full path to the configurarion file.
@@ -646,10 +678,14 @@ void config_init( CXTranslationUnit tu ) {
 
   char path_buf[ PATH_MAX ];
   FILE *const config_file = config_find( opt_config_path, path_buf );
-  if ( config_file != NULL ) {
-    config_parse( path_buf, config_file );
-    fclose( config_file );
-  }
+  if ( config_file == NULL )
+    return;
+  config_parse( path_buf, config_file );
+  fclose( config_file );
+  if ( (opt_verbose & TIDY_VERBOSE_CONFIG_PROXIES) != 0 )
+    include_proxies_dump();
+  if ( (opt_verbose & TIDY_VERBOSE_CONFIG_SYMBOLS) != 0 )
+    symbol_includes_dump();
 }
 
 void config_resolve_includes( void ) {

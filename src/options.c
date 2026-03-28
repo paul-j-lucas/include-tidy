@@ -51,7 +51,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define OPT_VERBOSE_ALL           "ais"
+#define OPT_VERBOSE_ALL           "aiPsS"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -254,8 +254,14 @@ bool parse_tidy_verbose( char const *verbose_format ) {
       case 'a':
         verbose |= TIDY_VERBOSE_ARGS;
         break;
+      case 'P':
+        verbose |= TIDY_VERBOSE_CONFIG_PROXIES;
+        break;
       case 'i':
         verbose |= TIDY_VERBOSE_INCLUDES;
+        break;
+      case 'S':
+        verbose |= TIDY_VERBOSE_CONFIG_SYMBOLS;
         break;
       case 's':
         verbose |= TIDY_VERBOSE_SYMBOLS;

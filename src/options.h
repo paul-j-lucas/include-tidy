@@ -45,9 +45,11 @@
  */
 enum tidy_verbose {
   TIDY_VERBOSE_NONE,                    ///< Don't be verbose.
-  TIDY_VERBOSE_ARGS     = 1 << 0,       ///< Command-line arguments.
-  TIDY_VERBOSE_INCLUDES = 1 << 1,       ///< Files includes.
-  TIDY_VERBOSE_SYMBOLS  = 1 << 2,       ///< Symbols referenced.
+  TIDY_VERBOSE_ARGS           = 1 << 0, ///< Command-line arguments.
+  TIDY_VERBOSE_CONFIG_PROXIES = 1 << 1, ///< Configuration proxies.
+  TIDY_VERBOSE_CONFIG_SYMBOLS = 1 << 2, ///< Configuration symbols.
+  TIDY_VERBOSE_INCLUDES       = 1 << 3, ///< Files includes.
+  TIDY_VERBOSE_SYMBOLS        = 1 << 4,  ///< Symbols referenced.
 };
 typedef enum tidy_verbose tidy_verbose;
 
