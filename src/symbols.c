@@ -64,8 +64,8 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
  * @return Returns `true` only if the symbol is referenced from \a file.
  */
 static bool is_symbol_in_file( CXCursor cursor, CXFile file ) {
-  CXSourceLocation  sym_loc = clang_getCursorLocation( cursor );
-  CXFile            sym_file;
+  CXSourceLocation const  sym_loc = clang_getCursorLocation( cursor );
+  CXFile                  sym_file;
 
   clang_getSpellingLocation( sym_loc, &sym_file,
                              /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL );
@@ -121,12 +121,12 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     goto done;
 
   // Gets the cursor for _a_ declaration of the symbol.
-  CXCursor decl_cursor = clang_getCursorReferenced( cursor );
+  CXCursor const decl_cursor = clang_getCursorReferenced( cursor );
   if ( clang_isInvalid( decl_cursor.kind ) )
     goto done;
 
   // Gets the cursor for the _first_ declaration of the symbol.
-  CXCursor          first_cursor = clang_getCanonicalCursor( decl_cursor );
+  CXCursor const    first_cursor = clang_getCanonicalCursor( decl_cursor );
   CXSourceLocation  first_loc = clang_getCursorLocation( first_cursor );
   CXFile            first_file;
 
@@ -159,7 +159,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
         verbose_printf( "symbols:\n" );
         vcvd->verbose_printed = true;
       }
-      CXString          file_cxs = tidy_File_getRealPathName( include_file );
+      CXString const    file_cxs = tidy_File_getRealPathName( include_file );
       char const *const file_abs_path = clang_getCString( file_cxs );
       verbose_printf(
         "  %s -> %s (%sadded)\n",
@@ -187,7 +187,7 @@ void symbols_init( CXTranslationUnit tu ) {
   );
   ATEXIT( &symbols_cleanup );
 
-  CXCursor cursor = clang_getTranslationUnitCursor( tu );
+  CXCursor const cursor = clang_getTranslationUnitCursor( tu );
   visitChildren_visitor_data vcvd = {
     .source_file = clang_getFile( tu, arg_source_path )
   };
