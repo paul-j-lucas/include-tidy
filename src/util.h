@@ -691,17 +691,6 @@ PJL_PRINTF_LIKE_FUNC(2)
 unsigned check_asprintf( char **ps, char const *format, ... );
 
 /**
- * Converts an ASCII string to an unsigned integer.
- * Unlike **atoi**(3), insists that all characters in \a s are digits.
- * If conversion fails, prints an error message and exits.
- *
- * @param s The string to convert.
- * @return Returns the unsigned integer.
- */
-NODISCARD
-unsigned check_atou( char const *s );
-
-/**
  * Calls **realloc**(3) and checks for failure.
  * If reallocation fails, prints an error message and exits.
  *

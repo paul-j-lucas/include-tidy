@@ -113,16 +113,6 @@ unsigned check_asprintf( char **ps, char const *format, ... ) {
   return STATIC_CAST( unsigned, raw_len );
 }
 
-unsigned check_atou( char const *s ) {
-  assert( s != NULL );
-  if ( !is_digits( s ) )
-    fatal_error( EX_USAGE, "\"%s\": invalid integer\n", s );
-  errno = 0;
-  unsigned long const rv = strtoul( s, NULL, 10 );
-  PERROR_EXIT_IF( errno != 0, EX_USAGE );
-  return STATIC_CAST( unsigned, rv );
-}
-
 void* check_realloc( void *p, size_t size ) {
   assert( size > 0 );
   p = p != NULL ? realloc( p, size ) : malloc( size );
