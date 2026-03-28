@@ -73,9 +73,10 @@ void tidy_CXFileUniqueID_fput( CXFileUniqueID const *id, FILE *out ) {
 
   static int const ID_HEX_WIDTH = (int)sizeof( id->data[0] ) * CHAR_BIT / 4;
 
-  fprintf( out, "%0*llX%0*llX",
+  fprintf( out, "%0*llX-%0*llX-%0*llX",
     ID_HEX_WIDTH, id->data[0],
-    ID_HEX_WIDTH, id->data[1]
+    ID_HEX_WIDTH, id->data[1],
+    ID_HEX_WIDTH, id->data[2]
   );
 }
 
@@ -101,7 +102,7 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
   CXFileUniqueID id;
   int const rv = clang_getFileUniqueID( file, &id );
   if ( unlikely( rv != 0 ) ) {
-    CXString          abs_path_cxs = tidy_File_getRealPathName( file );
+    CXString const    abs_path_cxs = tidy_File_getRealPathName( file );
     char const *const abs_path = clang_getCString( abs_path_cxs );
     fnv1a_t const     hash = fnv1a_str( abs_path );
 

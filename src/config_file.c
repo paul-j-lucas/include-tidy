@@ -387,7 +387,7 @@ static void include_proxies_dump( void ) {
   rb_iterator_t iter;
   rb_iterator_init( &include_proxy_map_by_rel_path, &iter );
   for ( include_proxy const *ip; (ip = rb_iterator_next( &iter )) != NULL; ) {
-    CXString to_rel_path_cxs = clang_getFileName( ip->to_include_file );
+    CXString const to_rel_path_cxs = clang_getFileName( ip->to_include_file );
     char const *const to_rel_path =
       path_no_dot_slash( clang_getCString( to_rel_path_cxs ) );
     verbose_printf( "  \"%s\" -> \"%s\"\n", ip->from_rel_path, to_rel_path );
@@ -404,8 +404,8 @@ static void include_proxies_dump( void ) {
 static void include_proxies_resolve( void ) {
   rb_iterator_t iter;
   rb_iterator_init( &include_proxy_map_by_rel_path, &iter );
-  for ( include_proxy *ip; (ip = rb_iterator_next( &iter )) != NULL; ) {
-    CXFile from_include_file = include_getFile( ip->from_rel_path );
+  for ( include_proxy const *ip; (ip = rb_iterator_next( &iter )) != NULL; ) {
+    CXFile const from_include_file = include_getFile( ip->from_rel_path );
     if ( from_include_file != NULL ) {
       include_proxy new_ip = {
         .from_include_id = tidy_getFileUniqueID( from_include_file ),
