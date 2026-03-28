@@ -924,7 +924,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern inline void toml_key_value_iterator_init( toml_table*, toml_iterator* );
+extern inline void toml_iterator_init( toml_table*, toml_iterator* );
 extern inline toml_key_value const* toml_iterator_next( toml_iterator* );
 
 /* vim:set et sw=2 ts=2: */
