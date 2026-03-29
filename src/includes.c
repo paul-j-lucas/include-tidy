@@ -209,28 +209,31 @@ skip:
 }
 
 /**
- * Gets whether \a include_file is a local include file (as opposed to a system
- * include file).
+ * Gets whether \a abs_path refers to a local include file (as opposed to a
+ * system include file).
  *
- * @param include_file The included file.
- * @return Returns `true` only if \a full_path is a local include file.
+ * @param abs_path The absolute path of an include file.
+ * @return Returns `true` only if \a abs_path refers to a local include file.
  */
-static bool is_local_include( char const *include_file ) {
-  static char   cwd_buf[ PATH_MAX ];
-  static size_t cwd_len;
+static bool is_local_include( char const *abs_path ) {
+  assert( abs_path != NULL );
+  assert( abs_path[0] == '/' );
 
-  if ( cwd_len == 0 ) {
-    if ( getcwd( cwd_buf, sizeof cwd_buf ) == NULL ) {
+  static char   cwd_path_buf[ PATH_MAX ];
+  static size_t cwd_path_len;
+
+  if ( cwd_path_len == 0 ) {
+    if ( getcwd( cwd_path_buf, sizeof cwd_path_buf ) == NULL ) {
       fatal_error( EX_UNAVAILABLE,
         "could not get current working directory: %s\n", STRERROR()
       );
     }
-    cwd_len = strlen( cwd_buf );
-    if ( cwd_len > 0 && cwd_buf[ cwd_len - 1 ] != '/' )
-      strcpy( cwd_buf + cwd_len++, "/" );
+    cwd_path_len = strlen( cwd_path_buf );
+    if ( cwd_path_len > 0 && cwd_path_buf[ cwd_path_len - 1 ] != '/' )
+      strcpy( cwd_path_buf + cwd_path_len++, "/" );
   }
 
-  return strncmp( include_file, cwd_buf, cwd_len ) == 0;
+  return strncmp( abs_path, cwd_path_buf, cwd_path_len ) == 0;
 }
 
 /**
