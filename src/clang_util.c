@@ -33,12 +33,30 @@
 #include <clang-c/Index.h>
 
 #if HAVE_UNSIGNED_INT128
+/**
+ * Creates a 128-bit `unsigned __int128` literal.
+ *
+ * @param UPPER The upper 64 bits.
+ * @param LOWER The lower 64 bits.
+ * @return Returns a 128-bit `unsigned __int128` literal.
+ *
+ * @note If \a UPPER or \a LOWER are integer literals, they _must_ have either
+ * the `ULL` or `ull` suffix.
+ */
+#define UINT128LIT(UPPER,LOWER) \
+  ((STATIC_CAST( unsigned __int128, (UPPER) ) << 64) | (LOWER))
+
+/**
+ * Result type for Fowler-Noll-Vo hash function.
+ *
+ * @sa fnv1a_s()
+ */
 typedef unsigned __int128 fnv1a_t;
 
 static fnv1a_t FNV1A_INIT =
-  ((fnv1a_t)0x6C62272E07BB0142ULL << 64) | 0x62B821756295C58DULL;
+  UINT128LIT( 0x6C62272E07BB0142ull, 0x62B821756295C58Dull );
 static fnv1a_t FNV1A_PRIME =
-  ((fnv1a_t)0x0000000001000000ULL << 64) | 0x000000000000013BULL;
+  UINT128LIT( 0x0000000001000000ull, 0x000000000000013Bull );
 #else
 typedef uint64_t fnv1a_t;
 
@@ -56,7 +74,7 @@ static fnv1a_t FNV1A_PRIME = 1099511628211UL;
  *
  * @sa [The FNV Non-Cryptographic Hash Algorithm](https://datatracker.ietf.org/doc/html/draft-eastlake-fnv-17.html)
  */
-static fnv1a_t fnv1a_str( char const *s ) {
+static fnv1a_t fnv1a_s( char const *s ) {
   assert( s != NULL );
 
   fnv1a_t hash = FNV1A_INIT;
@@ -104,7 +122,7 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
   if ( unlikely( rv != 0 ) ) {
     CXString const    abs_path_cxs = tidy_File_getRealPathName( file );
     char const *const abs_path = clang_getCString( abs_path_cxs );
-    fnv1a_t const     hash = fnv1a_str( abs_path );
+    fnv1a_t const     hash = fnv1a_s( abs_path );
 
     clang_disposeString( abs_path_cxs );
     id = (CXFileUniqueID){
