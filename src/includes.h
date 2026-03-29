@@ -58,7 +58,7 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym );
  * @param rel_path The relative path of the include file to find.
  * @return Returns its corresponding file or NULL if not found.
  */
-CXFile include_getFile( char const *rel_path );
+CXFile include_get_File( char const *rel_path );
 
 /**
  * Dumps all include proxies.

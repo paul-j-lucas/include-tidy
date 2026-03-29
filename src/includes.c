@@ -449,7 +449,7 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
   return true;
 }
 
-CXFile include_getFile( char const *rel_path ) {
+CXFile include_get_File( char const *rel_path ) {
   assert( rel_path != NULL );
 
   bool          found = false;

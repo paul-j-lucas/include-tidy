@@ -367,14 +367,14 @@ static void proxy_parse( char const *config_path, char const *table_name,
   assert( table_name != NULL );
   assert( value != NULL );
 
-  CXFile to_include_file = include_getFile( table_name );
+  CXFile to_include_file = include_get_File( table_name );
   if ( to_include_file == NULL )
     return;
   CXFile from_include_file;
 
   switch ( value->type ) {
     case TOML_STRING:
-      from_include_file = include_getFile( value->s );
+      from_include_file = include_get_File( value->s );
       if ( from_include_file != NULL )
         include_add_proxy( from_include_file, to_include_file );
       break;
@@ -388,7 +388,7 @@ static void proxy_parse( char const *config_path, char const *table_name,
             config_path, a_value->loc.line, a_value->loc.col
           );
         }
-        from_include_file = include_getFile( a_value->s );
+        from_include_file = include_get_File( a_value->s );
         if ( from_include_file != NULL )
           include_add_proxy( from_include_file, to_include_file );
       } // for
@@ -477,7 +477,7 @@ static void symbol_includes_resolve( void ) {
   rb_iterator_t iter;
   rb_iterator_init( &symbol_include_map, &iter );
   for ( symbol_include *si; (si = rb_iterator_next( &iter )) != NULL; ) {
-    CXFile to_include_file = include_getFile( si->to_rel_path );
+    CXFile to_include_file = include_get_File( si->to_rel_path );
     FREE( si->to_rel_path );
     si->to_include_file = to_include_file;
   } // for
