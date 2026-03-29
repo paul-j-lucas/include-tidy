@@ -382,6 +382,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     );
     if ( !is_direct ) {
       tidy_include *const includer = include_find_by_id( including_file );
+      assert( includer != NULL );
       include->depth = includer->depth + 1;
       if ( !include->is_local && !includer->is_local )
         include->proxy = includer;
