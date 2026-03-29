@@ -83,9 +83,9 @@ struct visitChildren_visitor_data {
 
 // local functions
 NODISCARD
-static char*          make_symbols_used_comment( tidy_include const* );
+static char*  make_symbols_used_comment( tidy_include const* );
 
-static void           tidy_include_cleanup( tidy_include* );
+static void   tidy_include_cleanup( tidy_include* );
 
 static rb_tree_t include_set;           ///< Set of included files.
 
