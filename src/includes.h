@@ -34,6 +34,14 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * Adds a proxy from \a from_include_file to \a to_include_file.
+ *
+ * @param from_include_file The file to add the proxy from.
+ * @param to_include_file The file to add the proxy to.
+ */
+void include_add_proxy( CXFile from_include_file, CXFile to_include_file );
+
+/**
  * Adds \a sym to the set of symbols that are used in the file being tidied and
  * declared in \a include_file.
  *
@@ -51,6 +59,11 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym );
  * @return Returns its corresponding file or NULL if not found.
  */
 CXFile include_getFile( char const *rel_path );
+
+/**
+ * Dumps all include proxies.
+ */
+void include_proxies_dump( void );
 
 /**
  * Initializes the set of files included in the given translation unit.

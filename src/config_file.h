@@ -37,15 +37,6 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Gets the proxy include file for \a from_include_file, if any.
- *
- * @param from_include_file The include file to get the proxy include file for.
- * @return Returns the proxy include file, if any, or \a from_include_file if
- * none.
- */
-CXFile config_get_include_proxy( CXFile from_include_file );
-
-/**
  * Gets the header file that \a symbol_name maps to, if any.
  *
  * @param symbol_name The symbol name.
@@ -54,13 +45,11 @@ CXFile config_get_include_proxy( CXFile from_include_file );
 CXFile config_get_symbol_include( char const *symbol_name );
 
 /**
- * Reads an **include-tidy**(1) configuration file, if any.
- *
- * @param tu The translation unit to use.
+ * Reads an **include-tidy**(5) configuration file, if any.
  *
  * @note This function must be called at most once.
  */
-void config_init( CXTranslationUnit tu );
+void config_init( void );
 
 ///////////////////////////////////////////////////////////////////////////////
 

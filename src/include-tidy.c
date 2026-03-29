@@ -59,7 +59,9 @@ int main( int argc, char const *argv[] ) {
   cli_options_init( &argc, &argv );
   CXTranslationUnit tu = trans_unit_init( argc, argv );
   includes_init( tu );
-  config_init( tu );
+  config_init();
+  if ( (opt_verbose & TIDY_VERBOSE_CONFIG_PROXIES) != 0 )
+    include_proxies_dump();
   symbols_init( tu );
   includes_print();
   return EX_OK;

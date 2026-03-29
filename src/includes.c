@@ -64,12 +64,13 @@ struct tidy_include {
   CXFileUniqueID  file_id;              ///< Unique file ID.
   CXString        abs_path_cxs;         ///< Absolute path of \a file.
   char const     *rel_path;             ///< Relative path of \a file.
-  tidy_include   *original;             ///< Original include.
+  tidy_include   *proxy;                ///< Proxy include, if any.
   unsigned        depth;                ///< Include depth.
   unsigned        count;                ///< Number of times included.
   unsigned        line;                 ///< Line included from.
   bool            is_local;             ///< Local include file?
   bool            is_needed;            ///< Include needed?
+  bool            is_proxy_explicit;    ///< Was \ref proxy explicitly added?
   rb_tree_t       symbol_set;           ///< Symbols referenced from this file.
 };
 
@@ -82,9 +83,9 @@ struct visitChildren_visitor_data {
 
 // local functions
 NODISCARD
-static char*    make_symbols_used_comment( tidy_include const* );
+static char*          make_symbols_used_comment( tidy_include const* );
 
-static void     tidy_include_cleanup( tidy_include* );
+static void           tidy_include_cleanup( tidy_include* );
 
 static rb_tree_t include_set;           ///< Set of included files.
 
@@ -379,18 +380,8 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     if ( !is_direct ) {
       tidy_include *const includer = include_find_by_id( including_file );
       include->depth = includer->depth + 1;
-      if ( strcmp( base_name( include->rel_path ),
-                   base_name( includer->rel_path ) ) == 0 ) {
-        //
-        // This include file and the include file that included this one (the
-        // "original") have the same base name. (The original was likely
-        // included via an #include_next.)
-        //
-        // Remember the original so when symbols in this include file are
-        // referenced, add them to the symbol_set in the original instead.
-        //
-        include->original = includer;
-      }
+      if ( !include->is_local && !includer->is_local )
+        include->proxy = includer;
     }
 
     rb_tree_init(
@@ -429,16 +420,30 @@ skip:
 
 ////////// extern functions ///////////////////////////////////////////////////
 
+void include_add_proxy( CXFile from_include_file, CXFile to_include_file ) {
+  assert( from_include_file != NULL );
+  assert( to_include_file != NULL );
+
+  tidy_include *const from_include = include_find_by_id( from_include_file );
+  if ( from_include == NULL )
+    return;
+  tidy_include *const to_include = include_find_by_id( to_include_file );
+  if ( to_include == NULL )
+    return;
+
+  from_include->proxy = to_include;
+  from_include->is_proxy_explicit = true;
+}
+
 bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
   assert( include_file != NULL );
   assert( sym != NULL );
 
-  include_file = config_get_include_proxy( include_file );
   tidy_include *include = include_find_by_id( include_file );
   if ( include == NULL )
     return false;
-  while ( include->original != NULL )
-    include = include->original;
+  while ( include->proxy != NULL )
+    include = include->proxy;
   include->is_needed = true;
   PJL_DISCARD_RV( rb_tree_insert( &include->symbol_set, sym, sizeof *sym ) );
   return true;
@@ -468,6 +473,24 @@ CXFile include_getFile( char const *rel_path ) {
   } // for
 
   return NULL;
+}
+
+void include_proxies_dump( void ) {
+  if ( rb_tree_empty( &include_set ) )
+    return;
+  verbose_printf( "configuration proxies:\n" );
+  rb_iterator_t iter;
+  rb_iterator_init( &include_set, &iter );
+  for ( tidy_include const *include;
+        (include = rb_iterator_next( &iter )) != NULL; ) {
+    if ( include->is_proxy_explicit ) {
+      verbose_printf(
+        "  \"%s\" -> \"%s\"\n",
+        include->rel_path, include->proxy->rel_path
+      );
+    }
+  } // for
+  verbose_printf( "\n" );
 }
 
 void includes_init( CXTranslationUnit tu ) {
