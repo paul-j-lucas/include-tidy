@@ -108,6 +108,24 @@ static void get_include_delims( bool is_local, char delim[static 2] ) {
 }
 
 /**
+ * Attempts to find \a file by its unique file ID among the set of files
+ * included.
+ *
+ * @param file The file to find.
+ * @return Returns the corresponding tidy_include if found or NULL if not.
+ */
+NODISCARD
+static tidy_include* include_find_by_id( CXFile file ) {
+  assert( file != NULL );
+
+  tidy_include find_include = {
+    .file_id = tidy_getFileUniqueID( file )
+  };
+  rb_node_t const *const found_rb = rb_tree_find( &include_set, &find_include );
+  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
+}
+
+/**
  * Prints a `#include` preprocessor directive.
  *
  * @param include The tidy_include to print.
@@ -315,22 +333,6 @@ static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
 }
 
 /**
- * Attempts to find \a file by its unique file ID among the set of files
- * included.
- *
- * @param file The file to find.
- * @return Returns the corresponding tidy_include if found or NULL if not.
- */
-NODISCARD
-static tidy_include* tidy_include_find_by_id( CXFile file ) {
-  tidy_include find_include = {
-    .file_id = tidy_getFileUniqueID( file )
-  };
-  rb_node_t const *const found_rb = rb_tree_find( &include_set, &find_include );
-  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
-}
-
-/**
  * Visits each `#include` directive in a translation unit.
  *
  * @param cursor The cursor for the symbol in the AST being visited.
@@ -375,7 +377,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       /*offset=*/NULL
     );
     if ( !is_direct ) {
-      tidy_include *const includer = tidy_include_find_by_id( including_file );
+      tidy_include *const includer = include_find_by_id( including_file );
       include->depth = includer->depth + 1;
       if ( strcmp( base_name( include->rel_path ),
                    base_name( includer->rel_path ) ) == 0 ) {
@@ -432,7 +434,7 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
   assert( sym != NULL );
 
   include_file = config_get_include_proxy( include_file );
-  tidy_include *include = tidy_include_find_by_id( include_file );
+  tidy_include *include = include_find_by_id( include_file );
   if ( include == NULL )
     return false;
   while ( include->original != NULL )
