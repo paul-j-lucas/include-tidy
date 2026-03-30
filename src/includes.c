@@ -771,6 +771,12 @@ CXFile include_get_File( char const *rel_path ) {
   return NULL;
 }
 
+bool include_is_included( CXFile file ) {
+  assert( file != NULL );
+  tidy_include const *const ti = include_find( file );
+  return ti != NULL && ti->depth == 0;
+}
+
 void include_proxies_dump( void ) {
   if ( rb_tree_empty( &include_set ) )
     return;

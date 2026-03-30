@@ -592,13 +592,6 @@ static void symbols_parse( char const *config_path, char const *table_name,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-static void* rb_tree_first( rb_tree_t const *tree ) {
-  assert( tree != NULL );
-  rb_iterator_t iter;
-  rb_iterator_init( tree, &iter );
-  return rb_iterator_next( &iter );
-}
-
 CXFile config_get_symbol_include( char const *symbol_name ) {
   assert( symbol_name != NULL );
 
@@ -608,9 +601,15 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   if ( found_rb == NULL )
     return NULL;
   symbol_include const *const found_si = RB_DINT( found_rb );
-  CXFile *const pto_include_file = rb_tree_first( &found_si->to_include_files );
-  assert( pto_include_file != NULL );
-  return *pto_include_file;
+
+  rb_iterator_t iter;
+  rb_iterator_init( &found_si->to_include_files, &iter );
+  for ( CXFile *pto_include_file;
+        (pto_include_file = rb_iterator_next( &iter )) != NULL; ) {
+    if ( include_is_included( *pto_include_file ) )
+      return *pto_include_file;
+  } // for
+  return NULL;
 }
 
 void config_init( void ) {

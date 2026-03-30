@@ -61,6 +61,11 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym );
 CXFile include_get_File( char const *rel_path );
 
 /**
+ */
+NODISCARD
+bool include_is_included( CXFile file );
+
+/**
  * Dumps all include proxies.
  */
 void include_proxies_dump( void );
