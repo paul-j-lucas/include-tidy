@@ -280,7 +280,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
 
 mutually_exclusive:
       fatal_error( EX_CONFIG,
-        "%s:%u:%u: \"proxy\" and \"symbols\" keys are mutuall exclusive\n",
+        "%s:%u:%u: \"proxy\" and \"symbols\" keys are mutually exclusive\n",
         config_path, kv->key_loc.line, kv->key_loc.col
       );
     } // for
@@ -356,7 +356,8 @@ static void path_append( char *path, size_t path_len, char const *component ) {
  * If present, parses the value of a `"proxy"` key.
  *
  * @param config_path The full path to the configurarion file.
- * @param table The toml_table to parse.
+ * @param table_name The TOML table name.
+ * @param value The toml_value to parse.
  */
 static void proxy_parse( char const *config_path, char const *table_name,
                          toml_value const *value ) {
@@ -474,7 +475,8 @@ static void symbol_includes_dump( void ) {
  * If present, parses the value of a `"symbols"` key.
  *
  * @param config_path The full path to the configurarion file.
- * @param table The toml_table to parse.
+ * @param table_name The TOML table name.
+ * @param value The toml_value to parse.
  */
 static void symbols_parse( char const *config_path, char const *table_name,
                            toml_value const *value ) {
