@@ -30,6 +30,7 @@
 
 // standard
 #include <assert.h>
+#include <stdbool.h>
 #include <sysexits.h>
 
 // local variables
