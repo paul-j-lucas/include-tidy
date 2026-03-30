@@ -1,3 +1,11 @@
+2026-03-30  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c, includes.c, includes.h: Made tidy_include and
+     include_find() public.
+   * clang_util.c, clang_util.h, config_file.c: Added "includes" in config
+     support.
+   * config_file.c: Eliminated union and symbol_includes_resolve().
+
 2026-03-29  Paul J. Lucas <paul@lucasmail.org>
 
    * trans_unit.c: Added #include <stdbool.h>.
