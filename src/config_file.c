@@ -606,9 +606,11 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   rb_iterator_init( &found_si->to_include_files, &iter );
   for ( CXFile *pto_include_file;
         (pto_include_file = rb_iterator_next( &iter )) != NULL; ) {
-    if ( include_is_included( *pto_include_file ) )
+    tidy_include const *const include = include_find( *pto_include_file );
+    if ( include != NULL && include->depth == 0 )
       return *pto_include_file;
   } // for
+
   return NULL;
 }
 

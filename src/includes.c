@@ -25,7 +25,6 @@
 #include "config_file.h"
 #include "include-tidy.h"
 #include "options.h"
-#include "red_black.h"
 #include "symbols.h"
 #include "trans_unit.h"
 #include "util.h"
@@ -45,7 +44,6 @@
 #define VERBOSE_INCLUDE_INDENT    2     /**< Spaces per include depth. */
 
 typedef struct includes_print_visitor_data  includes_print_visitor_data;
-typedef struct tidy_include                 tidy_include;
 typedef struct visitChildren_visitor_data   visitChildren_visitor_data;
 
 /**
@@ -55,24 +53,6 @@ struct includes_print_visitor_data {
   bool  print_blank_line;               ///< Print a blank line?
   bool  print_local;                    ///< Print local includes?
   bool  printed_any_includes;           ///< Did we print any includes?
-};
-
-/**
- * A file that was included.
- */
-struct tidy_include {
-  CXFile          file;                 ///< File that was included.
-  CXFileUniqueID  file_id;              ///< Unique file ID.
-  CXString        abs_path_cxs;         ///< Absolute path of \a file.
-  char const     *rel_path;             ///< Relative path of \a file.
-  tidy_include   *proxy;                ///< Proxy include, if any.
-  unsigned        depth;                ///< Include depth.
-  unsigned        count;                ///< Number of times included.
-  unsigned        line;                 ///< Line included from.
-  bool            is_local;             ///< Local include file?
-  bool            is_needed;            ///< Include needed?
-  bool            is_proxy_explicit;    ///< Was \ref proxy explicitly added?
-  rb_tree_t       symbol_set;           ///< Symbols referenced from this file.
 };
 
 /**
@@ -334,24 +314,6 @@ static void get_include_delims( bool is_local, char delim[static 2] ) {
     delim[0] = '<';
     delim[1] = '>';
   }
-}
-
-/**
- * Attempts to find \a file by its unique file ID among the set of files
- * included.
- *
- * @param file The file to find.
- * @return Returns the corresponding tidy_include if found or NULL if not.
- */
-NODISCARD
-static tidy_include* include_find( CXFile file ) {
-  assert( file != NULL );
-
-  tidy_include find_include = {
-    .file_id = tidy_getFileUniqueID( file )
-  };
-  rb_node_t const *const found_rb = rb_tree_find( &include_set, &find_include );
-  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }
 
 /**
@@ -745,6 +707,17 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
   return true;
 }
 
+NODISCARD
+tidy_include* include_find( CXFile file ) {
+  assert( file != NULL );
+
+  tidy_include find_include = {
+    .file_id = tidy_getFileUniqueID( file )
+  };
+  rb_node_t const *const found_rb = rb_tree_find( &include_set, &find_include );
+  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
+}
+
 CXFile include_get_File( char const *rel_path ) {
   assert( rel_path != NULL );
 
@@ -769,12 +742,6 @@ CXFile include_get_File( char const *rel_path ) {
   } // for
 
   return NULL;
-}
-
-bool include_is_included( CXFile file ) {
-  assert( file != NULL );
-  tidy_include const *const ti = include_find( file );
-  return ti != NULL && ti->depth == 0;
 }
 
 void include_proxies_dump( void ) {

@@ -23,6 +23,7 @@
 
 // local
 #include "pjl_config.h"
+#include "red_black.h"
 #include "symbols.h"
 
 // libclang
@@ -30,6 +31,28 @@
 
 // standard
 #include <stdbool.h>
+
+///////////////////////////////////////////////////////////////////////////////
+
+typedef struct tidy_include tidy_include;
+
+/**
+ * A file that was included.
+ */
+struct tidy_include {
+  CXFile          file;                 ///< File that was included.
+  CXFileUniqueID  file_id;              ///< Unique file ID.
+  CXString        abs_path_cxs;         ///< Absolute path of \a file.
+  char const     *rel_path;             ///< Relative path of \a file.
+  tidy_include   *proxy;                ///< Proxy include, if any.
+  unsigned        depth;                ///< Include depth.
+  unsigned        count;                ///< Number of times included.
+  unsigned        line;                 ///< Line included from.
+  bool            is_local;             ///< Local include file?
+  bool            is_needed;            ///< Include needed?
+  bool            is_proxy_explicit;    ///< Was \ref proxy explicitly added?
+  rb_tree_t       symbol_set;           ///< Symbols referenced from this file.
+};
 
 ////////// extern functions ///////////////////////////////////////////////////
 
@@ -52,6 +75,16 @@ void include_add_proxy( CXFile from_include_file, CXFile to_include_file );
 bool include_add_symbol( CXFile include_file, tidy_symbol *sym );
 
 /**
+ * Attempts to find \a file by its unique file ID among the set of files
+ * included.
+ *
+ * @param file The file to find.
+ * @return Returns the corresponding tidy_include if found or NULL if not.
+ */
+NODISCARD
+tidy_include* include_find( CXFile file );
+
+/**
  * Given a relative path to an include file, e.g.: `clang-c/Index.h`, gets its
  * corresponding file.
  *
@@ -59,11 +92,6 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym );
  * @return Returns its corresponding file or NULL if not found.
  */
 CXFile include_get_File( char const *rel_path );
-
-/**
- */
-NODISCARD
-bool include_is_included( CXFile file );
 
 /**
  * Dumps all include proxies.
