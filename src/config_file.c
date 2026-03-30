@@ -73,12 +73,12 @@ enum config_opts {
 typedef enum config_opts config_opts_t;
 
 /**
- * Mapping from a symbol name to the include file that supposedly declares it
- * (from a configuration file).
+ * Mapping from a symbol name to the include file's relative path _or_ file
+ * that declares it from a configuration file.
  */
 struct symbol_include {
   char const *from_symbol_name;         ///< Symbol name.
-  CXFile      to_include_file;          ///< Include file that declares it.
+  rb_tree_t   to_include_files;         ///< Include file(s).
 };
 typedef struct symbol_include symbol_include;
 
@@ -89,11 +89,15 @@ static FILE*        config_open( char const*, config_opts_t );
 NODISCARD
 static char const*  home_dir( void );
 
+static void         includes_parse( char const*, char const*,
+                                    toml_value const* );
 static void         path_append( char*, size_t, char const* );
 static void         proxy_parse( char const*, char const*, toml_value const* );
+static void         symbol_include_add( char const*, CXFile );
 static void         symbol_include_cleanup( symbol_include* );
 static void         symbols_parse( char const*, char const*,
                                    toml_value const* );
+
 
 // local variables
 static rb_tree_t symbol_include_map;    ///< Mapping from symbols to includes.
@@ -246,9 +250,10 @@ static void config_parse( char const *config_path, FILE *config_file ) {
     }
 
     enum known_keys {
-      KEY_NONE    = 0,
-      KEY_PROXY   = 1 << 0,
-      KEY_SYMBOLS = 1 << 1,
+      KEY_NONE      = 0,
+      KEY_INCLUDES  = 1 << 0,
+      KEY_PROXY     = 1 << 1,
+      KEY_SYMBOLS   = 1 << 2,
     };
     typedef enum known_keys known_keys;
 
@@ -258,15 +263,25 @@ static void config_parse( char const *config_path, FILE *config_file ) {
     toml_iterator_init( &table, &iter );
     for ( toml_key_value const *kv;
           (kv = toml_iterator_next( &iter )) != NULL; ) {
+
+      if ( strcmp( kv->key, "includes" ) == 0 ) {
+        if ( (keys & (KEY_PROXY | KEY_SYMBOLS)) != 0 )
+          goto mutually_exclusive;
+        includes_parse( config_path, table.name, &kv->value );
+        keys |= KEY_INCLUDES;
+        continue;
+      }
+
       if ( strcmp( kv->key, "proxy" ) == 0 ) {
-        if ( (keys & KEY_SYMBOLS) != 0 )
+        if ( (keys & (KEY_INCLUDES | KEY_SYMBOLS)) != 0 )
           goto mutually_exclusive;
         proxy_parse( config_path, table.name, &kv->value );
         keys |= KEY_PROXY;
         continue;
       }
+
       if ( strcmp( kv->key, "symbols" ) == 0 ) {
-        if ( (keys & KEY_PROXY) != 0 )
+        if ( (keys & (KEY_INCLUDES | KEY_PROXY)) != 0 )
           goto mutually_exclusive;
         symbols_parse( config_path, table.name, &kv->value );
         keys |= KEY_SYMBOLS;
@@ -287,7 +302,7 @@ mutually_exclusive:
 
     if ( keys == KEY_NONE ) {
       fatal_error( EX_CONFIG,
-        "%s:%u:%u: required \"proxy\" or \"symbols\" key for \"%s\" missing\n",
+        "%s:%u:%u: required \"includes\", \"proxy\", or \"symbols\" key for \"%s\" missing\n",
         config_path, table.loc.line, table.loc.col, table.name
       );
     }
@@ -326,6 +341,50 @@ static char const* home_dir( void ) {
   }
 
   return home;
+}
+
+/**
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table_name The toml_table name.
+ * @param value The toml_value to parse.
+ */
+static void includes_parse( char const *config_path, char const *table_name,
+                            toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( table_name != NULL );
+  assert( value != NULL );
+
+  CXFile to_include_file;
+
+  switch ( value->type ) {
+    case TOML_STRING:
+      to_include_file = include_get_File( value->s );
+      if ( to_include_file != NULL )
+        symbol_include_add( table_name, to_include_file );
+      break;
+    case TOML_ARRAY:
+      for ( unsigned i = 0; i < value->a.size; ++i ) {
+        toml_value const *const a_value = &value->a.values[i];
+        if ( a_value->type != TOML_STRING ) {
+          fatal_error( EX_CONFIG,
+            "%s:%u:%u: "
+            "invalid value for \"includes\" key array; expected string\n",
+            config_path, a_value->loc.line, a_value->loc.col
+          );
+        }
+        to_include_file = include_get_File( a_value->s );
+        if ( to_include_file != NULL )
+          symbol_include_add( table_name, to_include_file );
+      } // for
+      break;
+    default:
+      fatal_error( EX_CONFIG,
+        "%s:%u:%u "
+        "invalid value for \"includes\" key; expected string or array\n",
+        config_path, value->loc.line, value->loc.col
+      );
+  } // switch
 }
 
 /**
@@ -409,6 +468,7 @@ static void symbol_include_cleanup( symbol_include *si ) {
   if ( si == NULL )
     return;
   FREE( si->from_symbol_name );
+  rb_tree_cleanup( &si->to_include_files, /*free_fn=*/NULL );
 }
 
 /**
@@ -443,13 +503,19 @@ static void symbol_include_add( char const *from_symbol_name,
   symbol_include new_si = { .from_symbol_name = from_symbol_name };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_include_map, &new_si, sizeof new_si );
+  symbol_include *const si = RB_DINT( rv_rbi.node );
   if ( rv_rbi.inserted ) {
-    symbol_include *const si = RB_DINT( rv_rbi.node );
-    *si = (symbol_include){
-      .from_symbol_name = check_strdup( from_symbol_name ),
-      .to_include_file = to_include_file
-    };
+    si->from_symbol_name = check_strdup( from_symbol_name );
+    rb_tree_init(
+      &si->to_include_files, RB_DINT,
+      POINTER_CAST( rb_cmp_fn_t, &tidy_CXFile_cmp )
+    );
   }
+  PJL_DISCARD_RV(
+    rb_tree_insert(
+      &si->to_include_files, &to_include_file, sizeof to_include_file
+    )
+  );
 }
 
 /**
@@ -459,14 +525,24 @@ static void symbol_includes_dump( void ) {
   if ( rb_tree_empty( &symbol_include_map ) )
     return;
   verbose_printf( "configuration symbols:\n" );
-  rb_iterator_t iter;
-  rb_iterator_init( &symbol_include_map, &iter );
-  for ( symbol_include const *si; (si = rb_iterator_next( &iter )) != NULL; ) {
-    CXString const abs_path_cxs =
-      tidy_File_getRealPathName( si->to_include_file );
-    char const *const abs_path = clang_getCString( abs_path_cxs );
-    verbose_printf( "  \"%s\" -> \"%s\"\n", si->from_symbol_name, abs_path );
-    clang_disposeString( abs_path_cxs );
+  rb_iterator_t si_iter;
+  rb_iterator_init( &symbol_include_map, &si_iter );
+  for ( symbol_include const *si;
+        (si = rb_iterator_next( &si_iter )) != NULL; ) {
+    verbose_printf( "  \"%s\" -> [ ", si->from_symbol_name );
+
+    bool comma = false;
+    rb_iterator_t tif_iter;
+    rb_iterator_init( &si->to_include_files, &tif_iter );
+    for ( CXFile *pto_include_file;
+          (pto_include_file = rb_iterator_next( &tif_iter )) != NULL; ) {
+      CXString const abs_path_cxs =
+        tidy_File_getRealPathName( *pto_include_file );
+      char const *const abs_path = clang_getCString( abs_path_cxs );
+      printf( "%s\"%s\"", true_or_set( &comma ) ? ", " : "", abs_path );
+      clang_disposeString( abs_path_cxs );
+    } // for
+    puts( " ]" );
   }
   verbose_printf( "\n" );
 }
@@ -516,6 +592,13 @@ static void symbols_parse( char const *config_path, char const *table_name,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
+static void* rb_tree_first( rb_tree_t const *tree ) {
+  assert( tree != NULL );
+  rb_iterator_t iter;
+  rb_iterator_init( tree, &iter );
+  return rb_iterator_next( &iter );
+}
+
 CXFile config_get_symbol_include( char const *symbol_name ) {
   assert( symbol_name != NULL );
 
@@ -525,7 +608,9 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   if ( found_rb == NULL )
     return NULL;
   symbol_include const *const found_si = RB_DINT( found_rb );
-  return found_si->to_include_file;
+  CXFile *const pto_include_file = rb_tree_first( &found_si->to_include_files );
+  assert( pto_include_file != NULL );
+  return *pto_include_file;
 }
 
 void config_init( void ) {

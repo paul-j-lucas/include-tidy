@@ -35,12 +35,27 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * Compares to CXFile objects.
+ *
+ * @param i_file The first CXFile.
+ * @param j_file The second CXFile.
+ * @return Returns a number less than 0, 0, or greater than 0 if \a i_file is
+ * less than, equal to, or greater than \a j_file, respectively.
+ *
+ * @sa tidy_CXFileUniqueID_cmp()
+ */
+NODISCARD
+int tidy_CXFile_cmp( CXFile const *i_file, CXFile const *j_file );
+
+/**
  * Compares two CXFileUniqueID objects.
  *
  * @param i_id The first CXFileUniqueID.
  * @param j_id The second CXFileUniqueID.
  * @return Returns a number less than 0, 0, or greater than 0 if \a i_id is
  * less than, equal to, or greater than \a j_id, respectively.
+ *
+ * @sa tidy_CXFile_cmp()
  */
 NODISCARD
 inline int tidy_CXFileUniqueID_cmp( CXFileUniqueID const *i_id,

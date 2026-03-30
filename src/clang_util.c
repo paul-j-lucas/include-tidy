@@ -85,6 +85,18 @@ static fnv1a_t fnv1a_s( char const *s ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
+NODISCARD
+int tidy_CXFile_cmp( CXFile const *i_file, CXFile const *j_file ) {
+  assert(  i_file != NULL );
+  assert( *i_file != NULL );
+  assert(  j_file != NULL );
+  assert( *j_file != NULL );
+
+  CXFileUniqueID const i_id = tidy_getFileUniqueID( *i_file );
+  CXFileUniqueID const j_id = tidy_getFileUniqueID( *j_file );
+  return tidy_CXFileUniqueID_cmp( &i_id, &j_id );
+}
+
 void tidy_CXFileUniqueID_fput( CXFileUniqueID const *id, FILE *out ) {
   assert( id != NULL );
   assert( out != NULL );
