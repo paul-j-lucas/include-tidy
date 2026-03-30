@@ -20,6 +20,7 @@
 
 // local
 #include "pjl_config.h"
+#include "trans_unit.h"
 #include "include-tidy.h"
 #include "options.h"
 #include "util.h"
@@ -34,6 +35,9 @@
 // local variables
 static CXIndex            tidy_index;
 static CXTranslationUnit  tidy_tu;
+
+// extern variables
+enum CXLanguageKind       tidy_lang;
 
 ////////// inline functions ///////////////////////////////////////////////////
 
@@ -96,13 +100,6 @@ static void trans_unit_cleanup( void ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-/**
- * Initializes the translation unit by parsing the source file.
- *
- * @param argc The command-line argument count.
- * @param argv The command-line argument values.
- * @return Returns a new translation unit.
- */
 CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
   ASSERT_RUN_ONCE();
   assert( argc > 0 );
@@ -125,8 +122,11 @@ CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
 
   if ( tidy_tu == NULL )
     fatal_error( EX_DATAERR, "error: failed to parse the translation unit\n" );
-
   print_diagnostics();
+
+  CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
+  tidy_lang = clang_getCursorLanguage( cursor );
+
   return tidy_tu;
 }
 

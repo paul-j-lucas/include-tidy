@@ -27,6 +27,7 @@
 #include "options.h"
 #include "red_black.h"
 #include "symbols.h"
+#include "trans_unit.h"
 #include "util.h"
 
 // libclang
@@ -81,7 +82,234 @@ struct visitChildren_visitor_data {
   bool  verbose_printed;                ///< Printed any verbose output?
 };
 
+/**
+ * Array of standard C and POSIX include files.
+ *
+ * @sa is_standard_include()
+ * @sa STD_CPP_INCLUDES
+ */
+static char const *const STD_C_POSIX_INCLUDES[] = {
+  "aio.h",
+  "arpa/inet.h",
+  "assert.h",
+  "complex.h",
+  "cpio.h",
+  "ctype.h",
+  "dirent.h",
+  "dlfcn.h",
+  "errno.h",
+  "fcntl.h",
+  "fenv.h",
+  "float.h",
+  "fmtmsg.h",
+  "fnmatch.h",
+  "ftw.h",
+  "glob.h",
+  "grp.h",
+  "iconv.h",
+  "inttypes.h",
+  "iso646.h",
+  "langinfo.h",
+  "libgen.h",
+  "limits.h",
+  "locale.h",
+  "math.h",
+  "monetary.h",
+  "mqueue.h",
+  "ndbm.h",
+  "net/if.h",
+  "netdb.h",
+  "netinet/in.h",
+  "netinet/tcp.h",
+  "nl_types.h",
+  "poll.h",
+  "pthread.h",
+  "pwd.h",
+  "regex.h",
+  "sched.h",
+  "search.h",
+  "semaphore.h",
+  "setjmp.h",
+  "signal.h",
+  "spawn.h",
+  "stdalign.h",
+  "stdarg.h",
+  "stdatomic.h",
+  "stdbit.h",
+  "stdbool.h",
+  "stdckdint.h",
+  "stddef.h",
+  "stdint.h",
+  "stdio.h",
+  "stdlib.h",
+  "stdmchar.h",
+  "stdnoreturn.h",
+  "string.h",
+  "strings.h",
+  "stropts.h",
+  "sys/ipc.h",
+  "sys/mman.h",
+  "sys/msg.h",
+  "sys/resource.h",
+  "sys/select.h",
+  "sys/sem.h",
+  "sys/shm.h",
+  "sys/socket.h",
+  "sys/stat.h",
+  "sys/statvfs.h",
+  "sys/time.h",
+  "sys/times.h",
+  "sys/types.h",
+  "sys/uio.h",
+  "sys/un.h",
+  "sys/utsname.h",
+  "sys/wait.h",
+  "syslog.h",
+  "tar.h",
+  "termios.h",
+  "tgmath.h",
+  "threads.h",
+  "time.h",
+  "trace.h",
+  "uchar.h",
+  "ulimit.h",
+  "unistd.h",
+  "utime.h",
+  "utmpx.h",
+  "wchar.h",
+  "wctype.h",
+  "wordexp.h"
+};
+
+/**
+ * Array of standard C++ include files.
+ *
+ * @sa is_standard_include()
+ * @sa STD_C_POSIX_INCLUDES
+ */
+static char const *const STD_CPP_INCLUDES[] = {
+  "algorithm",
+  "any",
+  "array",
+  "atomic",
+  "barrier",
+  "bit",
+  "bitset",
+  "cassert",
+  "cctype",
+  "cerrno",
+  "cfenv",
+  "cfloat",
+  "charconv",
+  "chrono",
+  "cinttypes",
+  "climits",
+  "clocale",
+  "cmath",
+  "codecvt",
+  "compare",
+  "complex",
+  "concepts",
+  "condition_variable",
+  "contracts",
+  "coroutine",
+  "csetjmp",
+  "csignal",
+  "cstdarg",
+  "cstddef",
+  "cstdint",
+  "cstdio",
+  "cstdlib",
+  "cstring",
+  "ctime",
+  "cuchar",
+  "cwchar",
+  "cwctype",
+  "debugging",
+  "deque",
+  "exception",
+  "execution",
+  "expected",
+  "filesystem",
+  "flat_map",
+  "flat_set",
+  "format",
+  "forward_list",
+  "fstream",
+  "functional",
+  "future",
+  "generator",
+  "hazard_pointer",
+  "hive",
+  "initializer_list",
+  "inplace_vector",
+  "iomanip",
+  "ios",
+  "iosfwd",
+  "iostream",
+  "istream",
+  "iterator",
+  "latch",
+  "limits",
+  "linalg",
+  "list",
+  "locale",
+  "map",
+  "mdspan",
+  "memory",
+  "memory_resource",
+  "mutex",
+  "new",
+  "numbers",
+  "numeric",
+  "optional",
+  "ostream",
+  "print",
+  "queue",
+  "random",
+  "ranges",
+  "ratio",
+  "rcu",
+  "regex",
+  "scoped_allocator",
+  "semaphore",
+  "set",
+  "shared_mutex",
+  "simd",
+  "source_location",
+  "span",
+  "spanstream",
+  "sstream",
+  "stack",
+  "stacktrace",
+  "stdexcept",
+  "stdfloat",
+  "stop_token",
+  "streambuf",
+  "string",
+  "string_view",
+  "strstream",
+  "syncstream",
+  "system_error",
+  "text_encoding",
+  "thread",
+  "tuple",
+  "type_traits",
+  "typeindex",
+  "typeinfo",
+  "unordered_map",
+  "unordered_set",
+  "utility",
+  "valarray",
+  "variant",
+  "vector",
+  "version"
+};
+
 // local functions
+NODISCARD
+static bool   is_standard_include( char const* );
+
 NODISCARD
 static char*  make_symbols_used_comment( tidy_include const* );
 
@@ -209,6 +437,30 @@ skip:
 }
 
 /**
+ * Gets whether \a includer should be an implicit proxy for \a include.
+ *
+ * @param includer The include file that includes \a include.
+ * @param include An include file.
+ * @return Returns `true` only if \a includer should be a proxy for \a include.
+ */
+NODISCARD
+static bool is_implicit_proxy( tidy_include const *includer,
+                               tidy_include const *include ) {
+  assert( includer != NULL );
+  assert( include != NULL );
+
+  if ( includer->is_local || include->is_local )
+    return false;
+
+  if ( !is_standard_include( include->rel_path ) )
+    return true;
+
+  char const *const include_name = base_name( include->rel_path );
+  char const *const includer_name = base_name( includer->rel_path );
+  return strcmp( include_name, includer_name ) == 0;
+}
+
+/**
  * Gets whether \a abs_path refers to a local include file (as opposed to a
  * system include file).
  *
@@ -234,6 +486,40 @@ static bool is_local_include( char const *abs_path ) {
   }
 
   return strncmp( abs_path, cwd_path_buf, cwd_path_len ) == 0;
+}
+
+/**
+ * Gets whether \a rel_path refers to a standard C, C++, or POSIX include file.
+ *
+ * @param rel_path The relative path of an include file, e.g., `"stdio.h"` or
+ * `"sys/wait.h"`.
+ * @return Returns `true` only if \a rel_path refers to a standard include
+ * file.
+ */
+static bool is_standard_include( char const *rel_path ) {
+  assert( rel_path != NULL );
+
+  void const *found;
+
+  if ( tidy_lang == CXLanguage_CPlusPlus ) {
+    found = bsearch(
+      &rel_path,
+      STD_CPP_INCLUDES, ARRAY_SIZE( STD_CPP_INCLUDES ),
+      sizeof STD_CPP_INCLUDES[0],
+      POINTER_CAST( bsearch_cmp_fn_t, &str_ptr_cmp )
+    );
+    if ( found != NULL )
+      return true;
+  }
+
+  found = bsearch(
+    &rel_path,
+    STD_C_POSIX_INCLUDES, ARRAY_SIZE( STD_C_POSIX_INCLUDES ),
+    sizeof STD_C_POSIX_INCLUDES[0],
+    POINTER_CAST( bsearch_cmp_fn_t, &str_ptr_cmp )
+  );
+
+  return found != NULL;
 }
 
 /**
@@ -384,8 +670,12 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       tidy_include *const includer = include_find_by_id( including_file );
       assert( includer != NULL );
       include->depth = includer->depth + 1;
-      if ( !include->is_local && !includer->is_local )
-        include->proxy = includer;
+      if ( is_implicit_proxy( includer, include ) ) {
+        tidy_include *proxy = includer;
+        while ( proxy->proxy != NULL )
+          proxy = proxy->proxy;
+        include->proxy = proxy;
+      }
     }
 
     rb_tree_init(
@@ -395,10 +685,12 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
     );
   }
-  else {
-    if ( !is_direct || include->depth == 0 )
-      goto skip;
+  else if ( is_direct ) {
     include->depth = 0;
+    include->proxy = NULL;
+  }
+  else {
+    goto skip;
   }
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {

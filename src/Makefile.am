@@ -40,7 +40,7 @@ include_tidy_SOURCES =	clang_util.c clang_util.h \
 			red_black.c red_black.h \
 			symbols.c symbols.h \
 			toml_lite.c toml_lite.h \
-			trans_unit.c \
+			trans_unit.c trans_unit.h \
 			type_traits.h \
 			util.c util.h
 

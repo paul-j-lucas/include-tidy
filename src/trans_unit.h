@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/include-tidy.c
+**      src/trans_unit.h
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **
@@ -18,54 +18,27 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// local
-#include "pjl_config.h"
-#include "include-tidy.h"
-#include "config_file.h"
-#include "includes.h"
-#include "options.h"
-#include "symbols.h"
-#include "trans_unit.h"
-#include "util.h"
+#ifndef include_tidy_trans_unit_H
+#define include_tidy_trans_unit_H
 
 // libclang
 #include <clang-c/Index.h>
 
-// standard
-#include <sysexits.h>
-
-/// @cond DOXYGEN_IGNORE
-/// Otherwise Doxygen generates two entries.
-
-// extern variable definitions
-char const *prog_name;
-
-/// @endcond
-
-void  cli_options_init( int*, char const **[] );
+// extern variables
+enum CXLanguageKind tidy_lang;          ///< Source file language.
 
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * The main entry point.
+ * Initializes the translation unit by parsing the source file.
  *
  * @param argc The command-line argument count.
  * @param argv The command-line argument values.
- * @return Returns 0 on success, non-zero on failure.
+ * @return Returns the initialized translation unit.
  */
-int main( int argc, char const *argv[] ) {
-  prog_name = base_name( argv[0] );
-  options_init();
-  cli_options_init( &argc, &argv );
-  CXTranslationUnit tu = trans_unit_init( argc, argv );
-  includes_init( tu );
-  config_init();
-  if ( (opt_verbose & TIDY_VERBOSE_CONFIG_PROXIES) != 0 )
-    include_proxies_dump();
-  symbols_init( tu );
-  includes_print();
-  return EX_OK;
-}
+CXTranslationUnit trans_unit_init( int argc, char const *const argv[] );
 
 ///////////////////////////////////////////////////////////////////////////////
+
+#endif /* include_tidy_trans_unit_H */
 /* vim:set et sw=2 ts=2: */

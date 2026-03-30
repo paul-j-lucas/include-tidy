@@ -196,6 +196,10 @@ void perror_exit( int status ) {
   exit( status );
 }
 
+int str_ptr_cmp( char const **i_ps, char const **j_ps ) {
+  return strcmp( *i_ps, *j_ps );
+}
+
 char* str_trim( char *s ) {
   assert( s != NULL );
   SKIP_WS( s );

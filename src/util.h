@@ -654,6 +654,19 @@
  */
 #define UNIQUE_NAME(PREFIX)       NAME2(NAME2(PREFIX,_),__LINE__)
 
+////////// types //////////////////////////////////////////////////////////////
+
+/**
+ * The signature for a function passed to **bsearch**(3).
+ *
+ * @param i_data A pointer to data.
+ * @param j_data A pointer to data.
+ * @return Returns an integer less than, equal to, or greater than 0, according
+ * to whether the data pointed to by \a i_data is less than, equal to, or
+ * greater than the data pointed to by \a j_data.
+ */
+typedef int (*bsearch_cmp_fn_t)( void const *i_data, void const *j_data );
+
 ////////// extern variables ///////////////////////////////////////////////////
 
 /**
@@ -844,6 +857,17 @@ inline char* strncpy_0( char *dst, char const *src, size_t n ) {
   dst[ n ] = '\0';
   return dst;
 }
+
+/**
+ * Compares two string pointers by comparing the string pointed to.
+ *
+ * @param i_ps The first string pointer to compare.
+ * @param j_ps The first string pointer to compare.
+ * @return Returns a number less than 0, 0, or greater than 0 if \a *i_ps is
+ * less than, equal to, or greater than \a *j_ps, respectively.
+ */
+NODISCARD
+int str_ptr_cmp( char const **i_ps, char const **j_ps );
 
 /**
  * Trims both leading and trailing whitespace from a string.
