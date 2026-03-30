@@ -73,15 +73,12 @@ enum config_opts {
 typedef enum config_opts config_opts_t;
 
 /**
- * Mapping from a symbol name to the include file's relative path _or_ file
- * that declares it from a configuration file.
+ * Mapping from a symbol name to the include file that supposedly declares it
+ * (from a configuration file).
  */
 struct symbol_include {
-  char const   *symbol_name;            ///< Symbol name.
-  union {
-    char const *to_rel_path;            ///< Include relative path.
-    CXFile      to_include_file;        ///< Corresponding include file.
-  };
+  char const *from_symbol_name;         ///< Symbol name.
+  CXFile      to_include_file;          ///< Include file that declares it.
 };
 typedef struct symbol_include symbol_include;
 
@@ -410,7 +407,7 @@ static void proxy_parse( char const *config_path, char const *table_name,
 static void symbol_include_cleanup( symbol_include *si ) {
   if ( si == NULL )
     return;
-  FREE( si->symbol_name );
+  FREE( si->from_symbol_name );
 }
 
 /**
@@ -427,29 +424,29 @@ static int symbol_include_cmp( symbol_include const *i_si,
                                symbol_include const *j_si ) {
   assert( i_si != NULL );
   assert( j_si != NULL );
-  return strcmp( i_si->symbol_name, j_si->symbol_name );
+  return strcmp( i_si->from_symbol_name, j_si->from_symbol_name );
 }
 
 /**
- * Maps \a symbol_name to \a to_rel_path so that if \a symbol_name is
- * referenced, it'll require \a to_rel_path.
+ * Maps \a from_symbol_name to \a to_include_file so that if \a
+ * from_symbol_name is referenced, it'll require \a to_include_file.
  *
- * @param symbol_name The name of the symbol.
- * @param to_rel_path The include file's relative path.
+ * @param from_symbol_name The name of the symbol.
+ * @param to_include_file The include file that supposedly declares it.
  */
-static void symbol_include_add( char const *symbol_name,
-                                char const *to_rel_path ) {
-  assert( symbol_name != NULL );
-  assert( to_rel_path != NULL );
+static void symbol_include_add( char const *from_symbol_name,
+                                CXFile to_include_file ) {
+  assert( from_symbol_name != NULL );
+  assert( to_include_file != NULL );
 
-  symbol_include new_si = { .symbol_name = symbol_name };
+  symbol_include new_si = { .from_symbol_name = from_symbol_name };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_include_map, &new_si, sizeof new_si );
   if ( rv_rbi.inserted ) {
     symbol_include *const si = RB_DINT( rv_rbi.node );
     *si = (symbol_include){
-      .symbol_name = check_strdup( symbol_name ),
-      .to_rel_path = check_strdup( to_rel_path )
+      .from_symbol_name = check_strdup( from_symbol_name ),
+      .to_include_file = to_include_file
     };
   }
 }
@@ -463,24 +460,14 @@ static void symbol_includes_dump( void ) {
   verbose_printf( "configuration symbols:\n" );
   rb_iterator_t iter;
   rb_iterator_init( &symbol_include_map, &iter );
-  for ( symbol_include const *si; (si = rb_iterator_next( &iter )) != NULL; )
-    verbose_printf( "  \"%s\" -> \"%s\"\n", si->symbol_name, si->to_rel_path );
+  for ( symbol_include const *si; (si = rb_iterator_next( &iter )) != NULL; ) {
+    CXString const abs_path_cxs =
+      tidy_File_getRealPathName( si->to_include_file );
+    char const *const abs_path = clang_getCString( abs_path_cxs );
+    verbose_printf( "  \"%s\" -> \"%s\"\n", si->from_symbol_name, abs_path );
+    clang_disposeString( abs_path_cxs );
+  }
   verbose_printf( "\n" );
-}
-
-/**
- * Resolves each symbol_include's \ref symbol_include::to_rel_path
- * "to_rel_path" to its corresponding \ref symbol_include::to_include_file
- * "to_include_file".
- */
-static void symbol_includes_resolve( void ) {
-  rb_iterator_t iter;
-  rb_iterator_init( &symbol_include_map, &iter );
-  for ( symbol_include *si; (si = rb_iterator_next( &iter )) != NULL; ) {
-    CXFile to_include_file = include_get_File( si->to_rel_path );
-    FREE( si->to_rel_path );
-    si->to_include_file = to_include_file;
-  } // for
 }
 
 /**
@@ -495,9 +482,13 @@ static void symbols_parse( char const *config_path, char const *table_name,
   assert( table_name != NULL );
   assert( value != NULL );
 
+  CXFile to_include_file = include_get_File( table_name );
+  if ( to_include_file == NULL )
+    return;
+
   switch ( value->type ) {
     case TOML_STRING:
-      symbol_include_add( value->s, table_name );
+      symbol_include_add( value->s, to_include_file );
       break;
     case TOML_ARRAY:
       for ( unsigned i = 0; i < value->a.size; ++i ) {
@@ -509,7 +500,7 @@ static void symbols_parse( char const *config_path, char const *table_name,
             config_path, a_value->loc.line, a_value->loc.col
           );
         }
-        symbol_include_add( a_value->s, table_name );
+        symbol_include_add( a_value->s, to_include_file );
       } // for
       break;
     default:
@@ -526,7 +517,7 @@ static void symbols_parse( char const *config_path, char const *table_name,
 CXFile config_get_symbol_include( char const *symbol_name ) {
   assert( symbol_name != NULL );
 
-  symbol_include find_si = { .symbol_name = symbol_name };
+  symbol_include find_si = { .from_symbol_name = symbol_name };
   rb_node_t const *const found_rb =
     rb_tree_find( &symbol_include_map, &find_si );
   if ( found_rb == NULL )
@@ -538,22 +529,22 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
 void config_init( void ) {
   ASSERT_RUN_ONCE();
 
+  char path_buf[ PATH_MAX ];
+  FILE *const config_file = config_find( opt_config_path, path_buf );
+  if ( config_file == NULL )
+    return;
+
   rb_tree_init(
     &symbol_include_map, RB_DINT,
     POINTER_CAST( rb_cmp_fn_t, &symbol_include_cmp )
   );
   ATEXIT( &config_cleanup );
 
-  char path_buf[ PATH_MAX ];
-  FILE *const config_file = config_find( opt_config_path, path_buf );
-  if ( config_file == NULL )
-    return;
   config_parse( path_buf, config_file );
   fclose( config_file );
+
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_SYMBOLS) != 0 )
     symbol_includes_dump();
-
-  symbol_includes_resolve();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
