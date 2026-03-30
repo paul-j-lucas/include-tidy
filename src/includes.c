@@ -344,7 +344,7 @@ static void get_include_delims( bool is_local, char delim[static 2] ) {
  * @return Returns the corresponding tidy_include if found or NULL if not.
  */
 NODISCARD
-static tidy_include* include_find_by_id( CXFile file ) {
+static tidy_include* include_find( CXFile file ) {
   assert( file != NULL );
 
   tidy_include find_include = {
@@ -667,7 +667,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       /*offset=*/NULL
     );
     if ( !is_direct ) {
-      tidy_include *const includer = include_find_by_id( including_file );
+      tidy_include *const includer = include_find( including_file );
       assert( includer != NULL );
       include->depth = includer->depth + 1;
       if ( is_implicit_proxy( includer, include ) ) {
@@ -720,10 +720,10 @@ void include_add_proxy( CXFile from_include_file, CXFile to_include_file ) {
   assert( from_include_file != NULL );
   assert( to_include_file != NULL );
 
-  tidy_include *const from_include = include_find_by_id( from_include_file );
+  tidy_include *const from_include = include_find( from_include_file );
   if ( from_include == NULL )
     return;
-  tidy_include *const to_include = include_find_by_id( to_include_file );
+  tidy_include *const to_include = include_find( to_include_file );
   if ( to_include == NULL )
     return;
 
@@ -735,7 +735,7 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
   assert( include_file != NULL );
   assert( sym != NULL );
 
-  tidy_include *include = include_find_by_id( include_file );
+  tidy_include *include = include_find( include_file );
   if ( include == NULL )
     return false;
   while ( include->proxy != NULL )
