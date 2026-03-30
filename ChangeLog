@@ -1,5 +1,34 @@
+2026-03-29  Paul J. Lucas <paul@lucasmail.org>
+
+   * trans_unit.c: Added #include <stdbool.h>.
+   * src/Makefile.am, include-tidy.c, includes.c, trans_unit.c, trans_unit.h,
+     util.c, util.h: Now doing implicit proxies.
+   * includes.c: Added assert().
+   * config_file.c, config_file.h, include-tidy.c, includes.c, includes.h:
+     Eliminated include_proxy_maps.
+
+2026-03-28  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c, config_file.h, include-tidy.c: Eliminated
+     config_resolve_includes().
+   * symbols.c: Added CXCursor_TypeRef, etc.
+   * symbols.c: Added "const".
+   * config_file.c: Eliminated include_id.
+   * clang_util.c, config_file.c: Added more "const"; now printing data[2].
+   * config_file.c, include-tidy.c, options.c, util.c, util.h: Include proxies
+     for system include paths works.
+   * config_file.c: More robust config file parsing.
+   * toml_lite.c: s/toml_key_value_iterator_init/toml_iterator_init/
+   * config_file.c, options.c, options.h: Added dumping of configuration file.
+
 2026-03-27  Paul J. Lucas <paul@lucasmail.org>
 
+   * util.c, util.h: Eliminated check_atou().
+   * trans_unit.c: Now printing only error and fatal severity diagnotics and
+     exiting if any.
+   * clang_util.c: Added assert().
+   * includes.c: Now using base_name().
+   * man/Makefile.am, man/man5/include-tidy.5: Added embryonic include-tidy-5.
    * includes.c: Added "original". First seemingly bug-free version!
    * config_file.c: Now using tidy_CXFileUniqueID_cmp().
    * clang_util.c, clang_util.h, includes.c: Added tidy_CXFileUniqueID_cmp().
