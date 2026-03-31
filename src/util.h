@@ -625,23 +625,6 @@
 #define STRNCMPLIT(S,LIT)         strncmp( (S), (LIT), STRLITLEN( (LIT) ) )
 
 /**
- * A special-case of #INTERNAL_ERROR() that prints an unexpected integer value.
- *
- * @param EXPR The expression having the unexpected value.
- *
- * @sa fatal_error()
- * @sa #INTERNAL_ERROR()
- * @sa perror_exit()
- * @sa #PERROR_EXIT_IF()
- */
-#define UNEXPECTED_INT_VALUE(EXPR)                      \
-  INTERNAL_ERROR(                                       \
-    "%lld (0x%llX): unexpected value for " #EXPR "\n",  \
-    STATIC_CAST( long long, (EXPR) ),                   \
-    STATIC_CAST( unsigned long long, (EXPR) )           \
-  )
-
-/**
  * Synthesises a name prefixed by \a PREFIX unique to the line on which it's
  * used.
  *
@@ -827,7 +810,7 @@ inline char const* null_if_empty( char const *s ) {
 }
 
 /**
- * Strips a leading `./`, if any, from \a path.
+ * Strips a leading dot-slash, if any, from \a path.
  *
  * @param path The path to strip `./` from.
  * @return Returns \a path without a leading `./`.

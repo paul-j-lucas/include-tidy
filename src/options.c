@@ -20,8 +20,8 @@
 
 /**
  * @file
- * Defines global variables and functions for **include-tidy** options.
-*/
+ * Defines types, global variables, and functions for **include-tidy** options.
+ */
 
 // local
 #include "pjl_config.h"                 /* must go first */
@@ -196,7 +196,6 @@ char const* opt_include_paths_relativize( char const *abs_path ) {
   return path_no_dot_slash( shortest_include_path );
 }
 
-NODISCARD
 bool parse_comment_style( char const *delim_format ) {
   assert( delim_format != NULL );
 
@@ -219,7 +218,6 @@ bool parse_comment_style( char const *delim_format ) {
   return true;
 }
 
-NODISCARD
 bool parse_comment_alignment( char const *s ) {
   assert( s != NULL );
   unsigned long long ull = parse_ull( s );
@@ -229,7 +227,6 @@ bool parse_comment_alignment( char const *s ) {
   return true;
 }
 
-NODISCARD
 bool parse_line_length( char const *s ) {
   assert( s != NULL );
   unsigned long long ull = parse_ull( s );
@@ -239,7 +236,6 @@ bool parse_line_length( char const *s ) {
   return true;
 }
 
-NODISCARD
 bool parse_tidy_verbose( char const *verbose_format ) {
   assert( verbose_format != NULL );
 

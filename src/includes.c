@@ -18,6 +18,11 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @file
+ * Defines functions for keeping track of files included.
+ */
+
 // local
 #include "pjl_config.h"
 #include "includes.h"
@@ -29,8 +34,7 @@
 #include "trans_unit.h"
 #include "util.h"
 
-// libclang
-#include <clang-c/Index.h>
+/// @cond DOXYGEN_IGNORE
 
 // standard
 #include <assert.h>
@@ -38,6 +42,16 @@
 #include <stdlib.h>                     /* for atexit(3) */
 #include <string.h>
 #include <unistd.h>                     /* for getcwd(3) */
+
+// libclang
+#include <clang-c/Index.h>
+
+/// @endcond
+
+/**
+ * @addtogroup tidy-includes-group
+ * @{
+ */
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -711,7 +725,6 @@ bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
   return true;
 }
 
-NODISCARD
 tidy_include* include_find( CXFile file ) {
   assert( file != NULL );
 
@@ -813,4 +826,7 @@ void includes_print( void ) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/** @} */
+
 /* vim:set et sw=2 ts=2: */

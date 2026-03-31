@@ -43,26 +43,26 @@
 #define INCLUDE_TIDY                    PACKAGE
 
 /**
- * **cdecl** latest copyright year.
+ * **include-tidy** latest copyright year.
  */
 #define INCLUDE_TIDY_COPYRIGHT_YEAR     "2026"
 
 /**
- * **cdecl** license.
+ * **include-tidy** license.
  *
  * @sa #INCLUDE_TIDY_LICENSE_URL
  */
 #define INCLUDE_TIDY_LICENSE            "GPLv3+: GNU GPL version 3 or later"
 
 /**
- * **cdecl** license URL.
+ * **include-tidy** license URL.
  *
  * @sa #INCLUDE_TIDY_LICENSE
  */
 #define INCLUDE_TIDY_LICENSE_URL        "https://gnu.org/licenses/gpl.html"
 
 /**
- * **cdecl** primary author.
+ * **include-tidy** primary author.
  */
 #define INCLUDE_TIDY_AUTHOR             "Paul J. Lucas"
 

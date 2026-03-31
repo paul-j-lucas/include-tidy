@@ -18,6 +18,11 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @file
+ * Defines variables and functions for the translation unit.
+ */
+
 // local
 #include "pjl_config.h"
 #include "trans_unit.h"
@@ -25,20 +30,34 @@
 #include "options.h"
 #include "util.h"
 
-// libclang
-#include <clang-c/Index.h>
+/// @cond DOXYGEN_IGNORE
 
 // standard
 #include <assert.h>
 #include <stdbool.h>
 #include <sysexits.h>
 
+// libclang
+#include <clang-c/Index.h>
+
+/// @endcond
+
+/**
+ * @addtogroup tidy-trans-unit-group
+ * @{
+ */
+
 // local variables
 static CXIndex            tidy_index;
 static CXTranslationUnit  tidy_tu;
 
+/// @cond DOXYGEN_IGNORE
+/// Otherwise Doxygen generates two entries.
+
 // extern variables
 enum CXLanguageKind       tidy_lang;
+
+/// @endcond
 
 ////////// inline functions ///////////////////////////////////////////////////
 
@@ -132,4 +151,7 @@ CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/** @} */
+
 /* vim:set et sw=2 ts=2: */

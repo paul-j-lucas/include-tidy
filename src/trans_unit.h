@@ -21,8 +21,23 @@
 #ifndef include_tidy_trans_unit_H
 #define include_tidy_trans_unit_H
 
+/**
+ * @file
+ * Declares variables and functions for the translation unit.
+ */
+
+/// @cond DOXYGEN_IGNORE
+
 // libclang
 #include <clang-c/Index.h>
+
+/// @endcond
+
+/**
+ * @defgroup tidy-trans-unit-group Translation Unit
+ * Translation unit Variable and function declarations.
+ * @{
+ */
 
 // extern variables
 enum CXLanguageKind tidy_lang;          ///< Source file language.
@@ -39,6 +54,8 @@ enum CXLanguageKind tidy_lang;          ///< Source file language.
 CXTranslationUnit trans_unit_init( int argc, char const *const argv[] );
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/** @} */
 
 #endif /* include_tidy_trans_unit_H */
 /* vim:set et sw=2 ts=2: */

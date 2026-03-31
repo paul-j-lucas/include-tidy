@@ -24,12 +24,16 @@
 // local
 #include "pjl_config.h"
 
+/// @cond DOXYGEN_IGNORE
+
 // libclang
 #include <clang-c/Index.h>
 
+/// @endcond
+
 /**
  * @defgroup config-file-group Configuration File
- * Functions to read **include-tidy**(1) a configuration file and look-up
+ * Functions to read an **include-tidy**(1) configuration file and look-up
  * information specified therein.
  * @{
  */

@@ -825,7 +825,6 @@ void toml_cleanup( toml_file *toml ) {
   *toml = (toml_file){ 0 };
 }
 
-NODISCARD
 char const* toml_error_msg( toml_file const *toml ) {
   assert( toml != NULL );
   if ( toml->error_msg != NULL )
@@ -857,7 +856,6 @@ void toml_table_cleanup( toml_table *table ) {
   );
 }
 
-NODISCARD
 toml_value const* toml_table_find( toml_table const *table, char const *key ) {
   assert( table != NULL );
   assert( key != NULL );
@@ -879,7 +877,6 @@ void toml_table_init( toml_table *table ) {
   );
 }
 
-NODISCARD
 bool toml_table_next( toml_file *toml, toml_table *table ) {
   assert( toml != NULL );
   assert( table != NULL );
@@ -924,7 +921,11 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/// @cond DOXYGEN_IGNORE
+
 extern inline void toml_iterator_init( toml_table*, toml_iterator* );
 extern inline toml_key_value const* toml_iterator_next( toml_iterator* );
+
+/// @endcond
 
 /* vim:set et sw=2 ts=2: */

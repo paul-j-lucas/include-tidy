@@ -23,6 +23,8 @@
 #include "clang_util.h"
 #include "util.h"
 
+/// @cond DOXYGEN_IGNORE
+
 // standard
 #include <assert.h>
 #include <limits.h>
@@ -31,6 +33,13 @@
 
 // libclang
 #include <clang-c/Index.h>
+
+/// @endcond
+
+/**
+ * @addtogroup util-group
+ * @{
+ */
 
 #if HAVE_UNSIGNED_INT128
 /**
@@ -53,8 +62,19 @@
  */
 typedef unsigned __int128 fnv1a_t;
 
+/**
+ * Initialization value for Fowler-Noll-Vo hash function.
+ *
+ * @sa fnv1a_s()
+ */
 static fnv1a_t FNV1A_INIT =
   UINT128LIT( 0x6C62272E07BB0142ull, 0x62B821756295C58Dull );
+
+/**
+ * Prime value for Fowler-Noll-Vo hash function.
+ *
+ * @sa fnv1a_s()
+ */
 static fnv1a_t FNV1A_PRIME =
   UINT128LIT( 0x0000000001000000ull, 0x000000000000013Bull );
 #else
@@ -85,7 +105,6 @@ static fnv1a_t fnv1a_s( char const *s ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-NODISCARD
 int tidy_CXFile_cmp( CXFile const *i_file, CXFile const *j_file ) {
   assert(  i_file != NULL );
   assert( *i_file != NULL );
@@ -110,7 +129,6 @@ void tidy_CXFileUniqueID_fput( CXFileUniqueID const *id, FILE *out ) {
   );
 }
 
-NODISCARD
 CXString tidy_File_getRealPathName( CXFile file ) {
   assert( file != NULL );
 
@@ -125,7 +143,6 @@ CXString tidy_File_getRealPathName( CXFile file ) {
   return abs_path_cxs;
 }
 
-NODISCARD
 CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
   assert( file != NULL );
 
@@ -151,6 +168,12 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/** @} */
+
+/// @cond DOXYGEN_IGNORE
+
 extern inline int tidy_CXFileUniqueID_cmp( CXFileUniqueID const*, CXFileUniqueID const* );
+
+/// @endcond
 
 /* vim:set et sw=2 ts=2: */

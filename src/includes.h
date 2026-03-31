@@ -21,16 +21,31 @@
 #ifndef include_tidy_includes_H
 #define include_tidy_includes_H
 
+/**
+ * @file
+ * Declares structures and functions for keeping track of files included.
+ */
+
 // local
 #include "pjl_config.h"
 #include "red_black.h"
 #include "symbols.h"
 
-// libclang
-#include <clang-c/Index.h>
+/// @cond DOXYGEN_IGNORE
 
 // standard
 #include <stdbool.h>
+
+// libclang
+#include <clang-c/Index.h>
+
+/// @endcond
+
+/**
+ * @defgroup tidy-includes-group Include Files
+ * Structures and functions for keeping track of files included.
+ * @{
+ */
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -72,6 +87,7 @@ void include_add_proxy( CXFile from_include_file, CXFile to_include_file );
  * @param sym The symbol that is used.
  * @return Returns `true` only if the symbol was added.
  */
+NODISCARD
 bool include_add_symbol( CXFile include_file, tidy_symbol *sym );
 
 /**
@@ -91,6 +107,7 @@ tidy_include* include_find( CXFile file );
  * @param rel_path The relative path of the include file to find.
  * @return Returns its corresponding file or NULL if not found.
  */
+NODISCARD
 CXFile include_get_File( char const *rel_path );
 
 /**
@@ -111,6 +128,8 @@ void includes_init( CXTranslationUnit tu );
 void includes_print( void );
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/** @} */
 
 #endif /* include_tidy_includes_H */
 /* vim:set et sw=2 ts=2: */

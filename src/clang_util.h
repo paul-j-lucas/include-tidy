@@ -25,12 +25,22 @@
 #include "pjl_config.h"
 #include "clang_util.h"
 
+/// @cond DOXYGEN_IGNORE
+
 // standard
 #include <stdio.h>                      /* for FILE */
 #include <string.h>                     /* for memcmp(3) */
 
 // libclang
 #include <clang-c/Index.h>
+
+/// @endcond
+
+/**
+ * @defgroup clang-util-group libclang Utility Functions
+ * Utility functions for libclang.
+ * @{
+ */
 
 ////////// extern functions ///////////////////////////////////////////////////
 
@@ -92,6 +102,8 @@ NODISCARD
 CXFileUniqueID tidy_getFileUniqueID( CXFile file );
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/** @} */
 
 #endif /* include_tidy_clang_util_H */
 /* vim:set et sw=2 ts=2: */

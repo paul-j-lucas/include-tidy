@@ -21,11 +21,26 @@
 #ifndef include_tidy_symbols_H
 #define include_tidy_symbols_H
 
+/**
+ * @file
+ * Declares structures and functions for keeping track of symbols referenced.
+ */
+
 // local
 #include "pjl_config.h"
 
+/// @cond DOXYGEN_IGNORE
+
 // libclang
 #include <clang-c/Index.h>
+
+/// @endcond
+
+/**
+ * @defgroup tidy-symbols-group Symbols
+ * Structures and functions for keeping track of symbols referenced.
+ * @{
+ */
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -59,6 +74,8 @@ NODISCARD
 int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym );
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/** @} */
 
 #endif /* include_tidy_symbols_H */
 /* vim:set et sw=2 ts=2: */

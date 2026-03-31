@@ -18,6 +18,11 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @file
+ * Defines structures and functions for keeping track of symbols referenced.
+ */
+
 // local
 #include "pjl_config.h"
 #include "symbols.h"
@@ -29,13 +34,22 @@
 #include "red_black.h"
 #include "util.h"
 
-// libclang
-#include <clang-c/Index.h>
+/// @cond DOXYGEN_IGNORE
 
 // standard
 #include <assert.h>
 #include <stdlib.h>                     /* for atexit() */
 #include <string.h>
+
+// libclang
+#include <clang-c/Index.h>
+
+/// @endcond
+
+/**
+ * @addtogroup tidy-symbols-group
+ * @{
+ */
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -63,6 +77,7 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
  * @param file The file of interest.
  * @return Returns `true` only if the symbol is referenced from \a file.
  */
+NODISCARD
 static bool is_symbol_in_file( CXCursor cursor, CXFile file ) {
   CXSourceLocation const  sym_loc = clang_getCursorLocation( cursor );
   CXFile                  sym_file;
@@ -199,7 +214,6 @@ void symbols_init( CXTranslationUnit tu ) {
     verbose_printf( "\n" );
 }
 
-NODISCARD
 int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
   assert( i_sym != NULL );
   assert( j_sym != NULL );
@@ -210,4 +224,7 @@ int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/** @} */
+
 /* vim:set et sw=2 ts=2: */
