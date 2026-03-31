@@ -63,6 +63,17 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Configuration keys.
+ */
+enum config_keys {
+  CONFIG_KEY_NONE      = 0,             ///< No key.
+  CONFIG_KEY_INCLUDES  = 1 << 0,        ///< `includes`.
+  CONFIG_KEY_PROXY     = 1 << 1,        ///< `proxy`.
+  CONFIG_KEY_SYMBOLS   = 1 << 2,        ///< `symbols`.
+};
+typedef enum config_keys config_keys;
+
+/**
  * Options for the config_open() function.
  */
 enum config_opts {
@@ -249,15 +260,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       );
     }
 
-    enum known_keys {
-      KEY_NONE      = 0,
-      KEY_INCLUDES  = 1 << 0,
-      KEY_PROXY     = 1 << 1,
-      KEY_SYMBOLS   = 1 << 2,
-    };
-    typedef enum known_keys known_keys;
-
-    known_keys keys = KEY_NONE;
+    config_keys keys = CONFIG_KEY_NONE;
 
     toml_iterator iter;
     toml_iterator_init( &table, &iter );
@@ -265,26 +268,26 @@ static void config_parse( char const *config_path, FILE *config_file ) {
           (kv = toml_iterator_next( &iter )) != NULL; ) {
 
       if ( strcmp( kv->key, "includes" ) == 0 ) {
-        if ( (keys & (KEY_PROXY | KEY_SYMBOLS)) != 0 )
+        if ( (keys & (CONFIG_KEY_PROXY | CONFIG_KEY_SYMBOLS)) != 0 )
           goto mutually_exclusive;
         includes_parse( config_path, table.name, &kv->value );
-        keys |= KEY_INCLUDES;
+        keys |= CONFIG_KEY_INCLUDES;
         continue;
       }
 
       if ( strcmp( kv->key, "proxy" ) == 0 ) {
-        if ( (keys & (KEY_INCLUDES | KEY_SYMBOLS)) != 0 )
+        if ( (keys & (CONFIG_KEY_INCLUDES | CONFIG_KEY_SYMBOLS)) != 0 )
           goto mutually_exclusive;
         proxy_parse( config_path, table.name, &kv->value );
-        keys |= KEY_PROXY;
+        keys |= CONFIG_KEY_PROXY;
         continue;
       }
 
       if ( strcmp( kv->key, "symbols" ) == 0 ) {
-        if ( (keys & (KEY_INCLUDES | KEY_PROXY)) != 0 )
+        if ( (keys & (CONFIG_KEY_INCLUDES | CONFIG_KEY_PROXY)) != 0 )
           goto mutually_exclusive;
         symbols_parse( config_path, table.name, &kv->value );
-        keys |= KEY_SYMBOLS;
+        keys |= CONFIG_KEY_SYMBOLS;
         continue;
       }
 
@@ -300,7 +303,7 @@ mutually_exclusive:
       );
     } // for
 
-    if ( keys == KEY_NONE ) {
+    if ( keys == CONFIG_KEY_NONE ) {
       fatal_error( EX_CONFIG,
         "%s:%u:%u: required \"includes\", \"proxy\", or \"symbols\" key for \"%s\" missing\n",
         config_path, table.loc.line, table.loc.col, table.name
