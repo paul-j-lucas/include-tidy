@@ -33,16 +33,20 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "March 27, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 5 "March 31, 2026" "PJL TOOLS"
 .SH NAME
-include-tidy.toml \- include tidier configuration file
+include-tidy.toml \(em \f(CWinclude\P tidier configuration file
 .SH DESCRIPTION
 The
 .B include-tidy.toml
 file is used to configure
 .BR include-tidy (1).
-The file is ``lite'' version of a TOML file.
+The file is ``lite'' version of TOML.
+(See
+.B CAVEATS
+for unsupported TOML.)
 The file is broken down into sections
+(``tables'' in TOML parlance)
 where each section is started by a line of the form:
 .P
 .RS 5
@@ -52,76 +56,25 @@ where each section is started by a line of the form:
 that is a left bracket,
 a table name,
 and a right bracket.
-There must be no whitespace between the brackets.
-.SH ENVIRONMENT
-.TP
-.B HOME
-Used to locate a default configuration file
-under the user's home directory.
-If unset,
-the home directory is obtained from the password database entry
-for the effective user.
-If that fails,
-no default configuration file
-under the user's home directory
-is read.
-.TP
-.B XDG_CONFIG_DIRS
-If set to a colon separated list of paths,
-then for each
-.I path
-in it,
-the first of
-.IB path /include-tidy.toml
-to exist
-and be readable
-is used as the configuration file
-(see
-.BR FILES ).
-.TP
-.B XDG_CONFIG_HOME
-If set to a path
-of a directory
-and
-.B $XDG_CONFIG_HOME/include-tidy.toml
-exists and is readable,
-then that used as the configuration file
-(see
-.BR FILES ).
-.SH FILES
-A configuration file's full path
-is derived from the first of these files
-that exists
-and is readable:
-.nr step 1 1
-.IP \n[step]. 3
-The value of either the
-.B \-\-config
-or
-.B \-c
-option.
-.IP \n+[step].
-The first of these files:
-.RS 8
-.TP
-.PD 0
-.B $XDG_CONFIG_HOME/include-tidy.toml
-.TP
-.B ~/.config/include-tidy.toml
-.RE
-.PD
-.IP \n+[step].
-If the
-.B XDG_CONFIG_DIRS
-environment variable
-is set to a colon separated list of paths,
-then for each
-.I path
-in it,
-the first of
-.IB path /include-tidy.toml \f1.\fP
-.IP \n+[step].
-.B /etc/xdg/include-tidy.toml
+There must be
+.I no
+whitespace between the brackets.
+.PP
+A table name
+is either a relative path of an include file
+(what you would put between either the \f(CW""\fP
+or \f(CW<>\fP in an \f(CW#include\fP directive,
+e.g., \f(CWstdio.h\fP
+or \f(CWsys/wait.h\fP)
+or a symbol name,
+e.g., \f(CWsize_t\fP.
+Note that if a table name
+contains a character other than
+\f(CW[A-Za-z0-9_-.]\fP
+(a letter, digit, underscore, dash, or dot),
+then the table name
+.I must
+be quoted.
 .SH EXAMPLE
 .nf
 .ft CW
@@ -132,6 +85,27 @@ proxy = [
 ]
 .ft 1
 .fi
+.SH CAVEATS
+.SS Unsupported TOML
+The following parts of TOML are
+.I not
+supported
+because they aren't needed
+to configure
+.BR include-tidy (1):
+.sp
+.PD 0
+.IP \(bu 3
+Array of tables.
+.IP \(bu
+Dates or times.
+.IP \(bu
+Floating-point numbers.
+.IP \(bu
+Inline tables.
+.IP \(bu
+UTF-8.
+.PD
 .SH AUTHOR
 Paul J. Lucas
 .RI < paul@lucasmail.org >
