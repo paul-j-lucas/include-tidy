@@ -39,7 +39,7 @@
 /// @endcond
 
 /**
- * @defgroup toml-public-group TOML
+ * @defgroup toml-group TOML
  * Types and functions for reading a TOML file.
  *
  * @remarks
@@ -66,8 +66,9 @@
  *
  *  while ( toml_table_next( &toml, &table ) ) {
  *    // ...
- *    // Use toml_table_find() for specific keys
- *    // or toml_table_visit() for all keys.
+ *    // Use toml_table_find() for specific keys or
+ *    // toml_iterator_init() and toml_iterator_next()
+ *    // for all keys.
  *    // ...
  *  }
  *
@@ -76,6 +77,8 @@
  *  toml_cleanup( &toml );
  *  fclose( ftoml );
  *  ```
+ *
+ * @sa [TOML](https://toml.io/)
  * @{
  */
 

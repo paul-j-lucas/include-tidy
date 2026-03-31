@@ -37,10 +37,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @addtogroup toml-group
+ * @{
+ */
+
 ///////////////////////////////////////////////////////////////////////////////
 
-#define TOML_KEY_LEN_MAX          128   /* Maximum key length. */
-#define TOML_STRING_LEN_MAX       1024  /* Maximum string length. */
+#define TOML_KEY_LEN_MAX          128   /**< Maximum key length. */
+#define TOML_STRING_LEN_MAX       1024  /**< Maximum string length. */
 
 /**
  * TOML error messages.
@@ -920,6 +925,8 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/** @} */
 
 /// @cond DOXYGEN_IGNORE
 
