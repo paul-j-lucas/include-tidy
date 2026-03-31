@@ -773,6 +773,15 @@ _Noreturn void fatal_error( int status, char const *format, ... );
 void fput_list( FILE *out, void const *elt,
                 char const* (*gets)( void const **ppelt ) );
 
+/**
+ * Gets the absolute path of the current working directory.
+ *
+ * @param plen If not NULL, the length of the path is put here.
+ * @return Returns the absolute path of the current working directory.
+ */
+NODISCARD
+char const* get_cwd( size_t *plen );
+
 #ifndef NDEBUG
 /**
  * Checks whether \a s is an affirmative value.  An affirmative value is one of

@@ -41,7 +41,6 @@
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdlib.h>                     /* for atexit(3) */
 #include <string.h>
-#include <unistd.h>                     /* for getcwd(3) */
 
 // libclang
 #include <clang-c/Index.h>
@@ -447,21 +446,9 @@ static bool is_local_include( char const *abs_path ) {
   assert( abs_path != NULL );
   assert( abs_path[0] == '/' );
 
-  static char   cwd_path_buf[ PATH_MAX ];
-  static size_t cwd_path_len;
-
-  if ( cwd_path_len == 0 ) {
-    if ( getcwd( cwd_path_buf, sizeof cwd_path_buf ) == NULL ) {
-      fatal_error( EX_UNAVAILABLE,
-        "could not get current working directory: %s\n", STRERROR()
-      );
-    }
-    cwd_path_len = strlen( cwd_path_buf );
-    if ( cwd_path_len > 0 && cwd_path_buf[ cwd_path_len - 1 ] != '/' )
-      strcpy( cwd_path_buf + cwd_path_len++, "/" );
-  }
-
-  return strncmp( abs_path, cwd_path_buf, cwd_path_len ) == 0;
+  size_t cwd_path_len;
+  char const *const cwd_path = get_cwd( &cwd_path_len );
+  return strncmp( abs_path, cwd_path, cwd_path_len ) == 0;
 }
 
 /**

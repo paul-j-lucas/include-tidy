@@ -167,6 +167,26 @@ void fput_list( FILE *out, void const *elt,
   } // for
 }
 
+char const* get_cwd( size_t *plen ) {
+  static char   cwd_path_buf[ PATH_MAX ];
+  static size_t cwd_path_len;
+
+  if ( cwd_path_len == 0 ) {
+    if ( getcwd( cwd_path_buf, sizeof cwd_path_buf ) == NULL ) {
+      fatal_error( EX_UNAVAILABLE,
+        "could not get current working directory: %s\n", STRERROR()
+      );
+    }
+    cwd_path_len = strlen( cwd_path_buf );
+    if ( cwd_path_len > 0 && cwd_path_buf[ cwd_path_len - 1 ] != '/' )
+      strcpy( cwd_path_buf + cwd_path_len++, "/" );
+  }
+
+  if ( plen != NULL )
+    *plen = cwd_path_len;
+  return cwd_path_buf;
+}
+
 #ifndef NDEBUG
 bool is_affirmative( char const *s ) {
   static char const *const AFFIRMATIVES[] = {
