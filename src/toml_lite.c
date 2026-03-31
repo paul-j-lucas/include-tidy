@@ -292,6 +292,7 @@ static bool toml_char_parse( toml_file *toml, char want_c ) {
       toml->error = TOML_ERR_UNEX_EOF;
       break;
     case '\n':
+    case '\r':
       toml->error = TOML_ERR_UNEX_NEWLINE;
       break;
     default:
@@ -387,8 +388,9 @@ static bool toml_integer_parse( toml_file *toml, long *pi ) {
           toml_ungetc( toml, c );
           FALLTHROUGH;
         case ' ':
-        case '\t':
         case '\n':
+        case '\r':
+        case '\t':
         case EOF:
           *pi = 0;
           return true;
