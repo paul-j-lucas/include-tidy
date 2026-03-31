@@ -1,6 +1,6 @@
 ##
 #	include-tidy -- #include tidier
-#	Makefile.am
+#	include-tidy.toml -- default configuration file
 #
 #	Copyright (C) 2026  Paul J. Lucas
 #
@@ -18,28 +18,24 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-ACLOCAL_AMFLAGS =	-I m4
-SUBDIRS =		etc lib src man
+[NULL]
+includes = [
+    "locale.h",
+    "stddef.h",
+    "stdio.h",
+    "stdlib.h",
+    "string.h",
+    "time.h",
+    "wchar.h",
+]
 
-EXTRA_DIST =		bootstrap \
-			Doxyfile \
-			m4/gnulib-cache.m4 \
-			m4/update_m4.sh \
-			makedoc.sh \
-			README.md
-
-DOCS_DIR =		docs
-
-.PHONY: doc docs \
-	update-gnulib
-
-doc docs:
-	@./makedoc.sh $(PACKAGE) $(DOCS_DIR)
-
-clean-local:
-	rm -fr $(DOCS_DIR)
-
-update-gnulib:
-	gnulib-tool --add-import --no-vc-files
-
-# vim:set noet sw=8 ts=8:
+[size_t]
+includes = [
+    "stddef.h",
+    "stdio.h",
+    "stdlib.h",
+    "string.h",
+    "time.h",
+    "uchar.h",
+    "wchar.h",
+]

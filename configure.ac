@@ -161,6 +161,7 @@ AH_BOTTOM([#endif /* include_tidy_config_H */])
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_FILES([
   Makefile
+  etc/Makefile
   lib/Makefile
   src/Makefile
   man/Makefile

@@ -1,6 +1,6 @@
 ##
 #	include-tidy -- #include tidier
-#	Makefile.am
+#	etc/Makefile.am
 #
 #	Copyright (C) 2026  Paul J. Lucas
 #
@@ -18,28 +18,6 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-ACLOCAL_AMFLAGS =	-I m4
-SUBDIRS =		etc lib src man
-
-EXTRA_DIST =		bootstrap \
-			Doxyfile \
-			m4/gnulib-cache.m4 \
-			m4/update_m4.sh \
-			makedoc.sh \
-			README.md
-
-DOCS_DIR =		docs
-
-.PHONY: doc docs \
-	update-gnulib
-
-doc docs:
-	@./makedoc.sh $(PACKAGE) $(DOCS_DIR)
-
-clean-local:
-	rm -fr $(DOCS_DIR)
-
-update-gnulib:
-	gnulib-tool --add-import --no-vc-files
+dist_sysconf_DATA =	include-tidy.toml
 
 # vim:set noet sw=8 ts=8:
