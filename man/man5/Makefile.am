@@ -18,9 +18,30 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
+# Suppress printing of "--- target ---" when -j is given to BSD's make.
+.MAKE.JOB.PREFIX=
+
 dist_man5_MANS = include-tidy.5
 
-show_include_tidy:
-	nroff -man include-tidy.5 | $(PAGER)
+GROFF_FLAGS =		-man -Tps
+
+PS2PDF_FLAGS =		-dEmbedAllFonts=true \
+			-dHaveTrueTypes=true \
+			-dPDFSETTINGS=/prepress \
+			-dSubsetFonts=false
+
+pdf-local: include-tidy-5.pdf
+
+include-tidy-5.ps: include-tidy.5
+	groff $(GROFF_FLAGS) $< > $@
+
+include-tidy-5.pdf: include-tidy-5.ps
+	ps2pdf $(PS2PDF_FLAGS) $<
+
+clean-local:
+	rm -f include-tidy-5.ps
+
+distclean-local:
+	rm -f include-tidy-5.pdf
 
 # vim:set noet sw=8 ts=8:

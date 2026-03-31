@@ -21,6 +21,8 @@
 .\" define code-start macro
 .de cS
 .sp
+.nr cS_ps \n[.ps]                       \" save current point size
+.ps -1                                  \" shrink it
 .nf
 .RS 5
 .ft CW
@@ -30,6 +32,7 @@
 .ft 1
 .RE
 .fi
+.ps \n[cS_ps]                           \" restore original size
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------

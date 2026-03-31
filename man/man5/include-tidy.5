@@ -21,6 +21,8 @@
 .\" define code-start macro
 .de cS
 .sp
+.nr cS_ps \n[.ps]                       \" save current point size
+.ps -1                                  \" shrink it
 .nf
 .RS 5
 .ft CW
@@ -30,12 +32,13 @@
 .ft 1
 .RE
 .fi
+.ps \n[cS_ps]                           \" restore original size
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
 .TH \f3include-tidy\fP 5 "March 31, 2026" "PJL TOOLS"
 .SH NAME
-include-tidy.toml \(em \f(CWinclude\P tidier configuration file
+include-tidy.toml \(em \f(CW#include\fP tidier configuration file
 .SH DESCRIPTION
 The
 .B include-tidy.toml
@@ -76,15 +79,22 @@ then the table name
 .I must
 be quoted.
 .SH EXAMPLE
-.nf
-.ft CW
+The following says the file \f(CWpjl_config.h\fP
+is a proxy for both \f(CWattribute.h\fP
+and \f(CWconfig.h\fP
+meaning that all symbols declared in either of those files
+are considered declared in \f(CWpjl_config.h\fP instead.
+Therefore,
+if a source file includes \f(CWpjl_config.h\fP,
+it does not need to include either of the files
+for which it is a proxy.
+.cS
 [pjl_config.h]
 proxy = [
     "attribute.h",
     "config.h"
 ]
-.ft 1
-.fi
+.cE
 .SH CAVEATS
 .SS Unsupported TOML
 The following parts of TOML are
