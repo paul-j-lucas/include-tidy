@@ -601,12 +601,16 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
     goto skip;
 
-  visitChildren_visitor_data *const vcvd =
-    POINTER_CAST( visitChildren_visitor_data*, data );
-
+  unsigned          include_line;
   CXSourceLocation  include_loc = clang_getCursorLocation( cursor );
   CXFile const      included_file = clang_getIncludedFile( cursor );
+  CXFile            including_file;
   bool const        is_direct = clang_Location_isFromMainFile( include_loc );
+
+  clang_getSpellingLocation(
+    include_loc, &including_file, &include_line, /*column=*/NULL,
+    /*offset=*/NULL
+  );
 
   tidy_include new_include = {
     .file_id = tidy_getFileUniqueID( included_file )
@@ -614,6 +618,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
   tidy_include *const include = RB_DINT( rv_rbi.node );
+
   if ( rv_rbi.inserted ) {
     CXString const    abs_path_cxs = tidy_File_getRealPathName( included_file );
     char const *const abs_path = clang_getCString( abs_path_cxs );
@@ -623,11 +628,6 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     include->is_local     = is_local_include( abs_path );
     include->rel_path     = opt_include_paths_relativize( abs_path );
 
-    CXFile including_file;
-    clang_getSpellingLocation(
-      include_loc, &including_file, &include->line, /*column=*/NULL,
-      /*offset=*/NULL
-    );
     if ( !is_direct ) {
       tidy_include *const includer = include_find( including_file );
       assert( includer != NULL );
@@ -649,6 +649,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   }
   else if ( is_direct ) {
     include->depth = 0;
+    include->line = include_line;
     include->proxy = NULL;
   }
   else {
@@ -656,6 +657,9 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   }
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
+    visitChildren_visitor_data *const vcvd =
+      POINTER_CAST( visitChildren_visitor_data*, data );
+
     if ( !vcvd->verbose_printed ) {
       verbose_printf( "includes:\n" );
       vcvd->verbose_printed = true;
