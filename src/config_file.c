@@ -66,10 +66,11 @@
  * Configuration keys.
  */
 enum config_keys {
-  CONFIG_KEY_NONE      = 0,             ///< No key.
-  CONFIG_KEY_INCLUDES  = 1 << 0,        ///< `includes`.
-  CONFIG_KEY_PROXY     = 1 << 1,        ///< `proxy`.
-  CONFIG_KEY_SYMBOLS   = 1 << 2,        ///< `symbols`.
+  CONFIG_KEY_NONE         = 0,          ///< No key.
+  CONFIG_KEY_CONFIG_NEXT  = 1 << 0,     ///< `config_next`.
+  CONFIG_KEY_INCLUDES     = 1 << 0,     ///< `includes`.
+  CONFIG_KEY_PROXY        = 1 << 1,     ///< `proxy`.
+  CONFIG_KEY_SYMBOLS      = 1 << 2,     ///< `symbols`.
 };
 typedef enum config_keys config_keys;
 
@@ -111,7 +112,8 @@ static void         symbols_parse( char const*, char const*,
 
 
 // local variables
-static rb_tree_t symbol_include_map;    ///< Mapping from symbols to includes.
+static bool       config_next;
+static rb_tree_t  symbol_include_map;   ///< Mapping from symbols to includes.
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -134,8 +136,11 @@ static void config_cleanup( void ) {
  * order):
  *
  *  1. The value of either the `--config` or `-c` command-line option; or:
- *  2. `$XDG_CONFIG_HOME/include-tidy` or `~/.config/include-tidy`; or:
- *  3. `$XDG_CONFIG_DIRS/include-tidy` for each path or `/etc/xdg/include-tidy`.
+ *  2. `$PWD/include-tidy.toml`; or:
+ *  3. `$XDG_CONFIG_HOME/include-tidy.toml` or `~/.config/include-tidy.toml`;
+ *     or:
+ *  4. `$XDG_CONFIG_DIRS/include-tidy.toml` for each path or
+ *     `/etc/xdg/include-tidy.toml`.
  * @endparblock
  *
  * @param config_path The full path to a configuration file.  May be NULL.
@@ -155,7 +160,16 @@ static FILE* config_find( char const *config_path,
   if ( config_file != NULL )
     strcpy( path_buf, config_path );
 
-  // 2. Try $XDG_CONFIG_HOME/include-tidy.toml and
+  // 2. Try $PWD/include-tidy.toml
+  if ( config_file == NULL ) {
+    size_t cwd_len;
+    strcpy( path_buf, get_cwd( &cwd_len ) );
+    path_append( path_buf, cwd_len, PACKAGE ".toml" );
+    config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
+    path_buf[0] = '\0';
+  }
+
+  // 3. Try $XDG_CONFIG_HOME/include-tidy.toml and
   //    $HOME/.config/include-tidy.toml.
   if ( config_file == NULL && (home = home_dir()) != NULL ) {
     char const *const config_dir = null_if_empty( getenv( "XDG_CONFIG_HOME" ) );
@@ -175,7 +189,7 @@ static FILE* config_find( char const *config_path,
     }
   }
 
-  // 3. Try $XDG_CONFIG_DIRS/include-tidy and /etc/xdg/include-tidy.
+  // 4. Try $XDG_CONFIG_DIRS/include-tidy and /etc/xdg/include-tidy.
   if ( config_file == NULL ) {
     char const *config_dirs = null_if_empty( getenv( "XDG_CONFIG_DIRS" ) );
     if ( config_dirs == NULL )
@@ -199,6 +213,28 @@ static FILE* config_find( char const *config_path,
   }
 
   return config_file;
+}
+
+/**
+ * Parses the value of the `"config_next"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param value The toml_value to parse.
+ */
+static void config_next_parse( char const *config_path,
+                               toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( value != NULL );
+
+  if ( value->type != TOML_BOOL ) {
+    fatal_error( EX_CONFIG,
+      "%s:%u:%u "
+      "invalid value for \"config_next\" key; expected boolean\n",
+      config_path, value->loc.line, value->loc.col
+    );
+  }
+
+  config_next = value->b;
 }
 
 /**
@@ -260,12 +296,20 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       );
     }
 
+    bool const table_is_include_tidy = strcmp( table.name, "include-tidy" ) == 0;
     config_keys keys = CONFIG_KEY_NONE;
 
     toml_iterator iter;
     toml_iterator_init( &table, &iter );
     for ( toml_key_value const *kv;
           (kv = toml_iterator_next( &iter )) != NULL; ) {
+
+      if ( table_is_include_tidy ) {
+        if ( strcmp( kv->key, "config_next" ) == 0 ) {
+          config_next_parse( config_path, &kv->value );
+          continue;
+        }
+      }
 
       if ( strcmp( kv->key, "includes" ) == 0 ) {
         if ( (keys & (CONFIG_KEY_PROXY | CONFIG_KEY_SYMBOLS)) != 0 )
@@ -347,6 +391,7 @@ static char const* home_dir( void ) {
 }
 
 /**
+ * TODO.
  *
  * @param config_path The full path to the configurarion file.
  * @param table_name The toml_table name.
@@ -415,7 +460,7 @@ static void path_append( char *path, size_t path_len, char const *component ) {
 }
 
 /**
- * If present, parses the value of a `"proxy"` key.
+ * Parses the value of a `"proxy"` key.
  *
  * @param config_path The full path to the configurarion file.
  * @param table_name The TOML table name.
