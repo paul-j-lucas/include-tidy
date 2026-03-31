@@ -607,18 +607,21 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   CXFile            including_file;
   bool const        is_direct = clang_Location_isFromMainFile( include_loc );
 
-  clang_getSpellingLocation(
-    include_loc, &including_file, &include_line, /*column=*/NULL,
-    /*offset=*/NULL
-  );
-
   tidy_include new_include = {
     .file_id = tidy_getFileUniqueID( included_file )
   };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
-  tidy_include *const include = RB_DINT( rv_rbi.node );
 
+  if ( !rv_rbi.inserted && !is_direct )
+    goto skip;
+
+  clang_getSpellingLocation(
+    include_loc, &including_file, &include_line, /*column=*/NULL,
+    /*offset=*/NULL
+  );
+
+  tidy_include *const include = RB_DINT( rv_rbi.node );
   if ( rv_rbi.inserted ) {
     CXString const    abs_path_cxs = tidy_File_getRealPathName( included_file );
     char const *const abs_path = clang_getCString( abs_path_cxs );
@@ -647,13 +650,10 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
     );
   }
-  else if ( is_direct ) {
+  else {                                // is_direct must be true here
     include->depth = 0;
     include->line = include_line;
     include->proxy = NULL;
-  }
-  else {
-    goto skip;
   }
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
