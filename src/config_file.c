@@ -167,7 +167,7 @@ static rb_tree_t    symbol_include_map; ///< Mapping from symbols to includes.
  * Configuration keys.
  */
 static config_key const CONFIG_KEYS[] = {
-  { "config_next",  CONFIG_KEY_CONFIG_NEXT, &config_next_parse  },
+  { "config-next",  CONFIG_KEY_CONFIG_NEXT, &config_next_parse  },
   { "includes",     CONFIG_KEY_INCLUDES,    &includes_parse     },
   { "proxy",        CONFIG_KEY_PROXY,       &proxy_parse        },
   { "symbols",      CONFIG_KEY_SYMBOLS,     &symbols_parse      },
