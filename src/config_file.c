@@ -155,6 +155,8 @@ static char const*  home_dir( void );
 
 static void         includes_parse( char const*, toml_table const*,
                                     toml_value const* );
+static long         int_value_parse( char const*c, char const*,
+                                     toml_value const*, long , long );
 static void         path_append( char*, size_t, char const* );
 static void         proxy_parse( char const*, toml_table const*,
                                  toml_value const* );
@@ -219,22 +221,10 @@ static void align_column_parse( char const *config_path,
 
   assert_key_in_include_tidy_table( config_path, table, "align-column" );
 
-  if ( value->type != TOML_INT ) {
-    fatal_error( EX_CONFIG,
-      "%s:%u:%u: invalid value for \"align-column\"; expected integer\n",
-      config_path, value->loc.line, value->loc.col
-    );
-  }
-
-  if ( value->i < 0 || value->i > OPT_ALIGN_COLUMN_MAX ) {
-    fatal_error( EX_USAGE,
-      "%s:%u:%u: \"%ld\": invalid value for \"align-column\"; must be 0-%d\n",
-      config_path, value->loc.line, value->loc.col,
-      value->i, OPT_ALIGN_COLUMN_MAX
-    );
-  }
-
-  opt_align_column = STATIC_CAST( unsigned, value->i );
+  long const int_value = int_value_parse(
+    config_path, "align-column", value, 0, OPT_ALIGN_COLUMN_MAX
+  );
+  opt_align_column = STATIC_CAST( unsigned, int_value );
 }
 
 /**
@@ -559,6 +549,40 @@ static void includes_parse( char const *config_path, toml_table const *table,
         config_path, value->loc.line, value->loc.col
       );
   } // switch
+}
+
+/**
+ * Parses an integer value.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param key_name The name of a key.
+ * @param value The toml_value to parse.
+ * @param value_min The minimum allowed value.
+ * @param value_max The maximum allowed value.
+ */
+static long int_value_parse( char const *config_path, char const *key_name,
+                             toml_value const *value,
+                             long value_min, long value_max ) {
+  assert( config_path != NULL );
+  assert( key_name != NULL );
+  assert( value != NULL );
+
+  if ( value->type != TOML_INT ) {
+    fatal_error( EX_CONFIG,
+      "%s:%u:%u: invalid value for \"%s\"; expected integer\n",
+      config_path, value->loc.line, value->loc.col, key_name
+    );
+  }
+
+  if ( value->i < value_min || value->i > value_max ) {
+    fatal_error( EX_USAGE,
+      "%s:%u:%u: \"%ld\": invalid value for \"%s\"; must be %ld-%ld\n",
+      config_path, value->loc.line, value->loc.col, value->i, key_name,
+      value_min, value_max
+    );
+  }
+
+  return value->i;
 }
 
 /**
