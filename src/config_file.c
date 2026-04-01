@@ -67,10 +67,11 @@
  */
 enum config_key_kind {
   CONFIG_KEY_NONE,                      ///< No key.
-  CONFIG_KEY_CONFIG_NEXT  = 1 << 0,     ///< `config_next`.
-  CONFIG_KEY_INCLUDES     = 1 << 0,     ///< `includes`.
-  CONFIG_KEY_PROXY        = 1 << 1,     ///< `proxy`.
-  CONFIG_KEY_SYMBOLS      = 1 << 2,     ///< `symbols`.
+  CONFIG_KEY_ALIGN_COLUMN = 1 << 0,     ///< `align-column`.
+  CONFIG_KEY_CONFIG_NEXT  = 1 << 1,     ///< `config_next`.
+  CONFIG_KEY_INCLUDES     = 1 << 2,     ///< `includes`.
+  CONFIG_KEY_PROXY        = 1 << 3,     ///< `proxy`.
+  CONFIG_KEY_SYMBOLS      = 1 << 4,     ///< `symbols`.
 };
 
 /**
@@ -137,6 +138,9 @@ struct symbol_include {
 };
 
 // local functions
+static void         align_column_parse( char const*, char const*,
+                                        toml_value const* );
+
 NODISCARD
 static config_key const*
                     config_key_parse( char const* );
@@ -167,13 +171,45 @@ static rb_tree_t    symbol_include_map; ///< Mapping from symbols to includes.
  * Configuration keys.
  */
 static config_key const CONFIG_KEYS[] = {
-  { "config-next",  CONFIG_KEY_CONFIG_NEXT, &config_next_parse  },
-  { "includes",     CONFIG_KEY_INCLUDES,    &includes_parse     },
-  { "proxy",        CONFIG_KEY_PROXY,       &proxy_parse        },
-  { "symbols",      CONFIG_KEY_SYMBOLS,     &symbols_parse      },
+  { "align-column", CONFIG_KEY_ALIGN_COLUMN,  &align_column_parse },
+  { "config-next",  CONFIG_KEY_CONFIG_NEXT,   &config_next_parse  },
+  { "includes",     CONFIG_KEY_INCLUDES,      &includes_parse     },
+  { "proxy",        CONFIG_KEY_PROXY,         &proxy_parse        },
+  { "symbols",      CONFIG_KEY_SYMBOLS,       &symbols_parse      },
 };
 
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Parses the value of an `"includes"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table_name The toml_table name.
+ * @param value The toml_value to parse.
+ */
+static void align_column_parse( char const *config_path, char const *table_name,
+                                toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( table_name != NULL );
+  assert( value != NULL );
+
+  if ( value->type != TOML_INT ) {
+    fatal_error( EX_CONFIG,
+      "%s:%u:%u: invalid value for \"align-column\"; expected integer\n",
+      config_path, value->loc.line, value->loc.col
+    );
+  }
+
+  if ( value->i < 0 || value->i > OPT_ALIGN_COLUMN_MAX ) {
+    fatal_error( EX_USAGE,
+      "%s:%u:%u: \"%ld\": invalid value for \"align-column\"; must be 0-%d\n",
+      config_path, value->loc.line, value->loc.col,
+      value->i, OPT_ALIGN_COLUMN_MAX
+    );
+  }
+
+  opt_align_column = STATIC_CAST( unsigned, value->i );
+}
 
 /**
  * Cleans-up all configuration data.
@@ -318,8 +354,7 @@ static void config_next_parse( char const *config_path, char const *table_name,
 
   if ( value->type != TOML_BOOL ) {
     fatal_error( EX_CONFIG,
-      "%s:%u:%u "
-      "invalid value for \"config_next\" key; expected boolean\n",
+      "%s:%u:%u: invalid value for \"config_next\"; expected boolean\n",
       config_path, value->loc.line, value->loc.col
     );
   }
@@ -381,7 +416,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   while ( toml_table_next( &toml, &table ) ) {
     if ( table.name == NULL ) {
       fatal_error( EX_CONFIG,
-        "%s:%u:%u required table name missing\n",
+        "%s:%u:%u: required table name missing\n",
         config_path, toml.loc.line, toml.loc.col
       );
     }
@@ -481,7 +516,7 @@ static void includes_parse( char const *config_path, char const *table_name,
         if ( a_value->type != TOML_STRING ) {
           fatal_error( EX_CONFIG,
             "%s:%u:%u: "
-            "invalid value for \"includes\" key array; expected string\n",
+            "invalid value for \"includes\"; expected string\n",
             config_path, a_value->loc.line, a_value->loc.col
           );
         }
@@ -492,8 +527,8 @@ static void includes_parse( char const *config_path, char const *table_name,
       break;
     default:
       fatal_error( EX_CONFIG,
-        "%s:%u:%u "
-        "invalid value for \"includes\" key; expected string or array\n",
+        "%s:%u:%u: "
+        "invalid value for \"includes\"; expected string or array\n",
         config_path, value->loc.line, value->loc.col
       );
   } // switch
@@ -564,7 +599,7 @@ static void proxy_parse( char const *config_path, char const *table_name,
       break;
     default:
       fatal_error( EX_CONFIG,
-        "%s:%u:%u "
+        "%s:%u:%u: "
         "invalid value for \"proxy\" key; expected string or array\n",
         config_path, value->loc.line, value->loc.col
       );
@@ -695,7 +730,7 @@ static void symbols_parse( char const *config_path, char const *table_name,
       break;
     default:
       fatal_error( EX_CONFIG,
-        "%s:%u:%u "
+        "%s:%u:%u: "
         "invalid value for \"symbols\" key; expected string or array\n",
         config_path, value->loc.line, value->loc.col
       );
