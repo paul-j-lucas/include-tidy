@@ -624,7 +624,6 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   );
 
   tidy_include *const include = RB_DINT( rv_rbi.node );
-  include->line = include_line;
 
   if ( rv_rbi.inserted ) {
     CXString const    abs_path_cxs = tidy_File_getRealPathName( included_file );
@@ -658,6 +657,9 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     include->depth = 0;
     include->proxy = NULL;
   }
+
+  if ( is_direct )
+    include->line = include_line;
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
     visitChildren_visitor_data *const vcvd =
