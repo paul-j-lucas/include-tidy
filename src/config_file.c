@@ -110,11 +110,11 @@ typedef struct  symbol_include  symbol_include;
  * Signature for function to parse the value of a configuration key.
  *
  * @param config_path The full path to the configurarion file.
- * @param table_name The TOML table name.
+ * @param table The current toml_table.
  * @param value The toml_value to parse.
  */
 typedef void (*config_parse_fn)( char const *config_path,
-                                 char const *table_name,
+                                 toml_table const *table,
                                  toml_value const *value );
 
 ////////// structures /////////////////////////////////////////////////////////
@@ -138,14 +138,14 @@ struct symbol_include {
 };
 
 // local functions
-static void         align_column_parse( char const*, char const*,
+static void         align_column_parse( char const*, toml_table const*,
                                         toml_value const* );
 
 NODISCARD
 static config_key const*
                     config_key_parse( char const* );
 
-static void         config_next_parse( char const*, char const*,
+static void         config_next_parse( char const*, toml_table const*,
                                        toml_value const* );
 NODISCARD
 static FILE*        config_open( char const*, config_opts );
@@ -153,13 +153,14 @@ static FILE*        config_open( char const*, config_opts );
 NODISCARD
 static char const*  home_dir( void );
 
-static void         includes_parse( char const*, char const*,
+static void         includes_parse( char const*, toml_table const*,
                                     toml_value const* );
 static void         path_append( char*, size_t, char const* );
-static void         proxy_parse( char const*, char const*, toml_value const* );
+static void         proxy_parse( char const*, toml_table const*,
+                                 toml_value const* );
 static void         symbol_include_add( char const*, CXFile );
 static void         symbol_include_cleanup( symbol_include* );
-static void         symbols_parse( char const*, char const*,
+static void         symbols_parse( char const*, toml_table const*,
                                    toml_value const* );
 
 // local variables
@@ -181,17 +182,42 @@ static config_key const CONFIG_KEYS[] = {
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
+ * Asserts that the name of \a table is `"include-tidy"`.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current coml_table.
+ * @param key_name The name of a key.
+ */
+static void assert_key_in_include_tidy_table( char const *config_path,
+                                              toml_table const *table,
+                                              char const *key_name ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( key_name != NULL );
+
+  if ( strcmp( table->name, "include-tidy" ) != 0 ) {
+    fatal_error( EX_CONFIG,
+      "%s:%u:%u: \"%s\": key allowed only in \"include-tidy\" table\n",
+      config_path, table->loc.line, table->loc.col, key_name
+    );
+  }
+}
+
+/**
  * Parses the value of an `"includes"` key.
  *
  * @param config_path The full path to the configurarion file.
- * @param table_name The toml_table name.
+ * @param table The current toml_table.
  * @param value The toml_value to parse.
  */
-static void align_column_parse( char const *config_path, char const *table_name,
+static void align_column_parse( char const *config_path,
+                                toml_table const *table,
                                 toml_value const *value ) {
   assert( config_path != NULL );
-  assert( table_name != NULL );
+  assert( table != NULL );
   assert( value != NULL );
+
+  assert_key_in_include_tidy_table( config_path, table, "align-column" );
 
   if ( value->type != TOML_INT ) {
     fatal_error( EX_CONFIG,
@@ -344,12 +370,13 @@ static config_key const* config_key_parse( char const *s ) {
  * Parses the value of the `"config_next"` key.
  *
  * @param config_path The full path to the configurarion file.
+ * @param table Not used.
  * @param value The toml_value to parse.
  */
-static void config_next_parse( char const *config_path, char const *table_name,
+static void config_next_parse( char const *config_path, toml_table const *table,
                                toml_value const *value ) {
   assert( config_path != NULL );
-  (void)table_name;
+  (void)table;
   assert( value != NULL );
 
   if ( value->type != TOML_BOOL ) {
@@ -442,7 +469,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
         );
       }
 
-      (*key->parse_fn)( config_path, table.name, &kv->value );
+      (*key->parse_fn)( config_path, &table, &kv->value );
       key_kinds_seen |= key->kind;
     } // for
 
@@ -493,13 +520,13 @@ static char const* home_dir( void ) {
  * Parses the value of an `"includes"` key.
  *
  * @param config_path The full path to the configurarion file.
- * @param table_name The toml_table name.
+ * @param table The current toml_table.
  * @param value The toml_value to parse.
  */
-static void includes_parse( char const *config_path, char const *table_name,
+static void includes_parse( char const *config_path, toml_table const *table,
                             toml_value const *value ) {
   assert( config_path != NULL );
-  assert( table_name != NULL );
+  assert( table != NULL );
   assert( value != NULL );
 
   CXFile to_include_file;
@@ -508,7 +535,7 @@ static void includes_parse( char const *config_path, char const *table_name,
     case TOML_STRING:
       to_include_file = include_get_File( value->s );
       if ( to_include_file != NULL )
-        symbol_include_add( table_name, to_include_file );
+        symbol_include_add( table->name, to_include_file );
       break;
     case TOML_ARRAY:
       for ( unsigned i = 0; i < value->a.size; ++i ) {
@@ -522,7 +549,7 @@ static void includes_parse( char const *config_path, char const *table_name,
         }
         to_include_file = include_get_File( a_value->s );
         if ( to_include_file != NULL )
-          symbol_include_add( table_name, to_include_file );
+          symbol_include_add( table->name, to_include_file );
       } // for
       break;
     default:
@@ -562,16 +589,16 @@ static void path_append( char *path, size_t path_len, char const *component ) {
  * Parses the value of a `"proxy"` key.
  *
  * @param config_path The full path to the configurarion file.
- * @param table_name The TOML table name.
+ * @param table The current toml_table.
  * @param value The toml_value to parse.
  */
-static void proxy_parse( char const *config_path, char const *table_name,
+static void proxy_parse( char const *config_path, toml_table const *table,
                          toml_value const *value ) {
   assert( config_path != NULL );
-  assert( table_name != NULL );
+  assert( table != NULL );
   assert( value != NULL );
 
-  CXFile to_include_file = include_get_File( table_name );
+  CXFile to_include_file = include_get_File( table->name );
   if ( to_include_file == NULL )
     return;
   CXFile from_include_file;
@@ -698,16 +725,16 @@ static void symbol_includes_dump( void ) {
  * Parses the value of a `"symbols"` key.
  *
  * @param config_path The full path to the configurarion file.
- * @param table_name The TOML table name.
+ * @param table The current toml_table.
  * @param value The toml_value to parse.
  */
-static void symbols_parse( char const *config_path, char const *table_name,
+static void symbols_parse( char const *config_path, toml_table const *table,
                            toml_value const *value ) {
   assert( config_path != NULL );
-  assert( table_name != NULL );
+  assert( table != NULL );
   assert( value != NULL );
 
-  CXFile to_include_file = include_get_File( table_name );
+  CXFile to_include_file = include_get_File( table->name );
   if ( to_include_file == NULL )
     return;
 
