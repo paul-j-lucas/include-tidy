@@ -44,7 +44,7 @@
 #include <sysexits.h>
 
 // in ascending option character ASCII order; sort using: sort -k3b,3f -k3b,3r
-#define OPT_ALIGN                 a
+#define OPT_ALIGN_COLUMN          a
 #define OPT_ALL_INCLUDES          A
 #define OPT_CONFIG                c
 #define OPT_CLANG                 C
@@ -86,7 +86,7 @@
  * @sa OPTIONS_HELP
  */
 static struct option const OPTIONS[] = {
-  { "align",          required_argument,  NULL, COPT(ALIGN)         },
+  { "align-column",   required_argument,  NULL, COPT(ALIGN_COLUMN)  },
   { "all-includes",   no_argument,        NULL, COPT(ALL_INCLUDES)  },
   { "clang",          required_argument,  NULL, COPT(CLANG)         },
   { "comment-style",  required_argument,  NULL, COPT(COMMENT_STYLE) },
@@ -107,7 +107,7 @@ static struct option const OPTIONS[] = {
  * @sa OPTIONS
  */
 static char const *const OPTIONS_HELP[] = {
-  [ COPT(ALIGN) ] = "Align comments to this column; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
+  [ COPT(ALIGN_COLUMN) ] = "Align comments to this column; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
   [ COPT(ALL_INCLUDES) ] = "Print all include files",
   [ COPT(CLANG) ] = "Path of clang to use; default=\"" OPT_CLANG_DEFAULT "\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
@@ -874,7 +874,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     if ( opt == -1 )
       break;
     switch ( opt ) {
-      case COPT(ALIGN):;
+      case COPT(ALIGN_COLUMN):;
         if ( !parse_comment_alignment( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s; must be 0-%d\n",
