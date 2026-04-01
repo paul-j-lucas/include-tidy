@@ -60,19 +60,33 @@
  * @{
  */
 
-///////////////////////////////////////////////////////////////////////////////
+////////// enumerations ///////////////////////////////////////////////////////
 
 /**
- * Configuration keys.
+ * Configuration file key kinds.
  */
-enum config_keys {
-  CONFIG_KEY_NONE         = 0,          ///< No key.
+enum config_key_kind {
+  CONFIG_KEY_NONE,                      ///< No key.
   CONFIG_KEY_CONFIG_NEXT  = 1 << 0,     ///< `config_next`.
   CONFIG_KEY_INCLUDES     = 1 << 0,     ///< `includes`.
   CONFIG_KEY_PROXY        = 1 << 1,     ///< `proxy`.
   CONFIG_KEY_SYMBOLS      = 1 << 2,     ///< `symbols`.
 };
-typedef enum config_keys config_keys;
+
+/**
+ * Connfiguration file locations.
+ */
+enum config_locs {
+  CONFIG_LOC_CLI,                       ///< Command line.
+  CONFIG_LOC_CWD,                       ///< Current working directory.
+  CONFIG_LOC_XDG_CONFIG_HOME,           ///< `$XDG_CONFIG_HOME`.
+  CONFIG_LOC_XDG_CONFIG_DIRS            ///< `$XDG_CONFIG_DIRS`.
+};
+
+/**
+ * Last value of config_locs.
+ */
+#define CONFIG_LOC_LAST   CONFIG_LOC_XDG_CONFIG_DIRS
 
 /**
  * Options for the config_open() function.
@@ -82,21 +96,55 @@ enum config_opts {
   CONFIG_OPT_ERROR_IS_FATAL    = 1 << 0,  ///< An error is fatal.
   CONFIG_OPT_IGNORE_NOT_FOUND  = 1 << 1   ///< Ignore file not found.
 };
-typedef enum config_opts config_opts_t;
+
+////////// typedefs ///////////////////////////////////////////////////////////
+
+typedef enum    config_opts     config_opts;
+typedef enum    config_key_kind config_key_kind;
+typedef struct  config_key      config_key;
+typedef enum    config_locs     config_locs;
+typedef struct  symbol_include  symbol_include;
 
 /**
- * Mapping from a symbol name to the include file's relative path _or_ file
- * that declares it from a configuration file.
+ * Signature for function to parse the value of a configuration key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table_name The TOML table name.
+ * @param value The toml_value to parse.
+ */
+typedef void (*config_parse_fn)( char const *config_path,
+                                 char const *table_name,
+                                 toml_value const *value );
+
+////////// structures /////////////////////////////////////////////////////////
+
+/**
+ * Configuration key (in a table).
+ */
+struct config_key {
+  char const       *name;               ///< Key name.
+  config_key_kind   kind;               ///< Key kind.
+  config_parse_fn   parse_fn;           ///< Value parsing function.
+};
+
+/**
+ * Mapping from a symbol name to a set of include CXFiles that declare it from
+ * a configuration file.
  */
 struct symbol_include {
   char const *from_symbol_name;         ///< Symbol name.
   rb_tree_t   to_include_files;         ///< Include file(s).
 };
-typedef struct symbol_include symbol_include;
 
 // local functions
 NODISCARD
-static FILE*        config_open( char const*, config_opts_t );
+static config_key const*
+                    config_key_parse( char const* );
+
+static void         config_next_parse( char const*, char const*,
+                                       toml_value const* );
+NODISCARD
+static FILE*        config_open( char const*, config_opts );
 
 NODISCARD
 static char const*  home_dir( void );
@@ -110,10 +158,20 @@ static void         symbol_include_cleanup( symbol_include* );
 static void         symbols_parse( char const*, char const*,
                                    toml_value const* );
 
-
 // local variables
-static bool       config_next;
-static rb_tree_t  symbol_include_map;   ///< Mapping from symbols to includes.
+static config_locs  config_loc;         ///< Configuration file location.
+static bool         config_next = true; ///< Read next configuration file?
+static rb_tree_t    symbol_include_map; ///< Mapping from symbols to includes.
+
+/**
+ * Configuration keys.
+ */
+static config_key const CONFIG_KEYS[] = {
+  { "config_next",  CONFIG_KEY_CONFIG_NEXT, &config_next_parse  },
+  { "includes",     CONFIG_KEY_INCLUDES,    &includes_parse     },
+  { "proxy",        CONFIG_KEY_PROXY,       &proxy_parse        },
+  { "symbols",      CONFIG_KEY_SYMBOLS,     &symbols_parse      },
+};
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -153,66 +211,97 @@ static void config_cleanup( void ) {
 NODISCARD
 static FILE* config_find( char const *config_path,
                           char path_buf[static PATH_MAX] ) {
+  FILE *config_file = NULL;
   char const *home = NULL;
 
-  // 1. Try --config/-c command-line option.
-  FILE *config_file = config_open( config_path, CONFIG_OPT_ERROR_IS_FATAL );
-  if ( config_file != NULL )
-    strcpy( path_buf, config_path );
+  switch ( config_loc ) {
+    case CONFIG_LOC_CLI:
+      // 1. Try --config/-c command-line option.
+      config_file = config_open( config_path, CONFIG_OPT_ERROR_IS_FATAL );
+      if ( config_file != NULL )
+        strcpy( path_buf, config_path );
+      FALLTHROUGH;
 
-  // 2. Try $PWD/include-tidy.toml
-  if ( config_file == NULL ) {
-    size_t cwd_len;
-    strcpy( path_buf, get_cwd( &cwd_len ) );
-    path_append( path_buf, cwd_len, PACKAGE ".toml" );
-    config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
-    path_buf[0] = '\0';
-  }
-
-  // 3. Try $XDG_CONFIG_HOME/include-tidy.toml and
-  //    $HOME/.config/include-tidy.toml.
-  if ( config_file == NULL && (home = home_dir()) != NULL ) {
-    char const *const config_dir = null_if_empty( getenv( "XDG_CONFIG_HOME" ) );
-    if ( config_dir != NULL ) {
-      strcpy( path_buf, config_dir );
-    }
-    else if ( home != NULL ) {
-      // LCOV_EXCL_START
-      strcpy( path_buf, home );
-      path_append( path_buf, SIZE_MAX, ".config" );
-      // LCOV_EXCL_STOP
-    }
-    if ( path_buf[0] != '\0' ) {
-      path_append( path_buf, SIZE_MAX, PACKAGE ".toml" );
-      config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
-      path_buf[0] = '\0';
-    }
-  }
-
-  // 4. Try $XDG_CONFIG_DIRS/include-tidy and /etc/xdg/include-tidy.
-  if ( config_file == NULL ) {
-    char const *config_dirs = null_if_empty( getenv( "XDG_CONFIG_DIRS" ) );
-    if ( config_dirs == NULL )
-      config_dirs = "/etc/xdg";         // LCOV_EXCL_LINE
-    for (;;) {
-      char const *const next_sep = strchr( config_dirs, ':' );
-      size_t const dir_len = next_sep != NULL ?
-        STATIC_CAST( size_t, next_sep - config_dirs ) : strlen( config_dirs );
-      if ( dir_len > 0 ) {
-        strncpy_0( path_buf, config_dirs, dir_len );
-        path_append( path_buf, dir_len, PACKAGE );
+    case CONFIG_LOC_CWD:
+      // 2. Try $PWD/include-tidy.toml
+      if ( config_file == NULL ) {
+        size_t cwd_len;
+        strcpy( path_buf, get_cwd( &cwd_len ) );
+        path_append( path_buf, cwd_len, PACKAGE ".toml" );
         config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
         path_buf[0] = '\0';
-        if ( config_file != NULL )
-          break;
       }
-      if ( next_sep == NULL )
-        break;
-      config_dirs = next_sep + 1;
-    } // for
+      FALLTHROUGH;
+
+    case CONFIG_LOC_XDG_CONFIG_HOME:
+      // 3. Try $XDG_CONFIG_HOME/include-tidy.toml and
+      //    $HOME/.config/include-tidy.toml.
+      if ( config_file == NULL && (home = home_dir()) != NULL ) {
+        char const *const config_dir =
+          null_if_empty( getenv( "XDG_CONFIG_HOME" ) );
+        if ( config_dir != NULL ) {
+          strcpy( path_buf, config_dir );
+        }
+        else if ( home != NULL ) {
+          // LCOV_EXCL_START
+          strcpy( path_buf, home );
+          path_append( path_buf, SIZE_MAX, ".config" );
+          // LCOV_EXCL_STOP
+        }
+        if ( path_buf[0] != '\0' ) {
+          path_append( path_buf, SIZE_MAX, PACKAGE ".toml" );
+          config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
+          path_buf[0] = '\0';
+        }
+      }
+      FALLTHROUGH;
+
+    case CONFIG_LOC_XDG_CONFIG_DIRS:
+      // 4. Try $XDG_CONFIG_DIRS/include-tidy and /etc/xdg/include-tidy.
+      if ( config_file == NULL ) {
+        char const *config_dirs = null_if_empty( getenv( "XDG_CONFIG_DIRS" ) );
+        if ( config_dirs == NULL )
+          config_dirs = "/etc/xdg";         // LCOV_EXCL_LINE
+        for (;;) {
+          char const *const next_sep = strchr( config_dirs, ':' );
+          size_t const dir_len = next_sep != NULL ?
+            STATIC_CAST( size_t, next_sep - config_dirs ) :
+            strlen( config_dirs );
+          if ( dir_len > 0 ) {
+            strncpy_0( path_buf, config_dirs, dir_len );
+            path_append( path_buf, dir_len, PACKAGE );
+            config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
+            path_buf[0] = '\0';
+            if ( config_file != NULL )
+              break;
+          }
+          if ( next_sep == NULL )
+            break;
+          config_dirs = next_sep + 1;
+        } // for
+    } // switch
+    config_next = false;
   }
 
   return config_file;
+}
+
+/**
+ * Parses a configuration key string.
+ *
+ * @param s The string to parse.
+ * @return Returns a pointer to the corresponding config_key or NULL if \a s
+ * does not correspond to a key.
+ */
+static config_key const* config_key_parse( char const *s ) {
+  assert( s != NULL );
+
+  FOREACH_ARRAY_ELEMENT( config_key, key, CONFIG_KEYS ) {
+    if ( strcmp( s, key->name ) == 0 )
+      return key;
+  } // for
+
+  return NULL;
 }
 
 /**
@@ -221,9 +310,10 @@ static FILE* config_find( char const *config_path,
  * @param config_path The full path to the configurarion file.
  * @param value The toml_value to parse.
  */
-static void config_next_parse( char const *config_path,
+static void config_next_parse( char const *config_path, char const *table_name,
                                toml_value const *value ) {
   assert( config_path != NULL );
+  (void)table_name;
   assert( value != NULL );
 
   if ( value->type != TOML_BOOL ) {
@@ -246,7 +336,7 @@ static void config_next_parse( char const *config_path,
  * error or if \a path is NULL.
  */
 NODISCARD
-static FILE* config_open( char const *path, config_opts_t opts ) {
+static FILE* config_open( char const *path, config_opts opts ) {
   if ( path == NULL )
     return NULL;
   FILE *const config_file = fopen( path, "r" );
@@ -291,65 +381,39 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   while ( toml_table_next( &toml, &table ) ) {
     if ( table.name == NULL ) {
       fatal_error( EX_CONFIG,
-        "%s:%u:%u required table (header) name missing\n",
+        "%s:%u:%u required table name missing\n",
         config_path, toml.loc.line, toml.loc.col
       );
     }
 
-    bool const table_is_include_tidy = strcmp( table.name, "include-tidy" ) == 0;
-    config_keys keys = CONFIG_KEY_NONE;
+    config_key_kind key_kinds_seen = CONFIG_KEY_NONE;
 
     toml_iterator iter;
     toml_iterator_init( &table, &iter );
     for ( toml_key_value const *kv;
           (kv = toml_iterator_next( &iter )) != NULL; ) {
 
-      if ( table_is_include_tidy ) {
-        if ( strcmp( kv->key, "config_next" ) == 0 ) {
-          config_next_parse( config_path, &kv->value );
-          continue;
-        }
+      config_key const *const key = config_key_parse( kv->key );
+      if ( key == NULL ) {
+        fatal_error( EX_CONFIG,
+          "%s:%u:%u: \"%s\": unknown key\n",
+          config_path, kv->key_loc.line, kv->key_loc.col, table.name
+        );
+      }
+      if ( key_kinds_seen != CONFIG_KEY_NONE ) {
+        fatal_error( EX_CONFIG,
+          "%s:%u:%u: \"%s\": key mutually exclusive with previous keys\n",
+          config_path, kv->key_loc.line, kv->key_loc.col, table.name
+        );
       }
 
-      if ( strcmp( kv->key, "includes" ) == 0 ) {
-        if ( (keys & (CONFIG_KEY_PROXY | CONFIG_KEY_SYMBOLS)) != 0 )
-          goto mutually_exclusive;
-        includes_parse( config_path, table.name, &kv->value );
-        keys |= CONFIG_KEY_INCLUDES;
-        continue;
-      }
-
-      if ( strcmp( kv->key, "proxy" ) == 0 ) {
-        if ( (keys & (CONFIG_KEY_INCLUDES | CONFIG_KEY_SYMBOLS)) != 0 )
-          goto mutually_exclusive;
-        proxy_parse( config_path, table.name, &kv->value );
-        keys |= CONFIG_KEY_PROXY;
-        continue;
-      }
-
-      if ( strcmp( kv->key, "symbols" ) == 0 ) {
-        if ( (keys & (CONFIG_KEY_INCLUDES | CONFIG_KEY_PROXY)) != 0 )
-          goto mutually_exclusive;
-        symbols_parse( config_path, table.name, &kv->value );
-        keys |= CONFIG_KEY_SYMBOLS;
-        continue;
-      }
-
-      fatal_error( EX_CONFIG,
-        "%s:%u:%u: \"%s\": unknown key\n",
-        config_path, kv->key_loc.line, kv->key_loc.col, table.name
-      );
-
-mutually_exclusive:
-      fatal_error( EX_CONFIG,
-        "%s:%u:%u: \"proxy\" and \"symbols\" keys are mutually exclusive\n",
-        config_path, kv->key_loc.line, kv->key_loc.col
-      );
+      (*key->parse_fn)( config_path, table.name, &kv->value );
+      key_kinds_seen |= key->kind;
     } // for
 
-    if ( keys == CONFIG_KEY_NONE ) {
+    if ( key_kinds_seen == CONFIG_KEY_NONE ) {
       fatal_error( EX_CONFIG,
-        "%s:%u:%u: required \"includes\", \"proxy\", or \"symbols\" key for \"%s\" missing\n",
+        "%s:%u:%u: \"%s\": empty table\n",
         config_path, table.loc.line, table.loc.col, table.name
       );
     }
@@ -391,7 +455,7 @@ static char const* home_dir( void ) {
 }
 
 /**
- * TODO.
+ * Parses the value of an `"includes"` key.
  *
  * @param config_path The full path to the configurarion file.
  * @param table_name The toml_table name.
@@ -596,7 +660,7 @@ static void symbol_includes_dump( void ) {
 }
 
 /**
- * If present, parses the value of a `"symbols"` key.
+ * Parses the value of a `"symbols"` key.
  *
  * @param config_path The full path to the configurarion file.
  * @param table_name The TOML table name.
@@ -666,18 +730,23 @@ void config_init( void ) {
   ASSERT_RUN_ONCE();
 
   char path_buf[ PATH_MAX ];
-  FILE *const config_file = config_find( opt_config_path, path_buf );
-  if ( config_file == NULL )
-    return;
 
-  rb_tree_init(
-    &symbol_include_map, RB_DINT,
-    POINTER_CAST( rb_cmp_fn_t, &symbol_include_cmp )
-  );
-  ATEXIT( &config_cleanup );
+  for ( ; config_next && config_loc <= CONFIG_LOC_LAST; ++config_loc ) {
+    FILE *const config_file = config_find( opt_config_path, path_buf );
+    if ( config_file == NULL )
+      break;
 
-  config_parse( path_buf, config_file );
-  fclose( config_file );
+    RUN_ONCE {
+      rb_tree_init(
+        &symbol_include_map, RB_DINT,
+        POINTER_CAST( rb_cmp_fn_t, &symbol_include_cmp )
+      );
+      ATEXIT( &config_cleanup );
+    }
+
+    config_parse( path_buf, config_file );
+    fclose( config_file );
+  } // for
 
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_SYMBOLS) != 0 )
     symbol_includes_dump();
