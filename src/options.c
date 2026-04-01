@@ -218,10 +218,10 @@ bool parse_comment_style( char const *delim_format ) {
   return true;
 }
 
-bool parse_comment_alignment( char const *s ) {
+bool parse_align_column( char const *s ) {
   assert( s != NULL );
   unsigned long long ull = parse_ull( s );
-  if ( ull > OPT_COMMENT_ALIGN_MAX )
+  if ( ull > OPT_ALIGN_COLUMN_MAX )
     return false;
   opt_align_column = STATIC_CAST( unsigned, ull );
   return true;

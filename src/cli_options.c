@@ -875,10 +875,10 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       break;
     switch ( opt ) {
       case COPT(ALIGN_COLUMN):;
-        if ( !parse_comment_alignment( optarg ) ) {
+        if ( !parse_align_column( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s; must be 0-%d\n",
-            optarg, get_opt_format( opt ), OPT_COMMENT_ALIGN_MAX
+            optarg, get_opt_format( opt ), OPT_ALIGN_COLUMN_MAX
           );
         }
         break;

@@ -65,9 +65,9 @@ extern tidy_verbose opt_verbose;          ///< Print verbose output?
 // extern argument variables
 extern char const  *arg_source_path;      ///< The file being tidied.
 
-#define OPT_CLANG_DEFAULT         "clang" /**< Default `clang` path. */
 #define OPT_ALIGN_COLUMN_DEFAULT  41      /**< Default column alignment. */
-#define OPT_COMMENT_ALIGN_MAX     256     /**< Maximum column alignment. */
+#define OPT_ALIGN_COLUMN_MAX      256     /**< Maximum column alignment. */
+#define OPT_CLANG_DEFAULT         "clang" /**< Default `clang` path. */
 #define OPT_LINE_LENGTH_DEFAULT   80      /**< Default line length. */
 #define OPT_LINE_LENGTH_MAX       256     /**< Maximum line length. */
 
@@ -103,7 +103,7 @@ void options_init( void );
  * @return Returns `true` only if \a s was parsed successfully.
  */
 NODISCARD
-bool parse_comment_alignment( char const *s );
+bool parse_align_column( char const *s );
 
 /**
  * Parses a comment delimiter.
