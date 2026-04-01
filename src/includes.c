@@ -27,9 +27,9 @@
 #include "pjl_config.h"
 #include "includes.h"
 #include "clang_util.h"
-#include "config_file.h"
 #include "include-tidy.h"
 #include "options.h"
+#include "red_black.h"
 #include "symbols.h"
 #include "trans_unit.h"
 #include "util.h"
@@ -38,9 +38,11 @@
 
 // standard
 #include <assert.h>
-#include <limits.h>                     /* for PATH_MAX */
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>                     /* for atexit(3) */
 #include <string.h>
+#include <sysexits.h>
 
 // libclang
 #include <clang-c/Index.h>
