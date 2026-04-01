@@ -281,7 +281,6 @@ static FILE* config_find( char const *config_path,
         strcpy( path_buf, get_cwd( &cwd_len ) );
         path_append( path_buf, cwd_len, PACKAGE ".toml" );
         config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
-        path_buf[0] = '\0';
       }
       FALLTHROUGH;
 
@@ -303,7 +302,6 @@ static FILE* config_find( char const *config_path,
         if ( path_buf[0] != '\0' ) {
           path_append( path_buf, SIZE_MAX, PACKAGE ".toml" );
           config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
-          path_buf[0] = '\0';
         }
       }
       FALLTHROUGH;
@@ -455,7 +453,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       if ( key_kinds_seen != CONFIG_KEY_NONE ) {
         fatal_error( EX_CONFIG,
           "%s:%u:%u: \"%s\": key mutually exclusive with previous keys\n",
-          config_path, kv->key_loc.line, kv->key_loc.col, table.name
+          config_path, kv->key_loc.line, kv->key_loc.col, key->name
         );
       }
 
