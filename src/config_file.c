@@ -124,8 +124,9 @@ typedef void (*config_parse_fn)( char const *config_path,
  */
 struct config_key {
   char const       *name;               ///< Key name.
-  config_key_kind   kind;               ///< Key kind.
   config_parse_fn   parse_fn;           ///< Value parsing function.
+  config_key_kind   kind;               ///< Key kind.
+  config_key_kind   allowed_kinds;      ///< Kinds allowed with it.
 };
 
 /**
@@ -174,11 +175,16 @@ static rb_tree_t    symbol_include_map; ///< Mapping from symbols to includes.
  * Configuration keys.
  */
 static config_key const CONFIG_KEYS[] = {
-  { "align-column", CONFIG_KEY_ALIGN_COLUMN,  &align_column_parse },
-  { "config-next",  CONFIG_KEY_CONFIG_NEXT,   &config_next_parse  },
-  { "includes",     CONFIG_KEY_INCLUDES,      &includes_parse     },
-  { "proxy",        CONFIG_KEY_PROXY,         &proxy_parse        },
-  { "symbols",      CONFIG_KEY_SYMBOLS,       &symbols_parse      },
+  { "align-column", &align_column_parse,  CONFIG_KEY_ALIGN_COLUMN,
+                    CONFIG_KEY_CONFIG_NEXT },
+  { "config-next",  &config_next_parse,   CONFIG_KEY_CONFIG_NEXT,
+                    CONFIG_KEY_ALIGN_COLUMN },
+  { "includes",     &includes_parse,      CONFIG_KEY_INCLUDES,
+                    CONFIG_KEY_NONE },
+  { "proxy",        &proxy_parse,         CONFIG_KEY_PROXY,
+                    CONFIG_KEY_NONE },
+  { "symbols",      &symbols_parse,       CONFIG_KEY_SYMBOLS,
+                    CONFIG_KEY_NONE },
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -435,10 +441,16 @@ static void config_parse( char const *config_path, FILE *config_file ) {
         config_path, toml.loc.line, toml.loc.col
       );
     }
+    if ( toml_table_empty( &table ) ) {
+      fatal_error( EX_CONFIG,
+        "%s:%u:%u: \"%s\": empty table\n",
+        config_path, table.loc.line, table.loc.col, table.name
+      );
+    }
 
-    config_key_kind key_kinds_seen = CONFIG_KEY_NONE;
+    config_key_kind allowed_kinds = CONFIG_KEY_NONE;
+    toml_iterator   iter;
 
-    toml_iterator iter;
     toml_iterator_init( &table, &iter );
     for ( toml_key_value const *kv;
           (kv = toml_iterator_next( &iter )) != NULL; ) {
@@ -450,23 +462,19 @@ static void config_parse( char const *config_path, FILE *config_file ) {
           config_path, kv->key_loc.line, kv->key_loc.col, table.name
         );
       }
-      if ( key_kinds_seen != CONFIG_KEY_NONE ) {
+
+      if ( allowed_kinds == CONFIG_KEY_NONE ) {
+        allowed_kinds = key->allowed_kinds;
+      }
+      else if ( (key->kind & allowed_kinds) == 0 ) {
         fatal_error( EX_CONFIG,
-          "%s:%u:%u: \"%s\": key mutually exclusive with previous keys\n",
+          "%s:%u:%u: \"%s\": key mutually exclusive with previous key(s)\n",
           config_path, kv->key_loc.line, kv->key_loc.col, key->name
         );
       }
 
       (*key->parse_fn)( config_path, &table, &kv->value );
-      key_kinds_seen |= key->kind;
     } // for
-
-    if ( key_kinds_seen == CONFIG_KEY_NONE ) {
-      fatal_error( EX_CONFIG,
-        "%s:%u:%u: \"%s\": empty table\n",
-        config_path, table.loc.line, table.loc.col, table.name
-      );
-    }
   } // while
 
   toml_table_cleanup( &table );
