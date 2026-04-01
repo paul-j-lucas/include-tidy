@@ -27,7 +27,6 @@
 #include "pjl_config.h"
 #include "includes.h"
 #include "clang_util.h"
-#include "include-tidy.h"
 #include "options.h"
 #include "red_black.h"
 #include "symbols.h"
@@ -398,7 +397,7 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
       opt_comment_style[0] = "// ";
       reset_opt_comment_style = true;
     }
-    check_asprintf( &comment, "DELETE line %u", include->line );
+    check_asprintf( &comment, "DELETE LINE %u", include->line );
   }
 
   if ( true_clear( &ipvd->print_blank_line ) )
@@ -625,6 +624,8 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   );
 
   tidy_include *const include = RB_DINT( rv_rbi.node );
+  include->line = include_line;
+
   if ( rv_rbi.inserted ) {
     CXString const    abs_path_cxs = tidy_File_getRealPathName( included_file );
     char const *const abs_path = clang_getCString( abs_path_cxs );
@@ -655,7 +656,6 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   }
   else {                                // is_direct must be true here
     include->depth = 0;
-    include->line = include_line;
     include->proxy = NULL;
   }
 
