@@ -257,6 +257,17 @@ inline toml_key_value const* toml_iterator_next( toml_iterator *iter ) {
 void toml_table_cleanup( toml_table *table );
 
 /**
+ * Gets whether \a table is empty.
+ *
+ * @param table The toml_table to check.
+ * @return Returns `true` only if \a table is empty.
+ */
+NODISCARD
+inline bool toml_table_empty( toml_table const *table ) {
+  return rb_tree_empty( &table->keys_values );
+}
+
+/**
  * Attempts to find \a key in \a table.
  *
  * @param table The toml_table to find \a key in.
