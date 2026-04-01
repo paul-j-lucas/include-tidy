@@ -56,8 +56,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // extern option variables
+unsigned            opt_align_column = OPT_ALIGN_COLUMN_DEFAULT;
 bool                opt_all_includes;
-unsigned            opt_comment_align = OPT_COMMENT_ALIGN_DEFAULT;
 char const         *opt_comment_style[2] = { "// ", "" };
 char const         *opt_config_path;
 unsigned            opt_line_length = OPT_LINE_LENGTH_DEFAULT;
@@ -223,7 +223,7 @@ bool parse_comment_alignment( char const *s ) {
   unsigned long long ull = parse_ull( s );
   if ( ull > OPT_COMMENT_ALIGN_MAX )
     return false;
-  opt_comment_align = STATIC_CAST( unsigned, ull );
+  opt_align_column = STATIC_CAST( unsigned, ull );
   return true;
 }
 

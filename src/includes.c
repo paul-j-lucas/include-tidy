@@ -351,8 +351,8 @@ static void include_print( tidy_include const *include, char const *comment ) {
 
   if ( comment != NULL ) {
     unsigned const column = STATIC_CAST( unsigned, raw_len ) + 1;
-    if ( column < opt_comment_align )
-      FPUTNSP( opt_comment_align - column, stdout );
+    if ( column < opt_align_column )
+      FPUTNSP( opt_align_column - column, stdout );
     printf( "%s%s%s", opt_comment_style[0], comment, opt_comment_style[1] );
   }
 
@@ -496,7 +496,7 @@ static bool is_standard_include( char const *rel_path ) {
 static char* make_symbols_used_comment( tidy_include const *include ) {
   assert( include != NULL );
 
-  size_t const fixed_len = opt_comment_align +
+  size_t const fixed_len = opt_align_column +
     strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
 
   bool            done = false;

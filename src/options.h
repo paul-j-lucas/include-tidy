@@ -55,8 +55,8 @@ enum tidy_verbose {
 typedef enum tidy_verbose tidy_verbose;
 
 // extern option variables
+extern unsigned     opt_align_column;     ///< Comment alignment column.
 extern bool         opt_all_includes;     ///< Print all includes?
-extern unsigned     opt_comment_align;    ///< Comment alignment column.
 extern char const  *opt_comment_style[2]; ///< Comment delimiters to use.
 extern char const  *opt_config_path;      ///< Configuration file path.
 extern unsigned     opt_line_length;      ///< Line length.
@@ -66,7 +66,7 @@ extern tidy_verbose opt_verbose;          ///< Print verbose output?
 extern char const  *arg_source_path;      ///< The file being tidied.
 
 #define OPT_CLANG_DEFAULT         "clang" /**< Default `clang` path. */
-#define OPT_COMMENT_ALIGN_DEFAULT 41      /**< Default column alignment. */
+#define OPT_ALIGN_COLUMN_DEFAULT  41      /**< Default column alignment. */
 #define OPT_COMMENT_ALIGN_MAX     256     /**< Maximum column alignment. */
 #define OPT_LINE_LENGTH_DEFAULT   80      /**< Default line length. */
 #define OPT_LINE_LENGTH_MAX       256     /**< Maximum line length. */
