@@ -642,17 +642,6 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     include->is_local     = is_local_include( abs_path );
     include->rel_path     = opt_include_paths_relativize( abs_path );
 
-    if ( vcvd->source_file_no_ext != NULL ) {
-      char const *const include_ext = path_ext( include->rel_path );
-      if ( include_ext != NULL && include_ext[0] == 'h' ) {
-        char path_buf[ PATH_MAX ];
-        char const *const include_no_ext =
-          path_no_ext( include->rel_path, path_buf );
-        if ( strcmp( include_no_ext, vcvd->source_file_no_ext ) == 0 )
-          include->sort_rank = -1;
-      }
-    }
-
     if ( !is_direct ) {
       tidy_include *const includer = include_find( including_file );
       assert( includer != NULL );
@@ -663,6 +652,15 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
           proxy = proxy->proxy;
         include->proxy = proxy;
       }
+    }
+
+    char const *const include_ext = path_ext( include->rel_path );
+    if ( include_ext != NULL && include_ext[0] == 'h' ) {
+      char path_buf[ PATH_MAX ];
+      char const *const include_no_ext =
+        path_no_ext( include->rel_path, path_buf );
+      if ( strcmp( include_no_ext, vcvd->source_file_no_ext ) == 0 )
+        include->sort_rank = -1;
     }
 
     rb_tree_init(
