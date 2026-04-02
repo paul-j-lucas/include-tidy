@@ -39,7 +39,6 @@
 
 // standard
 #include <assert.h>
-#include <ctype.h>
 #include <errno.h>
 #include <limits.h>                     /* for PATH_MAX, SIZE_MAX */
 #if HAVE_PWD_H
