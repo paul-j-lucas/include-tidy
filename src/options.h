@@ -50,7 +50,7 @@ enum tidy_verbose {
   TIDY_VERBOSE_CONFIG_PROXIES = 1 << 1, ///< Configuration proxies.
   TIDY_VERBOSE_CONFIG_SYMBOLS = 1 << 2, ///< Configuration symbols.
   TIDY_VERBOSE_INCLUDES       = 1 << 3, ///< Files includes.
-  TIDY_VERBOSE_SYMBOLS        = 1 << 4,  ///< Symbols referenced.
+  TIDY_VERBOSE_SYMBOLS        = 1 << 4, ///< Symbols referenced.
 };
 typedef enum tidy_verbose tidy_verbose;
 
