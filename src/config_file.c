@@ -83,10 +83,11 @@ enum config_file_loc {
 enum config_key_kind {
   CONFIG_KEY_NONE,                      ///< No key.
   CONFIG_KEY_ALIGN_COLUMN = 1 << 0,     ///< `align-column`.
-  CONFIG_KEY_CONFIG_NEXT  = 1 << 1,     ///< `config_next`.
-  CONFIG_KEY_INCLUDES     = 1 << 2,     ///< `includes`.
-  CONFIG_KEY_PROXY        = 1 << 3,     ///< `proxy`.
-  CONFIG_KEY_SYMBOLS      = 1 << 4,     ///< `symbols`.
+  CONFIG_KEY_ALL_INCLUDES = 1 << 1,     ///< `all-includes`.
+  CONFIG_KEY_CONFIG_NEXT  = 1 << 2,     ///< `config_next`.
+  CONFIG_KEY_INCLUDES     = 1 << 3,     ///< `includes`.
+  CONFIG_KEY_PROXY        = 1 << 4,     ///< `proxy`.
+  CONFIG_KEY_SYMBOLS      = 1 << 5,     ///< `symbols`.
 };
 
 /**
@@ -151,6 +152,12 @@ struct symbol_include {
 // local functions
 static void         align_column_parse( char const*, toml_table const*,
                                         toml_value const* );
+static void         all_includes_parse( char const*, toml_table const*,
+                                        toml_value const* );
+
+NODISCARD
+static bool         bool_value_parse( char const*, char const*,
+                                      toml_value const* );
 
 NODISCARD
 static config_key const*
@@ -166,8 +173,11 @@ static char const*  home_dir( void );
 
 static void         includes_parse( char const*, toml_table const*,
                                     toml_value const* );
-static long         int_value_parse( char const*c, char const*,
-                                     toml_value const*, long , long );
+
+NODISCARD
+static long         int_value_parse( char const*, char const*,
+                                     toml_value const*, long, long );
+
 static void         path_append( char*, size_t, char const* );
 static void         proxy_parse( char const*, toml_table const*,
                                  toml_value const* );
@@ -187,9 +197,12 @@ static rb_tree_t        symbol_include_map; ///< Mapping from symbols to include
 static config_key const CONFIG_KEYS[] = {
   { "align-column", &align_column_parse,  CONFIG_TABLE_INCLUDE_TIDY,
                     CONFIG_KEY_ALIGN_COLUMN,
-                    CONFIG_KEY_CONFIG_NEXT },
+                    CONFIG_KEY_ALL_INCLUDES | CONFIG_KEY_CONFIG_NEXT },
+  { "all-includes", &all_includes_parse,  CONFIG_TABLE_INCLUDE_TIDY,
+                    CONFIG_KEY_ALL_INCLUDES,
+                    CONFIG_KEY_ALIGN_COLUMN | CONFIG_KEY_CONFIG_NEXT },
   { "config-next",  &config_next_parse,   CONFIG_TABLE_INCLUDE_TIDY,
-                    CONFIG_KEY_CONFIG_NEXT,
+                    CONFIG_KEY_ALL_INCLUDES | CONFIG_KEY_CONFIG_NEXT,
                     CONFIG_KEY_ALIGN_COLUMN },
   { "includes",     &includes_parse,      CONFIG_TABLE_NOT_INCLUDE_TIDY,
                     CONFIG_KEY_INCLUDES,
@@ -225,6 +238,23 @@ static void align_column_parse( char const *config_path,
 }
 
 /**
+ * Parses the value of an `"all-includes"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param value The toml_value to parse.
+ */
+static void all_includes_parse( char const *config_path,
+                                toml_table const *table,
+                                toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( value != NULL );
+
+  opt_all_includes = bool_value_parse( config_path, "all-includes", value );
+}
+
+/**
  * Cleans-up all configuration data.
  */
 static void config_cleanup( void ) {
@@ -232,6 +262,29 @@ static void config_cleanup( void ) {
     &symbol_include_map,
     POINTER_CAST( rb_free_fn_t, &symbol_include_cleanup )
   );
+}
+
+/**
+ * Parses a bool value.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param key_name The name of a key.
+ * @param value The toml_value to parse.
+ */
+static bool bool_value_parse( char const *config_path, char const *key_name,
+                              toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( key_name != NULL );
+  assert( value != NULL );
+
+  if ( value->type != TOML_BOOL ) {
+    fatal_error( EX_CONFIG,
+      "%s:%u:%u: invalid value for \"%s\"; expected boolean\n",
+      config_path, value->loc.line, value->loc.col, key_name
+    );
+  }
+
+  return value->b;
 }
 
 /**
