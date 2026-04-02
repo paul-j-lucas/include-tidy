@@ -139,7 +139,7 @@ static inline bool is_toml_space( int c ) {
 static inline void toml_newline( toml_file *toml ) {
   ++toml->loc.line;
   toml->col_prev = toml->loc.col;
-  toml->loc.col = 1;
+  toml->loc.col = 0;
 }
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -848,7 +848,7 @@ void toml_init( toml_file *toml, FILE *file ) {
 
   *toml = (toml_file){
     .file = file,
-    .loc = { .line = 1, .col = 1 }
+    .loc = { .line = 1, .col = 0 }
   };
 }
 
