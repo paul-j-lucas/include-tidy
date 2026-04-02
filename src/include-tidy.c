@@ -31,9 +31,6 @@
 // libclang
 #include <clang-c/Index.h>
 
-// standard
-#include <sysexits.h>
-
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
@@ -64,7 +61,6 @@ int main( int argc, char const *argv[] ) {
     include_proxies_dump();
   symbols_init( tu );
   includes_print();
-  return EX_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
