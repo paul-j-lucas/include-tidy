@@ -143,6 +143,9 @@ NODISCARD
 static bool         bool_value_parse( char const*, char const*,
                                       toml_value const* );
 
+static void         comment_style_parse( char const*, toml_table const*,
+                                         toml_value const* );
+
 NODISCARD
 static config_key const*
                     config_key_parse( char const* );
@@ -167,6 +170,11 @@ static void         line_length_parse( char const*, toml_table const*,
 static void         path_append( char*, size_t, char const* );
 static void         proxy_parse( char const*, toml_table const*,
                                  toml_value const* );
+
+NODISCARD
+static char const*  string_value_parse( char const*, char const*,
+                                        toml_value const* );
+
 static void         symbol_include_add( char const*, CXFile );
 static void         symbol_include_cleanup( symbol_include* );
 static void         symbols_parse( char const*, toml_table const*,
@@ -181,13 +189,14 @@ static rb_tree_t        symbol_include_map; ///< Mapping from symbols to include
  * Configuration keys.
  */
 static config_key const CONFIG_KEYS[] = {
-  { "align-column", CONFIG_TABLE_INCLUDE_TIDY,      &align_column_parse },
-  { "all-includes", CONFIG_TABLE_INCLUDE_TIDY,      &all_includes_parse },
-  { "config-next",  CONFIG_TABLE_INCLUDE_TIDY,      &config_next_parse  },
-  { "includes",     CONFIG_TABLE_NOT_INCLUDE_TIDY,  &includes_parse     },
-  { "line-length",  CONFIG_TABLE_INCLUDE_TIDY,      &line_length_parse  },
-  { "proxy",        CONFIG_TABLE_NOT_INCLUDE_TIDY,  &proxy_parse        },
-  { "symbols",      CONFIG_TABLE_NOT_INCLUDE_TIDY,  &symbols_parse      },
+  { "align-column",   CONFIG_TABLE_INCLUDE_TIDY,      &align_column_parse   },
+  { "all-includes",   CONFIG_TABLE_INCLUDE_TIDY,      &all_includes_parse   },
+  { "comment-style",  CONFIG_TABLE_INCLUDE_TIDY,      &comment_style_parse  },
+  { "config-next",    CONFIG_TABLE_INCLUDE_TIDY,      &config_next_parse    },
+  { "includes",       CONFIG_TABLE_NOT_INCLUDE_TIDY,  &includes_parse       },
+  { "line-length",    CONFIG_TABLE_INCLUDE_TIDY,      &line_length_parse    },
+  { "proxy",          CONFIG_TABLE_NOT_INCLUDE_TIDY,  &proxy_parse          },
+  { "symbols",        CONFIG_TABLE_NOT_INCLUDE_TIDY,  &symbols_parse        },
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -260,6 +269,31 @@ static bool bool_value_parse( char const *config_path, char const *key_name,
   }
 
   return value->b;
+}
+
+/**
+ * Parses the value of an `"comment-style"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param value The toml_value to parse.
+ */
+static void comment_style_parse( char const *config_path,
+                                 toml_table const *table,
+                                 toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( value != NULL );
+
+  char const *const string_value =
+    string_value_parse( config_path, "comment-style", value );
+
+  if ( !parse_comment_style( string_value ) ) {
+    fatal_error( EX_CONFIG,
+      "%s:%u:%u: invalid value for \"comment-style\"; must be one of \"//\", \"/*\", or \"none\"\n",
+      config_path, value->loc.line, value->loc.col
+    );
+  }
 }
 
 /**
@@ -700,6 +734,30 @@ static void proxy_parse( char const *config_path, toml_table const *table,
         config_path, value->loc.line, value->loc.col
       );
   } // switch
+}
+
+/**
+ * Parses a string value.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param key_name The name of a key.
+ * @param value The toml_value to parse.
+ */
+static char const* string_value_parse( char const *config_path,
+                                       char const *key_name,
+                                       toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( key_name != NULL );
+  assert( value != NULL );
+
+  if ( value->type != TOML_STRING ) {
+    fatal_error( EX_CONFIG,
+      "%s:%u:%u: invalid value for \"%s\"; expected string\n",
+      config_path, value->loc.line, value->loc.col, key_name
+    );
+  }
+
+  return value->s;
 }
 
 /**
