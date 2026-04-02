@@ -207,7 +207,7 @@ bool parse_comment_style( char const *s ) {
     opt_comment_style[0] = "// ";
     opt_comment_style[1] = "";
   }
-  else if ( strcmp( s "/*" ) == 0 ) {
+  else if ( strcmp( s, "/*" ) == 0 ) {
     opt_comment_style[0] = "/* ";
     opt_comment_style[1] = " */";
   }
