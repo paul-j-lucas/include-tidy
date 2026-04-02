@@ -26,13 +26,14 @@
 // local
 #include "pjl_config.h"
 #include "toml_lite.h"
+#include "red_black.h"
 #include "util.h"
 
 // standard
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
-#include <inttypes.h>                   /* for strtol */
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -33,13 +33,12 @@
 // standard
 #include <assert.h>
 #include <ctype.h>
-#include <errno.h>
+#include <limits.h>                     /* for PATH_MAX */
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for malloc(), ... */
 #include <string.h>
-#include <strings.h>                    /* for strcasecmp(3) */
 #include <sysexits.h>
 #include <unistd.h>                     /* for close(2), getpid(3) */
 

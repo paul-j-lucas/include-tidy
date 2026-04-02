@@ -37,7 +37,6 @@
 // standard
 #include <assert.h>
 #include <stdbool.h>
-#include <stddef.h>                     /* for NULL */
 #include <stdlib.h>                     /* or free(3) */
 #include <string.h>                     /* for memcpy */
 

@@ -35,6 +35,7 @@
 // standard
 #include <assert.h>
 #include <stdbool.h>
+#include <stddef.h>                     /* for NULL */
 #include <sysexits.h>
 
 // libclang

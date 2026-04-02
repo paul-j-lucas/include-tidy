@@ -28,7 +28,6 @@
 #include "symbols.h"
 #include "clang_util.h"
 #include "config_file.h"
-#include "include-tidy.h"
 #include "includes.h"
 #include "options.h"
 #include "red_black.h"
@@ -38,6 +37,7 @@
 
 // standard
 #include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>                     /* for atexit() */
 #include <string.h>
 
