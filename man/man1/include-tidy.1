@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "March 31, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "April 2, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -52,10 +52,16 @@ include-tidy \(em \f(CW#include\fP tidier
 is a command-line tool
 that can be used to ``tidy'' the
 \f(CW#include\fP directives
-used in a \f(CW.c\fP file
+used in a C
+or C++
+file
 by ensuring that it directly includes
-header files where every symbol referenced
-is declared.
+header files from which it references symbols
+and does not include header files
+from which no symbols are referenced.
+Either missing
+or extraneous header files
+are in ``violation.''
 .SH OPTIONS
 .B include-tidy
 has three kinds of command-line options:
@@ -76,8 +82,23 @@ options are preceded by an
 option to distinguish them from
 .BR clang (1)
 options.
+For exmaple,
+in:
+.cS
+include-tidy -Xtidy --all-includes -I../lib source_file.c
+.cE
+the
+.BR \-\-all-includes
+option
+is given only to
+.B include-tidy
+and the
+.B -I../lib
+option is given only to
+.BR clang (1).
 .PP
-An option argument
+For the options below,
+an option argument
 .I f
 means
 .IR file ,
@@ -88,6 +109,67 @@ and
 .I s
 means
 .IR string .
+.TP 5
+.BR \-\-align-column \f1=\fPn "\f1 | \fP" "" \-a " n"
+Sets the column at which to align comments
+after \f(CW#include\fP directives.
+The default is 40.
+.TP
+.BR \-\-all-includes " | " \-A
+Prints all include files,
+not just those in violation.
+.TP
+.BR \-\-clang \f1=\fPf "\f1 | \fP" "" \-C " f"
+Specifies the path to
+.BR clang (1)
+to use.
+.TP
+.BR \-\-comment-style \f1=\fPs "\f1 | \fP" "" \-s " s"
+Specifies the comment style to use,
+one of \f(CW//\fP,
+\f(CW/*\fP,
+or
+\f(CWnone\fP.
+The default is \f(CW//\fP.
+.TP
+.BR \-\-config \f1=\fPf "\f1 | \fP" "" \-c " f"
+Specifies the path of the configuration file to use.
+.TP
+.BR \-\-line-length \f1=\fPn "\f1 | \fP" "" \-l " n"
+Specifies the line length.
+The default is 80.
+.TP
+.BR \-\-verbose \f1=\fPs "\f1 | \fP" "" \-V " s"
+Specifies what to be verbose about.
+Valid values for
+.I s
+are:
+.RS 8
+.TP 4
+.PD 0
+.B a
+Command-line arguments.
+.TP
+.B i
+Files included.
+.TP
+.B P
+Configuration file proxies.
+.TP
+.B s
+Symbols referenced.
+.TP
+.B S
+Configuration file symbols.
+.RE
+.PD
+.IP
+Multiple values may be given,
+one immediately after the other.
+Alternatively,
+\f(CW*\fP may be given to mean ``all''
+or
+\f(CW-\fP may be given to mean ``none.''
 .SS Clang Options
 Options that are neither one of
 .B "Other Options"
@@ -101,7 +183,11 @@ and are passed to
 (libclang)
 verbatim.
 .SS Other Options
-These options are given directly as-is.
+These options are given directly as-is
+since they would never be ambiguous
+with
+.BR clang (1)
+options.
 .TP 5
 .BR \-\-help " | " \-h
 Prints a help message
@@ -111,6 +197,48 @@ and exits.
 .BR \-\-version " | " \-v
 Prints the version number
 and exits.
+.SH CONFIGRATION FILES
+A configuration file
+can be used to configure
+.B include-tidy
+by reading it
+on start-up.
+.PP
+The file's full path
+is derived from the first of these files
+that exists
+and is readable:
+.nr step 1 1
+.IP \n[step]. 3
+The value of either the
+.B \-\-config
+or
+.B \-c
+option.
+.IP \n+[step].
+.B ./include-tidy.toml
+.IP \n+[step].
+The first of these files:
+.RS 8
+.TP
+.PD 0
+.B $XDG_CONFIG_HOME/include-tidy.toml
+.TP
+.B ~/.config/include-tidy.toml
+.RE
+.PD
+.IP \n+[step].
+If the
+.B XDG_CONFIG_DIRS
+environment variable
+is set to a colon separated list of paths,
+then for each
+.I path
+in it,
+the first of
+.IB path /include-tidy.toml \f1.\fP
+.IP \n+[step].
+.B /etc/xdg/include-tidy.toml
 .SH EXIT STATUS
 .PD 0
 .IP 0
@@ -185,5 +313,6 @@ Paul J. Lucas
 .RI < paul@lucasmail.org >
 .SH SEE ALSO
 .BR clang (1),
-.BR sysexits (3)
+.BR sysexits (3),
+.BR include-tidy (5)
 .\" vim:set et sw=2 ts=2:
