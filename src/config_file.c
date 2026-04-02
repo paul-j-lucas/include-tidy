@@ -44,6 +44,7 @@
 #if HAVE_PWD_H
 # include <pwd.h>                       /* for getpwuid() */
 #endif /* HAVE_PWD_H */
+#include <stdbool.h>
 #include <stdint.h>                     /* for SIZE_MAX */
 #include <stdio.h>
 #include <stdlib.h>                     /* for getenv(), ... */
