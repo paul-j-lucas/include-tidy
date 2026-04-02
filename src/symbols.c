@@ -126,6 +126,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   switch ( clang_getCursorKind( cursor ) ) {
     case CXCursor_CallExpr:
     case CXCursor_DeclRefExpr:
+    case CXCursor_FunctionDecl:
     case CXCursor_MacroExpansion:
     case CXCursor_NamespaceRef:
     case CXCursor_TemplateRef:
