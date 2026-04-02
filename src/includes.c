@@ -73,7 +73,8 @@ struct includes_print_visitor_data {
  * Additional data passed to visitChildren_visitor().
  */
 struct visitChildren_visitor_data {
-  bool  verbose_printed;                ///< Printed any verbose output?
+  char const *source_file_no_ext;       ///< File being tidied without ext.
+  bool        verbose_printed;          ///< Printed any verbose output?
 };
 
 /**
@@ -583,6 +584,10 @@ static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
                                          tidy_include const *j_include ) {
   assert( i_include != NULL );
   assert( j_include != NULL );
+  if ( i_include->sort_rank < j_include->sort_rank )
+    return -1;
+  if ( i_include->sort_rank > j_include->sort_rank )
+    return 1;
   return strcmp( i_include->rel_path, j_include->rel_path );
 }
 
@@ -602,6 +607,9 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
 
   if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
     goto skip;
+
+  visitChildren_visitor_data *const vcvd =
+    POINTER_CAST( visitChildren_visitor_data*, data );
 
   unsigned          include_line;
   CXSourceLocation  include_loc = clang_getCursorLocation( cursor );
@@ -634,6 +642,17 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     include->is_local     = is_local_include( abs_path );
     include->rel_path     = opt_include_paths_relativize( abs_path );
 
+    if ( vcvd->source_file_no_ext != NULL ) {
+      char const *const include_ext = path_ext( include->rel_path );
+      if ( include_ext != NULL && include_ext[0] == 'h' ) {
+        char path_buf[ PATH_MAX ];
+        char const *const include_no_ext =
+          path_no_ext( include->rel_path, path_buf );
+        if ( strcmp( include_no_ext, vcvd->source_file_no_ext ) == 0 )
+          include->sort_rank = -1;
+      }
+    }
+
     if ( !is_direct ) {
       tidy_include *const includer = include_find( including_file );
       assert( includer != NULL );
@@ -662,9 +681,6 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     include->line = include_line;
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
-    visitChildren_visitor_data *const vcvd =
-      POINTER_CAST( visitChildren_visitor_data*, data );
-
     if ( !vcvd->verbose_printed ) {
       verbose_printf( "includes:\n" );
       vcvd->verbose_printed = true;
@@ -777,7 +793,10 @@ void includes_init( CXTranslationUnit tu ) {
   );
   ATEXIT( &includes_cleanup );
 
-  visitChildren_visitor_data vcvd = { 0 };
+  char path_buf[ PATH_MAX ];
+  visitChildren_visitor_data vcvd = {
+    .source_file_no_ext = path_no_ext( base_name( arg_source_path ), path_buf )
+  };
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
   clang_visitChildren( cursor, &visitChildren_visitor, &vcvd );
   if ( vcvd.verbose_printed )

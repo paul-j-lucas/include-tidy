@@ -35,6 +35,7 @@
 
 // standard
 #include <stdbool.h>
+#include <stdint.h>
 
 // libclang
 #include <clang-c/Index.h>
@@ -66,6 +67,7 @@ struct tidy_include {
   bool            is_local;             ///< Local include file?
   bool            is_needed;            ///< Include needed?
   bool            is_proxy_explicit;    ///< Was \ref proxy explicitly added?
+  int8_t          sort_rank;            ///< Sorting rank.
   rb_tree_t       symbol_set;           ///< Symbols referenced from this file.
 };
 
