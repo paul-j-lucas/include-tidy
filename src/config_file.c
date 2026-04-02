@@ -167,6 +167,8 @@ NODISCARD
 static long         int_value_parse( char const*, char const*,
                                      toml_value const*, long, long );
 
+static void         keep_parse( char const*, toml_table const*,
+                                toml_value const* );
 static void         line_length_parse( char const*, toml_table const*,
                                        toml_value const* );
 static void         path_append( char*, size_t, char const* );
@@ -196,6 +198,7 @@ static config_key const CONFIG_KEYS[] = {
   { "comment-style",  CONFIG_TABLE_INCLUDE_TIDY,      &comment_style_parse  },
   { "config-next",    CONFIG_TABLE_INCLUDE_TIDY,      &config_next_parse    },
   { "includes",       CONFIG_TABLE_NOT_INCLUDE_TIDY,  &includes_parse       },
+  { "keep",           CONFIG_TABLE_NOT_INCLUDE_TIDY,  &keep_parse           },
   { "line-length",    CONFIG_TABLE_INCLUDE_TIDY,      &line_length_parse    },
   { "proxy",          CONFIG_TABLE_NOT_INCLUDE_TIDY,  &proxy_parse          },
   { "symbols",        CONFIG_TABLE_NOT_INCLUDE_TIDY,  &symbols_parse        },
@@ -650,6 +653,31 @@ static long int_value_parse( char const *config_path, char const *key_name,
   }
 
   return value->i;
+}
+
+/**
+ * Parses the value of a `"keep"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param value The toml_value to parse.
+ */
+static void keep_parse( char const *config_path, toml_table const *table,
+                        toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( value != NULL );
+
+  bool const keep = bool_value_parse( config_path, "keep", value );
+  if ( !keep )
+    return;
+
+  CXFile include_file = include_get_File( table->name );
+  if ( include_file == NULL )
+    return;
+  tidy_include *const include = include_find( include_file );
+  assert( include != NULL );
+  include->is_needed = true;
 }
 
 /**
