@@ -86,8 +86,9 @@ enum config_key_kind {
   CONFIG_KEY_ALL_INCLUDES = 1 << 1,     ///< `all-includes`.
   CONFIG_KEY_CONFIG_NEXT  = 1 << 2,     ///< `config_next`.
   CONFIG_KEY_INCLUDES     = 1 << 3,     ///< `includes`.
-  CONFIG_KEY_PROXY        = 1 << 4,     ///< `proxy`.
-  CONFIG_KEY_SYMBOLS      = 1 << 5,     ///< `symbols`.
+  CONFIG_KEY_LINE_LENGTH  = 1 << 4,     ///< `line-length`.
+  CONFIG_KEY_PROXY        = 1 << 5,     ///< `proxy`.
+  CONFIG_KEY_SYMBOLS      = 1 << 6,     ///< `symbols`.
 };
 
 /**
@@ -178,6 +179,8 @@ NODISCARD
 static long         int_value_parse( char const*, char const*,
                                      toml_value const*, long, long );
 
+static void         line_length_parse( char const*, toml_table const*,
+                                       toml_value const* );
 static void         path_append( char*, size_t, char const* );
 static void         proxy_parse( char const*, toml_table const*,
                                  toml_value const* );
@@ -197,19 +200,36 @@ static rb_tree_t        symbol_include_map; ///< Mapping from symbols to include
 static config_key const CONFIG_KEYS[] = {
   { "align-column", &align_column_parse,  CONFIG_TABLE_INCLUDE_TIDY,
                     CONFIG_KEY_ALIGN_COLUMN,
-                    CONFIG_KEY_ALL_INCLUDES | CONFIG_KEY_CONFIG_NEXT },
+                    CONFIG_KEY_ALL_INCLUDES |
+                    CONFIG_KEY_CONFIG_NEXT |
+                    CONFIG_KEY_LINE_LENGTH  },
+
   { "all-includes", &all_includes_parse,  CONFIG_TABLE_INCLUDE_TIDY,
                     CONFIG_KEY_ALL_INCLUDES,
-                    CONFIG_KEY_ALIGN_COLUMN | CONFIG_KEY_CONFIG_NEXT },
+                    CONFIG_KEY_ALIGN_COLUMN |
+                    CONFIG_KEY_CONFIG_NEXT |
+                    CONFIG_KEY_LINE_LENGTH },
+
   { "config-next",  &config_next_parse,   CONFIG_TABLE_INCLUDE_TIDY,
-                    CONFIG_KEY_ALL_INCLUDES | CONFIG_KEY_CONFIG_NEXT,
-                    CONFIG_KEY_ALIGN_COLUMN },
+                    CONFIG_KEY_ALL_INCLUDES,
+                    CONFIG_KEY_ALIGN_COLUMN |
+                    CONFIG_KEY_CONFIG_NEXT |
+                    CONFIG_KEY_LINE_LENGTH },
+
   { "includes",     &includes_parse,      CONFIG_TABLE_NOT_INCLUDE_TIDY,
                     CONFIG_KEY_INCLUDES,
                     CONFIG_KEY_NONE },
+
+  { "line-length",  &line_length_parse,   CONFIG_TABLE_INCLUDE_TIDY,
+                    CONFIG_KEY_LINE_LENGTH,
+                    CONFIG_KEY_ALIGN_COLUMN |
+                    CONFIG_KEY_ALL_INCLUDES |
+                    CONFIG_KEY_CONFIG_NEXT },
+
   { "proxy",        &proxy_parse,         CONFIG_TABLE_NOT_INCLUDE_TIDY,
                     CONFIG_KEY_PROXY,
                     CONFIG_KEY_NONE },
+
   { "symbols",      &symbols_parse,       CONFIG_TABLE_NOT_INCLUDE_TIDY,
                     CONFIG_KEY_SYMBOLS,
                     CONFIG_KEY_NONE },
@@ -218,7 +238,7 @@ static config_key const CONFIG_KEYS[] = {
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Parses the value of an `"includes"` key.
+ * Parses the value of an `"align-column"` key.
  *
  * @param config_path The full path to the configurarion file.
  * @param table The current toml_table.
@@ -643,6 +663,26 @@ static long int_value_parse( char const *config_path, char const *key_name,
   }
 
   return value->i;
+}
+
+/**
+ * Parses the value of a `"line-length"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param value The toml_value to parse.
+ */
+static void line_length_parse( char const *config_path,
+                               toml_table const *table,
+                               toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( value != NULL );
+
+  long const int_value = int_value_parse(
+    config_path, "line-length", value, 0, OPT_LINE_LENGTH_MAX
+  );
+  opt_line_length = STATIC_CAST( unsigned, int_value );
 }
 
 /**
