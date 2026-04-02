@@ -211,6 +211,14 @@ bool is_any( char const *s, char const *const matches[const static 2] ) {
   return false;
 }
 
+char const* path_ext( char const *path ) {
+  assert( path != NULL );
+  // Do base_name() first for a case like "a.b/c".
+  char const *const file_name = base_name( path );
+  char const *const dot = strrchr( file_name, '.' );
+  return dot != NULL && dot[1] != '\0' ? dot + 1 : NULL;
+}
+
 void perror_exit( int status ) {
   perror( prog_name );
   exit( status );

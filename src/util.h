@@ -819,6 +819,15 @@ inline char const* null_if_empty( char const *s ) {
 }
 
 /**
+ * Gets the filename extension of \a path.
+ *
+ * @param path The path to get the filename extension of.
+ * @return Returns a pointer into \a path pointing at the first character of
+ * the extension (not the dot) or NULL if \a path has no extension.
+ */
+char const* path_ext( char const *path );
+
+/**
  * Strips a leading dot-slash, if any, from \a path.
  *
  * @param path The path to strip `./` from.
