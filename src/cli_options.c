@@ -283,6 +283,55 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
 }
 
 /**
+ * Gets the language from \a ext.
+ *
+ * @param ext A filename extension (without the dot).
+ * @return Returns either `"c"` (for C) or `"c++"` (for C++).
+ */
+NODISCARD
+static char const* get_ext_language( char const *ext ) {
+  struct ext_lang_map {
+    char const *ext;
+    char const *lang;
+  };
+  typedef struct ext_lang_map ext_lang_map;
+
+  static ext_lang_map const EXT_LANG_MAP[] = {
+    { "c",   "c"   },
+    { "c++", "c++" },
+    { "cc",  "c++" },
+    { "cp",  "c++" },
+    { "cpp", "c++" },
+    { "cxx", "c++" },
+    { "h",   "c"   },
+    { "h++", "c++" },
+    { "hh",  "c++" },
+    { "hp",  "c++" },
+    { "hpp", "c++" },
+    { "hxx", "c++" },
+  };
+
+  if ( ext == NULL ) {
+    EPRINTF( "%s: missing", prog_name );
+  }
+  else {
+    FOREACH_ARRAY_ELEMENT( ext_lang_map, m, EXT_LANG_MAP ) {
+      if ( strcasecmp( ext, m->ext ) == 0 )
+        return m->lang;
+    } // for
+    EPRINTF( "%s: \"%s\": unknown", prog_name, ext );
+  }
+
+  EPUTS( " extension; must be one of " );
+  bool comma = false;
+  FOREACH_ARRAY_ELEMENT( ext_lang_map, m, EXT_LANG_MAP )
+    EPRINTF( true_or_set( &comma ) ? ", %s" : "%s", m->ext );
+  EPUTS( "; or use -xc[++]\n" );
+
+  exit( EX_USAGE );
+}
+
+/**
  * Formats an option as `--%%s/-%%c` where `%%s` is the long option and `%%c`
  * is the short option.
  *
@@ -627,59 +676,6 @@ static void move_tidy_args( int *pargc, char const *argv[],
 }
 
 /**
- * Parses the file extension of \a path.
- *
- * @param path The pathname.
- * @return Returns either `"c"` (for C) or `"c++"` (for C++).
- */
-NODISCARD
-static char const* parse_file_ext( char const *path ) {
-  struct ext_lang_map {
-    char const *ext;
-    char const *lang;
-  };
-  typedef struct ext_lang_map ext_lang_map;
-
-  static ext_lang_map const EXT_LANG_MAP[] = {
-    { "c",   "c"   },
-    { "c++", "c++" },
-    { "cc",  "c++" },
-    { "cp",  "c++" },
-    { "cpp", "c++" },
-    { "cxx", "c++" },
-    { "h",   "c"   },
-    { "h++", "c++" },
-    { "hh",  "c++" },
-    { "hp",  "c++" },
-    { "hpp", "c++" },
-    { "hxx", "c++" },
-  };
-
-  assert( path != NULL );
-
-  char const *const dot = strrchr( path, '.' );
-  if ( dot == NULL || dot[1] == '\0' )
-    return NULL;
-  char const *const ext = dot + 1;
-
-  FOREACH_ARRAY_ELEMENT( ext_lang_map, m, EXT_LANG_MAP ) {
-    if ( strcasecmp( ext, m->ext ) == 0 )
-      return m->lang;
-  } // for
-
-  EPRINTF(
-    "%s: \"%s\": unknown file extension; must be one of ",
-    prog_name, ext
-  );
-  bool comma = false;
-  FOREACH_ARRAY_ELEMENT( ext_lang_map, m, EXT_LANG_MAP )
-    EPRINTF( true_or_set( &comma ) ? ", %s" : "%s", m->ext );
-  EPUTS( "; or use -xc[++]\n" );
-
-  exit( EX_USAGE );
-}
-
-/**
  * Prints the usage message to standard error and exits.
  *
  * @param status The status to exit with.  If it is `EX_OK`, prints to standard
@@ -803,9 +799,10 @@ static void preprocess_argv( int *pargc, char const **pargv[] ) {
   arg_source_path = last_argv;
 
   char const *const clang_path = get_clang_path( *pargc, *pargv );
+  char const *const ext = path_ext( arg_source_path );
   char const *lang = get_x_language( *pargc, *pargv );
   if ( lang == NULL )
-    lang = parse_file_ext( arg_source_path );
+    lang = get_ext_language( ext );
 
   add_clang_include_paths( pargc, pargv, clang_path, lang );
   opt_include_paths_add( "." );
