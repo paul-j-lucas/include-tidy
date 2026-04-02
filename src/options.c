@@ -196,18 +196,18 @@ char const* opt_include_paths_relativize( char const *abs_path ) {
   return path_no_dot_slash( shortest_include_path );
 }
 
-bool parse_comment_style( char const *delim_format ) {
-  assert( delim_format != NULL );
+bool parse_comment_style( char const *s ) {
+  assert( s != NULL );
 
-  if ( strcmp( delim_format, "none" ) == 0 ) {
+  if ( strcmp( s, "none" ) == 0 ) {
     opt_comment_style[0] = "";
     opt_comment_style[1] = "";
   }
-  else if ( strcmp( delim_format, "//" ) == 0 ) {
+  else if ( strcmp( s, "//" ) == 0 ) {
     opt_comment_style[0] = "// ";
     opt_comment_style[1] = "";
   }
-  else if ( strcmp( delim_format, "/*" ) == 0 ) {
+  else if ( strcmp( s "/*" ) == 0 ) {
     opt_comment_style[0] = "/* ";
     opt_comment_style[1] = " */";
   }

@@ -108,11 +108,11 @@ bool parse_align_column( char const *s );
 /**
  * Parses a comment delimiter.
  *
- * @param delim_format The comment delimiter to parse.
- * @return Returns `true` only if \a delim_format parsed successfully.
+ * @param s The comment delimiter to parse.
+ * @return Returns `true` only if \a s parsed successfully.
  */
 NODISCARD
-bool parse_comment_style( char const *delim_format );
+bool parse_comment_style( char const *s );
 
 /**
  * Parses the line length.
@@ -128,7 +128,7 @@ bool parse_line_length( char const *s );
  *
  * @param verbose_format
  * @parblock
- * The null-terminated **include-tidy** debug format string to parse.
+ * The null-terminated **include-tidy** verbose format string to parse.
  * Value format are:
  *
  * Format | Meaning
