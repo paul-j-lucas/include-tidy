@@ -78,20 +78,6 @@ enum config_file_loc {
 #define CONFIG_LOC_LAST   CONFIG_LOC_XDG_CONFIG_DIRS
 
 /**
- * Configuration file key kinds.
- */
-enum config_key_kind {
-  CONFIG_KEY_NONE,                      ///< No key.
-  CONFIG_KEY_ALIGN_COLUMN = 1 << 0,     ///< `align-column`.
-  CONFIG_KEY_ALL_INCLUDES = 1 << 1,     ///< `all-includes`.
-  CONFIG_KEY_CONFIG_NEXT  = 1 << 2,     ///< `config_next`.
-  CONFIG_KEY_INCLUDES     = 1 << 3,     ///< `includes`.
-  CONFIG_KEY_LINE_LENGTH  = 1 << 4,     ///< `line-length`.
-  CONFIG_KEY_PROXY        = 1 << 5,     ///< `proxy`.
-  CONFIG_KEY_SYMBOLS      = 1 << 6,     ///< `symbols`.
-};
-
-/**
  * Options for the config_open() function.
  */
 enum config_opts {
@@ -112,7 +98,6 @@ enum config_table_kind {
 
 typedef enum    config_file_loc   config_file_loc;
 typedef enum    config_opts       config_opts;
-typedef enum    config_key_kind   config_key_kind;
 typedef struct  config_key        config_key;
 typedef enum    config_table_kind config_table_kind;
 typedef struct  symbol_include    symbol_include;
@@ -135,7 +120,6 @@ typedef void (*config_parse_fn)( char const *config_path,
  */
 struct config_key {
   char const       *name;               ///< Key name.
-  config_key_kind   key_kind;           ///< Key kind.
   config_table_kind table_kind;         ///< Table kind allowed in.
   config_parse_fn   parse_fn;           ///< Value parsing function.
 };
@@ -198,39 +182,32 @@ static rb_tree_t        symbol_include_map; ///< Mapping from symbols to include
  */
 static config_key const CONFIG_KEYS[] = {
   { .name =       "align-column",
-    .key_kind =   CONFIG_KEY_ALIGN_COLUMN,
     .table_kind = CONFIG_TABLE_INCLUDE_TIDY,
     .parse_fn =   &align_column_parse
   },
   { .name =       "all-includes",
-    .key_kind =   CONFIG_KEY_ALL_INCLUDES,
     .table_kind = CONFIG_TABLE_INCLUDE_TIDY,
     .parse_fn =   &all_includes_parse
   },
   { .name =       "config-next",
-    .key_kind =   CONFIG_KEY_CONFIG_NEXT,
     .table_kind = CONFIG_TABLE_INCLUDE_TIDY,
     .parse_fn =   &config_next_parse
   },
   { .name =       "includes",
-    .key_kind =   CONFIG_KEY_INCLUDES,
     .table_kind = CONFIG_TABLE_NOT_INCLUDE_TIDY,
     .parse_fn =   &includes_parse
   },
   { .name =       "line-length",
-    .key_kind =   CONFIG_KEY_LINE_LENGTH,
     .table_kind = CONFIG_TABLE_INCLUDE_TIDY,
     .parse_fn =   &line_length_parse
   },
   { .name =       "proxy",
-    .parse_fn =   &proxy_parse,
     .table_kind = CONFIG_TABLE_NOT_INCLUDE_TIDY,
-    .key_kind =   CONFIG_KEY_PROXY
+    .parse_fn =   &proxy_parse
   },
   { .name =       "symbols",
-    .parse_fn =   &symbols_parse,
     .table_kind = CONFIG_TABLE_NOT_INCLUDE_TIDY,
-    .key_kind =   CONFIG_KEY_SYMBOLS
+    .parse_fn =   &symbols_parse
   },
 };
 
