@@ -21,6 +21,7 @@
 // local
 #include "pjl_config.h"
 #include "include-tidy.h"
+#include "cli_options.h"
 #include "config_file.h"
 #include "includes.h"
 #include "options.h"
@@ -38,8 +39,6 @@
 char const *prog_name;
 
 /// @endcond
-
-void  cli_options_init( int*, char const **[] );
 
 ////////// extern functions ///////////////////////////////////////////////////
 

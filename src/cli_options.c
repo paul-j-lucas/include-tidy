@@ -20,11 +20,12 @@
 
 /**
  * @file
- * Defines functions for command-line options.
-*/
+ * Defines macros and functions for command-line options.
+ */
 
 // local
 #include "pjl_config.h"                 /* must go first */
+#include "cli_options.h"
 #include "include-tidy.h"
 #include "options.h"
 #include "util.h"
@@ -43,28 +44,10 @@
 #include <strings.h>                    /* for strcasecmp() */
 #include <sysexits.h>
 
-// in ascending option character ASCII order; sort using: sort -k3b,3f -k3b,3r
-#define OPT_ALIGN_COLUMN          a
-#define OPT_ALL_INCLUDES          A
-#define OPT_CONFIG                c
-#define OPT_CLANG                 C
-#define OPT_HELP                  h
-#define OPT_LINE_LENGTH           l
-#define OPT_COMMENT_STYLE         s
-#define OPT_VERSION               v
-#define OPT_VERBOSE               V
-
-/// Command-line option character as a character literal.
-#define COPT(X)                   CHARIFY(OPT_##X)
-
-/// Command-line option as a string literal.
-#define SOPT(X)                   STRINGIFY(OPT_##X)
-
 /// @endcond
 
 /**
- * @defgroup cli-options-group Command-Line Options
- * Functions for command-line options.
+ * @addtogroup cli-options-group
  * @{
  */
 
@@ -118,8 +101,8 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(VERSION) ] = "Print version and exit",
 };
 
-// local variable definitions
-static bool         opts_given[ 128 ];  ///< Table of options that were given.
+// extern variable definitions
+bool                opts_given[ 128 ];
 
 
 // local functions
@@ -844,14 +827,6 @@ static void print_version( void ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-/**
- * Initializes **include-tidy** options from the command-line.
- *
- * @param pargc A pointer to the argument count from \c main().
- * @param pargv A pointer to the argument values from \c main().
- *
- * @note This function must be called exactly once.
- */
 void cli_options_init( int *pargc, char const **pargv[] ) {
   ASSERT_RUN_ONCE();
 
