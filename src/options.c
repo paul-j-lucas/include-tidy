@@ -36,7 +36,6 @@
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stddef.h>                     /* for size_t */
 #include <stdio.h>
 #include <stdlib.h>                     /* for exit() */
 #include <string.h>                     /* for str...() */
