@@ -37,6 +37,7 @@
 #  --no-conditional-dependencies \
 #  --no-libtool \
 #  --macro-prefix=gl \
+#  --no-vc-files \
 #  attribute \
 #  bool \
 #  getopt-gnu \
@@ -65,3 +66,4 @@ gl_MAKEFILE_NAME([])
 gl_MACRO_PREFIX([gl])
 gl_PO_DOMAIN([])
 gl_WITNESS_C_MACRO([])
+gl_VC_FILES([false])

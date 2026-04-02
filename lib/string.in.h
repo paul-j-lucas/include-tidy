@@ -81,8 +81,11 @@
 #endif
 
 _GL_INLINE_HEADER_BEGIN
-#ifndef _GL_STRING_INLINE
-# define _GL_STRING_INLINE _GL_INLINE
+#ifndef _GL_MEMEQ_INLINE
+# define _GL_MEMEQ_INLINE _GL_INLINE
+#endif
+#ifndef _GL_STREQ_INLINE
+# define _GL_STREQ_INLINE _GL_INLINE
 #endif
 #ifndef _GL_STRNUL_INLINE
 # define _GL_STRNUL_INLINE _GL_INLINE
@@ -416,11 +419,11 @@ _GL_WARN_ON_USE_CXX (memchr,
 #endif
 
 /* Are S1 and S2, of size N, bytewise equal?  */
-#if @GNULIB_STRINGEQ@ && !@HAVE_DECL_MEMEQ@
+#if @GNULIB_MEMEQ@ && !@HAVE_DECL_MEMEQ@
 # ifdef __cplusplus
 extern "C" {
 # endif
-_GL_STRING_INLINE bool
+_GL_MEMEQ_INLINE bool
 memeq (void const *__s1, void const *__s2, size_t __n)
 {
   return !memcmp (__s1, __s2, __n);
@@ -801,11 +804,11 @@ _GL_CXXALIASWARN (strdup);
 #endif
 
 /* Are strings S1 and S2 equal?  */
-#if @GNULIB_STRINGEQ@ && !@HAVE_DECL_STREQ@
+#if @GNULIB_STREQ@ && !@HAVE_DECL_STREQ@
 # ifdef __cplusplus
 extern "C" {
 # endif
-_GL_STRING_INLINE bool
+_GL_STREQ_INLINE bool
 streq (char const *__s1, char const *__s2)
 {
   return !strcmp (__s1, __s2);
@@ -1245,10 +1248,10 @@ _GL_WARN_ON_USE (strtok_r, "strtok_r is unportable - "
 # ifdef __cplusplus
 extern "C" {
 # endif
-_GL_STRNUL_INLINE const char *gl_strnul (const char *string)
+_GL_STRNUL_INLINE const char *_gl_strnul (const char *string)
      _GL_ATTRIBUTE_PURE
      _GL_ARG_NONNULL ((1));
-_GL_STRNUL_INLINE const char *gl_strnul (const char *string)
+_GL_STRNUL_INLINE const char *_gl_strnul (const char *string)
 {
   /* In gcc >= 7 or clang >= 4, we could use the expression
        strchr (string, '\0')
@@ -1265,9 +1268,9 @@ _GL_STRNUL_INLINE const char *gl_strnul (const char *string)
 _GL_BEGIN_NAMESPACE
 template <typename T> T strnul (T);
 template <> inline const char *strnul<const char *> (const char *s)
-{ return gl_strnul (s); }
+{ return _gl_strnul (s); }
 template <> inline       char *strnul<      char *> (      char *s)
-{ return const_cast<char *>(gl_strnul (s)); }
+{ return const_cast<char *>(_gl_strnul (s)); }
 _GL_END_NAMESPACE
 # else
 #  if (defined __GNUC__ && __GNUC__ + (__GNUC_MINOR__ >= 9) > 4 && !defined __cplusplus) \
@@ -1283,11 +1286,11 @@ _GL_END_NAMESPACE
    This mapping is done through the conditional expression.  */
 #   define strnul(s) \
       _Generic (1 ? (s) : (void *) 99, \
-                void *       : (char *) gl_strnul (s), \
-                const void * : gl_strnul (s))
+                void *       : (char *) _gl_strnul (s), \
+                const void * : _gl_strnul (s))
 #  else
 #   define strnul(s) \
-      ((char *) gl_strnul (s))
+      ((char *) _gl_strnul (s))
 #  endif
 # endif
 #endif
