@@ -63,6 +63,21 @@
 ////////// enumerations ///////////////////////////////////////////////////////
 
 /**
+ * Connfiguration file location.
+ */
+enum config_file_loc {
+  CONFIG_LOC_CLI,                       ///< Command line.
+  CONFIG_LOC_CWD,                       ///< Current working directory.
+  CONFIG_LOC_XDG_CONFIG_HOME,           ///< `$XDG_CONFIG_HOME`.
+  CONFIG_LOC_XDG_CONFIG_DIRS            ///< `$XDG_CONFIG_DIRS`.
+};
+
+/**
+ * Last value of config_file_loc.
+ */
+#define CONFIG_LOC_LAST   CONFIG_LOC_XDG_CONFIG_DIRS
+
+/**
  * Configuration file key kinds.
  */
 enum config_key_kind {
@@ -75,21 +90,6 @@ enum config_key_kind {
 };
 
 /**
- * Connfiguration file locations.
- */
-enum config_locs {
-  CONFIG_LOC_CLI,                       ///< Command line.
-  CONFIG_LOC_CWD,                       ///< Current working directory.
-  CONFIG_LOC_XDG_CONFIG_HOME,           ///< `$XDG_CONFIG_HOME`.
-  CONFIG_LOC_XDG_CONFIG_DIRS            ///< `$XDG_CONFIG_DIRS`.
-};
-
-/**
- * Last value of config_locs.
- */
-#define CONFIG_LOC_LAST   CONFIG_LOC_XDG_CONFIG_DIRS
-
-/**
  * Options for the config_open() function.
  */
 enum config_opts {
@@ -98,13 +98,22 @@ enum config_opts {
   CONFIG_OPT_IGNORE_NOT_FOUND  = 1 << 1   ///< Ignore file not found.
 };
 
+/**
+ * Table kind.
+ */
+enum config_table_kind {
+  CONFIG_TABLE_NOT_INCLUDE_TIDY,        ///< Not the `include-tidy` table.
+  CONFIG_TABLE_INCLUDE_TIDY             ///< Only the `include-tidy` table.
+};
+
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-typedef enum    config_opts     config_opts;
-typedef enum    config_key_kind config_key_kind;
-typedef struct  config_key      config_key;
-typedef enum    config_locs     config_locs;
-typedef struct  symbol_include  symbol_include;
+typedef enum    config_file_loc   config_file_loc;
+typedef enum    config_opts       config_opts;
+typedef enum    config_key_kind   config_key_kind;
+typedef struct  config_key        config_key;
+typedef enum    config_table_kind config_table_kind;
+typedef struct  symbol_include    symbol_include;
 
 /**
  * Signature for function to parse the value of a configuration key.
@@ -125,7 +134,8 @@ typedef void (*config_parse_fn)( char const *config_path,
 struct config_key {
   char const       *name;               ///< Key name.
   config_parse_fn   parse_fn;           ///< Value parsing function.
-  config_key_kind   kind;               ///< Key kind.
+  config_table_kind table_kind;         ///< Table kind allowed in.
+  config_key_kind   key_kind;           ///< Key kind.
   config_key_kind   allowed_kinds;      ///< Kinds allowed with it.
 };
 
@@ -167,49 +177,32 @@ static void         symbols_parse( char const*, toml_table const*,
                                    toml_value const* );
 
 // local variables
-static config_locs  config_loc;         ///< Configuration file location.
-static bool         config_next = true; ///< Read next configuration file?
-static rb_tree_t    symbol_include_map; ///< Mapping from symbols to includes.
+static config_file_loc  config_loc;     ///< Configuration file location.
+static bool             config_next = true; ///< Read next configuration file?
+static rb_tree_t        symbol_include_map; ///< Mapping from symbols to includes.
 
 /**
  * Configuration keys.
  */
 static config_key const CONFIG_KEYS[] = {
-  { "align-column", &align_column_parse,  CONFIG_KEY_ALIGN_COLUMN,
+  { "align-column", &align_column_parse,  CONFIG_TABLE_INCLUDE_TIDY,
+                    CONFIG_KEY_ALIGN_COLUMN,
                     CONFIG_KEY_CONFIG_NEXT },
-  { "config-next",  &config_next_parse,   CONFIG_KEY_CONFIG_NEXT,
+  { "config-next",  &config_next_parse,   CONFIG_TABLE_INCLUDE_TIDY,
+                    CONFIG_KEY_CONFIG_NEXT,
                     CONFIG_KEY_ALIGN_COLUMN },
-  { "includes",     &includes_parse,      CONFIG_KEY_INCLUDES,
+  { "includes",     &includes_parse,      CONFIG_TABLE_NOT_INCLUDE_TIDY,
+                    CONFIG_KEY_INCLUDES,
                     CONFIG_KEY_NONE },
-  { "proxy",        &proxy_parse,         CONFIG_KEY_PROXY,
+  { "proxy",        &proxy_parse,         CONFIG_TABLE_NOT_INCLUDE_TIDY,
+                    CONFIG_KEY_PROXY,
                     CONFIG_KEY_NONE },
-  { "symbols",      &symbols_parse,       CONFIG_KEY_SYMBOLS,
+  { "symbols",      &symbols_parse,       CONFIG_TABLE_NOT_INCLUDE_TIDY,
+                    CONFIG_KEY_SYMBOLS,
                     CONFIG_KEY_NONE },
 };
 
 ////////// local functions ////////////////////////////////////////////////////
-
-/**
- * Asserts that the name of \a table is `"include-tidy"`.
- *
- * @param config_path The full path to the configurarion file.
- * @param table The current coml_table.
- * @param key_name The name of a key.
- */
-static void assert_key_in_include_tidy_table( char const *config_path,
-                                              toml_table const *table,
-                                              char const *key_name ) {
-  assert( config_path != NULL );
-  assert( table != NULL );
-  assert( key_name != NULL );
-
-  if ( strcmp( table->name, "include-tidy" ) != 0 ) {
-    fatal_error( EX_CONFIG,
-      "%s:%u:%u: \"%s\": key allowed only in \"include-tidy\" table\n",
-      config_path, table->loc.line, table->loc.col, key_name
-    );
-  }
-}
 
 /**
  * Parses the value of an `"includes"` key.
@@ -224,8 +217,6 @@ static void align_column_parse( char const *config_path,
   assert( config_path != NULL );
   assert( table != NULL );
   assert( value != NULL );
-
-  assert_key_in_include_tidy_table( config_path, table, "align-column" );
 
   long const int_value = int_value_parse(
     config_path, "align-column", value, 0, OPT_ALIGN_COLUMN_MAX
@@ -463,10 +454,20 @@ static void config_parse( char const *config_path, FILE *config_file ) {
         );
       }
 
+      bool const is_include_tidy_table =
+        strcmp( table.name, "include-tidy" ) == 0;
+      if ( is_include_tidy_table != key->table_kind ) {
+        fatal_error( EX_CONFIG,
+          "%s:%u:%u: \"%s\": key %s in \"include-tidy\" table\n",
+          config_path, kv->key_loc.line, kv->key_loc.col, key->name,
+          key->table_kind ? "only allowed" : "not allowed"
+        );
+      }
+
       if ( allowed_kinds == CONFIG_KEY_NONE ) {
         allowed_kinds = key->allowed_kinds;
       }
-      else if ( (key->kind & allowed_kinds) == 0 ) {
+      else if ( (key->key_kind & allowed_kinds) == 0 ) {
         fatal_error( EX_CONFIG,
           "%s:%u:%u: \"%s\": key mutually exclusive with previous key(s)\n",
           config_path, kv->key_loc.line, kv->key_loc.col, key->name
