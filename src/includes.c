@@ -37,6 +37,7 @@
 
 // standard
 #include <assert.h>
+#include <limits.h>                     /* for PATH_MAX */
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for atexit(3) */
