@@ -1,5 +1,19 @@
+2026-04-02  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c: Added "first" key.
+   * includes.c, includes.h: Now putting x.h first for x.c.
+   * cli_options.c: Replaced parse_file_ext() by get_ext_language().
+   * util.c, util.h: Added path_no_ext().
+   * util.h: Added NODISCARD.
+   * util.c, util.h: Now calling base_name() in path_ext().
+
 2026-04-01  Paul J. Lucas <paul@lucasmail.org>
 
+   * config_file.c: Added "keep" key.
+   * symbols.c: Added missing CXCursor_FunctionDecl.
+   * config_file.c: Added stdbool.h.
+   * config_file.c: Removed ctype.h.
+   * cli_options.c: Removed stddef.h.
    * config_file.c: Command-line options now override config file.
    * config_file.c: Added missing #include.
    * src/Makefile.am, cli_options.c, cli_options.h, include-tidy.c: Added
