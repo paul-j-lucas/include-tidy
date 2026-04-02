@@ -160,6 +160,8 @@ static FILE*        config_open( char const*, config_opts );
 NODISCARD
 static char const*  home_dir( void );
 
+static void         first_parse( char const*, toml_table const*,
+                                 toml_value const* );
 static void         includes_parse( char const*, toml_table const*,
                                     toml_value const* );
 
@@ -197,6 +199,7 @@ static config_key const CONFIG_KEYS[] = {
   { "all-includes",   CONFIG_TABLE_INCLUDE_TIDY,      &all_includes_parse   },
   { "comment-style",  CONFIG_TABLE_INCLUDE_TIDY,      &comment_style_parse  },
   { "config-next",    CONFIG_TABLE_INCLUDE_TIDY,      &config_next_parse    },
+  { "first",          CONFIG_TABLE_NOT_INCLUDE_TIDY,  &first_parse          },
   { "includes",       CONFIG_TABLE_NOT_INCLUDE_TIDY,  &includes_parse       },
   { "keep",           CONFIG_TABLE_NOT_INCLUDE_TIDY,  &keep_parse           },
   { "line-length",    CONFIG_TABLE_INCLUDE_TIDY,      &line_length_parse    },
@@ -574,6 +577,31 @@ static char const* home_dir( void ) {
   }
 
   return home;
+}
+
+/**
+ * Parses the value of an `"first"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param value The toml_value to parse.
+ */
+static void first_parse( char const *config_path, toml_table const *table,
+                         toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( value != NULL );
+
+  bool const first = bool_value_parse( config_path, "first", value );
+  if ( !first )
+    return;
+
+  CXFile include_file = include_get_File( table->name );
+  if ( include_file == NULL )
+    return;
+  tidy_include *const include = include_find( include_file );
+  assert( include != NULL );
+  include->sort_rank = -2;
 }
 
 /**
