@@ -1,5 +1,49 @@
+2026-04-01  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c: Command-line options now override config file.
+   * config_file.c: Added missing #include.
+   * src/Makefile.am, cli_options.c, cli_options.h, include-tidy.c: Added
+     cli_options.h.
+   * include-tidy.c: Removed <sysexits.h>.
+   * config_file.c: Changed to (void)table;
+   * config_file.c: Added config support for comment-style.
+   * options.c: Fixed comma.
+   * config_file.c: Don't need key_kind.
+   * config_file.c: Don't need allowed_kinds.
+   * config_file.c: Added config support for line-length.
+   * config_file.c: Added config support for all-includes.
+   * toml_lite.c: Set col = 0 so first increment makes it 1.
+   * config_file.c: Added allowed_kinds.
+   * toml_lite.c, toml_lite.h: Added toml_table_empty().
+   * config_file.c: No longer nulling-out path_buf.
+
+2026-03-31  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c: Added int_value_parse().
+   * config_file.c: Added align-column support in config.
+   * config_file.c: Added config file support for align-column.
+   * includes.c, options.c, options.h: s/opt_comment_align/opt_align_column/
+   * config_file.c: s/config_next/config-next/
+   * cli_options.c: s/align/align-column/
+   * config_file.c: Can now read from multiple configuration files.
+   * includes.c: Now setting include->line only if is_direct.
+   * includes.c: Now always setting "line".
+   * includes.c: Fixed #includes.
+   * config_file.c: Now looking for $PWD/include-tidy.toml.
+   * includes.c, util.c, util.h: Added get_cwd().
+   * config_file.c: s/known_keys/config_keys/
+   * man/man1/Makefile.am, man/man1/include-tidy.1, man/man5/Makefile.am,
+     man/man5/include-tidy.5: Makefile updates.
+   * Makefile.am, configure.ac, etc/Makefile.am, etc/include-tidy.toml: Added
+     default configuration file.
+   * man/man1/include-tidy.1, man/man5/include-tidy.5: Man page updates.
+   * toml_lite.c: Added support \r.
+
 2026-03-30  Paul J. Lucas <paul@lucasmail.org>
 
+   * configure.ac, man/man5/Makefile.am: Added man5.
+   * includes.c: Moved "goto skip" earlier.
+   * includes.c: Now setting line if is_direct.
    * config_file.c, includes.c, includes.h: Made tidy_include and
      include_find() public.
    * clang_util.c, clang_util.h, config_file.c: Added "includes" in config
