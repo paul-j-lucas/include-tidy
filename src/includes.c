@@ -659,8 +659,19 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       char path_buf[ PATH_MAX ];
       char const *const include_no_ext =
         path_no_ext( include->rel_path, path_buf );
-      if ( strcmp( include_no_ext, vcvd->source_file_no_ext ) == 0 )
+      if ( strcmp( include_no_ext, vcvd->source_file_no_ext ) == 0 ) {
+        //
+        // This include file's name matches the source file's (without
+        // extensions), hence it's the .h corresponding to the .c so sort the
+        // this include file first, e.g.:
+        //
+        //      // foo.c
+        //      #include "foo.h"        // corresponding header sorted first
+        //      #include "a.h"
+        //      #include "b.h"
+        //
         include->sort_rank = -1;
+      }
     }
 
     rb_tree_init(
