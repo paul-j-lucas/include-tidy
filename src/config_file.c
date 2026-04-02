@@ -25,6 +25,7 @@
 
 // local
 #include "pjl_config.h"
+#include "config_file.h"
 #include "clang_util.h"
 #include "include-tidy.h"
 #include "includes.h"
