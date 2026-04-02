@@ -205,14 +205,14 @@ static config_key const CONFIG_KEYS[] = {
  * Parses the value of an `"align-column"` key.
  *
  * @param config_path The full path to the configurarion file.
- * @param table The current toml_table.
+ * @param table Not used.
  * @param value The toml_value to parse.
  */
 static void align_column_parse( char const *config_path,
                                 toml_table const *table,
                                 toml_value const *value ) {
   assert( config_path != NULL );
-  assert( table != NULL );
+  (void)table;
   assert( value != NULL );
 
   long const int_value = int_value_parse(
@@ -225,14 +225,14 @@ static void align_column_parse( char const *config_path,
  * Parses the value of an `"all-includes"` key.
  *
  * @param config_path The full path to the configurarion file.
- * @param table The current toml_table.
+ * @param table Not used.
  * @param value The toml_value to parse.
  */
 static void all_includes_parse( char const *config_path,
                                 toml_table const *table,
                                 toml_value const *value ) {
   assert( config_path != NULL );
-  assert( table != NULL );
+  (void)table;
   assert( value != NULL );
 
   opt_all_includes = bool_value_parse( config_path, "all-includes", value );
@@ -275,14 +275,14 @@ static bool bool_value_parse( char const *config_path, char const *key_name,
  * Parses the value of an `"comment-style"` key.
  *
  * @param config_path The full path to the configurarion file.
- * @param table The current toml_table.
+ * @param table Not used.
  * @param value The toml_value to parse.
  */
 static void comment_style_parse( char const *config_path,
                                  toml_table const *table,
                                  toml_value const *value ) {
   assert( config_path != NULL );
-  assert( table != NULL );
+  (void)table;
   assert( value != NULL );
 
   char const *const string_value =
@@ -648,14 +648,14 @@ static long int_value_parse( char const *config_path, char const *key_name,
  * Parses the value of a `"line-length"` key.
  *
  * @param config_path The full path to the configurarion file.
- * @param table The current toml_table.
+ * @param table Not used.
  * @param value The toml_value to parse.
  */
 static void line_length_parse( char const *config_path,
                                toml_table const *table,
                                toml_value const *value ) {
   assert( config_path != NULL );
-  assert( table != NULL );
+  (void)table;
   assert( value != NULL );
 
   long const int_value = int_value_parse(
