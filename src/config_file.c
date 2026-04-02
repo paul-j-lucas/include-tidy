@@ -181,34 +181,13 @@ static rb_tree_t        symbol_include_map; ///< Mapping from symbols to include
  * Configuration keys.
  */
 static config_key const CONFIG_KEYS[] = {
-  { .name =       "align-column",
-    .table_kind = CONFIG_TABLE_INCLUDE_TIDY,
-    .parse_fn =   &align_column_parse
-  },
-  { .name =       "all-includes",
-    .table_kind = CONFIG_TABLE_INCLUDE_TIDY,
-    .parse_fn =   &all_includes_parse
-  },
-  { .name =       "config-next",
-    .table_kind = CONFIG_TABLE_INCLUDE_TIDY,
-    .parse_fn =   &config_next_parse
-  },
-  { .name =       "includes",
-    .table_kind = CONFIG_TABLE_NOT_INCLUDE_TIDY,
-    .parse_fn =   &includes_parse
-  },
-  { .name =       "line-length",
-    .table_kind = CONFIG_TABLE_INCLUDE_TIDY,
-    .parse_fn =   &line_length_parse
-  },
-  { .name =       "proxy",
-    .table_kind = CONFIG_TABLE_NOT_INCLUDE_TIDY,
-    .parse_fn =   &proxy_parse
-  },
-  { .name =       "symbols",
-    .table_kind = CONFIG_TABLE_NOT_INCLUDE_TIDY,
-    .parse_fn =   &symbols_parse
-  },
+  { "align-column", CONFIG_TABLE_INCLUDE_TIDY,      &align_column_parse },
+  { "all-includes", CONFIG_TABLE_INCLUDE_TIDY,      &all_includes_parse },
+  { "config-next",  CONFIG_TABLE_INCLUDE_TIDY,      &config_next_parse  },
+  { "includes",     CONFIG_TABLE_NOT_INCLUDE_TIDY,  &includes_parse     },
+  { "line-length",  CONFIG_TABLE_INCLUDE_TIDY,      &line_length_parse  },
+  { "proxy",        CONFIG_TABLE_NOT_INCLUDE_TIDY,  &proxy_parse        },
+  { "symbols",      CONFIG_TABLE_NOT_INCLUDE_TIDY,  &symbols_parse      },
 };
 
 ////////// local functions ////////////////////////////////////////////////////
