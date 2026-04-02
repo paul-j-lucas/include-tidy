@@ -94,11 +94,11 @@ static void options_cleanup( void ) {
  * Parses a string into an <code>unsigned long long</code>.
  *
  * @remarks Unlike **strtoull(3)**, insists that \a s is entirely a non-
- * negative number.
+ * negative integer.
  *
  * @param s The NULL-terminated string to parse.
- * @return Returns the parsed number only if \a s is entirely a non-negative
- * number or prints an error message and exits if there was an error.
+ * @return Returns the parsed integer only if \a s is entirely a non-negative
+ * integer or prints an error message and exits if there was an error.
  */
 NODISCARD
 static unsigned long long parse_ull( char const *s ) {
