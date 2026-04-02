@@ -135,10 +135,9 @@ typedef void (*config_parse_fn)( char const *config_path,
  */
 struct config_key {
   char const       *name;               ///< Key name.
-  config_parse_fn   parse_fn;           ///< Value parsing function.
-  config_table_kind table_kind;         ///< Table kind allowed in.
   config_key_kind   key_kind;           ///< Key kind.
-  config_key_kind   allowed_kinds;      ///< Kinds allowed with it.
+  config_table_kind table_kind;         ///< Table kind allowed in.
+  config_parse_fn   parse_fn;           ///< Value parsing function.
 };
 
 /**
@@ -198,58 +197,40 @@ static rb_tree_t        symbol_include_map; ///< Mapping from symbols to include
  * Configuration keys.
  */
 static config_key const CONFIG_KEYS[] = {
-  { .name =           "align-column",
-    .parse_fn =       &align_column_parse,
-    .table_kind =     CONFIG_TABLE_INCLUDE_TIDY,
-    .key_kind =       CONFIG_KEY_ALIGN_COLUMN,
-    .allowed_kinds =  CONFIG_KEY_ALL_INCLUDES |
-                      CONFIG_KEY_CONFIG_NEXT |
-                      CONFIG_KEY_LINE_LENGTH
+  { .name =       "align-column",
+    .key_kind =   CONFIG_KEY_ALIGN_COLUMN,
+    .table_kind = CONFIG_TABLE_INCLUDE_TIDY,
+    .parse_fn =   &align_column_parse
   },
-
-  { .name =           "all-includes",
-    .parse_fn =       &all_includes_parse,
-    .table_kind =     CONFIG_TABLE_INCLUDE_TIDY,
-    .key_kind =       CONFIG_KEY_ALL_INCLUDES,
-    .allowed_kinds =  CONFIG_KEY_ALIGN_COLUMN |
-                      CONFIG_KEY_CONFIG_NEXT |
-                      CONFIG_KEY_LINE_LENGTH
+  { .name =       "all-includes",
+    .key_kind =   CONFIG_KEY_ALL_INCLUDES,
+    .table_kind = CONFIG_TABLE_INCLUDE_TIDY,
+    .parse_fn =   &all_includes_parse
   },
-
-  { .name =           "config-next",
-    .parse_fn =       &config_next_parse,
-    .table_kind =     CONFIG_TABLE_INCLUDE_TIDY,
-    .key_kind =       CONFIG_KEY_ALL_INCLUDES,
-    .allowed_kinds =  CONFIG_KEY_ALIGN_COLUMN |
-                      CONFIG_KEY_CONFIG_NEXT |
-                      CONFIG_KEY_LINE_LENGTH
+  { .name =       "config-next",
+    .key_kind =   CONFIG_KEY_CONFIG_NEXT,
+    .table_kind = CONFIG_TABLE_INCLUDE_TIDY,
+    .parse_fn =   &config_next_parse
   },
-
-  { .name =           "includes",
-    .parse_fn =       &includes_parse,
-    .table_kind =     CONFIG_TABLE_NOT_INCLUDE_TIDY,
-    .key_kind =       CONFIG_KEY_INCLUDES,
-    .allowed_kinds =  CONFIG_KEY_NONE },
-
-  { .name =           "line-length",
-    .parse_fn =       &line_length_parse,
-    .table_kind =     CONFIG_TABLE_INCLUDE_TIDY,
-    .key_kind =       CONFIG_KEY_LINE_LENGTH,
-    .allowed_kinds =  CONFIG_KEY_ALIGN_COLUMN |
-                      CONFIG_KEY_ALL_INCLUDES |
-                      CONFIG_KEY_CONFIG_NEXT },
-
-  { .name =           "proxy",
-    .parse_fn =       &proxy_parse,
-    .table_kind =     CONFIG_TABLE_NOT_INCLUDE_TIDY,
-    .key_kind =       CONFIG_KEY_PROXY,
-    .allowed_kinds =  CONFIG_KEY_NONE },
-
-  { .name =           "symbols",
-    .parse_fn =       &symbols_parse,
-    .table_kind =     CONFIG_TABLE_NOT_INCLUDE_TIDY,
-    .key_kind =       CONFIG_KEY_SYMBOLS,
-    .allowed_kinds =  CONFIG_KEY_NONE
+  { .name =       "includes",
+    .key_kind =   CONFIG_KEY_INCLUDES,
+    .table_kind = CONFIG_TABLE_NOT_INCLUDE_TIDY,
+    .parse_fn =   &includes_parse
+  },
+  { .name =       "line-length",
+    .key_kind =   CONFIG_KEY_LINE_LENGTH,
+    .table_kind = CONFIG_TABLE_INCLUDE_TIDY,
+    .parse_fn =   &line_length_parse
+  },
+  { .name =       "proxy",
+    .parse_fn =   &proxy_parse,
+    .table_kind = CONFIG_TABLE_NOT_INCLUDE_TIDY,
+    .key_kind =   CONFIG_KEY_PROXY
+  },
+  { .name =       "symbols",
+    .parse_fn =   &symbols_parse,
+    .table_kind = CONFIG_TABLE_NOT_INCLUDE_TIDY,
+    .key_kind =   CONFIG_KEY_SYMBOLS
   },
 };
 
@@ -530,7 +511,9 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       );
     }
 
-    config_key_kind allowed_kinds = CONFIG_KEY_NONE;
+    bool const is_include_tidy_table =
+      strcmp( table.name, "include-tidy" ) == 0;
+
     toml_iterator   iter;
 
     toml_iterator_init( &table, &iter );
@@ -545,23 +528,11 @@ static void config_parse( char const *config_path, FILE *config_file ) {
         );
       }
 
-      bool const is_include_tidy_table =
-        strcmp( table.name, "include-tidy" ) == 0;
-      if ( is_include_tidy_table != key->table_kind ) {
+      if ( key->table_kind != is_include_tidy_table ) {
         fatal_error( EX_CONFIG,
           "%s:%u:%u: \"%s\": key %s in \"include-tidy\" table\n",
           config_path, kv->key_loc.line, kv->key_loc.col, key->name,
           key->table_kind ? "only allowed" : "not allowed"
-        );
-      }
-
-      if ( allowed_kinds == CONFIG_KEY_NONE ) {
-        allowed_kinds = key->allowed_kinds;
-      }
-      else if ( (key->key_kind & allowed_kinds) == 0 ) {
-        fatal_error( EX_CONFIG,
-          "%s:%u:%u: \"%s\": key mutually exclusive with previous key(s)\n",
-          config_path, kv->key_loc.line, kv->key_loc.col, key->name
         );
       }
 
