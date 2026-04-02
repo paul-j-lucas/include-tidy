@@ -37,7 +37,6 @@
 #include <ctype.h>                      /* for isalnum(), isprint() */
 #include <getopt.h>
 #include <stdbool.h>
-#include <stddef.h>                     /* for size_t */
 #include <stdio.h>
 #include <stdlib.h>                     /* for exit() */
 #include <string.h>                     /* for str...() */
