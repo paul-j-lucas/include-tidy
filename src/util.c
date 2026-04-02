@@ -219,6 +219,30 @@ char const* path_ext( char const *path ) {
   return dot != NULL && dot[1] != '\0' ? dot + 1 : NULL;
 }
 
+char const* path_no_ext( char const *path, char path_buf[static PATH_MAX] ) {
+  assert( path != NULL );
+
+  ssize_t last_dot = -1, last_slash = -1;
+
+  for ( ssize_t i = 0; path[i] != '\0'; ++i ) {
+    switch ( path[i] ) {
+      case '.':
+        last_dot = i;
+        break;
+      case '/':
+        last_slash = i;
+        break;
+    } // switch
+  }
+
+  if ( last_dot < last_slash )          // no extension
+    return path;
+
+  size_t const len = last_dot < PATH_MAX ?
+    STATIC_CAST( size_t, last_dot ) : PATH_MAX - 1;
+  return strncpy_0( path_buf, path, len );
+}
+
 void perror_exit( int status ) {
   perror( prog_name );
   exit( status );

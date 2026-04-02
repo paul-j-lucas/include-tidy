@@ -829,6 +829,17 @@ NODISCARD
 char const* path_ext( char const *path );
 
 /**
+ * Gets the pathname without the filename extension of \a path, if any.
+ *
+ * @param path The path.
+ * @param path_buf A path buffer to use only if \a path has an extension.
+ * @return If \a path has no extension, returns \a path as-is; otherwise copies
+ * \a path into \a path_buf without the extension and returns \a path_buf.
+ */
+NODISCARD
+char const* path_no_ext( char const *path, char path_buf[static PATH_MAX] );
+
+/**
  * Strips a leading dot-slash, if any, from \a path.
  *
  * @param path The path to strip `./` from.
