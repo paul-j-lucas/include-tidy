@@ -27,6 +27,7 @@
 #include "pjl_config.h"
 #include "config_file.h"
 #include "clang_util.h"
+#include "cli_options.h"
 #include "include-tidy.h"
 #include "includes.h"
 #include "options.h"
@@ -219,7 +220,9 @@ static void align_column_parse( char const *config_path,
   long const int_value = int_value_parse(
     config_path, "align-column", value, 0, OPT_ALIGN_COLUMN_MAX
   );
-  opt_align_column = STATIC_CAST( unsigned, int_value );
+
+  if ( !opts_given[ COPT(ALIGN_COLUMN) ] )
+    opt_align_column = STATIC_CAST( unsigned, int_value );
 }
 
 /**
@@ -236,7 +239,8 @@ static void all_includes_parse( char const *config_path,
   (void)table;
   assert( value != NULL );
 
-  opt_all_includes = bool_value_parse( config_path, "all-includes", value );
+  if ( !opts_given[ COPT(ALL_INCLUDES) ] )
+    opt_all_includes = bool_value_parse( config_path, "all-includes", value );
 }
 
 /**
@@ -288,6 +292,9 @@ static void comment_style_parse( char const *config_path,
 
   char const *const string_value =
     string_value_parse( config_path, "comment-style", value );
+
+  if ( opts_given[ COPT(COMMENT_STYLE) ] )
+    return;
 
   if ( !parse_comment_style( string_value ) ) {
     fatal_error( EX_CONFIG,
@@ -662,7 +669,9 @@ static void line_length_parse( char const *config_path,
   long const int_value = int_value_parse(
     config_path, "line-length", value, 0, OPT_LINE_LENGTH_MAX
   );
-  opt_line_length = STATIC_CAST( unsigned, int_value );
+
+  if ( !opts_given[ COPT(LINE_LENGTH) ] )
+    opt_line_length = STATIC_CAST( unsigned, int_value );
 }
 
 /**
