@@ -74,6 +74,24 @@ extern char const  *arg_source_path;      ///< The file being tidied.
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * Parses the alignment column number for comments.
+ *
+ * @param s The string to parse.
+ * @return Returns `true` only if \a s was parsed successfully.
+ */
+NODISCARD
+bool opt_align_column_parse( char const *s );
+
+/**
+ * Parses the comment style.
+ *
+ * @param s The comment style to parse.
+ * @return Returns `true` only if \a s parsed successfully.
+ */
+NODISCARD
+bool opt_comment_style_parse( char const *s );
+
+/**
  * Adds \a include_path to the global list of include (`-I`) paths.
  *
  * @param include_path The include path to add.
@@ -90,38 +108,13 @@ void opt_include_paths_add( char const *include_path );
 char const* opt_include_paths_relativize( char const *abs_path );
 
 /**
- * Initializes **include-tidy** options.
- *
- * @note This function must be called exactly once.
- */
-void options_init( void );
-
-/**
- * Parses the alignment column number for comments.
- *
- * @param s The string to parse.
- * @return Returns `true` only if \a s was parsed successfully.
- */
-NODISCARD
-bool parse_align_column( char const *s );
-
-/**
- * Parses a comment delimiter.
- *
- * @param s The comment delimiter to parse.
- * @return Returns `true` only if \a s parsed successfully.
- */
-NODISCARD
-bool parse_comment_style( char const *s );
-
-/**
  * Parses the line length.
  *
  * @param s The string to parse.
  * @return Returns the line length.
  */
 NODISCARD
-bool parse_line_length( char const *s );
+bool opt_line_length_parse( char const *s );
 
 /**
  * Parses the value of the **include-tidy** verbose option.
@@ -144,7 +137,14 @@ bool parse_line_length( char const *s );
  * @return Returns the parsed value.
  */
 NODISCARD
-bool parse_tidy_verbose( char const *verbose_format );
+bool opt_verbose_parse( char const *verbose_format );
+
+/**
+ * Initializes **include-tidy** options.
+ *
+ * @note This function must be called exactly once.
+ */
+void options_init( void );
 
 /**
  * Prints verbose output.

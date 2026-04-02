@@ -139,9 +139,35 @@ static void set_all_or_none( char const **pformat, char const *all_value ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void options_init( void ) {
-  ASSERT_RUN_ONCE();
-  ATEXIT( &options_cleanup );
+bool opt_align_column_parse( char const *s ) {
+  assert( s != NULL );
+  unsigned long long ull = parse_ull( s );
+  if ( ull > OPT_ALIGN_COLUMN_MAX )
+    return false;
+  opt_align_column = STATIC_CAST( unsigned, ull );
+  return true;
+}
+
+bool opt_comment_style_parse( char const *s ) {
+  assert( s != NULL );
+
+  if ( strcmp( s, "none" ) == 0 ) {
+    opt_comment_style[0] = "";
+    opt_comment_style[1] = "";
+  }
+  else if ( strcmp( s, "//" ) == 0 ) {
+    opt_comment_style[0] = "// ";
+    opt_comment_style[1] = "";
+  }
+  else if ( strcmp( s, "/*" ) == 0 ) {
+    opt_comment_style[0] = "/* ";
+    opt_comment_style[1] = " */";
+  }
+  else {
+    return false;
+  }
+
+  return true;
 }
 
 void opt_include_paths_add( char const *include_path ) {
@@ -196,38 +222,7 @@ char const* opt_include_paths_relativize( char const *abs_path ) {
   return path_no_dot_slash( shortest_include_path );
 }
 
-bool parse_comment_style( char const *s ) {
-  assert( s != NULL );
-
-  if ( strcmp( s, "none" ) == 0 ) {
-    opt_comment_style[0] = "";
-    opt_comment_style[1] = "";
-  }
-  else if ( strcmp( s, "//" ) == 0 ) {
-    opt_comment_style[0] = "// ";
-    opt_comment_style[1] = "";
-  }
-  else if ( strcmp( s, "/*" ) == 0 ) {
-    opt_comment_style[0] = "/* ";
-    opt_comment_style[1] = " */";
-  }
-  else {
-    return false;
-  }
-
-  return true;
-}
-
-bool parse_align_column( char const *s ) {
-  assert( s != NULL );
-  unsigned long long ull = parse_ull( s );
-  if ( ull > OPT_ALIGN_COLUMN_MAX )
-    return false;
-  opt_align_column = STATIC_CAST( unsigned, ull );
-  return true;
-}
-
-bool parse_line_length( char const *s ) {
+bool opt_line_length_parse( char const *s ) {
   assert( s != NULL );
   unsigned long long ull = parse_ull( s );
   if ( ull > OPT_LINE_LENGTH_MAX )
@@ -236,7 +231,7 @@ bool parse_line_length( char const *s ) {
   return true;
 }
 
-bool parse_tidy_verbose( char const *verbose_format ) {
+bool opt_verbose_parse( char const *verbose_format ) {
   assert( verbose_format != NULL );
 
   set_all_or_none( &verbose_format, OPT_VERBOSE_ALL );
@@ -266,6 +261,11 @@ bool parse_tidy_verbose( char const *verbose_format ) {
 
   opt_verbose = verbose;
   return true;
+}
+
+void options_init( void ) {
+  ASSERT_RUN_ONCE();
+  ATEXIT( &options_cleanup );
 }
 
 int verbose_printf( char const *format, ... ) {

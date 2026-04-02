@@ -850,7 +850,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       break;
     switch ( opt ) {
       case COPT(ALIGN_COLUMN):;
-        if ( !parse_align_column( optarg ) ) {
+        if ( !opt_align_column_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s; must be 0-%d\n",
             optarg, get_opt_format( opt ), OPT_ALIGN_COLUMN_MAX
@@ -865,7 +865,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       case COPT(COMMENT_STYLE):
         if ( *SKIP_WS( optarg ) == '\0' )
           goto missing_arg;
-        if ( !parse_comment_style( optarg ) ) {
+        if ( !opt_comment_style_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s;"
             " must be one of \"//\", \"/*\", or \"none\"\n",
@@ -887,7 +887,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         opt_include_paths_add( optarg );
         break;
       case COPT(LINE_LENGTH):
-        if ( !parse_line_length( optarg ) ) {
+        if ( !opt_line_length_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s; must be 1-%d\n",
             optarg, get_opt_format( opt ), OPT_LINE_LENGTH_MAX
@@ -897,7 +897,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       case COPT(VERBOSE):
         if ( *SKIP_WS( optarg ) == '\0' )
           goto missing_arg;
-        if ( !parse_tidy_verbose( optarg ) ) {
+        if ( !opt_verbose_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s; must be [ais]\n",
             optarg, get_opt_format( opt )

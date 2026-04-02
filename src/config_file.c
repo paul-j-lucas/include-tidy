@@ -296,7 +296,7 @@ static void comment_style_parse( char const *config_path,
   if ( opts_given[ COPT(COMMENT_STYLE) ] )
     return;
 
-  if ( !parse_comment_style( string_value ) ) {
+  if ( !opt_comment_style_parse( string_value ) ) {
     fatal_error( EX_CONFIG,
       "%s:%u:%u: invalid value for \"comment-style\"; must be one of \"//\", \"/*\", or \"none\"\n",
       config_path, value->loc.line, value->loc.col
