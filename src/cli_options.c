@@ -73,6 +73,7 @@ static struct option const OPTIONS[] = {
   { "clang",          required_argument,  NULL, COPT(CLANG)         },
   { "comment-style",  required_argument,  NULL, COPT(COMMENT_STYLE) },
   { "config",         required_argument,  NULL, COPT(CONFIG)        },
+  { "error",          no_argument,        NULL, COPT(ERROR)         },
   { "help",           no_argument,        NULL, COPT(HELP)          },
   { "line-length",    required_argument,  NULL, COPT(LINE_LENGTH)   },
   { "verbose",        required_argument,  NULL, COPT(VERBOSE)       },
@@ -94,6 +95,7 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(CLANG) ] = "Path of clang to use; default=\"" OPT_CLANG_DEFAULT "\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
   [ COPT(CONFIG) ] = "Configuration file path",
+  [ COPT(ERROR) ] = "Exit with non-zero status when no violations",
   [ COPT(HELP) ] = "Print this help and exit",
   [ COPT(LINE_LENGTH) ] = "Line length; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
   [ COPT(VERBOSE) ] = "Print verbose output",
@@ -873,6 +875,9 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         if ( *SKIP_WS( optarg ) == '\0' )
           goto missing_arg;
         opt_config_path = optarg;
+        break;
+      case COPT(ERROR):
+        opt_error = true;
         break;
       case COPT(HELP):
         opt_help = true;

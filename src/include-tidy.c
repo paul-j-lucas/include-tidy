@@ -60,6 +60,7 @@ int main( int argc, char const *argv[] ) {
     include_proxies_dump();
   symbols_init( tu );
   includes_print();
+  return opt_error;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

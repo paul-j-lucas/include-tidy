@@ -40,6 +40,7 @@
 #define OPT_ALL_INCLUDES          A
 #define OPT_CONFIG                c
 #define OPT_CLANG                 C
+#define OPT_ERROR                 e
 #define OPT_HELP                  h
 #define OPT_LINE_LENGTH           l
 #define OPT_COMMENT_STYLE         s
