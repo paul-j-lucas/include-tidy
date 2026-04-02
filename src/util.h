@@ -819,7 +819,7 @@ inline char const* null_if_empty( char const *s ) {
 }
 
 /**
- * Gets the filename extension of \a path.
+ * Gets the filename extension of \a path, if any.
  *
  * @param path The path to get the filename extension of.
  * @return Returns a pointer into \a path pointing at the first character of
