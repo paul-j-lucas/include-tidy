@@ -35,6 +35,9 @@
 // libclang
 #include <clang-c/Index.h>
 
+/**
+ * **include-tidy**-specific exit status codes.
+ */
 enum {
   TIDY_EX_VIOLATIONS  = 1,              ///< One or more violations.
   TIDY_EX_ERROR       = 2               ///< `--error` or `-e` was given.
