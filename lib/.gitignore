@@ -11,4 +11,3 @@
 /sys
 /sysexits.h
 /unistd.h
-/getopt_int.h
