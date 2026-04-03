@@ -311,6 +311,11 @@ static char*  make_symbols_used_comment( tidy_include const* );
 
 static void   tidy_include_cleanup( tidy_include* );
 
+// extern variables
+unsigned tidy_includes_missing;
+unsigned tidy_includes_unnecessary;
+
+// local variables
 static rb_tree_t include_set;           ///< Set of included files.
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -825,12 +830,13 @@ void includes_print( void ) {
   rb_iterator_init( &include_set, &iter );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( include->is_needed ?
-          (opt_all_includes || include->depth > 0) :
-          include->depth == 0 ) {
-      PJL_DISCARD_RV(
-        rb_tree_insert( &include_set_by_rel_path, include, sizeof *include )
-      );
+    bool is_direct = include->depth == 0;
+    if ( include->is_needed ? (!is_direct || opt_all_includes) : is_direct ) {
+      if ( !include->is_needed )
+        ++tidy_includes_unnecessary;
+      else if ( !is_direct )
+        ++tidy_includes_missing;
+      PJL_DISCARD_RV( rb_tree_insert( &include_set_by_rel_path, include, 0 ) );
     }
   } // for
 

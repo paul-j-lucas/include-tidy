@@ -71,6 +71,22 @@ struct tidy_include {
   rb_tree_t       symbol_set;           ///< Symbols referenced from this file.
 };
 
+////////// extern variables ///////////////////////////////////////////////////
+
+/**
+ * Number of missing include files.
+ *
+ * @sa tidy_includes_unnecessary
+ */
+extern unsigned tidy_includes_missing;
+
+/**
+ * Number of unnecessary include files.
+ *
+ * @sa tidy_includes_missing
+ */
+extern unsigned tidy_includes_unnecessary;
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**

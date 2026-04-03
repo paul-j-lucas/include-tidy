@@ -29,8 +29,16 @@
 #include "trans_unit.h"
 #include "util.h"
 
+// system
+#include <sysexits.h>
+
 // libclang
 #include <clang-c/Index.h>
+
+enum {
+  TIDY_EX_VIOLATIONS  = 1,              ///< One or more violations.
+  TIDY_EX_ERROR       = 2               ///< `--error` or `-e` was given.
+};
 
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
@@ -60,7 +68,9 @@ int main( int argc, char const *argv[] ) {
     include_proxies_dump();
   symbols_init( tu );
   includes_print();
-  return opt_error;
+  if ( tidy_includes_missing > 0 || tidy_includes_unnecessary > 0 )
+    return TIDY_EX_VIOLATIONS;
+  return opt_error ? TIDY_EX_ERROR : EX_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
