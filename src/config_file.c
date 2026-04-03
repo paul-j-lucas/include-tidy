@@ -102,7 +102,7 @@ typedef enum    config_file_loc   config_file_loc;
 typedef enum    config_opts       config_opts;
 typedef struct  config_key        config_key;
 typedef enum    config_table_kind config_table_kind;
-typedef struct  symbol_include    symbol_include;
+typedef struct  symbol_includes   symbol_includes;
 
 /**
  * Signature for function to parse the value of a configuration key.
@@ -127,15 +127,32 @@ struct config_key {
 };
 
 /**
- * Mapping from a symbol name to a set of include CXFiles that declare it from
- * a configuration file.
+ * Mapping from a symbol name to a set of include CXFiles that declare it.
+ *
+ * @remarks A set of include files is needed since some symbols are declared in
+ * multiple include files, e.g., `NULL` and `size_t`.
+ *
+ * @par Example
+ *  ```
+ *  [NULL]
+ *  includes = [
+ *      "locale.h",
+ *      "stddef.h",
+ *      "stdio.h",
+ *      "stdlib.h",
+ *      "string.h",
+ *      "time.h",
+ *      "wchar.h",
+ *  ]
+ *  ```
  */
-struct symbol_include {
+struct symbol_includes {
   char const *from_symbol_name;         ///< Symbol name.
   rb_tree_t   to_include_files;         ///< Include file(s).
 };
 
-// local functions
+////////// local functions ////////////////////////////////////////////////////
+
 static void         align_column_parse( char const*, toml_table const*,
                                         toml_value const* );
 static void         all_includes_parse( char const*, toml_table const*,
@@ -182,14 +199,11 @@ static char const*  string_value_parse( char const*, char const*,
                                         toml_value const* );
 
 static void         symbol_include_add( char const*, CXFile );
-static void         symbol_include_cleanup( symbol_include* );
+static void         symbol_include_cleanup( symbol_includes* );
 static void         symbols_parse( char const*, toml_table const*,
                                    toml_value const* );
 
-// local variables
-static config_file_loc  config_loc;     ///< Configuration file location.
-static bool             config_next = true; ///< Read next configuration file?
-static rb_tree_t        symbol_include_map; ///< Mapping from symbols to includes.
+////////// local constants ////////////////////////////////////////////////////
 
 /**
  * Configuration keys.
@@ -206,6 +220,19 @@ static config_key const CONFIG_KEYS[] = {
   { "proxy",          CONFIG_TABLE_NOT_INCLUDE_TIDY,  &proxy_parse          },
   { "symbols",        CONFIG_TABLE_NOT_INCLUDE_TIDY,  &symbols_parse        },
 };
+
+////////// local variables ////////////////////////////////////////////////////
+
+static config_file_loc  config_loc;     ///< Configuration file location.
+
+static bool             config_next = true; ///< Read next configuration file?
+
+/**
+ * Mapping from symbols to the include file(s) they're declared in.
+ *
+ * @sa symbol_includes
+ */
+static rb_tree_t symbol_include_map;
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -827,11 +854,11 @@ static char const* string_value_parse( char const *config_path,
 }
 
 /**
- * Cleans-up a symbol_include.
+ * Cleans-up a symbol_includes.
  *
- * @param si The symbol_include to clean up.  If NULL, does nothing.
+ * @param si The symbol_includes to clean up.  If NULL, does nothing.
  */
-static void symbol_include_cleanup( symbol_include *si ) {
+static void symbol_include_cleanup( symbol_includes *si ) {
   if ( si == NULL )
     return;
   FREE( si->from_symbol_name );
@@ -839,17 +866,17 @@ static void symbol_include_cleanup( symbol_include *si ) {
 }
 
 /**
- * Compares two \ref symbol_include objects.
+ * Compares two \ref symbol_includes objects.
  *
- * @param i_si The first symbol_include.
- * @param j_si The second symbol_include.
+ * @param i_si The first symbol_includes.
+ * @param j_si The second symbol_includes.
  * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
  * i_si is less than, equal to, or greater than the name of \a j_si,
  * respectively.
  */
 NODISCARD
-static int symbol_include_cmp( symbol_include const *i_si,
-                               symbol_include const *j_si ) {
+static int symbol_include_cmp( symbol_includes const *i_si,
+                               symbol_includes const *j_si ) {
   assert( i_si != NULL );
   assert( j_si != NULL );
   return strcmp( i_si->from_symbol_name, j_si->from_symbol_name );
@@ -867,10 +894,10 @@ static void symbol_include_add( char const *from_symbol_name,
   assert( from_symbol_name != NULL );
   assert( to_include_file != NULL );
 
-  symbol_include new_si = { .from_symbol_name = from_symbol_name };
+  symbol_includes new_si = { .from_symbol_name = from_symbol_name };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_include_map, &new_si, sizeof new_si );
-  symbol_include *const si = RB_DINT( rv_rbi.node );
+  symbol_includes *const si = RB_DINT( rv_rbi.node );
   if ( rv_rbi.inserted ) {
     si->from_symbol_name = check_strdup( from_symbol_name );
     rb_tree_init(
@@ -894,7 +921,7 @@ static void symbol_includes_dump( void ) {
   verbose_printf( "configuration symbols:\n" );
   rb_iterator_t si_iter;
   rb_iterator_init( &symbol_include_map, &si_iter );
-  for ( symbol_include const *si;
+  for ( symbol_includes const *si;
         (si = rb_iterator_next( &si_iter )) != NULL; ) {
     verbose_printf( "  \"%s\" -> [ ", si->from_symbol_name );
 
@@ -962,12 +989,12 @@ static void symbols_parse( char const *config_path, toml_table const *table,
 CXFile config_get_symbol_include( char const *symbol_name ) {
   assert( symbol_name != NULL );
 
-  symbol_include find_si = { .from_symbol_name = symbol_name };
+  symbol_includes find_si = { .from_symbol_name = symbol_name };
   rb_node_t const *const found_rb =
     rb_tree_find( &symbol_include_map, &find_si );
   if ( found_rb == NULL )
     return NULL;
-  symbol_include const *const found_si = RB_DINT( found_rb );
+  symbol_includes const *const found_si = RB_DINT( found_rb );
 
   rb_iterator_t iter;
   rb_iterator_init( &found_si->to_include_files, &iter );
