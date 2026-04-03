@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "April 2, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "April 3, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -55,13 +55,92 @@ that can be used to ``tidy'' the
 used in a C
 or C++
 file
-by ensuring that it directly includes
+by enforcing the
+.I include-what-you-use
+principle,
+namely that a source file
+directly includes
 header files from which it references symbols
 and does not include header files
 from which it does not reference symbols.
-Either missing
+Either missing direct
 or unnecessary header files
 are in ``violation.''
+.PP
+By default,
+a missing \f(CW#include\fP is printed
+followed by a comment
+aligned at a specific column
+containing a sorted,
+comma-separated
+list of as many symbols
+referenced from it
+as will fit into
+the current line length.
+(See the
+.B \-\-align-column
+or
+.BR \-a ,
+.B \-\-comment-style
+or
+.BR \-s ,
+and the
+.B \-\-line-length
+or
+.BR \-l
+options
+that control comments.)
+.PP
+An unnecessary \f(CW#include\fP is printed
+followed by a comment
+containing a recommendation
+to delete the line number.
+.SS Use with Make
+While
+.B include-tidy
+can be used on a per-file basis,
+it can alternatively be used with
+.BR make (1)
+in place of either your C compiler:
+.cS
+make -k CC="include-tidy" CFLAGS="-Xtidy --error"
+.cE
+or your C++ compiler:
+.cS
+make -k CXX="include-tidy" CXXFLAGS="-Xtidy --error"
+.cE
+to run
+.B include-tidy
+on all your source files
+at once.
+The advantage of doing this
+is that
+.B include-tidy
+will be given all the options
+normally given to your compiler
+via your
+.BR Makefile ,
+specifically
+.B \-D
+and
+.B \-I
+options
+that affect compilation.
+.PP
+(The
+.B \-k
+or
+.B \-\-keep-going
+option is necessary for
+.BR make (1)
+since the
+.B \-\-error
+option causes
+.B include-tidy
+always to exit with a non-zero exit status.
+(See the
+.B \-\-error
+option below.)
 .SH OPTIONS
 .B include-tidy
 has three kinds of command-line options:
@@ -82,19 +161,19 @@ options are preceded by an
 option to distinguish them from
 .BR clang (1)
 options.
-For exmaple,
+For example,
 in:
 .cS
-include-tidy -Xtidy --all-includes -I../lib source_file.c
+include-tidy -Xtidy --all-includes -I../lib source.c
 .cE
 the
 .BR \-\-all-includes
 option
 is given only to
 .B include-tidy
-and the
+and only the
 .B -I../lib
-option is given only to
+option is given to
 .BR clang (1).
 .PP
 For the options below,
@@ -118,6 +197,11 @@ The default is 40.
 .BR \-\-all-includes " | " \-A
 Prints all include files,
 not just those in violation.
+Local includes
+are printed before system includes.
+The include corresponding to the current
+\f(CW.c\fP or \f(CW.cpp\fP
+is printed first.
 .TP
 .BR \-\-clang \f1=\fPf "\f1 | \fP" "" \-C " f"
 Specifies the path to
@@ -131,16 +215,25 @@ one of \f(CW//\fP,
 or
 \f(CWnone\fP.
 The default is \f(CW//\fP.
+(Note that \f(CW/*\fP
+may need to be quoted
+to prevent shell expansion.)
+Comments for unnecessary headers
+are always printed.
 .TP
 .BR \-\-config \f1=\fPf "\f1 | \fP" "" \-c " f"
-Specifies the path of the configuration file to use.
-.BR \-\-error " | " \-e
-Exit with a non-zero status
-when no violations.
+Specifies the path of the configuration file to use
+instead of the defaults.
 .TP
 .BR \-\-error " | " \-e
-Exit with a non-zero status
-even when there were no violations.
+Exits with a non-zero status
+even when there are no violations.
+This is needed to tell
+.BR make (1)
+that the corresponding target \f(CW.o\fP file
+has not been built.
+(See
+.BR "Use with Make" .)
 .TP
 .BR \-\-line-length \f1=\fPn "\f1 | \fP" "" \-l " n"
 Specifies the line length.
@@ -155,7 +248,10 @@ are:
 .TP 4
 .PD 0
 .B a
-Command-line arguments.
+Command-line arguments given to
+.B include-tidy
+and
+.BR clang .
 .TP
 .B i
 Files included.
@@ -164,7 +260,9 @@ Files included.
 Configuration file proxies.
 .TP
 .B s
-Symbols referenced.
+Symbols referenced
+and the include files
+declaring them.
 .TP
 .B S
 Configuration file symbols.
@@ -251,7 +349,7 @@ the first of
 .IP 0
 No violations.
 .IP 1
-One or more violations were found.
+One or more violations.
 .IP 2
 No violations,
 but either the
@@ -329,6 +427,7 @@ Paul J. Lucas
 .RI < paul@lucasmail.org >
 .SH SEE ALSO
 .BR clang (1),
+.BR make (1),
 .BR sysexits (3),
 .BR include-tidy (5)
 .\" vim:set et sw=2 ts=2:

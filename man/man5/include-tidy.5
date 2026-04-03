@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 5 "March 31, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 5 "April 3, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy.toml \(em \f(CW#include\fP tidier configuration file
 .SH DESCRIPTION
@@ -48,6 +48,7 @@ The file is ``lite'' version of TOML.
 (See
 .B CAVEATS
 for unsupported TOML.)
+.SS Tables
 The file is broken down into sections
 (``tables'' in TOML parlance)
 where each section is started by a line of the form:
@@ -62,24 +63,116 @@ and a right bracket.
 There must be
 .I no
 whitespace between the brackets.
-.PP
-A table name
-is either a relative path of an include file
-(what you would put between either the \f(CW""\fP
-or \f(CW<>\fP in an \f(CW#include\fP directive,
-e.g., \f(CWstdio.h\fP
-or \f(CWsys/wait.h\fP)
-or a symbol name,
-e.g., \f(CWsize_t\fP.
-Note that if a table name
+If a table name
 contains a character other than
+a valid TOML key character of
 \f(CW[A-Za-z0-9_-.]\fP
 (a letter, digit, underscore, dash, or dot),
 then the table name
 .I must
 be quoted.
-.SH EXAMPLE
-The following says the file \f(CWpjl_config.h\fP
+.PP
+The order in which tables are given
+doesn't matter.
+For the keys below,
+a value
+.I b
+means Boolean
+(either \f(CWtrue\fP
+or \f(CWfalse\fP),
+.I f
+means a quoted file's relative path,
+.I n
+means an unsigned integer,
+and
+.I s
+means a quoted string.
+.SS include-tidy Table
+This table
+.I must
+be named
+.B include-tidy
+and is used to specify options,
+the same as can be specified
+via the command-line,
+but without having to specify them
+via the command-line
+every time.
+.TP 5
+.BI align-column " \f1=\fP n"
+Same as the
+.B \-\-align-column
+command-line option.
+.TP
+.BI all-includes " \f1=\fP b"
+Same as the
+.B \-\-all-includes
+command-line option.
+.TP
+.BI comment-style " \f1=\fP s"
+Same as the
+.B \-\-comment-style
+command-line option.
+.TP
+.BI config-next " \f1=\fP b"
+TODO.
+.TP
+.BI line-length " \f1=\fP n"
+Same as the
+.B \-\-line-length
+command-line option.
+.SS Header Tables
+Thit table specifies
+a relative path of an include file
+(what you would put between either the \f(CW""\fP
+or \f(CW<>\fP
+in an \f(CW#include\fP directive),
+e.g.,
+\f(CWstdio.h\fP
+or
+\f(CWsys/wait.h\fP.
+.TP 5
+.BI first " \f1=\fP b"
+If true,
+the local include file given for the table name
+is to be printed first,
+i.e., before any other local include files.
+This is useful when
+.B all-includes
+is \f(CWtrue\fP.
+.TP
+.BI keep " \f1=\fP b"
+If true,
+the include file given for the table name
+is to be ``kept,''
+that is,
+even if no symbols from it are referenced
+and so is apparently unnecessary,
+it will not be reported as a violation.
+.TP
+.BI proxy " \f1=\fP s" "\f1 | \fP[" s " \f1[,\fP " s "\f1]*\fP ]"
+Specifies that the include file
+given for the table name
+is a ``proxy''
+for one other include file
+(that can be specified as a single string)
+or one or more other include files
+that are specified as a bracket-enclosed,
+comma-separated
+array of strings.
+For example,
+this:
+.RS 5
+.cS
+[pjl_config.h]
+proxy = [
+    "attribute.h",
+    "config.h"
+]
+.cE 0
+.RE
+.IP
+says the header \f(CWpjl_config.h\fP
 is a proxy for both \f(CWattribute.h\fP
 and \f(CWconfig.h\fP
 meaning that all symbols declared in either of those files
@@ -88,13 +181,55 @@ Therefore,
 if a source file includes \f(CWpjl_config.h\fP,
 it does not need to include either of the files
 for which it is a proxy.
+.TP
+.BR symbols " \f1=\fP s" "\f1 | \fP[" s " \f1[,\fP " s "\f1]*\fP ]"
+Specifies that the include file
+given for the name table
+is to be considered
+to declare the given symbols.
+.SS Symbol Tables
+This table specifies a symbol name,
+e.g.,
+\f(CWNULL\fP
+or
+\f(CWsize_t\fP,
+is declared in multiple include files
+so including any one of them
+meets the
+.I include-what-you-use
+requirement
+thus averting a violation.
+.TP 5
+.BR includes " \f1=\fP s" "\f1 | \fP[" s " \f1[,\fP " s "\f1]*\fP ]"
+Specifies that the symbol
+given for the table name
+is to be considered declared
+in one or more
+of the include files listed.
+For example,
+this:
+.RS 5
 .cS
-[pjl_config.h]
-proxy = [
-    "attribute.h",
-    "config.h"
+[NULL]
+includes = [
+    "locale.h",
+    "stddef.h",
+    "stdio.h",
+    "stdlib.h",
+    "string.h",
+    "time.h",
+    "wchar.h",
 ]
-.cE
+.cE 0
+.RE
+.IP
+says that \f(CWNULL\fP
+is declared in
+.I all
+of those files
+so including any
+.I one
+of them is sufficient.
 .SH CAVEATS
 .SS Unsupported TOML
 The following parts of TOML are
