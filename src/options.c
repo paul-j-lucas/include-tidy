@@ -32,6 +32,7 @@
 
 // standard
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdarg.h>
@@ -55,19 +56,20 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // extern option variables
-unsigned            opt_align_column = OPT_ALIGN_COLUMN_DEFAULT;
-bool                opt_all_includes;
-char const         *opt_comment_style[2] = { "// ", "" };
-char const         *opt_config_path;
-bool                opt_error;
-unsigned            opt_line_length = OPT_LINE_LENGTH_DEFAULT;
-tidy_verbose        opt_verbose;
+unsigned      opt_align_column = OPT_ALIGN_COLUMN_DEFAULT;
+bool          opt_all_includes;
+char const   *opt_comment_style[2] = { "// ", "" };
+char const   *opt_config_path;
+bool          opt_error;
+unsigned      opt_line_length = OPT_LINE_LENGTH_DEFAULT;
+tidy_verbose  opt_verbose;
 
 // extern argument variables
-char const         *arg_source_path;
+char const   *arg_source_path;
 
 // local option variables
-static char       **opt_include_paths;  ///< Null-terminated list of `-I` paths.
+static char **opt_include_paths;        ///< Null-terminated list of `-I` paths.
+static bool   opt_is_set_impl[ 256 ];   ///< Was an option set?
 
 // local functions
 NODISCARD
@@ -222,6 +224,12 @@ char const* opt_include_paths_relativize( char const *abs_path ) {
   return path_no_dot_slash( shortest_include_path );
 }
 
+bool opt_is_set( int short_opt ) {
+  assert( short_opt >= 0 && short_opt <= 255 );
+  assert( isalnum( short_opt ) );
+  return opt_is_set_impl[ STATIC_CAST( unsigned char, short_opt ) ];
+}
+
 bool opt_line_length_parse( char const *s ) {
   assert( s != NULL );
   unsigned long long ull = parse_ull( s );
@@ -229,6 +237,12 @@ bool opt_line_length_parse( char const *s ) {
     return false;
   opt_line_length = STATIC_CAST( unsigned, ull );
   return true;
+}
+
+void opt_mark_set( int short_opt ) {
+  assert( short_opt >= 0 && short_opt <= 255 );
+  assert( isalnum( short_opt ) );
+  opt_is_set_impl[ STATIC_CAST( unsigned char, short_opt ) ] = true;
 }
 
 bool opt_verbose_parse( char const *verbose_format ) {

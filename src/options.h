@@ -109,6 +109,17 @@ void opt_include_paths_add( char const *include_path );
 char const* opt_include_paths_relativize( char const *abs_path );
 
 /**
+ * Gets whether the option has been set.
+ *
+ * @param short_opt The short option character.
+ * @return Returns `true` only if the option has been set.
+ *
+ * @sa opt_mark_set()
+ */
+NODISCARD
+bool opt_is_set( int short_opt );
+
+/**
  * Parses the line length.
  *
  * @param s The string to parse.
@@ -116,6 +127,15 @@ char const* opt_include_paths_relativize( char const *abs_path );
  */
 NODISCARD
 bool opt_line_length_parse( char const *s );
+
+/**
+ * Marks an option as having been set.
+ *
+ * @param short_opt The short option character.
+ *
+ * @sa opt_is_set()
+ */
+void opt_mark_set( int short_opt );
 
 /**
  * Parses the value of the **include-tidy** verbose option.

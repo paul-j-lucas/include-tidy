@@ -254,8 +254,10 @@ static void align_column_parse( char const *config_path,
     config_path, "align-column", value, 0, OPT_ALIGN_COLUMN_MAX
   );
 
-  if ( !opts_given[ COPT(ALIGN_COLUMN) ] )
+  if ( !opt_is_set( COPT(ALIGN_COLUMN) ) ) {
     opt_align_column = STATIC_CAST( unsigned, int_value );
+    opt_mark_set( COPT(ALIGN_COLUMN) );
+  }
 }
 
 /**
@@ -272,8 +274,10 @@ static void all_includes_parse( char const *config_path,
   (void)table;
   assert( value != NULL );
 
-  if ( !opts_given[ COPT(ALL_INCLUDES) ] )
+  if ( !opt_is_set( COPT(ALL_INCLUDES) ) ) {
     opt_all_includes = bool_value_parse( config_path, "all-includes", value );
+    opt_mark_set( COPT(ALL_INCLUDES) );
+  }
 }
 
 /**
@@ -326,7 +330,7 @@ static void comment_style_parse( char const *config_path,
   char const *const string_value =
     string_value_parse( config_path, "comment-style", value );
 
-  if ( opts_given[ COPT(COMMENT_STYLE) ] )
+  if ( opt_is_set( COPT(COMMENT_STYLE) ) )
     return;
 
   if ( !opt_comment_style_parse( string_value ) ) {
@@ -335,6 +339,7 @@ static void comment_style_parse( char const *config_path,
       config_path, value->loc.line, value->loc.col
     );
   }
+  opt_mark_set( COPT(COMMENT_STYLE) );
 }
 
 /**
@@ -753,8 +758,10 @@ static void line_length_parse( char const *config_path,
     config_path, "line-length", value, 0, OPT_LINE_LENGTH_MAX
   );
 
-  if ( !opts_given[ COPT(LINE_LENGTH) ] )
+  if ( !opt_is_set( COPT(LINE_LENGTH) ) ) {
     opt_line_length = STATIC_CAST( unsigned, int_value );
+    opt_mark_set( COPT(LINE_LENGTH) );
+  }
 }
 
 /**

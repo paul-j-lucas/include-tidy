@@ -101,10 +101,6 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(VERSION) ] = "Print version and exit",
 };
 
-// extern variable definitions
-bool                opts_given[ 128 ];
-
-
 // local functions
 NODISCARD
 static char const*  get_opt_format( int ),
@@ -239,13 +235,13 @@ error:
  * @param opt The option to check for.
  */
 static void check_opt_exclusive( char opt ) {
-  if ( !opts_given[ STATIC_CAST( unsigned, opt ) ] )
+  if ( !opt_is_set( opt ) )
     return;
-  for ( size_t i = '0'; i < ARRAY_SIZE( opts_given ); ++i ) {
+  for ( size_t i = '0'; i < 256; ++i ) {
     char const curr_opt = STATIC_CAST( char, i );
     if ( curr_opt == opt )
       continue;
-    if ( opts_given[ STATIC_CAST( unsigned, curr_opt ) ] ) {
+    if ( opt_is_set( curr_opt ) ) {
       fatal_error( EX_USAGE,
         "%s can be given only by itself\n",
         get_opt_format( opt )
@@ -869,6 +865,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
             optarg, get_opt_format( opt )
           );
         }
+        opt_mark_set( COPT(COMMENT_STYLE) );
         break;
       case COPT(CONFIG):
         if ( *SKIP_WS( optarg ) == '\0' )
@@ -922,7 +919,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
           "%d: unaccounted-for getopt_long() return value\n", opt
         );
     } // switch
-    opts_given[ opt ] = true;
+    opt_mark_set( opt );
   } // for
   FREE( short_opts );
 

@@ -32,9 +32,6 @@
 
 /// @cond DOXYGEN_IGNORE
 
-// standard
-#include <stdbool.h>
-
 // in ascending option character ASCII order; sort using: sort -k3b,3f -k3b,3r
 #define OPT_ALIGN_COLUMN          a
 #define OPT_ALL_INCLUDES          A
@@ -60,15 +57,6 @@
 
 /// Command-line option as a string literal.
 #define SOPT(X)                   STRINGIFY(OPT_##X)
-
-///////////////////////////////////////////////////////////////////////////////
-
-// extern variables
-
-/**
- * Table of options that were given indexed by short option character.
- */
-extern bool opts_given[];
 
 ////////// extern functions ///////////////////////////////////////////////////
 
