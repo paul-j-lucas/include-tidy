@@ -830,7 +830,7 @@ void includes_print( void ) {
   rb_iterator_init( &include_set, &iter );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    bool is_direct = include->depth == 0;
+    bool const is_direct = include->depth == 0;
     if ( include->is_needed ? (!is_direct || opt_all_includes) : is_direct ) {
       if ( !include->is_needed )
         ++tidy_includes_unnecessary;
