@@ -58,9 +58,9 @@ file
 by ensuring that it directly includes
 header files from which it references symbols
 and does not include header files
-from which no symbols are referenced.
+from which it does not reference symbols.
 Either missing
-or extraneous header files
+or unnecessary header files
 are in ``violation.''
 .SH OPTIONS
 .B include-tidy
@@ -137,6 +137,10 @@ Specifies the path of the configuration file to use.
 .BR \-\-error " | " \-e
 Exit with a non-zero status
 when no violations.
+.TP
+.BR \-\-error " | " \-e
+Exit with a non-zero status
+even when there were no violations.
 .TP
 .BR \-\-line-length \f1=\fPn "\f1 | \fP" "" \-l " n"
 Specifies the line length.
@@ -245,7 +249,16 @@ the first of
 .SH EXIT STATUS
 .PD 0
 .IP 0
-Success.
+No violations.
+.IP 1
+One or more violations were found.
+.IP 2
+No violations,
+but either the
+.B \-\-error
+or
+.B \-e
+option was given.
 .IP 64
 Command-line usage error.
 .IP 65
