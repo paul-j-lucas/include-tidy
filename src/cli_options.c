@@ -646,6 +646,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
     else if ( STRNCMPLIT( argv[i], "-isystem" ) == 0 ) {
       argv[ new_argc++ ] = argv[i];
       char *new_arg = NULL;
+      // Convert -isystem to -I for include-tidy.
       check_asprintf( &new_arg, "-I%s", argv[i] + STRLITLEN( "-isystem" ) );
       tidy_argv[ tidy_argc++ ] = new_arg;
       if ( argv[i][STRLITLEN( "-isystem" )] == '\0' ) {
