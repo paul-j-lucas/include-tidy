@@ -1,5 +1,34 @@
+2026-04-03  Paul J. Lucas <paul@lucasmail.org>
+
+   * options.h: Added NODISCARD.
+   * options.c: Changed "if" to assert().
+   * options.h: Added PJL_DISCARD.
+   * cli_options.c, cli_options.h, config_file.c, options.c, options.h: Now
+     setting an option at most once.
+   * getopt_int.h: Added missing file.
+   * assert.in.h, errno.in.h, getopt-cdefs.in.h, getopt-core.h, getopt-ext.h,
+     getopt-pfx-core.h, getopt-pfx-ext.h, getopt.c, getopt.in.h, getopt1.c,
+     gettext.h, intprops-internal.h, intprops.h, strerror-override.c,
+     strerror-override.h, strerror.c, verify.h: Added missing lib files.
+   * ax_c___attribute__.m4, ax_cflags_warn_all.m4: Added missing m4 files.
+   * ax_check_compile_flag.m4: Added missing m4 file.
+   * man/man1/include-tidy.1, man/man5/include-tidy.5: More man pages.
+
 2026-04-02  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c: Added const.
+   * include-tidy.c, includes.c, includes.h: Exit status now takes violations
+     into account.
+   * man/man1/include-tidy.1: More man page.
+   * options.c: Removed stddef.h.
+   * cli_options.c: Removed strings.h.
+   * man/man1/include-tidy.1, cli_options.c, cli_options.h, include-tidy.c,
+     options.c, options.h: Adder --error option.
+   * includes.c: Added limits.h.
+   * man/man1/include-tidy.1: More man page.
+   * red_black.c, symbols.c, toml_lite.c, trans_unit.c, util.c: Header
+     clean-up.
+   * includes.c: source_file_no_ext is always non-null.
    * config_file.c: Added "first" key.
    * includes.c, includes.h: Now putting x.h first for x.c.
    * cli_options.c: Replaced parse_file_ext() by get_ext_language().
