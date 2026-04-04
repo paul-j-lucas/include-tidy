@@ -56,6 +56,18 @@ CXFile config_get_symbol_include( char const *symbol_name );
  */
 void config_init( void );
 
+/**
+ * Gets whether \a rel_path refers to a standard C, C++, POSIX, BSD, or Linux
+ * include file.
+ *
+ * @param rel_path The relative path of an include file, e.g., `"stdio.h"` or
+ * `"sys/wait.h"`.
+ * @return Returns `true` only if \a rel_path refers to a standard include
+ * file.
+ */
+NODISCARD
+bool config_is_standard_include( char const *rel_path );
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */

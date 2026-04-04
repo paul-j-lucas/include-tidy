@@ -33,6 +33,7 @@
 #include "options.h"
 #include "red_black.h"
 #include "toml_lite.h"
+#include "trans_unit.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -41,6 +42,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>                     /* for PATH_MAX, SIZE_MAX */
+#include <fnmatch.h>
 #if HAVE_PWD_H
 # include <pwd.h>                       /* for getpwuid() */
 #endif /* HAVE_PWD_H */
@@ -97,7 +99,7 @@ typedef struct  symbol_includes   symbol_includes;
  */
 typedef void (*config_parse_fn)( char const *config_path,
                                  toml_table const *table,
-                                 toml_value const *value );
+                                 toml_value *value );
 
 ////////// structures /////////////////////////////////////////////////////////
 
@@ -138,16 +140,20 @@ struct symbol_includes {
 ////////// local functions ////////////////////////////////////////////////////
 
 static void         align_column_parse( char const*, toml_table const*,
-                                        toml_value const* );
+                                        toml_value* );
 static void         all_includes_parse( char const*, toml_table const*,
-                                        toml_value const* );
+                                        toml_value* );
 
 NODISCARD
-static bool         bool_value_parse( char const*, char const*,
-                                      toml_value const* );
+static bool         bool_value_parse( char const*, char const*, toml_value* );
+
+static void         c_includes_parse( char const*, toml_table const*,
+                                      toml_value* );
 
 static void         comment_style_parse( char const*, toml_table const*,
-                                         toml_value const* );
+                                         toml_value* );
+static void         cpp_includes_parse( char const*, toml_table const*,
+                                        toml_value* );
 
 NODISCARD
 static config_key const*
@@ -159,31 +165,31 @@ static FILE*        config_open( char const*, config_opts );
 NODISCARD
 static char const*  home_dir( void );
 
-static void         first_parse( char const*, toml_table const*,
-                                 toml_value const* );
+static void         first_parse( char const*, toml_table const*, toml_value* );
 static void         includes_parse( char const*, toml_table const*,
-                                    toml_value const* );
+                                    toml_value* );
 
 NODISCARD
-static long         int_value_parse( char const*, char const*,
-                                     toml_value const*, long, long );
+static long         int_value_parse( char const*, char const*, toml_value*,
+                                     long, long );
 
-static void         keep_parse( char const*, toml_table const*,
-                                toml_value const* );
+static void         keep_parse( char const*, toml_table const*, toml_value* );
 static void         line_length_parse( char const*, toml_table const*,
-                                       toml_value const* );
+                                       toml_value* );
 static void         path_append( char*, size_t, char const* );
-static void         proxy_parse( char const*, toml_table const*,
-                                 toml_value const* );
+static void         proxy_parse( char const*, toml_table const*, toml_value* );
 
 NODISCARD
-static char const*  string_value_parse( char const*, char const*,
-                                        toml_value const* );
+static char**       string_array_value_parse( char const*, char const*,
+                                              toml_value* );
+
+NODISCARD
+static char const*  string_value_parse( char const*, char const*, toml_value* );
 
 static void         symbol_include_add( char const*, CXFile );
 static void         symbol_include_cleanup( symbol_includes* );
 static void         symbols_parse( char const*, toml_table const*,
-                                   toml_value const* );
+                                   toml_value* );
 
 ////////// local constants ////////////////////////////////////////////////////
 
@@ -193,6 +199,8 @@ static void         symbols_parse( char const*, toml_table const*,
 static config_key const CONFIG_KEYS[] = {
   { "align-column",   CONFIG_TABLE_INCLUDE_TIDY,      &align_column_parse   },
   { "all-includes",   CONFIG_TABLE_INCLUDE_TIDY,      &all_includes_parse   },
+  { "c-includes",     CONFIG_TABLE_INCLUDE_TIDY,      &c_includes_parse     },
+  { "cpp-includes",   CONFIG_TABLE_INCLUDE_TIDY,      &cpp_includes_parse   },
   { "comment-style",  CONFIG_TABLE_INCLUDE_TIDY,      &comment_style_parse  },
   { "first",          CONFIG_TABLE_NOT_INCLUDE_TIDY,  &first_parse          },
   { "includes",       CONFIG_TABLE_NOT_INCLUDE_TIDY,  &includes_parse       },
@@ -203,6 +211,9 @@ static config_key const CONFIG_KEYS[] = {
 };
 
 ////////// local variables ////////////////////////////////////////////////////
+
+static char **c_includes;               ///< Standard-ish C include files.
+static char **cpp_includes;             ///< Standard C++ include files.
 
 /**
  * Mapping from symbols to the include file(s) they're declared in.
@@ -221,8 +232,7 @@ static rb_tree_t symbol_include_map;
  * @param value The toml_value to parse.
  */
 static void align_column_parse( char const *config_path,
-                                toml_table const *table,
-                                toml_value const *value ) {
+                                toml_table const *table, toml_value *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
@@ -245,8 +255,7 @@ static void align_column_parse( char const *config_path,
  * @param value The toml_value to parse.
  */
 static void all_includes_parse( char const *config_path,
-                                toml_table const *table,
-                                toml_value const *value ) {
+                                toml_table const *table, toml_value *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
@@ -261,6 +270,16 @@ static void all_includes_parse( char const *config_path,
  * Cleans-up all configuration data.
  */
 static void config_cleanup( void ) {
+  if ( c_includes != NULL ) {
+    for ( char **ppattern = c_includes; *ppattern != NULL; ++ppattern )
+      free( *ppattern );
+    free( c_includes );
+  }
+  if ( cpp_includes != NULL ) {
+    for ( char **ppattern = cpp_includes; *ppattern != NULL; ++ppattern )
+      free( *ppattern );
+    free( cpp_includes );
+  }
   rb_tree_cleanup(
     &symbol_include_map,
     POINTER_CAST( rb_free_fn_t, &symbol_include_cleanup )
@@ -271,11 +290,11 @@ static void config_cleanup( void ) {
  * Parses a bool value.
  *
  * @param config_path The full path to the configurarion file.
- * @param key_name The name of a key.
+ * @param key_name The key name.
  * @param value The toml_value to parse.
  */
 static bool bool_value_parse( char const *config_path, char const *key_name,
-                              toml_value const *value ) {
+                              toml_value *value ) {
   assert( config_path != NULL );
   assert( key_name != NULL );
   assert( value != NULL );
@@ -291,6 +310,23 @@ static bool bool_value_parse( char const *config_path, char const *key_name,
 }
 
 /**
+ * Parses the value of an `"c-includes"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table Not used.
+ * @param value The toml_value to parse.
+ */
+static void c_includes_parse( char const *config_path,
+                              toml_table const *table, toml_value *value ) {
+  assert( config_path != NULL );
+  (void)table;
+  assert( value != NULL );
+
+  if ( c_includes == NULL )
+    c_includes = string_array_value_parse( config_path, "c-includes", value );
+}
+
+/**
  * Parses the value of an `"comment-style"` key.
  *
  * @param config_path The full path to the configurarion file.
@@ -298,8 +334,7 @@ static bool bool_value_parse( char const *config_path, char const *key_name,
  * @param value The toml_value to parse.
  */
 static void comment_style_parse( char const *config_path,
-                                 toml_table const *table,
-                                 toml_value const *value ) {
+                                 toml_table const *table, toml_value *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
@@ -514,9 +549,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
     toml_iterator   iter;
 
     toml_iterator_init( &table, &iter );
-    for ( toml_key_value const *kv;
-          (kv = toml_iterator_next( &iter )) != NULL; ) {
-
+    for ( toml_key_value *kv; (kv = toml_iterator_next( &iter )) != NULL; ) {
       config_key const *const key = config_key_parse( kv->key );
       if ( key == NULL ) {
         fatal_error( EX_CONFIG,
@@ -550,6 +583,25 @@ static void config_parse( char const *config_path, FILE *config_file ) {
 }
 
 /**
+ * Parses the value of an `"cpp-includes"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table Not used.
+ * @param value The toml_value to parse.
+ */
+static void cpp_includes_parse( char const *config_path,
+                              toml_table const *table, toml_value *value ) {
+  assert( config_path != NULL );
+  (void)table;
+  assert( value != NULL );
+
+  if ( cpp_includes == NULL ) {
+    cpp_includes =
+      string_array_value_parse( config_path, "cpp-includes", value );
+  }
+}
+
+/**
  * Gets the full path of the user's home directory.
  *
  * @return Returns said directory or NULL if it is not obtainable.
@@ -580,7 +632,7 @@ static char const* home_dir( void ) {
  * @param value The toml_value to parse.
  */
 static void first_parse( char const *config_path, toml_table const *table,
-                         toml_value const *value ) {
+                         toml_value*value ) {
   assert( config_path != NULL );
   assert( table != NULL );
   assert( value != NULL );
@@ -605,7 +657,7 @@ static void first_parse( char const *config_path, toml_table const *table,
  * @param value The toml_value to parse.
  */
 static void includes_parse( char const *config_path, toml_table const *table,
-                            toml_value const *value ) {
+                            toml_value *value ) {
   assert( config_path != NULL );
   assert( table != NULL );
   assert( value != NULL );
@@ -646,13 +698,13 @@ static void includes_parse( char const *config_path, toml_table const *table,
  * Parses an integer value.
  *
  * @param config_path The full path to the configurarion file.
- * @param key_name The name of a key.
+ * @param key_name The key name.
  * @param value The toml_value to parse.
  * @param value_min The minimum allowed value.
  * @param value_max The maximum allowed value.
  */
 static long int_value_parse( char const *config_path, char const *key_name,
-                             toml_value const *value,
+                             toml_value *value,
                              long value_min, long value_max ) {
   assert( config_path != NULL );
   assert( key_name != NULL );
@@ -677,6 +729,33 @@ static long int_value_parse( char const *config_path, char const *key_name,
 }
 
 /**
+ * Gets whether \a rel_path is among \a includes.
+ *
+ * @param rel_path The relative path of an include file, e.g., `"stdio.h"` or
+ * `"sys/wait.h"`.
+ * @return Returns `true` only if \a rel_path is among \a includes.
+ */
+NODISCARD
+static bool is_standard_include( char const *rel_path, char **includes ) {
+  assert( rel_path != NULL );
+
+  if ( includes != NULL ) {
+    for ( char **ppattern = includes; *ppattern != NULL; ++ppattern ) {
+      switch ( fnmatch( *ppattern, rel_path, /*flags=*/0 ) ) {
+        case 0:
+          return true;
+        case FNM_NOMATCH:
+          continue;
+        default:
+          assert( false && "fnmatch() error" );
+      } // switch
+    } // for
+  }
+
+  return false;
+}
+
+/**
  * Parses the value of a `"keep"` key.
  *
  * @param config_path The full path to the configurarion file.
@@ -684,7 +763,7 @@ static long int_value_parse( char const *config_path, char const *key_name,
  * @param value The toml_value to parse.
  */
 static void keep_parse( char const *config_path, toml_table const *table,
-                        toml_value const *value ) {
+                        toml_value *value ) {
   assert( config_path != NULL );
   assert( table != NULL );
   assert( value != NULL );
@@ -709,8 +788,7 @@ static void keep_parse( char const *config_path, toml_table const *table,
  * @param value The toml_value to parse.
  */
 static void line_length_parse( char const *config_path,
-                               toml_table const *table,
-                               toml_value const *value ) {
+                               toml_table const *table, toml_value *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
@@ -757,7 +835,7 @@ static void path_append( char *path, size_t path_len, char const *component ) {
  * @param value The toml_value to parse.
  */
 static void proxy_parse( char const *config_path, toml_table const *table,
-                         toml_value const *value ) {
+                         toml_value *value ) {
   assert( config_path != NULL );
   assert( table != NULL );
   assert( value != NULL );
@@ -798,15 +876,60 @@ static void proxy_parse( char const *config_path, toml_table const *table,
 }
 
 /**
+ * Parses an array of strings values.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param key_name The key name.
+ * @param value The toml_value to parse.
+ * @return Returns a pointer to the first element of a null-terminated string
+ * array or NULL if the array is empty.
+ */
+static char** string_array_value_parse( char const *config_path,
+                                        char const *key_name,
+                                        toml_value *value ) {
+  assert( config_path != NULL );
+  assert( key_name != NULL );
+  assert( value != NULL );
+
+  if ( value->type != TOML_ARRAY ) {
+    fatal_error( EX_CONFIG,
+      "%s:%u:%u: "
+      "invalid value for \"%s\"; expected array\n",
+      config_path, value->loc.line, value->loc.col, key_name
+    );
+  }
+
+  if ( value->a.size == 0 )
+    return NULL;
+  char **const array = MALLOC( char*, value->a.size + 1/*NULL*/ );
+
+  for ( unsigned i = 0; i < value->a.size; ++i ) {
+    toml_value *const a_value = &value->a.values[i];
+    if ( a_value->type != TOML_STRING ) {
+      fatal_error( EX_CONFIG,
+        "%s:%u:%u: "
+        "invalid value for \"%s\"; expected string\n",
+        config_path, a_value->loc.line, a_value->loc.col, key_name
+      );
+    }
+    array[i] = a_value->s;
+    a_value->s = NULL;
+  } // for
+
+  array[ value->a.size ] = NULL;
+  return array;
+}
+
+/**
  * Parses a string value.
  *
  * @param config_path The full path to the configurarion file.
- * @param key_name The name of a key.
+ * @param key_name The key name.
  * @param value The toml_value to parse.
  */
 static char const* string_value_parse( char const *config_path,
                                        char const *key_name,
-                                       toml_value const *value ) {
+                                       toml_value *value ) {
   assert( config_path != NULL );
   assert( key_name != NULL );
   assert( value != NULL );
@@ -917,7 +1040,7 @@ static void symbol_includes_dump( void ) {
  * @param value The toml_value to parse.
  */
 static void symbols_parse( char const *config_path, toml_table const *table,
-                           toml_value const *value ) {
+                           toml_value *value ) {
   assert( config_path != NULL );
   assert( table != NULL );
   assert( value != NULL );
@@ -1000,6 +1123,17 @@ void config_init( void ) {
 
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_SYMBOLS) != 0 )
     symbol_includes_dump();
+}
+
+bool config_is_standard_include( char const *rel_path ) {
+  assert( rel_path != NULL );
+
+  if ( tidy_lang == CXLanguage_CPlusPlus &&
+       is_standard_include( rel_path, cpp_includes ) ) {
+    return true;
+  }
+
+  return is_standard_include( rel_path, c_includes );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

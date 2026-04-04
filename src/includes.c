@@ -27,6 +27,7 @@
 #include "pjl_config.h"
 #include "includes.h"
 #include "clang_util.h"
+#include "config_file.h"
 #include "options.h"
 #include "red_black.h"
 #include "symbols.h"
@@ -38,7 +39,6 @@
 // standard
 #include <assert.h>
 #include <limits.h>                     /* for PATH_MAX */
-#include <fnmatch.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for atexit(3) */
@@ -80,213 +80,8 @@ struct visitChildren_visitor_data {
   bool        verbose_printed;          ///< Printed any verbose output?
 };
 
-/**
- * Array of standard C, POSIX, BSD, Linux, etc., include files.
- *
- * @note This array need not be sorted (but should be anyway).
- *
- * @sa is_standard_include()
- * @sa STD_CPP_INCLUDES
- */
-static char const *const STD_C_ETC_INCLUDES[] = {
-  "aio.h",
-  "arpa/*.h",
-  "assert.h",
-  "complex.h",
-  "cpio.h",
-  "ctype.h",
-  "dirent.h",
-  "dlfcn.h",
-  "errno.h",
-  "fcntl.h",
-  "fenv.h",
-  "float.h",
-  "fmtmsg.h",
-  "fnmatch.h",
-  "ftw.h",
-  "glob.h",
-  "grp.h",
-  "iconv.h",
-  "inttypes.h",
-  "iso646.h",
-  "langinfo.h",
-  "libgen.h",
-  "limits.h",
-  "linux/*.h",
-  "locale.h",
-  "math.h",
-  "monetary.h",
-  "mqueue.h",
-  "ndbm.h",
-  "net/*.h",
-  "netdb.h",
-  "netinet/*.h",
-  "netinet6/*.h",
-  "nl_types.h",
-  "poll.h",
-  "pthread.h",
-  "pwd.h",
-  "regex.h",
-  "sched.h",
-  "search.h",
-  "semaphore.h",
-  "setjmp.h",
-  "signal.h",
-  "spawn.h",
-  "std*.h",
-  "string.h",
-  "strings.h",
-  "stropts.h",
-  "sys/*.h",
-  "sysexits.h",
-  "syslog.h",
-  "tar.h",
-  "termios.h",
-  "tgmath.h",
-  "threads.h",
-  "time.h",
-  "trace.h",
-  "uchar.h",
-  "ulimit.h",
-  "unistd.h",
-  "utime.h",
-  "utmpx.h",
-  "wchar.h",
-  "wctype.h",
-  "wordexp.h"
-};
-
-/**
- * Array of standard C++ include files.
- *
- * @note This array _must_ be sorted.
- *
- * @sa is_standard_include()
- * @sa STD_C_ETC_INCLUDES
- */
-static char const *const STD_CPP_INCLUDES[] = {
-  "algorithm",
-  "any",
-  "array",
-  "atomic",
-  "barrier",
-  "bit",
-  "bitset",
-  "cassert",
-  "cctype",
-  "cerrno",
-  "cfenv",
-  "cfloat",
-  "charconv",
-  "chrono",
-  "cinttypes",
-  "climits",
-  "clocale",
-  "cmath",
-  "codecvt",
-  "compare",
-  "complex",
-  "concepts",
-  "condition_variable",
-  "contracts",
-  "coroutine",
-  "csetjmp",
-  "csignal",
-  "cstdarg",
-  "cstddef",
-  "cstdint",
-  "cstdio",
-  "cstdlib",
-  "cstring",
-  "ctime",
-  "cuchar",
-  "cwchar",
-  "cwctype",
-  "debugging",
-  "deque",
-  "exception",
-  "execution",
-  "expected",
-  "filesystem",
-  "flat_map",
-  "flat_set",
-  "format",
-  "forward_list",
-  "fstream",
-  "functional",
-  "future",
-  "generator",
-  "hazard_pointer",
-  "hive",
-  "initializer_list",
-  "inplace_vector",
-  "iomanip",
-  "ios",
-  "iosfwd",
-  "iostream",
-  "istream",
-  "iterator",
-  "latch",
-  "limits",
-  "linalg",
-  "list",
-  "locale",
-  "map",
-  "mdspan",
-  "memory",
-  "memory_resource",
-  "mutex",
-  "new",
-  "numbers",
-  "numeric",
-  "optional",
-  "ostream",
-  "print",
-  "queue",
-  "random",
-  "ranges",
-  "ratio",
-  "rcu",
-  "regex",
-  "scoped_allocator",
-  "semaphore",
-  "set",
-  "shared_mutex",
-  "simd",
-  "source_location",
-  "span",
-  "spanstream",
-  "sstream",
-  "stack",
-  "stacktrace",
-  "stdexcept",
-  "stdfloat",
-  "stop_token",
-  "streambuf",
-  "string",
-  "string_view",
-  "strstream",
-  "syncstream",
-  "system_error",
-  "text_encoding",
-  "thread",
-  "tuple",
-  "type_traits",
-  "typeindex",
-  "typeinfo",
-  "unordered_map",
-  "unordered_set",
-  "utility",
-  "valarray",
-  "variant",
-  "vector",
-  "version"
-};
 
 // local functions
-NODISCARD
-static bool   is_standard_include( char const* );
-
 NODISCARD
 static char*  make_symbols_used_comment( tidy_include const* );
 
@@ -372,7 +167,7 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
 
   if ( ipvd->print_local != include->is_local )
     goto skip;
-  if ( ipvd->print_standard != is_standard_include( include->rel_path ) )
+  if ( ipvd->print_standard != config_is_standard_include( include->rel_path ) )
     goto skip;
 
   char *comment = NULL;
@@ -418,7 +213,7 @@ static bool is_implicit_proxy( tidy_include const *includer,
   if ( includer->is_local || include->is_local )
     return false;
 
-  if ( !is_standard_include( include->rel_path ) )
+  if ( !config_is_standard_include( include->rel_path ) )
     return true;
 
   char const *const include_name = base_name( include->rel_path );
@@ -440,44 +235,6 @@ static bool is_local_include( char const *abs_path ) {
   size_t cwd_path_len;
   char const *const cwd_path = get_cwd( &cwd_path_len );
   return strncmp( abs_path, cwd_path, cwd_path_len ) == 0;
-}
-
-/**
- * Gets whether \a rel_path refers to a standard C, C++, or POSIX include file.
- *
- * @param rel_path The relative path of an include file, e.g., `"stdio.h"` or
- * `"sys/wait.h"`.
- * @return Returns `true` only if \a rel_path refers to a standard include
- * file.
- */
-static bool is_standard_include( char const *rel_path ) {
-  assert( rel_path != NULL );
-
-  void const *found;
-
-  if ( tidy_lang == CXLanguage_CPlusPlus ) {
-    found = bsearch(
-      &rel_path,
-      STD_CPP_INCLUDES, ARRAY_SIZE( STD_CPP_INCLUDES ),
-      sizeof STD_CPP_INCLUDES[0],
-      POINTER_CAST( bsearch_cmp_fn_t, &str_ptr_cmp )
-    );
-    if ( found != NULL )
-      return true;
-  }
-
-  FOREACH_ARRAY_ELEMENT( char const*, pattern, STD_C_ETC_INCLUDES ) {
-    switch ( fnmatch( *pattern, rel_path, /*flags=*/0 ) ) {
-      case 0:
-        return true;
-      case FNM_NOMATCH:
-        continue;
-      default:
-        assert( false && "fnmatch() error" );
-    } // switch
-  } // for
-
-  return false;
 }
 
 /**
