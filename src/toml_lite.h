@@ -243,7 +243,7 @@ inline void toml_iterator_init( toml_table *table, toml_iterator *iter ) {
  * @sa toml_iterator_init()
  */
 NODISCARD
-inline toml_key_value const* toml_iterator_next( toml_iterator *iter ) {
+inline toml_key_value* toml_iterator_next( toml_iterator *iter ) {
   return rb_iterator_next( iter );
 }
 

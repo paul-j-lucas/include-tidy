@@ -934,7 +934,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
 /// @cond DOXYGEN_IGNORE
 
 extern inline void toml_iterator_init( toml_table*, toml_iterator* );
-extern inline toml_key_value const* toml_iterator_next( toml_iterator* );
+extern inline toml_key_value* toml_iterator_next( toml_iterator* );
 extern inline bool toml_table_empty( toml_table const* );
 
 /// @endcond
