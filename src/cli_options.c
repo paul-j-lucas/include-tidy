@@ -878,7 +878,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       case COPT(HELP):
         opt_help = true;
         break;
-      case 'I':                         // special case
+      case COPT(INCLUDE):
         if ( *SKIP_WS( optarg ) == '\0' )
           goto missing_arg;
         opt_include_paths_add( optarg );

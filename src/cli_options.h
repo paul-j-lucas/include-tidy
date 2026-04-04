@@ -39,6 +39,7 @@
 #define OPT_CLANG                 C
 #define OPT_ERROR                 e
 #define OPT_HELP                  h
+#define OPT_INCLUDE               I
 #define OPT_LINE_LENGTH           l
 #define OPT_COMMENT_STYLE         s
 #define OPT_VERSION               v
