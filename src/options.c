@@ -283,8 +283,7 @@ void options_init( void ) {
 }
 
 int verbose_printf( char const *format, ... ) {
-  if ( opt_verbose == TIDY_VERBOSE_NONE )
-    return 0;
+  assert( opt_verbose != TIDY_VERBOSE_NONE );
   fputs( "// tidy | ", stdout );
   va_list args;
   va_start( args, format );
