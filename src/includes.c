@@ -38,6 +38,7 @@
 // standard
 #include <assert.h>
 #include <limits.h>                     /* for PATH_MAX */
+#include <fnmatch.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for atexit(3) */
@@ -67,6 +68,7 @@ typedef struct visitChildren_visitor_data   visitChildren_visitor_data;
 struct includes_print_visitor_data {
   bool  print_blank_line;               ///< Print a blank line?
   bool  print_local;                    ///< Print local includes?
+  bool  print_standard;                 ///< Print standard includes?
   bool  printed_any_includes;           ///< Did we print any includes?
 };
 
@@ -79,14 +81,16 @@ struct visitChildren_visitor_data {
 };
 
 /**
- * Array of standard C and POSIX include files.
+ * Array of standard C, POSIX, BSD, Linux, etc., include files.
+ *
+ * @note This array need not be sorted (but should be anyway).
  *
  * @sa is_standard_include()
  * @sa STD_CPP_INCLUDES
  */
-static char const *const STD_C_POSIX_INCLUDES[] = {
+static char const *const STD_C_ETC_INCLUDES[] = {
   "aio.h",
-  "arpa/inet.h",
+  "arpa/*.h",
   "assert.h",
   "complex.h",
   "cpio.h",
@@ -108,15 +112,16 @@ static char const *const STD_C_POSIX_INCLUDES[] = {
   "langinfo.h",
   "libgen.h",
   "limits.h",
+  "linux/*.h",
   "locale.h",
   "math.h",
   "monetary.h",
   "mqueue.h",
   "ndbm.h",
-  "net/if.h",
+  "net/*.h",
   "netdb.h",
-  "netinet/in.h",
-  "netinet/tcp.h",
+  "netinet/*.h",
+  "netinet6/*.h",
   "nl_types.h",
   "poll.h",
   "pthread.h",
@@ -128,38 +133,12 @@ static char const *const STD_C_POSIX_INCLUDES[] = {
   "setjmp.h",
   "signal.h",
   "spawn.h",
-  "stdalign.h",
-  "stdarg.h",
-  "stdatomic.h",
-  "stdbit.h",
-  "stdbool.h",
-  "stdckdint.h",
-  "stddef.h",
-  "stdint.h",
-  "stdio.h",
-  "stdlib.h",
-  "stdmchar.h",
-  "stdnoreturn.h",
+  "std*.h",
   "string.h",
   "strings.h",
   "stropts.h",
-  "sys/ipc.h",
-  "sys/mman.h",
-  "sys/msg.h",
-  "sys/resource.h",
-  "sys/select.h",
-  "sys/sem.h",
-  "sys/shm.h",
-  "sys/socket.h",
-  "sys/stat.h",
-  "sys/statvfs.h",
-  "sys/time.h",
-  "sys/times.h",
-  "sys/types.h",
-  "sys/uio.h",
-  "sys/un.h",
-  "sys/utsname.h",
-  "sys/wait.h",
+  "sys/*.h",
+  "sysexits.h",
   "syslog.h",
   "tar.h",
   "termios.h",
@@ -180,8 +159,10 @@ static char const *const STD_C_POSIX_INCLUDES[] = {
 /**
  * Array of standard C++ include files.
  *
+ * @note This array _must_ be sorted.
+ *
  * @sa is_standard_include()
- * @sa STD_C_POSIX_INCLUDES
+ * @sa STD_C_ETC_INCLUDES
  */
 static char const *const STD_CPP_INCLUDES[] = {
   "algorithm",
@@ -391,6 +372,8 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
 
   if ( ipvd->print_local != include->is_local )
     goto skip;
+  if ( ipvd->print_standard != is_standard_include( include->rel_path ) )
+    goto skip;
 
   char *comment = NULL;
   bool  reset_opt_comment_style = false;
@@ -483,14 +466,18 @@ static bool is_standard_include( char const *rel_path ) {
       return true;
   }
 
-  found = bsearch(
-    &rel_path,
-    STD_C_POSIX_INCLUDES, ARRAY_SIZE( STD_C_POSIX_INCLUDES ),
-    sizeof STD_C_POSIX_INCLUDES[0],
-    POINTER_CAST( bsearch_cmp_fn_t, &str_ptr_cmp )
-  );
+  FOREACH_ARRAY_ELEMENT( char const*, pattern, STD_C_ETC_INCLUDES ) {
+    switch ( fnmatch( *pattern, rel_path, /*flags=*/0 ) ) {
+      case 0:
+        return true;
+      case FNM_NOMATCH:
+        continue;
+      default:
+        assert( false && "fnmatch() error" );
+    } // switch
+  } // for
 
-  return found != NULL;
+  return false;
 }
 
 /**
@@ -844,7 +831,11 @@ void includes_print( void ) {
   rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
 
   ipvd.print_local = !ipvd.print_local;
-  ipvd.print_blank_line = ipvd.printed_any_includes;
+  ipvd.print_blank_line = true_clear( &ipvd.printed_any_includes );
+  rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
+
+  ipvd.print_standard = true;
+  ipvd.print_blank_line = true_clear( &ipvd.printed_any_includes );
   rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
 
   // Because the nodes point to existing tidy_include objects, use NULL.
