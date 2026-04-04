@@ -825,7 +825,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   int               opt;
   bool              opt_help = false;
   bool              opt_version = false;
-  char const *const short_opts = make_short_opts( OPTIONS, "I:" );
+  char const *const short_opts = make_short_opts( OPTIONS, SOPT(INCLUDE) ":" );
   int               tidy_argc;
   char const      **tidy_argv;
 
