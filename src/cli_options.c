@@ -802,7 +802,6 @@ static void preprocess_argv( int *pargc, char const **pargv[] ) {
     lang = get_ext_language( ext );
 
   add_clang_include_paths( pargc, pargv, clang_path, lang );
-  opt_include_paths_add( "." );
 }
 
 /**
