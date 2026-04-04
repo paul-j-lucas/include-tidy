@@ -942,7 +942,7 @@ static char** string_array_value_parse( char const *config_path,
       );
     }
     array[i] = a_value->s;
-    a_value->s = NULL;
+    a_value->s = NULL;                  // steal value's string
   } // for
 
   array[ value->a.size ] = NULL;
