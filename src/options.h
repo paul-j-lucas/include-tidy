@@ -35,7 +35,7 @@
 
 /**
  * @defgroup options-group **include-tidy** Options
- * Global variables and functions for **include-tidy** options.
+ * Types, global variables, and functions for **include-tidy** options.
  * @{
  */
 
@@ -102,9 +102,14 @@ void opt_include_paths_add( char const *include_path );
 /**
  * Relativizes \a abs_path against one of the `-I` absolute paths.
  *
+ * @par Example
+ * If the option `-I/opt/local/libexec/llvm-21/include` were given and \a
+ * abs_path were `/opt/local/libexec/llvm-21/include/clang-c/Index.h`, then
+ * this function would return `clang-c/Index.h`.
+ *
  * @param abs_path The absolte path of a file being included.
- * @return Returns the shorted path of \a abs_path relative to one of the `-I`
- * absolute paths.
+ * @return Returns the shortened path of \a abs_path relative to one of the
+ * `-I` absolute paths.
  */
 char const* opt_include_paths_relativize( char const *abs_path );
 
@@ -145,11 +150,13 @@ void opt_mark_set( int short_opt );
  * The null-terminated **include-tidy** verbose format string to parse.
  * Value format are:
  *
- * Format | Meaning
+ * Format | Be verbose about ...
  * -------|-----------------------------------------------------------------
- * `a`    | Be verbose about command-line arguments.
- * `i`    | Be verbose about include files.
- * `s`    | Be verbose about symbols referenced.
+ * `a`    | Command-line arguments.
+ * `i`    | Files included.
+ * `P`    | Connfiration file proxies.
+ * `s`    | Symbols referenced.
+ * `S`    | Configuration file symbols.
  *
  * Multiple formats may be given, one immediately after the other, e.g., `ai`.
  * Alternatively, `*` may be given to mean "all" or either the empty string or
