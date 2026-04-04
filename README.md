@@ -20,6 +20,18 @@ for every header your source file:
 [**include-what-you-use**](https://include-what-you-use.org) (IWYU),
 but IWYU has a number of [issues](https://github.com/include-what-you-use/include-what-you-use/issues).
 
+## Dependencies
+
+**include-tidy** depends on both
+[Libclang](https://clang.llvm.org/docs/LibClang.html)
+(typically installed as part of either a `clang`
+or `clang-devel`
+package,
+if not from source)
+and the
+[Clang](https://clang.llvm.org)
+compiler.
+
 ## Installation
 
 The git repository contains only the necessary source code.
