@@ -111,6 +111,7 @@ void opt_include_paths_add( char const *include_path );
  * @return Returns the shortened path of \a abs_path relative to one of the
  * `-I` absolute paths.
  */
+NODISCARD
 char const* opt_include_paths_relativize( char const *abs_path );
 
 /**
