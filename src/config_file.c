@@ -65,21 +65,6 @@
 ////////// enumerations ///////////////////////////////////////////////////////
 
 /**
- * Connfiguration file location.
- */
-enum config_file_loc {
-  CONFIG_LOC_CLI,                       ///< Command line.
-  CONFIG_LOC_CWD,                       ///< Current working directory.
-  CONFIG_LOC_XDG_CONFIG_HOME,           ///< `$XDG_CONFIG_HOME`.
-  CONFIG_LOC_XDG_CONFIG_DIRS            ///< `$XDG_CONFIG_DIRS`.
-};
-
-/**
- * Last value of config_file_loc.
- */
-#define CONFIG_LOC_LAST   CONFIG_LOC_XDG_CONFIG_DIRS
-
-/**
  * Options for the config_open() function.
  */
 enum config_opts {
@@ -98,7 +83,6 @@ enum config_table_kind {
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-typedef enum    config_file_loc   config_file_loc;
 typedef enum    config_opts       config_opts;
 typedef struct  config_key        config_key;
 typedef enum    config_table_kind config_table_kind;
@@ -169,8 +153,6 @@ NODISCARD
 static config_key const*
                     config_key_parse( char const* );
 
-static void         config_next_parse( char const*, toml_table const*,
-                                       toml_value const* );
 NODISCARD
 static FILE*        config_open( char const*, config_opts );
 
@@ -212,7 +194,6 @@ static config_key const CONFIG_KEYS[] = {
   { "align-column",   CONFIG_TABLE_INCLUDE_TIDY,      &align_column_parse   },
   { "all-includes",   CONFIG_TABLE_INCLUDE_TIDY,      &all_includes_parse   },
   { "comment-style",  CONFIG_TABLE_INCLUDE_TIDY,      &comment_style_parse  },
-  { "config-next",    CONFIG_TABLE_INCLUDE_TIDY,      &config_next_parse    },
   { "first",          CONFIG_TABLE_NOT_INCLUDE_TIDY,  &first_parse          },
   { "includes",       CONFIG_TABLE_NOT_INCLUDE_TIDY,  &includes_parse       },
   { "keep",           CONFIG_TABLE_NOT_INCLUDE_TIDY,  &keep_parse           },
@@ -222,10 +203,6 @@ static config_key const CONFIG_KEYS[] = {
 };
 
 ////////// local variables ////////////////////////////////////////////////////
-
-static config_file_loc  config_loc;     ///< Configuration file location.
-
-static bool             config_next = true; ///< Read next configuration file?
 
 /**
  * Mapping from symbols to the include file(s) they're declared in.
@@ -368,31 +345,38 @@ static void comment_style_parse( char const *config_path,
 NODISCARD
 static FILE* config_find( char const *config_path,
                           char path_buf[static PATH_MAX] ) {
+  static unsigned case_num = 1;
+
   FILE *config_file = NULL;
   char const *home = NULL;
 
-  switch ( config_loc ) {
-    case CONFIG_LOC_CLI:
-      // 1. Try --config/-c command-line option.
+  switch ( case_num ) {
+    case 1:
+      // Try --config/-c command-line option.
+      ++case_num;
       config_file = config_open( config_path, CONFIG_OPT_ERROR_IS_FATAL );
-      if ( config_file != NULL )
+      if ( config_file != NULL ) {
         strcpy( path_buf, config_path );
-      FALLTHROUGH;
-
-    case CONFIG_LOC_CWD:
-      // 2. Try $PWD/include-tidy.toml
-      if ( config_file == NULL ) {
-        size_t cwd_len;
-        strcpy( path_buf, get_cwd( &cwd_len ) );
-        path_append( path_buf, cwd_len, PACKAGE ".toml" );
-        config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
+        break;
       }
       FALLTHROUGH;
 
-    case CONFIG_LOC_XDG_CONFIG_HOME:
-      // 3. Try $XDG_CONFIG_HOME/include-tidy.toml and
-      //    $HOME/.config/include-tidy.toml.
-      if ( config_file == NULL && (home = home_dir()) != NULL ) {
+    case 2:
+      // Try $PWD/include-tidy.toml
+      ++case_num;
+      size_t cwd_len;
+      strcpy( path_buf, get_cwd( &cwd_len ) );
+      path_append( path_buf, cwd_len, PACKAGE ".toml" );
+      config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
+      if ( config_file != NULL )
+        break;
+      FALLTHROUGH;
+
+    case 3:
+      // Try $XDG_CONFIG_HOME/include-tidy.toml and
+      // $HOME/.config/include-tidy.toml.
+      ++case_num;
+      if ( (home = home_dir()) != NULL ) {
         char const *const config_dir =
           null_if_empty( getenv( "XDG_CONFIG_HOME" ) );
         if ( config_dir != NULL ) {
@@ -407,36 +391,36 @@ static FILE* config_find( char const *config_path,
         if ( path_buf[0] != '\0' ) {
           path_append( path_buf, SIZE_MAX, PACKAGE ".toml" );
           config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
+          if ( config_file != NULL )
+            break;
         }
       }
       FALLTHROUGH;
 
-    case CONFIG_LOC_XDG_CONFIG_DIRS:
-      // 4. Try $XDG_CONFIG_DIRS/include-tidy and /etc/xdg/include-tidy.
-      if ( config_file == NULL ) {
-        char const *config_dirs = null_if_empty( getenv( "XDG_CONFIG_DIRS" ) );
-        if ( config_dirs == NULL )
-          config_dirs = "/etc/xdg";         // LCOV_EXCL_LINE
-        for (;;) {
-          char const *const next_sep = strchr( config_dirs, ':' );
-          size_t const dir_len = next_sep != NULL ?
-            STATIC_CAST( size_t, next_sep - config_dirs ) :
-            strlen( config_dirs );
-          if ( dir_len > 0 ) {
-            strncpy_0( path_buf, config_dirs, dir_len );
-            path_append( path_buf, dir_len, PACKAGE );
-            config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
-            path_buf[0] = '\0';
-            if ( config_file != NULL )
-              break;
-          }
-          if ( next_sep == NULL )
+    case 4:
+      // Try $XDG_CONFIG_DIRS/include-tidy and /etc/xdg/include-tidy.
+      ++case_num;
+      char const *config_dirs = null_if_empty( getenv( "XDG_CONFIG_DIRS" ) );
+      if ( config_dirs == NULL )
+        config_dirs = "/etc/xdg";       // LCOV_EXCL_LINE
+      for (;;) {
+        char const *const next_sep = strchr( config_dirs, ':' );
+        size_t const dir_len = next_sep != NULL ?
+          STATIC_CAST( size_t, next_sep - config_dirs ) :
+          strlen( config_dirs );
+        if ( dir_len > 0 ) {
+          strncpy_0( path_buf, config_dirs, dir_len );
+          path_append( path_buf, dir_len, PACKAGE );
+          config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
+          path_buf[0] = '\0';
+          if ( config_file != NULL )
             break;
-          config_dirs = next_sep + 1;
-        } // for
-    } // switch
-    config_next = false;
-  }
+        }
+        if ( next_sep == NULL )
+          break;
+        config_dirs = next_sep + 1;
+      } // for
+  } // switch
 
   return config_file;
 }
@@ -457,29 +441,6 @@ static config_key const* config_key_parse( char const *s ) {
   } // for
 
   return NULL;
-}
-
-/**
- * Parses the value of the `"config_next"` key.
- *
- * @param config_path The full path to the configurarion file.
- * @param table Not used.
- * @param value The toml_value to parse.
- */
-static void config_next_parse( char const *config_path, toml_table const *table,
-                               toml_value const *value ) {
-  assert( config_path != NULL );
-  (void)table;
-  assert( value != NULL );
-
-  if ( value->type != TOML_BOOL ) {
-    fatal_error( EX_CONFIG,
-      "%s:%u:%u: invalid value for \"config_next\"; expected boolean\n",
-      config_path, value->loc.line, value->loc.col
-    );
-  }
-
-  config_next = value->b;
 }
 
 /**
@@ -1020,7 +981,7 @@ void config_init( void ) {
 
   char path_buf[ PATH_MAX ];
 
-  for ( ; config_next && config_loc <= CONFIG_LOC_LAST; ++config_loc ) {
+  for (;;) {
     FILE *const config_file = config_find( opt_config_path, path_buf );
     if ( config_file == NULL )
       break;
