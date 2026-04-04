@@ -181,6 +181,7 @@ void options_init( void );
  * @param ... The `printf()` arguments.
  * @return Returns the number of characters printed.
  */
+PJL_DISCARD
 PJL_PRINTF_LIKE_FUNC(1)
 int verbose_printf( char const *format, ... );
 
