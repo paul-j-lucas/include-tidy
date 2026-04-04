@@ -139,6 +139,8 @@ struct symbol_includes {
 
 ////////// local functions ////////////////////////////////////////////////////
 
+static void         add_c_includes_parse( char const*, toml_table const*,
+                                          toml_value* );
 static void         align_column_parse( char const*, toml_table const*,
                                         toml_value* );
 static void         all_includes_parse( char const*, toml_table const*,
@@ -197,6 +199,7 @@ static void         symbols_parse( char const*, toml_table const*,
  * Configuration keys.
  */
 static config_key const CONFIG_KEYS[] = {
+  { "add-c-includes", CONFIG_TABLE_INCLUDE_TIDY,      &add_c_includes_parse },
   { "align-column",   CONFIG_TABLE_INCLUDE_TIDY,      &align_column_parse   },
   { "all-includes",   CONFIG_TABLE_INCLUDE_TIDY,      &all_includes_parse   },
   { "c-includes",     CONFIG_TABLE_INCLUDE_TIDY,      &c_includes_parse     },
@@ -212,8 +215,9 @@ static config_key const CONFIG_KEYS[] = {
 
 ////////// local variables ////////////////////////////////////////////////////
 
-static char **c_includes;               ///< Standard-ish C include files.
-static char **cpp_includes;             ///< Standard C++ include files.
+static char   **c_includes;             ///< Standard-ish C include files.
+static size_t   c_includes_size;        ///< Size of \ref c_includes.
+static char   **cpp_includes;           ///< Standard C++ include files.
 
 /**
  * Mapping from symbols to the include file(s) they're declared in.
@@ -223,6 +227,29 @@ static char **cpp_includes;             ///< Standard C++ include files.
 static rb_tree_t symbol_include_map;
 
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Parses the value of an `"add-c-includes"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table Not used.
+ * @param value The toml_value to parse.
+ */
+static void add_c_includes_parse( char const *config_path,
+                                  toml_table const *table, toml_value *value ) {
+  assert( config_path != NULL );
+  (void)table;
+  assert( value != NULL );
+
+  char **const add_c_includes =
+    string_array_value_parse( config_path, "add-c-includes", value );
+  REALLOC( c_includes, char**, c_includes_size + value->a.size + 1 );
+  memcpy( c_includes + c_includes_size, add_c_includes,
+          value->a.size * sizeof c_includes[0] );
+  free( add_c_includes );
+  c_includes_size += value->a.size;
+  c_includes[ c_includes_size ] = NULL;
+}
 
 /**
  * Parses the value of an `"align-column"` key.
@@ -322,8 +349,10 @@ static void c_includes_parse( char const *config_path,
   (void)table;
   assert( value != NULL );
 
-  if ( c_includes == NULL )
+  if ( c_includes == NULL ) {
     c_includes = string_array_value_parse( config_path, "c-includes", value );
+    c_includes_size = value->a.size;
+  }
 }
 
 /**
