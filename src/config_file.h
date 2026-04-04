@@ -46,6 +46,7 @@
  * @param symbol_name The symbol name.
  * @return Returns said header file or NULL if none.
  */
+NODISCARD
 CXFile config_get_symbol_include( char const *symbol_name );
 
 /**
