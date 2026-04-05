@@ -1131,21 +1131,17 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
 void config_init( void ) {
   ASSERT_RUN_ONCE();
 
-  char path_buf[ PATH_MAX ];
+  rb_tree_init(
+    &symbol_include_map, RB_DINT,
+    POINTER_CAST( rb_cmp_fn_t, &symbol_include_cmp )
+  );
+  ATEXIT( &config_cleanup );
 
   for (;;) {
+    char path_buf[ PATH_MAX ];
     FILE *const config_file = config_find( opt_config_path, path_buf );
     if ( config_file == NULL )
       break;
-
-    RUN_ONCE {
-      rb_tree_init(
-        &symbol_include_map, RB_DINT,
-        POINTER_CAST( rb_cmp_fn_t, &symbol_include_cmp )
-      );
-      ATEXIT( &config_cleanup );
-    }
-
     config_parse( path_buf, config_file );
     fclose( config_file );
   } // for
