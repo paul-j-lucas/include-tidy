@@ -19,7 +19,7 @@
 ##
 
 [include-tidy]
-c-includes = [
+std-c-includes = [
   "aio.h",
   "arpa/*",
   "assert.h",
@@ -87,7 +87,7 @@ c-includes = [
   "wordexp.h",
 ]
 
-cpp-includes = [
+std-cpp-includes = [
   "algorithm",
   "any",
   "array",

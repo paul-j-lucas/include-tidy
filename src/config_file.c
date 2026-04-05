@@ -79,8 +79,8 @@ enum config_opts {
  * Table kind.
  */
 enum config_table_kind {
-  CONFIG_TABLE_NOT_INCLUDE_TIDY,        ///< Not the `include-tidy` table.
-  CONFIG_TABLE_INCLUDE_TIDY             ///< Only the `include-tidy` table.
+  TABLE_NOT_INCLUDE_TIDY,               ///< Not the `include-tidy` table.
+  TABLE_INCLUDE_TIDY                    ///< Only the `include-tidy` table.
 };
 
 ////////// typedefs ///////////////////////////////////////////////////////////
@@ -149,13 +149,8 @@ static void         all_includes_parse( char const*, toml_table const*,
 NODISCARD
 static bool         bool_value_parse( char const*, char const*, toml_value* );
 
-static void         c_includes_parse( char const*, toml_table const*,
-                                      toml_value* );
-
 static void         comment_style_parse( char const*, toml_table const*,
                                          toml_value* );
-static void         cpp_includes_parse( char const*, toml_table const*,
-                                        toml_value* );
 
 NODISCARD
 static config_key const*
@@ -180,6 +175,10 @@ static void         line_length_parse( char const*, toml_table const*,
                                        toml_value* );
 static void         path_append( char*, size_t, char const* );
 static void         proxy_parse( char const*, toml_table const*, toml_value* );
+static void         std_c_includes_parse( char const*, toml_table const*,
+                                          toml_value* );
+static void         std_cpp_includes_parse( char const*, toml_table const*,
+                                            toml_value* );
 
 NODISCARD
 static char**       string_array_value_parse( char const*, char const*,
@@ -199,25 +198,25 @@ static void         symbols_parse( char const*, toml_table const*,
  * Configuration keys.
  */
 static config_key const CONFIG_KEYS[] = {
-  { "add-c-includes", CONFIG_TABLE_INCLUDE_TIDY,      &add_c_includes_parse },
-  { "align-column",   CONFIG_TABLE_INCLUDE_TIDY,      &align_column_parse   },
-  { "all-includes",   CONFIG_TABLE_INCLUDE_TIDY,      &all_includes_parse   },
-  { "c-includes",     CONFIG_TABLE_INCLUDE_TIDY,      &c_includes_parse     },
-  { "cpp-includes",   CONFIG_TABLE_INCLUDE_TIDY,      &cpp_includes_parse   },
-  { "comment-style",  CONFIG_TABLE_INCLUDE_TIDY,      &comment_style_parse  },
-  { "first",          CONFIG_TABLE_NOT_INCLUDE_TIDY,  &first_parse          },
-  { "includes",       CONFIG_TABLE_NOT_INCLUDE_TIDY,  &includes_parse       },
-  { "keep",           CONFIG_TABLE_NOT_INCLUDE_TIDY,  &keep_parse           },
-  { "line-length",    CONFIG_TABLE_INCLUDE_TIDY,      &line_length_parse    },
-  { "proxy",          CONFIG_TABLE_NOT_INCLUDE_TIDY,  &proxy_parse          },
-  { "symbols",        CONFIG_TABLE_NOT_INCLUDE_TIDY,  &symbols_parse        },
+  { "add-c-includes",   TABLE_INCLUDE_TIDY,     &add_c_includes_parse   },
+  { "align-column",     TABLE_INCLUDE_TIDY,     &align_column_parse     },
+  { "all-includes",     TABLE_INCLUDE_TIDY,     &all_includes_parse     },
+  { "comment-style",    TABLE_INCLUDE_TIDY,     &comment_style_parse    },
+  { "first",            TABLE_NOT_INCLUDE_TIDY, &first_parse            },
+  { "includes",         TABLE_NOT_INCLUDE_TIDY, &includes_parse         },
+  { "keep",             TABLE_NOT_INCLUDE_TIDY, &keep_parse             },
+  { "line-length",      TABLE_INCLUDE_TIDY,     &line_length_parse      },
+  { "proxy",            TABLE_NOT_INCLUDE_TIDY, &proxy_parse            },
+  { "std-c-includes",   TABLE_INCLUDE_TIDY,     &std_c_includes_parse   },
+  { "std-cpp-includes", TABLE_INCLUDE_TIDY,     &std_cpp_includes_parse },
+  { "symbols",          TABLE_NOT_INCLUDE_TIDY, &symbols_parse          },
 };
 
 ////////// local variables ////////////////////////////////////////////////////
 
-static char   **c_includes;             ///< Standard-ish C include files.
-static size_t   c_includes_size;        ///< Size of \ref c_includes.
-static char   **cpp_includes;           ///< Standard C++ include files.
+static char   **std_c_includes;         ///< Standard-ish C include files.
+static size_t   std_c_includes_size;    ///< Size of \ref std_c_includes.
+static char   **std_cpp_includes;       ///< Standard C++ include files.
 
 /**
  * Mapping from symbols to the include file(s) they're declared in.
@@ -243,12 +242,12 @@ static void add_c_includes_parse( char const *config_path,
 
   char **const add_c_includes =
     string_array_value_parse( config_path, "add-c-includes", value );
-  REALLOC( c_includes, char**, c_includes_size + value->a.size + 1 );
-  memcpy( c_includes + c_includes_size, add_c_includes,
-          value->a.size * sizeof c_includes[0] );
+  REALLOC( std_c_includes, char**, std_c_includes_size + value->a.size + 1 );
+  memcpy( std_c_includes + std_c_includes_size, add_c_includes,
+          value->a.size * sizeof std_c_includes[0] );
   free( add_c_includes );
-  c_includes_size += value->a.size;
-  c_includes[ c_includes_size ] = NULL;
+  std_c_includes_size += value->a.size;
+  std_c_includes[ std_c_includes_size ] = NULL;
 }
 
 /**
@@ -297,15 +296,15 @@ static void all_includes_parse( char const *config_path,
  * Cleans-up all configuration data.
  */
 static void config_cleanup( void ) {
-  if ( c_includes != NULL ) {
-    for ( char **ppattern = c_includes; *ppattern != NULL; ++ppattern )
+  if ( std_c_includes != NULL ) {
+    for ( char **ppattern = std_c_includes; *ppattern != NULL; ++ppattern )
       free( *ppattern );
-    free( c_includes );
+    free( std_c_includes );
   }
-  if ( cpp_includes != NULL ) {
-    for ( char **ppattern = cpp_includes; *ppattern != NULL; ++ppattern )
+  if ( std_cpp_includes != NULL ) {
+    for ( char **ppattern = std_cpp_includes; *ppattern != NULL; ++ppattern )
       free( *ppattern );
-    free( cpp_includes );
+    free( std_cpp_includes );
   }
   rb_tree_cleanup(
     &symbol_include_map,
@@ -334,25 +333,6 @@ static bool bool_value_parse( char const *config_path, char const *key_name,
   }
 
   return value->b;
-}
-
-/**
- * Parses the value of an `"c-includes"` key.
- *
- * @param config_path The full path to the configurarion file.
- * @param table Not used.
- * @param value The toml_value to parse.
- */
-static void c_includes_parse( char const *config_path,
-                              toml_table const *table, toml_value *value ) {
-  assert( config_path != NULL );
-  (void)table;
-  assert( value != NULL );
-
-  if ( c_includes == NULL ) {
-    c_includes = string_array_value_parse( config_path, "c-includes", value );
-    c_includes_size = value->a.size;
-  }
 }
 
 /**
@@ -609,25 +589,6 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   }
 
   toml_cleanup( &toml );
-}
-
-/**
- * Parses the value of an `"cpp-includes"` key.
- *
- * @param config_path The full path to the configurarion file.
- * @param table Not used.
- * @param value The toml_value to parse.
- */
-static void cpp_includes_parse( char const *config_path,
-                              toml_table const *table, toml_value *value ) {
-  assert( config_path != NULL );
-  (void)table;
-  assert( value != NULL );
-
-  if ( cpp_includes == NULL ) {
-    cpp_includes =
-      string_array_value_parse( config_path, "cpp-includes", value );
-  }
 }
 
 /**
@@ -905,6 +866,45 @@ static void proxy_parse( char const *config_path, toml_table const *table,
 }
 
 /**
+ * Parses the value of an `"std-c-includes"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table Not used.
+ * @param value The toml_value to parse.
+ */
+static void std_c_includes_parse( char const *config_path,
+                              toml_table const *table, toml_value *value ) {
+  assert( config_path != NULL );
+  (void)table;
+  assert( value != NULL );
+
+  if ( std_c_includes == NULL ) {
+    std_c_includes =
+      string_array_value_parse( config_path, "std-c-includes", value );
+    std_c_includes_size = value->a.size;
+  }
+}
+
+/**
+ * Parses the value of an `"std-cpp-includes"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table Not used.
+ * @param value The toml_value to parse.
+ */
+static void std_cpp_includes_parse( char const *config_path,
+                              toml_table const *table, toml_value *value ) {
+  assert( config_path != NULL );
+  (void)table;
+  assert( value != NULL );
+
+  if ( std_cpp_includes == NULL ) {
+    std_cpp_includes =
+      string_array_value_parse( config_path, "std-cpp-includes", value );
+  }
+}
+
+/**
  * Parses an array of strings values.
  *
  * @param config_path The full path to the configurarion file.
@@ -1158,11 +1158,11 @@ bool config_is_standard_include( char const *rel_path ) {
   assert( rel_path != NULL );
 
   if ( tidy_lang == CXLanguage_CPlusPlus &&
-       is_standard_include( rel_path, cpp_includes ) ) {
+       is_standard_include( rel_path, std_cpp_includes ) ) {
     return true;
   }
 
-  return is_standard_include( rel_path, c_includes );
+  return is_standard_include( rel_path, std_c_includes );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
