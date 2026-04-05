@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 5 "April 4, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 5 "April 5, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy.toml \(em \f(CW#include\fP tidier configuration file
 .SH DESCRIPTION
@@ -93,7 +93,7 @@ This table
 be named
 .B include-tidy
 and is used to specify options,
-the same as can be specified
+some the same as can be specified
 via the command-line,
 but without having to specify them
 via the command-line
@@ -118,8 +118,32 @@ command-line option.
 Same as the
 .B \-\-line-length
 command-line option.
+.TP
+.BI std-c-includes " \f1=\fP " [ s " \f1[,\fP " s "\f1]*\fP ]"
+One or more include files,
+that are specified as a bracket-enclosed,
+comma-separated
+array of strings,
+are to be considered ``standard'' C include files.
+These are used
+when the source file
+is either C or C++
+(since C++ programs
+can include C header files).
+.TP
+.BI std-cpp-includes " \f1=\fP " [ s " \f1[,\fP " s "\f1]*\fP ]"
+One or more include files,
+that are specified as a bracket-enclosed,
+comma-separated
+array of strings,
+are to be considered ``standard'' C++ include files.
+These are used
+only when the source file
+is C++
+(since C programs
+can not include C++ header files).
 .SS Header Tables
-This table specifies
+This type of table specifies
 a relative path of an include file
 (what you would put between either the \f(CW""\fP
 or \f(CW<>\fP
@@ -185,7 +209,7 @@ given for the name table
 is to be considered
 to declare the given symbols.
 .SS Symbol Tables
-This table specifies a symbol name,
+This type of table specifies a symbol name,
 e.g.,
 \f(CWNULL\fP
 or
