@@ -859,15 +859,16 @@ _Noreturn void perror_exit( int status );
 /**
  * A variant of **strncpy**(3) that always null-terminates \a dst.
  *
- * @param dst A pointer to receive the copy of \a src.
+ * @param dst A pointer to receive the copy of \a src.  It _must_ be at least
+ * \a n + 1 bytes long.
  * @param src The null-terminated string to copy.
  * @param n The number of bytes at most to copy.
  * @return Returns \a dst.
  */
 PJL_DISCARD
-inline char* strncpy_0( char *dst, char const *src, size_t n ) {
-  strncpy( dst, src, n );
-  dst[ n ] = '\0';
+inline char* strncpy_0( char *restrict dst, char const *restrict src,
+                        size_t n ) {
+  snprintf( dst, n + 1, "%s", src );
   return dst;
 }
 
