@@ -234,8 +234,11 @@ char const* path_no_ext( char const *path, char path_buf[static PATH_MAX] ) {
     } // switch
   }
 
-  if ( last_dot < last_slash )          // no extension
+  if ( last_dot == -1 ||                // "foo"
+       last_dot < last_slash ||         // "fo.o/bar"
+       last_dot == last_slash + 1 ) {   // ".foo" or "foo/.bar"
     return path;
+  }
 
   size_t const len = last_dot < PATH_MAX ?
     STATIC_CAST( size_t, last_dot ) : PATH_MAX - 1;
