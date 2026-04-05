@@ -40,7 +40,7 @@
  */
 
 // extern variables
-enum CXLanguageKind tidy_lang;          ///< Source file language.
+extern enum CXLanguageKind tidy_lang;   ///< Source file language.
 
 ////////// extern functions ///////////////////////////////////////////////////
 

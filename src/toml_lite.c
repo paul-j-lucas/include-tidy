@@ -268,7 +268,7 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
     return false;
   }
 
-  toml->loc.col += bytes_read;
+  toml->loc.col += STATIC_CAST( unsigned, bytes_read );
   *pb = !is_f;
   return true;
 }
