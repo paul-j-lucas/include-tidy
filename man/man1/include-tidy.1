@@ -144,6 +144,7 @@ always to exit with a non-zero exit status.
 .B \-\-error
 option below.)
 .SH OPTIONS
+.SS Options Kinds
 .B include-tidy
 has three kinds of command-line options:
 .sp
@@ -375,6 +376,27 @@ but without having to specify them
 via the command-line
 every time.
 .TP 5
+.BI add-c-includes " \f1=\fP " [ s " \f1[,\fP " s "\f1]*\fP ]"
+One or more include files,
+that are specified as a bracket-enclosed,
+comma-separated
+array of strings,
+are
+.I additionally
+to be considered ``standard'' C include files.
+These are used
+when the source file
+is either C or C++
+(since C++ programs
+can include C header files).
+.IP
+As the only special case to configuration file layering,
+the include files given for
+.B add-c-includes
+are
+.I cumulative
+from all configuration files.
+.TP
 .BI align-column " \f1=\fP n"
 Same as the
 .B \-\-align-column
