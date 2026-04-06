@@ -40,6 +40,9 @@ doc docs:
 clean-local:
 	rm -fr $(DOCS_DIR)
 
+dist-hook:
+	find $(distdir) -name .DS_Store -exec rm -f {} \;
+
 update-gnulib:
 	gnulib-tool --add-import --no-vc-files
 
