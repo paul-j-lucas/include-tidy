@@ -18,6 +18,6 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-SUBDIRS = man1 man5
+SUBDIRS = man1
 
 # vim:set noet sw=8 ts=8:
