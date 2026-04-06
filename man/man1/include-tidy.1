@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "April 5, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "April 6, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -54,7 +54,7 @@ that can be used to ``tidy'' the
 \f(CW#include\fP directives
 used in a C
 or C++
-file
+source file
 by enforcing the
 .I include-what-you-use
 principle,
@@ -63,9 +63,11 @@ directly includes
 header files from which it references symbols
 and does not include header files
 from which it does not reference symbols.
-Either missing direct
-or unnecessary header files
-are in ``violation.''
+A source file that is either
+missing a direct
+or unnecessary
+\f(CW#include\fP
+is in ``violation.''
 .PP
 By default,
 a missing \f(CW#include\fP is printed
@@ -109,8 +111,7 @@ or your C++ compiler:
 .cS
 make -k CXX="include-tidy" CXXFLAGS="-Xtidy --error"
 .cE
-to run
-.B include-tidy
+to run it
 on all your source files
 at once.
 The advantage of doing this
@@ -143,6 +144,31 @@ always to exit with a non-zero exit status.
 (See the
 .B \-\-error
 option below.)
+.SS Proxies
+Headers often include other headers because:
+.nr step 1 1
+.IP \n[step]. 3
+They reference symbols from it.
+.IP \n+[step].
+They hide ``implementation'' headers
+that users should not include directly.
+For example,
+\f(CWfoo.h\fP,
+on an Intel platform,
+might include \f(CWx86_64/foo.h\fP;
+but on an ARM platform,
+might include \f(CWarm64/foo.h\fP.
+In either case,
+the user is expected simply
+to include \f(CWfoo.h\fP.
+.IP \n+[step].
+They aggregate headers for user convenience.
+For example,
+the Clang C library
+provides \f(CWIndex.h\fP
+that includes all other library headers
+so users can simply include it
+and not have to include other headers individually.
 .SH OPTIONS
 .SS Option Kinds
 .B include-tidy
