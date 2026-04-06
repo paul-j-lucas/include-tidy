@@ -226,7 +226,6 @@ char const* opt_include_paths_relativize( char const *abs_path ) {
 
 bool opt_is_set( int short_opt ) {
   assert( short_opt >= 0 && short_opt <= 255 );
-  assert( isalnum( short_opt ) );
   return opt_is_set_impl[ STATIC_CAST( unsigned char, short_opt ) ];
 }
 

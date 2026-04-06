@@ -234,11 +234,10 @@ error:
  *
  * @param opt The option to check for.
  */
-static void check_opt_exclusive( char opt ) {
+static void check_opt_exclusive( int opt ) {
   if ( !opt_is_set( opt ) )
     return;
-  for ( size_t i = '0'; i < 256; ++i ) {
-    char const curr_opt = STATIC_CAST( char, i );
+  for ( int curr_opt = '0'; curr_opt < 256; ++curr_opt ) {
     if ( curr_opt == opt )
       continue;
     if ( opt_is_set( curr_opt ) ) {
