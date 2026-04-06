@@ -22,6 +22,7 @@ ACLOCAL_AMFLAGS =	-I m4
 SUBDIRS =		etc lib src man
 
 EXTRA_DIST =		bootstrap \
+			Doxygen.sed \
 			Doxyfile \
 			m4/gnulib-cache.m4 \
 			m4/update_m4.sh \
