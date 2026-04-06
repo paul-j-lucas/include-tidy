@@ -58,6 +58,7 @@ typedef enum tidy_verbose tidy_verbose;
 extern unsigned     opt_align_column;     ///< Comment alignment column.
 extern bool         opt_all_includes;     ///< Print all includes?
 extern char const  *opt_comment_style[2]; ///< Comment delimiters to use.
+extern bool         opt_config_layers;    ///< Do configuration file layering?
 extern char const  *opt_config_path;      ///< Configuration file path.
 extern bool         opt_error;            ///< Exit with non-zero on success?
 extern unsigned     opt_line_length;      ///< Line length.

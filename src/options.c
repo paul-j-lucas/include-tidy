@@ -59,6 +59,7 @@
 unsigned      opt_align_column = OPT_ALIGN_COLUMN_DEFAULT;
 bool          opt_all_includes;
 char const   *opt_comment_style[2] = { "// ", "" };
+bool          opt_config_layers = true;
 char const   *opt_config_path;
 bool          opt_error;
 unsigned      opt_line_length = OPT_LINE_LENGTH_DEFAULT;

@@ -229,8 +229,7 @@ Comments for unnecessary headers
 are always printed.
 .TP
 .BR \-\-config \f1=\fPf "\f1 | \fP" "" \-c " f"
-Specifies the path of the configuration file to use
-instead of the defaults.
+Specifies the path of the configuration file to use first.
 .TP
 .BR \-\-error " | " \-e
 Exits with a non-zero status
@@ -245,6 +244,13 @@ has not been built.
 .BR \-\-line-length \f1=\fPn "\f1 | \fP" "" \-l " n"
 Specifies the line length.
 The default is 80.
+.TP
+.BR \-\-no-config-layers " | " \-L
+Suppresses configuration file layering.
+(See
+.B Layering
+under
+.BR "CONFIGURATION FILES" .)
 .TP
 .BR \-\-verbose \f1=\fPs "\f1 | \fP" "" \-V " s"
 Specifies what to be verbose about.
@@ -572,6 +578,33 @@ in files later in order
 with the only exception of the
 .B add-c-includes
 option.
+For example,
+if in
+.B include-tidy.toml
+in
+.B ./
+(the current working directory),
+.B align-colum
+is set to 35,
+but in
+.B include-tidy.toml
+in
+.BR /etc/xdg ,
+it's set to 40,
+then 35
+(the value in the first file found in order)
+will be used.
+.PP
+However,
+if either the
+.B \-\-no-config-layers
+or
+.B \-L
+option is given,
+then
+.I only
+the first configuration file found
+is read.
 .SH EXIT STATUS
 .PD 0
 .IP 0
@@ -657,7 +690,7 @@ The following parts of TOML are
 supported
 because they aren't needed
 to configure
-.BR include-tidy (1):
+.BR include-tidy :
 .sp
 .PD 0
 .IP \(bu 3
@@ -677,6 +710,5 @@ Paul J. Lucas
 .SH SEE ALSO
 .BR clang (1),
 .BR make (1),
-.BR sysexits (3),
-.BR include-tidy (5)
+.BR sysexits (3)
 .\" vim:set et sw=2 ts=2:

@@ -1138,7 +1138,7 @@ void config_init( void ) {
   ATEXIT( &config_cleanup );
 
   bool found_at_least_1 = false;
-  for (;;) {
+  do {
     char path_buf[ PATH_MAX ];
     FILE *const config_file = config_find( opt_config_path, path_buf );
     if ( config_file == NULL )
@@ -1146,7 +1146,7 @@ void config_init( void ) {
     config_parse( path_buf, config_file );
     fclose( config_file );
     found_at_least_1 = true;
-  } // for
+  } while ( opt_config_layers || !found_at_least_1 );
 
   if ( !found_at_least_1 )
     fatal_error( EX_CONFIG, "configuration file not found\n" );

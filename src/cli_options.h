@@ -41,6 +41,7 @@
 #define OPT_HELP                  h
 #define OPT_INCLUDE               I
 #define OPT_LINE_LENGTH           l
+#define OPT_NO_CONFIG_LAYERS      L
 #define OPT_COMMENT_STYLE         s
 #define OPT_VERSION               v
 #define OPT_VERBOSE               V

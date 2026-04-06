@@ -67,17 +67,18 @@
  * @sa OPTIONS_HELP
  */
 static struct option const OPTIONS[] = {
-  { "align-column",   required_argument,  NULL, COPT(ALIGN_COLUMN)  },
-  { "all-includes",   no_argument,        NULL, COPT(ALL_INCLUDES)  },
-  { "clang",          required_argument,  NULL, COPT(CLANG)         },
-  { "comment-style",  required_argument,  NULL, COPT(COMMENT_STYLE) },
-  { "config",         required_argument,  NULL, COPT(CONFIG)        },
-  { "error",          no_argument,        NULL, COPT(ERROR)         },
-  { "help",           no_argument,        NULL, COPT(HELP)          },
-  { "line-length",    required_argument,  NULL, COPT(LINE_LENGTH)   },
-  { "verbose",        required_argument,  NULL, COPT(VERBOSE)       },
-  { "version",        no_argument,        NULL, COPT(VERSION)       },
-  { NULL,             0,                  NULL, 0                   }
+  { "align-column",     required_argument,  NULL, COPT(ALIGN_COLUMN)      },
+  { "all-includes",     no_argument,        NULL, COPT(ALL_INCLUDES)      },
+  { "clang",            required_argument,  NULL, COPT(CLANG)             },
+  { "comment-style",    required_argument,  NULL, COPT(COMMENT_STYLE)     },
+  { "config",           required_argument,  NULL, COPT(CONFIG)            },
+  { "error",            no_argument,        NULL, COPT(ERROR)             },
+  { "help",             no_argument,        NULL, COPT(HELP)              },
+  { "line-length",      required_argument,  NULL, COPT(LINE_LENGTH)       },
+  { "no-config-layers", no_argument,        NULL, COPT(NO_CONFIG_LAYERS)  },
+  { "verbose",          required_argument,  NULL, COPT(VERBOSE)           },
+  { "version",          no_argument,        NULL, COPT(VERSION)           },
+  { NULL,               0,                  NULL, 0                       }
 };
 
 /**
@@ -97,6 +98,7 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(ERROR) ] = "Exit with non-zero status when no violations",
   [ COPT(HELP) ] = "Print this help and exit",
   [ COPT(LINE_LENGTH) ] = "Line length; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
+  [ COPT(NO_CONFIG_LAYERS) ] = "Don't do configuration file layering",
   [ COPT(VERBOSE) ] = "Print verbose output",
   [ COPT(VERSION) ] = "Print version and exit",
 };
@@ -889,6 +891,9 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
             optarg, get_opt_format( opt ), OPT_LINE_LENGTH_MAX
           );
         }
+        break;
+      case COPT(NO_CONFIG_LAYERS):
+        opt_config_layers = false;
         break;
       case COPT(VERBOSE):
         if ( *SKIP_WS( optarg ) == '\0' )
