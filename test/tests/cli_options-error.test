@@ -1,13 +1,5 @@
 EXPECTED_EXIT=64
 
-test_include_tidy() {
-  echo '$ include-tidy' $*
-  include-tidy $@ 2>&1
-  status=$?
-  echo
-  return $status
-}
-
 test_include_tidy -Xtidy --config
 test_include_tidy -Xtidy --config=
 test_include_tidy -Xtidy -c

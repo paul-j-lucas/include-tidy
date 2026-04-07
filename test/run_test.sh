@@ -52,6 +52,14 @@ assert_path_exists() {
   [ -e "$1" ] || error 66 "$1: file not found"
 }
 
+test_include_tidy() {
+  echo '$ include-tidy' $@
+  include-tidy $@ 2>&1
+  status=$?
+  echo
+  return $status
+}
+
 local_basename() {
   ##
   # Autoconf, 11.15:

@@ -1,2 +1,22 @@
 EXPECTED_EXIT=0
-include-tidy -Xtidy --config=../etc/include-tidy.toml data/hello.c
+
+test_include_tidy \
+    -Xtidy --config=../etc/include-tidy.toml \
+    data/hello.c
+
+test_include_tidy \
+    -Xtidy --config=../etc/include-tidy.toml \
+    -Xtidy --all-includes \
+    data/hello.c
+
+test_include_tidy \
+    -Xtidy --config=../etc/include-tidy.toml \
+    -Xtidy --all-includes \
+    -Xtidy --align-column=35 \
+    data/hello.c
+
+test_include_tidy \
+    -Xtidy --config=../etc/include-tidy.toml \
+    -Xtidy --all-includes \
+    -Xtidy --comment-style='/*' \
+    data/hello.c

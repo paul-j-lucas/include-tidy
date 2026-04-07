@@ -38,6 +38,13 @@ fail() {
   echo FAIL $TEST_NAME
 }
 
+test_include_tidy() {
+  echo '$ include-tidy' $@
+  include-tidy $@ 2>&1
+  status=$?
+  echo
+  return $status
+}
 usage() {
   cat >&2 <<END
 usage: $ME -s srcdir test ...
