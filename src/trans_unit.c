@@ -49,8 +49,8 @@
  */
 
 // local variables
-static CXIndex            tidy_index;
-static CXTranslationUnit  tidy_tu;
+static CXIndex            tidy_index;   ///< Current libclang index.
+static CXTranslationUnit  tidy_tu;      ///< Current libclang translation unit.
 
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
