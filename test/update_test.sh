@@ -41,10 +41,11 @@ fail() {
 test_include_tidy() {
   echo '$ include-tidy' $@
   include-tidy $@ 2>&1
-  status=$?
+  STATUS=$?
   echo
-  return $status
+  return $STATUS
 }
+
 usage() {
   cat >&2 <<END
 usage: $ME -s srcdir test ...
