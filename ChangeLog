@@ -1,5 +1,67 @@
+2026-04-07  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c: In is_short_opt(), now checking for empty value.
+   * cli_options.c, cli_options-error.out, cli_options-error.test: Fixed
+     missing argument for --clang option.
+   * cli_options.c, cli_options-error.out, cli_options-error.test: More CLI
+     tests.
+   * util.h: Put () around REALLOC().
+   * test/Makefile.am, run_test.sh, cli_error.test, hello.test: Now using
+     TEST_CONFIG.
+   * test/Makefile.am, cli_error.out, cli_error.test: Added test for --error.
+   * run_test.sh: Removed LINENO.
+
+2026-04-06  Paul J. Lucas <paul@lucasmail.org>
+
+   * hello.out, run_test.sh, cli_options-error.test, cli_options.test,
+     hello.test, update_test.sh: More tests.
+   * cli_options.c, trans_unit.c: Added asserts.
+   * trans_unit.c: Now checking for file not found.
+   * Makefile.am, configure.ac, cli_options.c, test/Makefile.am, hello.c,
+     cli_options-error.out, cli_options.out, hello.out, not_in_Makefile.sh,
+     run_test.sh, cli_options-error.test, cli_options.test, hello.test,
+     update_test.sh: Added tests directory.
+   * cli_options.c: Can now do: include-tidy --help x.
+   * Makefile.am: Added dist-hook.
+   * man/man1/include-tidy.1: More man page.
+   * man/man1/include-tidy.1: s/Options/Option/
+
+2026-04-05  Paul J. Lucas <paul@lucasmail.org>
+
+   * man/man1/include-tidy.1: Added add-c-concludes.
+   * man/man1/include-tidy.1, cli_options.c, cli_options.h, config_file.c,
+     options.c, options.h: Added --no-config-layers.
+   * cli_options.c, options.c: Option fixes.
+   * configure.ac, man/Makefile.am, man/man1/include-tidy.1: Merged man pages.
+   * config_file.c: Now requiring at least 1 configuration file.
+   * config_file.c: Now always initializing symbol_include_map.
+   * util.c: Fixed path_no_ext().
+   * util.h: Now using snprintf() in strncpy_0() implementation.
+   * toml_lite.c, trans_unit.h: Fixes.
+   * ax_require_defined.m4: Added missing m4 file.
+   * ax_prepend_flag.m4: Added missing m4 file.
+   * ax_compiler_vendor.m4: Added missing m4 file.
+   * man/man1/include-tidy.1: More man page.
+   * man/man5/include-tidy.5: Added std-c-includes and std-cpp-includes.
+
+2026-04-04  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c: Added add-c-includes.
+   * etc/include-tidy.toml: Added c-includes and cpp-includes.
+   * cli_options.c: Now using SOPT(INCLUDE).
+   * cli_options.c: Apparently don't need opt_include_paths_add( "." ).
+   * cli_options.c, cli_options.h: Added OPT_INCLUDE.
+   * config_file.c, config_file.h, includes.c: Added c-includes and
+     cpp-includes.
+   * toml_lite.c, toml_lite.h: Made toml_iterator_next() return pointer to
+     non-const.
+   * config_file.h: Added NODISCARD.
+
 2026-04-03  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c: Now allow glob standard header matching; added linux/*.h
+     headers.
+   * man/man5/include-tidy.5, config_file.c: Eliminated config-next.
    * options.h: Added NODISCARD.
    * options.c: Changed "if" to assert().
    * options.h: Added PJL_DISCARD.
