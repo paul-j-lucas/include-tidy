@@ -113,11 +113,6 @@ END
 
 ME=$(local_basename "$0")
 
-[ "$BUILD_SRC" ] || {
-  echo "$ME: \$BUILD_SRC not set" >&2
-  exit 2
-}
-
 ########## Process command-line ###############################################
 
 while [ $# -gt 0 ]
@@ -199,20 +194,23 @@ fi
 [ -n "$TMPDIR" ] || TMPDIR=/tmp
 trap "x=$?; rm -f $TMPDIR/*_$$_* 2>/dev/null; exit $x" EXIT HUP INT TERM
 
-##
-# The automake framework sets $srcdir. If it's empty, it means this script was
-# called by hand, so set it ourselves.
-##
-[ "$srcdir" ] || srcdir="."
 
+##
+# Automake sets $srcdir.
+##
+[ "$srcdir" ] || error 78 '$srcdir not set'
 DATA_DIR="$srcdir/data"
 EXPECTED_DIR="$srcdir/expected"
 
+[ "$TOP_SRCDIR" ] || error 78 '$TOP_SRCDIR not set'
+TEST_CONFIG="$TOP_SRCDIR/etc/include-tidy.toml"
+
 ##
-# Must put BUILD_SRC first in PATH so we get the correct version of include-
-# tidy.
+# Must put $ABS_TOP_BUILDDIR/src first in PATH so we get the correct version of
+# include-tidy.
 ##
-PATH="$BUILD_SRC:$PATH"
+[ "$ABS_TOP_BUILDDIR" ] || error 78 '$ABS_TOP_BUILDDIR not set'
+PATH="$ABS_TOP_BUILDDIR/src:$PATH"
 
 ##
 # Disable core dumps so we won't fill up the disk with them if a bunch of tests

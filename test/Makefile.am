@@ -34,8 +34,9 @@ TESTS+=	tests/hello.test
 
 ###############################################################################
 
-BUILD_SRC = $(abs_top_builddir)/src
-AM_TESTS_ENVIRONMENT = BUILD_SRC=$(BUILD_SRC) ; export BUILD_SRC ;
+TOP_SRCDIR = $(top_srcdir)
+ABS_TOP_BUILDDIR = $(abs_top_builddir)
+AM_TESTS_ENVIRONMENT = TOP_SRCDIR=$(TOP_SRCDIR) ABS_TOP_BUILDDIR=$(ABS_TOP_BUILDDIR) ; export TOP_SRCDIR ABS_TOP_BUILDDIR ;
 TEST_EXTENSIONS = .test
 
 TEST_LOG_DRIVER = $(srcdir)/run_test.sh
@@ -46,6 +47,6 @@ dist-hook:
 
 UPDATE_TEST = $(srcdir)/update_test.sh
 update:
-	@ls $(TESTS) | xargs -n255 -r $(UPDATE_TEST) -s $(BUILD_SRC)
+	@ls $(TESTS) | xargs -n255 -r $(UPDATE_TEST) -s $(ABS_TOP_BUILDDIR)/src
 
 # vim:set noet sw=8 ts=8:
