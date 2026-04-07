@@ -152,6 +152,7 @@ static void trans_unit_failure( CXTranslationUnit tu ) {
 CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
   ASSERT_RUN_ONCE();
   assert( argc > 0 );
+  assert( argv != NULL );
 
   ATEXIT( &trans_unit_cleanup );
 

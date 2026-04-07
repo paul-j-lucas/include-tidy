@@ -157,11 +157,13 @@ static bool         is_Xtidy_opt( int, char const *const[], int* );
 static void add_clang_include_paths( int *pargc, char const **pargv[],
                                      char const *clang_path,
                                      char const *lang ) {
-  ASSERT_RUN_ONCE();
-  assert( pargc != NULL );
-  assert( pargv != NULL );
+  assert(  pargc != NULL );
+  assert( *pargc > 0 );
+  assert(  pargv != NULL );
+  assert( *pargv != NULL );
   assert( clang_path != NULL );
   assert( lang != NULL );
+  ASSERT_RUN_ONCE();
 
   static char const CLANG_TEMPLATE[] =
     "%s"          // clang path
@@ -297,6 +299,9 @@ static void check_options( void ) {
  * @return Returns the path to **clang**.
  */
 static char const* get_clang_path( int argc, char const *const argv[] ) {
+  assert( argc > 0 );
+  assert( argv != NULL );
+
   for ( int i = 1; i < argc; ++i ) {
     if ( !is_Xtidy_opt( argc, argv, &i ) )
       continue;
@@ -401,6 +406,7 @@ static struct option const* get_option( char short_opt ) {
  * @return Returns the source path or NULL if none.
  */
 static char const* get_source_path( int argc, char const *argv[] ) {
+  assert( argc > 0 );
   assert( argv != NULL );
 
   if ( argc < 2 )                       // can't be a source path
@@ -420,6 +426,9 @@ static char const* get_source_path( int argc, char const *argv[] ) {
  * `"c++"`, or NULL if not given.
  */
 static char const* get_x_language( int argc, char const *const argv[] ) {
+  assert( argc > 0 );
+  assert( argv != NULL );
+
   for ( int i = 1; i < argc; ++i ) {
     char const *const lang = is_short_opt( argc, argv, 'x', &i );
     if ( lang != NULL ) {
@@ -486,6 +495,7 @@ static char const* is_long_opt( int argc, char const *const argv[],
  */
 static char const* is_short_opt( int argc, char const *const argv[],
                                  char opt, int *pargi ) {
+  assert( argc > 0 );
   assert( argv != NULL );
   assert( pargi != NULL );
 
@@ -619,8 +629,9 @@ static char const* make_short_opts( struct option const opts[static const 2],
  */
 static void move_tidy_args( int *pargc, char const *argv[],
                             int *ptidy_argc, char const **ptidy_argv[] ) {
-  assert( pargc != NULL );
-  assert(  argv != NULL );
+  assert(  pargc != NULL );
+  assert( *pargc > 0 );
+  assert(   argv != NULL );
   assert( ptidy_argc != NULL );
   assert( ptidy_argv != NULL );
 
@@ -794,6 +805,10 @@ static void print_version( void ) {
 ////////// extern functions ///////////////////////////////////////////////////
 
 void cli_options_init( int *pargc, char const **pargv[] ) {
+  assert(  pargc != NULL );
+  assert( *pargc > 0 );
+  assert(  pargv != NULL );
+  assert( *pargv != NULL );
   ASSERT_RUN_ONCE();
 
   // The order that we have to parse command-line arguments is necessitated to
