@@ -2,9 +2,9 @@ EXPECTED_EXIT=64
 
 test_include_tidy -Xtidy --align-column
 test_include_tidy -Xtidy --align-column=
-test_include_tidy -Xtidy --align-column=xx
+test_include_tidy -Xtidy --align-column=X
 test_include_tidy -Xtidy -a
-test_include_tidy -Xtidy -axx
+test_include_tidy -Xtidy -aX
 
 test_include_tidy -Xtidy --clang
 test_include_tidy -Xtidy --clang=
@@ -12,9 +12,9 @@ test_include_tidy -Xtidy -C
 
 test_include_tidy -Xtidy --comment-style
 test_include_tidy -Xtidy --comment-style=
-test_include_tidy -Xtidy --comment-style=xx
+test_include_tidy -Xtidy --comment-style=X
 test_include_tidy -Xtidy -s
-test_include_tidy -Xtidy -sxx
+test_include_tidy -Xtidy -sX
 
 test_include_tidy -Xtidy --config
 test_include_tidy -Xtidy --config=
@@ -22,9 +22,9 @@ test_include_tidy -Xtidy -c
 
 test_include_tidy -Xtidy --line-length
 test_include_tidy -Xtidy --line-length=
-test_include_tidy -Xtidy --line-length=xx
+test_include_tidy -Xtidy --line-length=X
 test_include_tidy -Xtidy -l
-test_include_tidy -Xtidy -lxx
+test_include_tidy -Xtidy -lX
 
 test_include_tidy --help X
 test_include_tidy --help=X
