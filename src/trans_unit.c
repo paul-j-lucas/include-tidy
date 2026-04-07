@@ -35,7 +35,7 @@
 // standard
 #include <assert.h>
 #include <stdbool.h>
-#include <stddef.h>                     /* for NULL */
+#include <stdio.h>
 #include <sysexits.h>
 
 // libclang
@@ -77,9 +77,13 @@ static inline char const* plural_s( unsigned long long n ) {
 
 /**
  * Prints translation unit errors, if any.
+ *
+ * @param tu The CXTranslationUnit to use.
  */
-static void print_diagnostics( void ) {
-  unsigned const diag_count = clang_getNumDiagnostics( tidy_tu );
+static void print_diagnostics( CXTranslationUnit tu ) {
+  assert( tu != NULL );
+
+  unsigned const diag_count = clang_getNumDiagnostics( tu );
   if ( diag_count == 0 )
     return;
 
@@ -87,7 +91,7 @@ static void print_diagnostics( void ) {
   unsigned error_count = 0;
 
   for ( unsigned i = 0; i < diag_count; ++i ) {
-    CXDiagnostic diag = clang_getDiagnostic( tidy_tu, i );
+    CXDiagnostic diag = clang_getDiagnostic( tu, i );
     switch ( clang_getDiagnosticSeverity( diag ) ) {
       case CXDiagnostic_Error:
       case CXDiagnostic_Fatal:
@@ -119,6 +123,30 @@ static void trans_unit_cleanup( void ) {
     clang_disposeIndex( tidy_index );
 }
 
+/**
+ * Handles a translation unit CXError_Failure.
+ *
+ * @param tu The CXTranslationUnit to use.  May be NULL.
+ */
+_Noreturn
+static void trans_unit_failure( CXTranslationUnit tu ) {
+  if ( tu == NULL ) {
+    // libclang isn't specific enough about a failure, so see if the reason is
+    // because the source file doesn't exist or isn't readable.
+    FILE *const file = fopen( arg_source_path, "r" );
+    if ( file == NULL )
+      fatal_error( EX_NOINPUT, "\"%s\": %s\n", arg_source_path, STRERROR() );
+    fclose( file );
+    fatal_error( EX_DATAERR, "error: failed to parse the translation unit\n" );
+  }
+
+  print_diagnostics( tu );
+
+  // This function is called only upon failure, so we should have caught the
+  // failure above.
+  assert( false && "should have caught the failure" );
+}
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
@@ -132,18 +160,28 @@ CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
     /*displayDisgnostics=*/false
   );
 
-  tidy_tu = clang_parseTranslationUnit(
-    tidy_index, 
+  enum CXErrorCode const error_code = clang_parseTranslationUnit2(
+    tidy_index,
     arg_source_path,
     argv + 1, argc - 1,                 // skip argv[0] (program name)
     /*unsaved_files=*/NULL, 
     /*num_unsaved_files=*/0,
-    CXTranslationUnit_DetailedPreprocessingRecord
+    CXTranslationUnit_DetailedPreprocessingRecord,
+    &tidy_tu
   );
 
-  if ( tidy_tu == NULL )
-    fatal_error( EX_DATAERR, "error: failed to parse the translation unit\n" );
-  print_diagnostics();
+  switch ( error_code ) {
+    case CXError_ASTReadError:
+      fatal_error( EX_UNAVAILABLE, "libclang AST error\n" );
+    case CXError_Crashed:
+      fatal_error( EX_UNAVAILABLE, "libclang crashed\n" );
+    case CXError_Failure:
+      trans_unit_failure( tidy_tu );
+    case CXError_InvalidArguments:
+      fatal_error( EX_SOFTWARE, "invalid arguments given to libclang\n" );
+    case CXError_Success:
+      break;
+  } // switch
 
   CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
   tidy_lang = clang_getCursorLanguage( cursor );
