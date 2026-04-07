@@ -55,9 +55,9 @@ assert_path_exists() {
 test_include_tidy() {
   echo '$ include-tidy' $@
   include-tidy $@ 2>&1
-  status=$?
+  STATUS=$?
   echo
-  return $status
+  return $STATUS
 }
 
 local_basename() {
@@ -116,11 +116,6 @@ ME=$(local_basename "$0")
 [ "$BUILD_SRC" ] || {
   echo "$ME: \$BUILD_SRC not set" >&2
   exit 2
-}
-
-[ "$LINENO" ] || {
-  echo "$ME: shell's \$LINENO not set" >&2
-  exit 3
 }
 
 ########## Process command-line ###############################################
