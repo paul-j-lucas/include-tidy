@@ -182,18 +182,18 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
   if ( fclang == NULL )
     goto error;
 
-  bool    found_include_search = false;
+  bool    found_include_search_paths = false;
   char   *line_buf = NULL;
   size_t  line_cap = 0;
 
   while ( getline( &line_buf, &line_cap, fclang ) != -1 ) {
     if ( strcmp( line_buf, "#include <...> search starts here:\n" ) == 0 ) {
-      found_include_search = true;
+      found_include_search_paths = true;
       break;
     }
   } // while
 
-  if ( found_include_search ) {
+  if ( found_include_search_paths ) {
     int argi = *pargc;                  // where to insert new -isystem option
     for ( int i = *pargc - 1; i > 0; --i ) {
       if ( (*pargv)[i][0] != '-' ) {
