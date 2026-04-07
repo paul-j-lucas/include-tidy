@@ -506,8 +506,12 @@ static char const* is_short_opt( int argc, char const *const argv[],
     return NULL;
   if ( argv[ *pargi ][2] != '\0' )    // -x<arg>, not -x <arg>
     return argv[ *pargi ] + 2;
-  if ( ++*pargi < argc )
-    return argv[ *pargi ];
+  if ( ++*pargi < argc ) {
+    char const *const value = argv[ *pargi ];
+    if ( value != NULL && value[0] != '\0' )
+      return value;
+  }
+
   fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", opt );
 }
 
