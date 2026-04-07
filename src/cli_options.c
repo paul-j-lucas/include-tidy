@@ -59,7 +59,36 @@
 #define FOREACH_CLI_OPTION(VAR, OPTIONS) \
   for ( struct option const *VAR = (OPTIONS); (VAR)->name != NULL; ++(VAR) )
 
-///////////////////////////////////////////////////////////////////////////////
+////////// structures /////////////////////////////////////////////////////////
+
+/**
+ * Mapping from source file extension to programming language, either C or C++.
+ */
+struct ext_lang_map {
+  char const *ext;                      ///< Extension (without the `'.'`).
+  char const *lang;                     ///< Language: either `"c"` or `"c++"`.
+};
+typedef struct ext_lang_map ext_lang_map;
+
+////////// local constants ////////////////////////////////////////////////////
+
+/**
+ * Mapping of all common C and C++ filename extensions to programming language.
+ */
+static ext_lang_map const EXT_LANG_MAP[] = {
+  { "c",   "c"   },
+  { "c++", "c++" },
+  { "cc",  "c++" },
+  { "cp",  "c++" },
+  { "cpp", "c++" },
+  { "cxx", "c++" },
+  { "h",   "c"   },
+  { "h++", "c++" },
+  { "hh",  "c++" },
+  { "hp",  "c++" },
+  { "hpp", "c++" },
+  { "hxx", "c++" },
+};
 
 /**
  * Command-line options.
@@ -103,7 +132,8 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(VERSION) ] = "Print version and exit",
 };
 
-// local functions
+////////// local functions ////////////////////////////////////////////////////
+
 NODISCARD
 static char const*  get_opt_format( int ),
                  *  get_opt_long( char ),
@@ -288,45 +318,14 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
  */
 NODISCARD
 static char const* get_ext_language( char const *ext ) {
-  struct ext_lang_map {
-    char const *ext;
-    char const *lang;
-  };
-  typedef struct ext_lang_map ext_lang_map;
+  assert( ext != NULL );
 
-  static ext_lang_map const EXT_LANG_MAP[] = {
-    { "c",   "c"   },
-    { "c++", "c++" },
-    { "cc",  "c++" },
-    { "cp",  "c++" },
-    { "cpp", "c++" },
-    { "cxx", "c++" },
-    { "h",   "c"   },
-    { "h++", "c++" },
-    { "hh",  "c++" },
-    { "hp",  "c++" },
-    { "hpp", "c++" },
-    { "hxx", "c++" },
-  };
+  FOREACH_ARRAY_ELEMENT( ext_lang_map, m, EXT_LANG_MAP ) {
+    if ( strcasecmp( ext, m->ext ) == 0 )
+      return m->lang;
+  } // for
 
-  if ( ext == NULL ) {
-    EPRINTF( "%s: missing", prog_name );
-  }
-  else {
-    FOREACH_ARRAY_ELEMENT( ext_lang_map, m, EXT_LANG_MAP ) {
-      if ( strcasecmp( ext, m->ext ) == 0 )
-        return m->lang;
-    } // for
-    EPRINTF( "%s: \"%s\": unknown", prog_name, ext );
-  }
-
-  EPUTS( " extension; must be one of " );
-  bool comma = false;
-  FOREACH_ARRAY_ELEMENT( ext_lang_map, m, EXT_LANG_MAP )
-    EPRINTF( true_or_set( &comma ) ? ", %s" : "%s", m->ext );
-  EPUTS( "; or use -xc[++]\n" );
-
-  exit( EX_USAGE );
+  return NULL;
 }
 
 /**
@@ -392,6 +391,24 @@ static struct option const* get_option( char short_opt ) {
       return opt;
   } // for
   return NULL;                          // LCOV_EXCL_LINE
+}
+
+/**
+ * Gets the source path from the last argument, if any.
+ *
+ * @param argc The argument count from \c main().
+ * @param argv The argument values from \c main().
+ * @return Returns the source path or NULL if none.
+ */
+static char const* get_source_path( int argc, char const *argv[] ) {
+  assert( argv != NULL );
+
+  if ( argc < 2 )                       // can't be a source path
+    return NULL;
+  char const *const last_argv = (argv)[ argc - 1 ];
+  if ( last_argv[0] == '-' )            // last doesn't look like a filename
+    return NULL;
+  return last_argv;
 }
 
 /**
@@ -762,51 +779,6 @@ static void print_usage( int status ) {
 }
 
 /**
- * Preprocess the command-line.
- *
- * @remarks
- * @parblock
- * The order that we have to parse command-line arguments is necessitated to
- * be unconventional.
- *
- * Ordinarily, a program would parse all options first, increment argv past
- * them, then look at (the new) argv[1] for the file; but the source file may
- * be needed before parsing options because its language (based on its filename
- * extension) affects the list of system include files and the corresponding
- * `-isystem` options needed by clang.
- *
- * We also have to pre-scan all options looking for clang's -x<language> option
- * because that has priority over whatever language is indicated by the source
- * file's extension.
- *
- * Finally, we have to call **clang** and insert `-isystem` options for the
- * include paths it would use to compile the source file.
- * @endparblock
- *
- * @param pargc A pointer to the argument count from \c main().
- * @param pargv A pointer to the argument values from \c main().
- */
-static void preprocess_argv( int *pargc, char const **pargv[] ) {
-  assert( pargc != NULL );
-  assert( pargv != NULL );
-
-  if ( *pargc < 2 )                     // no arguments to preprocess
-    return;
-  char const *const last_argv = (*pargv)[ *pargc - 1 ];
-  if ( last_argv[0] == '-' )            // last doesn't look like a filename
-    return;
-  arg_source_path = last_argv;
-
-  char const *const clang_path = get_clang_path( *pargc, *pargv );
-  char const *const ext = path_ext( arg_source_path );
-  char const *lang = get_x_language( *pargc, *pargv );
-  if ( lang == NULL )
-    lang = get_ext_language( ext );
-
-  add_clang_include_paths( pargc, pargv, clang_path, lang );
-}
-
-/**
  * Prints the **include-tidy** version.
  */
 static void print_version( void ) {
@@ -824,6 +796,34 @@ static void print_version( void ) {
 void cli_options_init( int *pargc, char const **pargv[] ) {
   ASSERT_RUN_ONCE();
 
+  // The order that we have to parse command-line arguments is necessitated to
+  // be unconventional.
+  //
+  // Ordinarily, a program would parse all options first, increment argv past
+  // them, then look at (the new) argv[1] for the file; but the source file may
+  // be needed before parsing options because its language (based on its
+  // filename extension) affects the list of system include files and the
+  // corresponding `-isystem` options needed by clang.
+  //
+  // We also have to pre-scan all options looking for clang's -x<language>
+  // option because that has priority over whatever language is indicated by
+  // the source file's extension.
+  //
+  // Finally, we have to call **clang** and insert `-isystem` options for the
+  // include paths it would use to compile the source file.
+
+  arg_source_path = get_source_path( *pargc, *pargv );
+  char const *const ext =
+    arg_source_path != NULL ? path_ext( arg_source_path ) : NULL;
+  char const *lang = get_x_language( *pargc, *pargv );
+  if ( lang == NULL && ext != NULL )
+    lang = get_ext_language( ext );
+
+  if ( lang != NULL ) {
+    char const *const clang_path = get_clang_path( *pargc, *pargv );
+    add_clang_include_paths( pargc, pargv, clang_path, lang );
+  }
+
   int               opt;
   bool              opt_help = false;
   bool              opt_version = false;
@@ -831,7 +831,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   int               tidy_argc;
   char const      **tidy_argv;
 
-  preprocess_argv( pargc, pargv );
   move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
 
   opterr = 1;
@@ -951,6 +950,20 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       print_usage( EX_USAGE );
     print_version();
     exit( EX_OK );
+  }
+
+  if ( lang == NULL ) {
+    EPRINTF( "%s: ", prog_name );
+    if ( ext == NULL )
+      EPUTS( "missing" );
+    else
+      EPRINTF( "\"%s\": unknown", ext );
+    EPUTS( " extension; must be one of " );
+    bool comma = false;
+    FOREACH_ARRAY_ELEMENT( ext_lang_map, m, EXT_LANG_MAP )
+      EPRINTF( true_or_set( &comma ) ? ", %s" : "%s", m->ext );
+    EPUTS( "; or use -xc[++]\n" );
+    exit( EX_USAGE );
   }
 
   // argv[argc-1] is the source file, but we've already copied it into
