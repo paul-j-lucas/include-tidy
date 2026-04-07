@@ -1,0 +1,68 @@
+$ include-tidy -Xtidy --config
+include-tidy: "--config/-c" requires an argument
+
+$ include-tidy -Xtidy --config=
+include-tidy: "--config/-c" requires an argument
+
+$ include-tidy -Xtidy -c
+include-tidy: -c requires an argument
+
+$ include-tidy --help X
+usage: include-tidy [-Xtidy tidy-option]... [clang-option]... source-file
+       include-tidy other-option
+
+tidy options:
+  --align-column=ARG  (-a) Align comments to this column; default=80.
+  --all-includes      (-A) Print all include files.
+  --clang=ARG         (-C) Path of clang to use; default="clang".
+  --comment-style=ARG (-s) Comment style: "//", "/*", or "none".
+  --config=ARG        (-c) Configuration file path.
+  --error             (-e) Exit with non-zero status when no violations.
+  --line-length=ARG   (-l) Line length; default=80.
+  --no-config-layers  (-L) Don't do configuration file layering.
+  --verbose=ARG       (-V) Print verbose output.
+
+other options:
+  --help                   Print this help and exit.
+  --version                Print version and exit.
+
+include-tidy home page: https://github.com/paul-j-lucas/include-tidy
+Report bugs to: https://github.com/paul-j-lucas/include-tidy/issues
+
+$ include-tidy --help=X
+include-tidy: "help=X": invalid option; use --help for help
+
+$ include-tidy --help --version
+include-tidy: --help/-h can be given only by itself
+
+$ include-tidy -x
+include-tidy: -x requires an argument
+
+$ include-tidy -xX
+include-tidy: "X": invalid value for -x; must be either "c" or "c++"
+
+$ include-tidy --version X
+usage: include-tidy [-Xtidy tidy-option]... [clang-option]... source-file
+       include-tidy other-option
+
+tidy options:
+  --align-column=ARG  (-a) Align comments to this column; default=80.
+  --all-includes      (-A) Print all include files.
+  --clang=ARG         (-C) Path of clang to use; default="clang".
+  --comment-style=ARG (-s) Comment style: "//", "/*", or "none".
+  --config=ARG        (-c) Configuration file path.
+  --error             (-e) Exit with non-zero status when no violations.
+  --line-length=ARG   (-l) Line length; default=80.
+  --no-config-layers  (-L) Don't do configuration file layering.
+  --verbose=ARG       (-V) Print verbose output.
+
+other options:
+  --help                   Print this help and exit.
+  --version                Print version and exit.
+
+include-tidy home page: https://github.com/paul-j-lucas/include-tidy
+Report bugs to: https://github.com/paul-j-lucas/include-tidy/issues
+
+$ include-tidy --version=X
+include-tidy: "version=X": invalid option; use --help for help
+

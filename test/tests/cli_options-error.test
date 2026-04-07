@@ -1,0 +1,25 @@
+EXPECTED_EXIT=64
+
+test_include_tidy() {
+  echo '$ include-tidy' $*
+  include-tidy $@ 2>&1
+  status=$?
+  echo
+  return $status
+}
+
+test_include_tidy -Xtidy --config
+test_include_tidy -Xtidy --config=
+test_include_tidy -Xtidy -c
+
+test_include_tidy --help X
+test_include_tidy --help=X
+test_include_tidy --help --version
+
+test_include_tidy -x
+test_include_tidy -xX
+
+test_include_tidy --version X
+test_include_tidy --version=X
+
+# vim:set syntax=sh et sw=2 ts=2:

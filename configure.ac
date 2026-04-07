@@ -166,6 +166,7 @@ AC_CONFIG_FILES([
   src/Makefile
   man/Makefile
   man/man1/Makefile
+  test/Makefile
 ])
 AC_OUTPUT
 

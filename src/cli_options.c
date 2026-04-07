@@ -675,8 +675,8 @@ static void move_tidy_args( int *pargc, char const *argv[],
         tidy_argv[ tidy_argc++ ] = argv[i];
       }
     }
-    else if ( strcmp( argv[i], "--help" ) == 0 ||
-              strcmp( argv[i], "--version" ) == 0 ) {
+    else if ( STRNCMPLIT( argv[i], "--help" ) == 0 ||
+              STRNCMPLIT( argv[i], "--version" ) == 0 ) {
       tidy_argv[ tidy_argc++ ] = argv[i];
     }
     else {

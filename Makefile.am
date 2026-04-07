@@ -19,7 +19,7 @@
 ##
 
 ACLOCAL_AMFLAGS =	-I m4
-SUBDIRS =		etc lib src man
+SUBDIRS =		etc lib src man test
 
 EXTRA_DIST =		bootstrap \
 			Doxygen.sed \

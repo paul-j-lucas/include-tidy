@@ -1,0 +1,13 @@
+EXPECTED_EXIT=0
+
+test_include_tidy() {
+  echo '$ include-tidy' $*
+  include-tidy $@ 2>&1
+  status=$?
+  echo
+  return $status
+}
+
+test_include_tidy --help
+
+# vim:set syntax=sh et sw=2 ts=2:

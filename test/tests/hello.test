@@ -1,0 +1,2 @@
+EXPECTED_EXIT=0
+include-tidy -Xtidy --config=../etc/include-tidy.toml data/hello.c
