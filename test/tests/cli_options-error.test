@@ -6,6 +6,10 @@ test_include_tidy -Xtidy --align-column=xx
 test_include_tidy -Xtidy -a
 test_include_tidy -Xtidy -axx
 
+test_include_tidy -Xtidy --clang
+test_include_tidy -Xtidy --clang=
+test_include_tidy -Xtidy -C
+
 test_include_tidy -Xtidy --comment-style
 test_include_tidy -Xtidy --comment-style=
 test_include_tidy -Xtidy --comment-style=xx

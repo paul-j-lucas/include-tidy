@@ -469,10 +469,16 @@ static char const* is_long_opt( int argc, char const *const argv[],
   size_t const opt_len = strlen( opt );
   if ( strncmp( arg + STRLITLEN( "--" ), opt, opt_len ) != 0 )
     return NULL;
-  if ( arg[ STRLITLEN( "--" ) + opt_len + 1 ] == '=' )
-    return arg + STRLITLEN( "--" ) + opt_len + 2;
-  if ( ++*pargi < argc )
-    return argv[ *pargi ];
+  if ( arg[ STRLITLEN( "--" ) + opt_len ] == '=' ) {
+    char const *const value = arg + STRLITLEN( "--" ) + opt_len + 1;
+    if ( value[0] != '\0' )
+      return value;
+  }
+  else if ( ++*pargi < argc ) {
+    char const *const value = argv[ *pargi ];
+    if ( value != NULL && value[0] != '\0' )
+      return value;
+  }
 
   fatal_error( EX_USAGE, "\"--%s\" requires an argument\n", opt );
 }
@@ -831,11 +837,10 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   char const *lang = get_x_language( *pargc, *pargv );
   if ( lang == NULL && ext != NULL )
     lang = get_ext_language( ext );
+  char const *const clang_path = get_clang_path( *pargc, *pargv );
 
-  if ( lang != NULL ) {
-    char const *const clang_path = get_clang_path( *pargc, *pargv );
+  if ( lang != NULL )
     add_clang_include_paths( pargc, pargv, clang_path, lang );
-  }
 
   int               opt;
   bool              opt_help = false;

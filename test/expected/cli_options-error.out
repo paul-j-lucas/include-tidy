@@ -13,6 +13,15 @@ include-tidy: "-a" requires an argument
 $ include-tidy -Xtidy -axx
 include-tidy: "xx": invalid integer
 
+$ include-tidy -Xtidy --clang
+include-tidy: "--clang" requires an argument
+
+$ include-tidy -Xtidy --clang=
+include-tidy: "--clang" requires an argument
+
+$ include-tidy -Xtidy -C
+include-tidy: "-C" requires an argument
+
 $ include-tidy -Xtidy --comment-style
 include-tidy: "--comment-style/-s" requires an argument
 
