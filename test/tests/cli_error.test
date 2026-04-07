@@ -1,0 +1,11 @@
+EXPECTED_EXIT=2
+
+test_include_tidy \
+    -Xtidy --config=../etc/include-tidy.toml \
+    -Xtidy --error \
+    data/hello.c
+
+test_include_tidy \
+    -Xtidy --config=../etc/include-tidy.toml \
+    -Xtidy -e \
+    data/hello.c

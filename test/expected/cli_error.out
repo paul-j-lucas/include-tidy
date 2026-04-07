@@ -1,0 +1,4 @@
+$ include-tidy -Xtidy --config=../etc/include-tidy.toml -Xtidy --error data/hello.c
+
+$ include-tidy -Xtidy --config=../etc/include-tidy.toml -Xtidy -e data/hello.c
+
