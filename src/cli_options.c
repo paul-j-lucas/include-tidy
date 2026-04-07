@@ -183,6 +183,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
     goto error;
 
   bool    found_include_search_paths = false;
+  bool    is_argv_on_heap = false;
   char   *line_buf = NULL;
   size_t  line_cap = 0;
 
@@ -219,21 +220,18 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
         continue;
 
       size_t const old_argc = STATIC_CAST( size_t, *pargc );
-      size_t const new_size = (old_argc + 2) * sizeof(char*);
+      size_t const new_argc = old_argc + 1/*new arg*/ + 1/*NULL*/;
 
-      static bool is_argv_on_heap = false;
       if ( !is_argv_on_heap ) {
-        char const **const heap_argv = malloc( new_size );
-        if ( unlikely( heap_argv == NULL ) )
-          goto error;
+        // We can't realloc the argv passed to main(), so in order to insert an
+        // argument, we first have to duplicate it into the heap.
+        char const **const heap_argv = MALLOC( char*, new_argc );
         memcpy( heap_argv, *pargv, old_argc * sizeof(char*) );
         *pargv = heap_argv;
         is_argv_on_heap = true;
       }
       else {
-        *pargv = realloc( *pargv, new_size );
-        if ( unlikely( *pargv == NULL ) )
-          goto error;
+        REALLOC( *pargv, char*, new_argc );
       }
 
       // Insert new -isystem option before last argv (the filename).
@@ -256,9 +254,8 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
   return;
 
 error:
-  fatal_error(
-    EX_UNAVAILABLE, "invoking %s failed: %s\n",
-    clang_path, STRERROR()
+  fatal_error( EX_UNAVAILABLE,
+    "\"%s\": invocation failed: %s\n", clang_path, STRERROR()
   );
 }
 
@@ -431,16 +428,15 @@ static char const* get_x_language( int argc, char const *const argv[] ) {
 
   for ( int i = 1; i < argc; ++i ) {
     char const *const lang = is_short_opt( argc, argv, 'x', &i );
-    if ( lang != NULL ) {
-      if ( strcmp( lang, "c" ) == 0 )
-        return "c";
-      if ( strcmp( lang, "c++" ) == 0 )
-        return "c++";
-      fatal_error( EX_USAGE,
-        "\"%s\": invalid value for -x; must be either \"c\" or \"c++\"\n",
-        lang
-      );
-    }
+    if ( lang == NULL )
+      continue;
+    if ( strcmp( lang, "c" ) == 0 )
+      return "c";
+    if ( strcmp( lang, "c++" ) == 0 )
+      return "c++";
+    fatal_error( EX_USAGE,
+      "\"%s\": invalid value for -x; must be either \"c\" or \"c++\"\n", lang
+    );
   } // for
 
   return NULL;
@@ -461,6 +457,7 @@ static char const* get_x_language( int argc, char const *const argv[] ) {
  */
 static char const* is_long_opt( int argc, char const *const argv[],
                                 char const *opt, int *pargi ) {
+  assert( argc > 0 );
   assert( argv != NULL );
   assert( opt != NULL );
   assert( pargi != NULL );
@@ -519,6 +516,7 @@ static char const* is_short_opt( int argc, char const *const argv[],
  * a subsequent option.
  */
 static bool is_Xtidy_opt( int argc, char const *const argv[], int *pargi ) {
+  assert( argc > 0 );
   assert( argv != NULL );
   assert( pargi != NULL );
   assert( *pargi < argc );
@@ -639,7 +637,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
   int new_argc = 1, tidy_argc = 1;
 
   char const **const tidy_argv =
-    MALLOC( char*, STATIC_CAST( size_t, argc ) + 1 );
+    MALLOC( char*, STATIC_CAST( size_t, argc ) + 1/*NULL*/ );
   tidy_argv[0] = argv[0];
 
   for ( int i = 1; i < argc; ++i ) {
