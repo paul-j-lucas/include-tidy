@@ -1,3 +1,33 @@
+$ include-tidy -Xtidy --align-column
+include-tidy: "--align-column/-a" requires an argument
+
+$ include-tidy -Xtidy --align-column=
+include-tidy: "": invalid integer
+
+$ include-tidy -Xtidy --align-column=xx
+include-tidy: "xx": invalid integer
+
+$ include-tidy -Xtidy -a
+include-tidy: "-a" requires an argument
+
+$ include-tidy -Xtidy -axx
+include-tidy: "xx": invalid integer
+
+$ include-tidy -Xtidy --comment-style
+include-tidy: "--comment-style/-s" requires an argument
+
+$ include-tidy -Xtidy --comment-style=
+include-tidy: "--comment-style/-s" requires an argument
+
+$ include-tidy -Xtidy --comment-style=xx
+include-tidy: "xx": invalid value for --comment-style/-s; must be one of "//", "/*", or "none"
+
+$ include-tidy -Xtidy -s
+include-tidy: "-s" requires an argument
+
+$ include-tidy -Xtidy -sxx
+include-tidy: "xx": invalid value for --comment-style/-s; must be one of "//", "/*", or "none"
+
 $ include-tidy -Xtidy --config
 include-tidy: "--config/-c" requires an argument
 
@@ -5,7 +35,22 @@ $ include-tidy -Xtidy --config=
 include-tidy: "--config/-c" requires an argument
 
 $ include-tidy -Xtidy -c
-include-tidy: -c requires an argument
+include-tidy: "-c" requires an argument
+
+$ include-tidy -Xtidy --line-length
+include-tidy: "--line-length/-l" requires an argument
+
+$ include-tidy -Xtidy --line-length=
+include-tidy: "": invalid integer
+
+$ include-tidy -Xtidy --line-length=xx
+include-tidy: "xx": invalid integer
+
+$ include-tidy -Xtidy -l
+include-tidy: "-l" requires an argument
+
+$ include-tidy -Xtidy -lxx
+include-tidy: "xx": invalid integer
 
 $ include-tidy --help X
 usage: include-tidy [-Xtidy tidy-option]... [clang-option]... source-file
@@ -36,7 +81,7 @@ $ include-tidy --help --version
 include-tidy: --help/-h can be given only by itself
 
 $ include-tidy -x
-include-tidy: -x requires an argument
+include-tidy: "-x" requires an argument
 
 $ include-tidy -xX
 include-tidy: "X": invalid value for -x; must be either "c" or "c++"
