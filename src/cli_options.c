@@ -836,12 +836,12 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   // include paths it would use to compile the source file.
 
   arg_source_path = get_source_path( *pargc, *pargv );
+  char const *const clang_path = get_clang_path( *pargc, *pargv );
   char const *const ext =
     arg_source_path != NULL ? path_ext( arg_source_path ) : NULL;
   char const *lang = get_x_language( *pargc, *pargv );
   if ( lang == NULL && ext != NULL )
     lang = get_ext_language( ext );
-  char const *const clang_path = get_clang_path( *pargc, *pargv );
   if ( clang_path != NULL && lang != NULL )
     add_clang_include_paths( pargc, pargv, clang_path, lang );
 
