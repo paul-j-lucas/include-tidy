@@ -615,12 +615,13 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *kv ) {
     toml_space_skip( toml ) &&
     toml_value_parse( toml, &value );
 
+  toml->in_key_value = false;
+
   if ( ok )
     *kv = (toml_key_value){ .key = key, .key_loc = key_loc, .value = value };
   else
     free( key );
 
-  toml->in_key_value = false;
   return ok;
 }
 
