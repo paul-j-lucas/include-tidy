@@ -361,7 +361,7 @@ static int toml_getc( toml_file *toml ) {
  * @return Returns `true` only if an integer was parsed successfully.
  */
 NODISCARD
-static bool toml_integer_parse( toml_file *toml, long *pi ) {
+static bool toml_int_parse( toml_file *toml, long *pi ) {
   assert( toml != NULL );
   assert( pi != NULL );
 
@@ -807,7 +807,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
       case '9':
         toml_ungetc( toml, c );
         long i;
-        if ( !toml_integer_parse( toml, &i ) )
+        if ( !toml_int_parse( toml, &i ) )
           return false;
         *v = (toml_value){ .type = TOML_INT, .loc = value_loc, .i = i };
         return true;
