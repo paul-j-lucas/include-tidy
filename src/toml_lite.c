@@ -368,8 +368,9 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
   char    buf[ MAX_DEC_INT_DIGITS( long ) + 1/*'\0'*/ ];
   size_t  buf_len = 0;
 
-  int base = 10;
-  int c = toml_getc( toml );
+  int   base = 10;
+  int   c = toml_getc( toml );
+  char  prev_c;
 
   switch ( c ) {
     case '+':
@@ -414,33 +415,43 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
       toml_ungetc( toml, c );
   } // switch
 
-  while ( (c = toml_getc( toml )) != EOF ) {
-    if ( c == '_' )
-      continue;
+  for (;;) {
+    prev_c = STATIC_CAST( char, c );
+    c = toml_getc( toml );
+    switch ( c ) {
+      case EOF:
+        goto done;
+      case '#':
+      case ',':
+      case ']':
+      case ' ':
+      case '\n':
+      case '\r':
+      case '\t':
+        toml_ungetc( toml, c );
+        if ( prev_c == '_' )
+          goto error;
+        goto done;
+      case '_':
+        continue;
+    } // switch
+
     switch ( base ) {
       case 2:
-        if ( !isbdigit( c ) ) {
-          toml_ungetc( toml, c );
-          goto done;
-        }
+        if ( !isbdigit( c ) )
+          goto error;
         break;
       case 8:
-        if ( !isodigit( c ) ) {
-          toml_ungetc( toml, c );
-          goto done;
-        }
+        if ( !isodigit( c ) )
+          goto error;
         break;
       case 10:
-        if ( !isdigit( c ) ) {
-          toml_ungetc( toml, c );
-          goto done;
-        }
+        if ( !isdigit( c ) )
+          goto error;
         break;
       case 16:
-        if ( !isxdigit( c ) ) {
-          toml_ungetc( toml, c );
-          goto done;
-        }
+        if ( !isxdigit( c ) )
+          goto error;
         break;
     } // switch
 
@@ -449,24 +460,20 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
       return false;
     }
     buf[ buf_len++ ] = STATIC_CAST( char, c );
-  } // while
+  } // for
 
 done:
-  if ( buf[ buf_len - 1 ] == '_' ) {
-    toml->error = TOML_ERR_INT_INVALID;
-    return false;
-  }
-
   buf[ buf_len ] = '\0';
   errno = 0;
-  long const rv = strtol( buf, /*endptr=*/NULL, base );
-  if ( errno != 0 ) {
-    toml->error = TOML_ERR_INT_INVALID;
-    return false;
+  long const value = strtol( buf, /*endptr=*/NULL, base );
+  if ( errno == 0 ) {
+    *pi = value;
+    return true;
   }
 
-  *pi = rv;
-  return true;
+error:
+  toml->error = TOML_ERR_INT_INVALID;
+  return false;
 }
 
 /**
