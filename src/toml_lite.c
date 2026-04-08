@@ -341,10 +341,10 @@ static int toml_getc( toml_file *toml ) {
   int const c = fgetc( toml->file );
 
   if ( c != EOF ) {
-    if ( toml->c_prev == '\n' )
+    if ( toml->c_last == '\n' )
       toml_newline( toml );
     toml_col_inc( toml, 1 );
-    toml->c_prev = c;
+    toml->c_last = c;
   }
 
   return c;
