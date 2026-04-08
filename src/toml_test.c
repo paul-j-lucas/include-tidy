@@ -88,7 +88,8 @@ static void toml_test_init( toml_test *test, char const *buf ) {
 static bool test_comments( void ) {
   TEST_FUNC_BEGIN();
 
-  static char const *const TOML =
+  toml_test test;
+  toml_test_init( &test, 
     "#1                   \n"
     " #2                  \n"
     "[test-comments]  #3  \n"
@@ -96,10 +97,8 @@ static bool test_comments( void ) {
     "ab = [           #5  \n"
     "  false,         #6  \n"
     "  true           #7  \n"
-    "]                #8  \n";
-
-  toml_test test;
-  toml_test_init( &test, TOML );
+    "]                #8  \n"
+  );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
     toml_value const *value;
@@ -132,6 +131,7 @@ static bool test_key_bad_leading_dot( void ) {
     "[test-key]  \n"
     ".key = false\n"
   );
+
   TEST( !toml_table_next( &test.toml, &test.table ) )
     && TEST( test.toml.error == TOML_ERR_KEY_INVALID )
     && TEST( test.toml.loc.line == 2 )
@@ -166,15 +166,14 @@ static bool test_valid_table_names( char const *const table_names[] ) {
 static bool test_value_array( void ) {
   TEST_FUNC_BEGIN();
 
-  static char const *const TOML =
+  toml_test test;
+  toml_test_init( &test,
     "[test-array]\n"
     "ab = [   \n"
     "  false, \n"
     "  true   \n"
-    "]        \n";
-
-  toml_test test;
-  toml_test_init( &test, TOML );
+    "]        \n"
+  );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
     toml_value const *value;
@@ -197,14 +196,13 @@ static bool test_value_array( void ) {
 static bool test_value_array_bad_comma( void ) {
   TEST_FUNC_BEGIN();
 
-  static char const *const TOML =
+  toml_test test;
+  toml_test_init( &test,
     "[test-array] \n"
     "ab = [       \n"
     "  ,          \n"
-    "]            \n";
-
-  toml_test test;
-  toml_test_init( &test, TOML );
+    "]            \n"
+  );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
     && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
@@ -219,12 +217,11 @@ static bool test_value_array_bad_comma( void ) {
 static bool test_value_array_unex_eof( void ) {
   TEST_FUNC_BEGIN();
 
-  static char const *const TOML =
-    "[test-array] \n"
-    "ab = [\n";
-
   toml_test test;
-  toml_test_init( &test, TOML );
+  toml_test_init( &test,
+    "[test-array] \n"
+    "ab = [\n"
+  );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
     && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
@@ -239,13 +236,12 @@ static bool test_value_array_unex_eof( void ) {
 static bool test_value_bool( void ) {
   TEST_FUNC_BEGIN();
 
-  static char const *const TOML =
+  toml_test test;
+  toml_test_init( &test,
     "[test-bool]  \n"
     "bf = false   \n"
-    "bt = true    \n";
-
-  toml_test test;
-  toml_test_init( &test, TOML );
+    "bt = true    \n"
+  );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
     toml_value const *value;
@@ -274,6 +270,7 @@ static bool test_value_bool_bad_false( void ) {
     "[test-bool]  \n"
     "b = fALSE    \n"
   );
+
   TEST( !toml_table_next( &test.toml, &test.table ) )
     && TEST( test.toml.error == TOML_ERR_UNEX_VALUE )
     && TEST( test.toml.loc.line == 2 )
@@ -287,16 +284,15 @@ static bool test_value_bool_bad_false( void ) {
 static bool test_value_int( void ) {
   TEST_FUNC_BEGIN();
 
-  static char const *const TOML =
+  toml_test test;
+  toml_test_init( &test,
     "[test-int]     \n"
     "i2 = 0b101010  \n"
     "i8 = 0o52      \n"
     "i10 = 42       \n"
     "i16 = 0x2A     \n"
-    "i10_us = 4_2   \n";
-
-  toml_test test;
-  toml_test_init( &test, TOML );
+    "i10_us = 4_2   \n"
+  );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
     toml_value const *value;
@@ -340,6 +336,7 @@ static bool test_value_int_bad_base( void ) {
     "[test-int] \n"
     "i = 0a     \n"
   );
+
   TEST( !toml_table_next( &test.toml, &test.table ) )
     && TEST( test.toml.error == TOML_ERR_INT_INVALID )
     && TEST( test.toml.loc.line == 2 )
@@ -358,6 +355,7 @@ static bool test_value_int_bad_binary( void ) {
     "[test-int] \n"
     "i = 0b2    \n"
   );
+
   TEST( !toml_table_next( &test.toml, &test.table ) )
     && TEST( test.toml.error == TOML_ERR_INT_INVALID )
     && TEST( test.toml.loc.line == 2 )
@@ -376,6 +374,7 @@ static bool test_value_int_bad_underscore( void ) {
     "[test-int] \n"
     "i = 1_     \n"
   );
+
   TEST( !toml_table_next( &test.toml, &test.table ) )
     && TEST( test.toml.error == TOML_ERR_INT_INVALID )
     && TEST( test.toml.loc.line == 2 )
@@ -388,12 +387,12 @@ static bool test_value_int_bad_underscore( void ) {
 
 static bool test_value_string( void ) {
   TEST_FUNC_BEGIN();
-  static char const *const TOML =
-    "[test-string]  \n"
-    "s1 = \"ab\"    \n";
 
   toml_test test;
-  toml_test_init( &test, TOML );
+  toml_test_init( &test,
+    "[test-string]  \n"
+    "s1 = \"ab\"    \n"
+  );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
     toml_value const *value;
