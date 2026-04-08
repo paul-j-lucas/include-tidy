@@ -158,9 +158,6 @@ on an Intel platform,
 might include \f(CWx86_64/foo.h\fP;
 but on an ARM platform,
 might include \f(CWarm64/foo.h\fP.
-In either case,
-the user is expected simply
-to include \f(CWfoo.h\fP.
 .IP \n+[step].
 They aggregate headers for user convenience.
 For example,
@@ -169,6 +166,37 @@ provides \f(CWIndex.h\fP
 that includes all other library headers
 so users can simply include it
 and not have to include other headers individually.
+.PP
+For cases 2 and 3,
+the including header
+can be considered a
+``proxy'' header
+and the user is expected
+simply to include it
+when referencing any symbol
+declared by either it
+or any header it includes.
+However,
+a tool such as
+.B include-tidy
+has no way to know which headers
+should be considered proxies.
+.PP
+For system headers,
+all headers given via both
+.B std-c-includes
+and
+.B std-cpp-includes
+(see
+.BR "include-tidy Table" )
+are implicitly considered proxies
+for any other system headers
+they might include.
+For user headers,
+.B proxy
+(see
+.BR "Header Tables" )
+can be used to specify an explicit proxy.
 .SH OPTIONS
 .SS Option Kinds
 .B include-tidy
@@ -676,9 +704,14 @@ Configuration file error.
 .SH ENVIRONMENT
 .TP
 .B HOME
-Used to locate a default configuration file
-under the user's home directory.
-If unset,
+Used to locate a configuration file in
+.B ~/.config
+only when
+.B XDG_CONFIG_HOME
+is unset.
+If
+.B HOME
+is also unset,
 the home directory is obtained from the password database entry
 for the effective user.
 If that fails,
@@ -692,22 +725,18 @@ then for each
 .I path
 in it,
 the first of
-.IB path /include-tidy
+.IB path /include-tidy.toml
 to exist
 and be readable
-is used as the configuration file
-(see
-.BR include-tidy (5)).
+is used as the configuration file.
 .TP
 .B XDG_CONFIG_HOME
 If set to a path
 of a directory
 and
-.B $XDG_CONFIG_HOME/include-tidy
+.B $XDG_CONFIG_HOME/include-tidy.toml
 exists and is readable,
-then that used as the configuration file
-(see
-.BR include-tidy (5)).
+then that used as the configuration file.
 .SH FILES
 .TP
 .B $XDG_CONFIG_HOME/include-tidy
@@ -717,7 +746,7 @@ then that used as the configuration file
 .TP
 .B /etc/xdg/include-tidy
 .PD
-The default configuration file.
+The configuration file.
 .SH CAVEATS
 .SS Unsupported TOML
 The following parts of TOML are
@@ -737,7 +766,9 @@ Floating-point numbers.
 .IP \(bu
 Inline tables.
 .IP \(bu
-UTF-8.
+Multi-line strings.
+.IP \(bu
+Unicode.
 .PD
 .SH AUTHOR
 Paul J. Lucas
