@@ -1,5 +1,23 @@
+2026-04-08  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.c: Finished toml_string_parse().
+   * toml_lite.c, toml_test.c: Fixed location for key with trailing dot.
+   * toml_test.c: Test for leading . on key.
+   * toml_lite.c, toml_lite.h, toml_test.c: Newline now stays on "previous"
+     line.
+   * toml_test.c: More negative tests.
+   * toml_lite.c: Fixed column.
+   * toml_lite.c: Better EOF handling.
+   * toml_lite.c: Better integer parsing.
+   * toml_lite.c: Can't be EOF.
+   * toml_lite.c: Added missing '+' and '-' to detect integer.
+   * toml_lite.c: Added toml_col_inc().
+
 2026-04-07  Paul J. Lucas <paul@lucasmail.org>
 
+   * src/Makefile.am, util_test.c: Added util_test.c.
+   * util.c, util.h: Removed unused functions.
+   * util.h: Removed FERROR, bsearch_cmp_fn_t.
    * cli_options.c: In is_short_opt(), now checking for empty value.
    * cli_options.c, cli_options-error.out, cli_options-error.test: Fixed
      missing argument for --clang option.
