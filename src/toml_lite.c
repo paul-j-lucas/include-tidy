@@ -274,6 +274,7 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
        !next_c_is_ok ||
        ( is_f && strncmp( buf, "false", STRLITLEN( "false" ) ) != 0) ||
        (!is_f && strncmp( buf, "true" , STRLITLEN( "true"  ) ) != 0) ) {
+    toml_col_inc( toml, 1 );            // so col is at first char of value
     toml->error = TOML_ERR_UNEX_VALUE;
     return false;
   }
