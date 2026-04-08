@@ -121,7 +121,7 @@ static struct option const OPTIONS[] = {
 static char const *const OPTIONS_HELP[] = {
   [ COPT(ALIGN_COLUMN) ] = "Align comments to this column; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
   [ COPT(ALL_INCLUDES) ] = "Print all include files",
-  [ COPT(CLANG) ] = "Path of clang to use; default=\"" OPT_CLANG_DEFAULT "\"",
+  [ COPT(CLANG) ] = "Path of clang to use or \"none\"; default=\"" OPT_CLANG_DEFAULT "\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
   [ COPT(CONFIG) ] = "Configuration file path",
   [ COPT(ERROR) ] = "Exit with non-zero status when no violations",
@@ -293,7 +293,7 @@ static void check_options( void ) {
  *
  * @param argc The command-line argument count.
  * @param argv The command-line argument values.
- * @return Returns the path to **clang**.
+ * @return Returns the path to **clang** or NULL if it's `"none"`.
  */
 static char const* get_clang_path( int argc, char const *const argv[] ) {
   assert( argc > 0 );
@@ -306,7 +306,7 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
     if ( clang_path == NULL )
       clang_path = is_long_opt( argc, argv, "clang", &i );
     if ( clang_path != NULL )
-      return clang_path;
+      return strcmp( clang_path, "none" ) == 0 ? NULL : clang_path;
   } // for
 
   return OPT_CLANG_DEFAULT;
@@ -843,7 +843,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     lang = get_ext_language( ext );
   char const *const clang_path = get_clang_path( *pargc, *pargv );
 
-  if ( lang != NULL )
+  if ( clang_path != NULL && lang != NULL )
     add_clang_include_paths( pargc, pargv, clang_path, lang );
 
   int               opt;

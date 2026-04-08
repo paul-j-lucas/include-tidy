@@ -268,7 +268,19 @@ is printed first.
 .BR \-\-clang \f1=\fPf "\f1 | \fP" "" \-C " f"
 Specifies the path to
 .BR clang (1)
-to use.
+to use;
+or
+.B none
+not to use
+.B clang
+in which case
+paths to system include directories
+must be specified explicitly
+via either
+.B -I
+or
+.B -isystem
+options.
 .TP
 .BR \-\-comment-style \f1=\fPs "\f1 | \fP" "" \-s " s"
 Specifies the comment style to use,
