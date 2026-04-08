@@ -645,8 +645,8 @@ extern char const WS_CHARS[];
  *
  * @param path_name The path-name to extract the base portion of.
  * @return Returns a pointer to the last component of \a path_name.
- * If \a path_name consists entirely of '/' characters,
- * a pointer to the string "/" is returned.
+ * If \a path_name consists entirely of '/' characters, a pointer to the string
+ * "/" is returned.
  */
 NODISCARD
 char const* base_name( char const *path_name );
@@ -723,34 +723,6 @@ PJL_PRINTF_LIKE_FUNC(2)
 _Noreturn void fatal_error( int status, char const *format, ... );
 
 /**
- * Prints a zero-or-more element list of strings where for:
- *
- *  + A zero-element list, nothing is printed;
- *  + A one-element list, the string for the element is printed;
- *  + A two-element list, the strings for the elements are printed separated by
- *    `or`;
- *  + A three-or-more element list, the strings for the first N-1 elements are
- *    printed separated by `,` and the N-1st and Nth elements are separated by
- *    `, or`.
- *
- * @param out The `FILE` to print to.
- * @param elt A pointer to the first element to print.
- * @param gets A pointer to a function to call to get the string for the
- * element `**ppelt`: if the function returns NULL, it signals the end of the
- * list; otherwise, the function returns the string for the element and must
- * increment `*ppelt` to the next element.  If \a gets is NULL, it is assumed
- * that \a elt points to the first element of an array of `char*` and that the
- * array ends with NULL.
- *
- * @warning The string pointer returned by \a gets for a given element _must_
- * remain valid at least until after the _next_ call to fput_list(), that is
- * upon return, the previously returned string pointer must still be valid
- * also.
- */
-void fput_list( FILE *out, void const *elt,
-                char const* (*gets)( void const **ppelt ) );
-
-/**
  * Gets the absolute path of the current working directory.
  *
  * @param plen If not NULL, the length of the path is put here.
@@ -770,17 +742,6 @@ char const* get_cwd( size_t *plen );
 NODISCARD
 bool is_affirmative( char const *s );
 #endif /* NDEBUG */
-
-/**
- * Checks whether \a s only contains decimal digit characters.
- *
- * @param s The null-terminated string to check.
- * @return Returns `true` only if \a s contains only digits.
- */
-NODISCARD
-inline bool is_digits( char const *s ) {
-  return s[ strspn( s, "0123456789" ) ] == '\0';
-}
 
 /**
  * Checks whether \a s is null, an empty string, or consists only of
