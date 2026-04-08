@@ -26,6 +26,7 @@
 /// @cond DOXYGEN_IGNORE
 
 // standard
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sysexits.h>

@@ -31,7 +31,6 @@
 #include "options.h"
 #include "red_black.h"
 #include "symbols.h"
-#include "trans_unit.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
