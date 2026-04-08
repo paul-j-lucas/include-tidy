@@ -372,7 +372,7 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
   int   c = toml_getc( toml );
   char  prev_c;
 
-  switch ( c ) {
+  switch ( c ) {                        // can't be EOF
     case '+':
       break;
     case '-':
@@ -395,12 +395,12 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
         case '#':
         case ',':
         case ']':
-          toml_ungetc( toml, c );
-          FALLTHROUGH;
         case ' ':
         case '\n':
         case '\r':
         case '\t':
+          toml_ungetc( toml, c );
+          FALLTHROUGH;
         case EOF:
           *pi = 0;
           return true;
@@ -419,8 +419,6 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
     prev_c = STATIC_CAST( char, c );
     c = toml_getc( toml );
     switch ( c ) {
-      case EOF:
-        goto done;
       case '#':
       case ',':
       case ']':
@@ -429,6 +427,8 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
       case '\r':
       case '\t':
         toml_ungetc( toml, c );
+        FALLTHROUGH;
+      case EOF:
         if ( prev_c == '_' )
           goto error;
         goto done;
