@@ -340,16 +340,12 @@ NODISCARD
 static int toml_getc( toml_file *toml ) {
   int const c = fgetc( toml->file );
 
-  switch ( c ) {
-    case EOF:
-      break;
-    case '\n':
+  if ( c != EOF ) {
+    if ( toml->c_prev == '\n' )
       toml_newline( toml );
-      break;
-    default:
-      toml_col_inc( toml, 1 );
-      break;
-  } // switch
+    toml_col_inc( toml, 1 );
+    toml->c_prev = c;
+  }
 
   return c;
 }

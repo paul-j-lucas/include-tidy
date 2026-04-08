@@ -176,6 +176,48 @@ static bool test_value_array( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_value_array_bad_comma( void ) {
+  TEST_FUNC_BEGIN();
+
+  static char const *const TOML =
+    "[test-array] \n"
+    "ab = [       \n"
+    "  ,          \n"
+    "]            \n";
+
+  toml_test test;
+  toml_test_init( &test, TOML );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
+    && TEST( test.toml.loc.line == 3 )
+    && TEST( test.toml.loc.col  == 3 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_value_array_unex_eof( void ) {
+  TEST_FUNC_BEGIN();
+
+  static char const *const TOML =
+    "[test-array] \n"
+    "ab = [\n";
+
+  toml_test test;
+  toml_test_init( &test, TOML );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 7 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_value_bool( void ) {
   TEST_FUNC_BEGIN();
 
@@ -369,11 +411,13 @@ int main( int argc, char const *const argv[] ) {
 
   test_valid_table_names( VALID_TABLE_NAMES );
   test_value_bool();
+  test_comments();
   test_value_int();
   test_value_string();
   if ( test_failures == 0 ) {
     test_value_array();
-    test_comments();
+    test_value_array_bad_comma();
+    test_value_array_unex_eof();
     test_value_bool_bad_false();
     test_value_int_bad_base();
     test_value_int_bad_binary();

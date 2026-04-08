@@ -152,6 +152,7 @@ struct toml_file {
   char const *error_msg;                ///< Error message, if any.
   unsigned    array_depth;              ///< Array depth.
   toml_loc    loc;                      ///< Current source location.
+  int         c_prev;                   ///< Previous character, if any.
   unsigned    col_prev;                 ///< Previous column within file.
   bool        in_key_value;             ///< Started parsing _key_ = _value_?
 };
