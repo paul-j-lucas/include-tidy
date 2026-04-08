@@ -124,6 +124,24 @@ static bool test_comments( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_key_bad_leading_dot( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test-key]  \n"
+    ".key = false\n"
+  );
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_KEY_INVALID )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 1 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_valid_table_names( char const *const table_names[] ) {
   TEST_FUNC_BEGIN();
 
@@ -415,6 +433,7 @@ int main( int argc, char const *const argv[] ) {
   test_value_int();
   test_value_string();
   if ( test_failures == 0 ) {
+    test_key_bad_leading_dot();
     test_value_array();
     test_value_array_bad_comma();
     test_value_array_unex_eof();
