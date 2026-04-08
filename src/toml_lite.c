@@ -372,8 +372,6 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
   int c = toml_getc( toml );
 
   switch ( c ) {
-    case EOF:
-      return false;
     case '+':
       break;
     case '-':
