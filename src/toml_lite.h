@@ -47,12 +47,12 @@
  * This implements a "lite" version of the TOML 1.0.0 specification in
  * that the following are **_not_** supported:
  *
- *  + Floating-point numbers.
- *  + Multi-line strings.
- *  + Dates or times.
- *  + Unicode.
  *  + Array of tables.
+ *  + Dates or times.
+ *  + Floating-point numbers.
  *  + Inline tables.
+ *  + Multi-line strings.
+ *  + Unicode.
  * @endparblock
  *
  * @par Example
