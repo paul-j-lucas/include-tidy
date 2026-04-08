@@ -795,6 +795,8 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
         toml_comment_parse( toml );
         continue;
 
+      case '+':
+      case '-':
       case '0':
       case '1':
       case '2':
