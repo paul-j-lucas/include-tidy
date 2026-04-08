@@ -187,14 +187,13 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
   assert( toml != NULL );
   assert( pa != NULL );
 
-  toml_array  a = { 0 };
   unsigned    array_cap = 16;
+  toml_array  a = { .values = MALLOC( toml_value, array_cap ) };
   int         c = '\0';
   bool        ok = false;
   char        prev_c;
 
   ++toml->array_depth;
-  a.values = MALLOC( toml_value, array_cap );
 
   for (;;) {
     PJL_DISCARD_RV( toml_space_skip( toml ) );
