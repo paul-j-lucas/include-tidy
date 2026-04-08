@@ -22,12 +22,17 @@ but IWYU has a number of [issues](https://github.com/include-what-you-use/includ
 
 ## Dependencies
 
-**include-tidy** depends on both
+**include-tidy** depends on
 [Libclang](https://clang.llvm.org/docs/LibClang.html)
 (typically installed as part of either a `clang`
 or `clang-devel`
 package,
-if not from source)
+if not from source),
+the `llvm-config` command
+(typically installed as part of either an `llvm`
+or `llvm-devel`
+package,
+if not from source),
 and the
 [Clang](https://clang.llvm.org)
 compiler.
@@ -59,4 +64,4 @@ then do:
 
 **Paul J. Lucas**  
 San Francisco Bay Area, California, USA  
-2 March 2026
+8 April 2026
