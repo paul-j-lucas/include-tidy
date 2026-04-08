@@ -206,6 +206,24 @@ static bool test_value_bool( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_value_bool_bad_false( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test-bool]  \n"
+    "b = fALSE    \n"
+  );
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_VALUE )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 5 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_value_int( void ) {
   TEST_FUNC_BEGIN();
 
@@ -248,6 +266,60 @@ static bool test_value_int( void ) {
       TEST( value->type == TOML_INT ) &&
       TEST( value->i == 42 );
   }
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_value_int_bad_base( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test-int] \n"
+    "i = 0a     \n"
+  );
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INT_INVALID )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 6 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_value_int_bad_binary( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test-int] \n"
+    "i = 0b2    \n"
+  );
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INT_INVALID )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 7 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_value_int_bad_underscore( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test-int] \n"
+    "i = 1_     \n"
+  );
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INT_INVALID )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 6 );
 
   toml_error_print( &test.toml );
   toml_test_cleanup( &test );
@@ -302,6 +374,10 @@ int main( int argc, char const *const argv[] ) {
   if ( test_failures == 0 ) {
     test_value_array();
     test_comments();
+    test_value_bool_bad_false();
+    test_value_int_bad_base();
+    test_value_int_bad_binary();
+    test_value_int_bad_underscore();
   }
 }
 
