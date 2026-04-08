@@ -153,30 +153,6 @@ char const* get_cwd( size_t *plen ) {
   return cwd_path_buf;
 }
 
-#ifndef NDEBUG
-bool is_affirmative( char const *s ) {
-  static char const *const AFFIRMATIVES[] = {
-    "1",
-    "t",
-    "true",
-    "y",
-    "yes",
-    NULL
-  };
-  return str_is_any( s, AFFIRMATIVES );
-}
-#endif /* NDEBUG */
-
-bool is_any( char const *s, char const *const matches[const static 2] ) {
-  if ( s != NULL ) {
-    for ( char const *const *match = matches; *match != NULL; ++match ) {
-      if ( strcasecmp( s, *match ) == 0 )
-        return true;
-    } // for
-  }
-  return false;
-}
-
 char const* path_ext( char const *path ) {
   assert( path != NULL );
   // Do base_name() first for a case like "a.b/c".
@@ -216,6 +192,20 @@ void perror_exit( int status ) {
   perror( prog_name );
   exit( status );
 }
+
+#ifndef NDEBUG
+bool str_is_affirmative( char const *s ) {
+  static char const *const AFFIRMATIVES[] = {
+    "1",
+    "t",
+    "true",
+    "y",
+    "yes",
+    NULL
+  };
+  return str_is_any( s, AFFIRMATIVES );
+}
+#endif /* NDEBUG */
 
 int str_ptr_cmp( char const **i_ps, char const **j_ps ) {
   return strcmp( *i_ps, *j_ps );

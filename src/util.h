@@ -731,18 +731,6 @@ _Noreturn void fatal_error( int status, char const *format, ... );
 NODISCARD
 char const* get_cwd( size_t *plen );
 
-#ifndef NDEBUG
-/**
- * Checks whether \a s is an affirmative value.  An affirmative value is one of
- * 1, t, true, y, or yes, case-insensitive.
- *
- * @param s The null-terminated string to check or null.
- * @return Returns `true` only if \a s is affirmative.
- */
-NODISCARD
-bool is_affirmative( char const *s );
-#endif /* NDEBUG */
-
 /**
  * Checks whether \a s is null, an empty string, or consists only of
  * whitespace.
@@ -793,6 +781,18 @@ inline char const* path_no_dot_slash( char const *path ) {
  * @param status The exit status code.
  */
 _Noreturn void perror_exit( int status );
+
+#ifndef NDEBUG
+/**
+ * Checks whether \a s is an affirmative value.  An affirmative value is one of
+ * 1, t, true, y, or yes, case-insensitive.
+ *
+ * @param s The null-terminated string to check or null.
+ * @return Returns `true` only if \a s is affirmative.
+ */
+NODISCARD
+bool str_is_affirmative( char const *s );
+#endif /* NDEBUG */
 
 /**
  * A variant of **strncpy**(3) that always null-terminates \a dst.
