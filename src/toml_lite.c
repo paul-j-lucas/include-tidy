@@ -676,6 +676,8 @@ static bool toml_space_skip( toml_file *toml ) {
  * @param toml The toml_file to use.
  * @param ps A pointer to receive the string.
  * @return Returns `true` only if a string was parsed successfully.
+ *
+ * @note Assumes the caller has already parsed the `"`.
  */
 NODISCARD
 static bool toml_string_parse( toml_file *toml, char **ps ) {
@@ -685,26 +687,54 @@ static bool toml_string_parse( toml_file *toml, char **ps ) {
   char    buf[ TOML_STRING_LEN_MAX + 1/*'\0'*/ ];
   size_t  buf_len = 0;
 
-  for ( int c; (c = toml_getc( toml )) != EOF; ) {
+  for (;;) {
+    int c = toml_getc( toml );
+    switch ( c ) {
+      case EOF:
+        goto eof;
+      case '\r':
+      case '\n':
+        toml->error = TOML_ERR_STR_INVALID;
+        toml->error_msg = "unterminated string";
+        return false;
+      case '"':
+        goto done;
+      case '\\':
+        c = toml_getc( toml );
+        switch ( c ) {
+          case EOF  : goto eof;
+          case '"'  : c = '"';  break;
+          case 'b'  : c = '\b'; break;
+          case 'e'  : c = 0x1B; break;
+          case 'f'  : c = '\f'; break;
+          case 'n'  : c = '\n'; break;
+          case 'r'  : c = '\r'; break;
+          case 't'  : c = '\t'; break;
+          case '\\' : c = '\\'; break;
+          default:
+            toml->error = TOML_ERR_STR_INVALID;
+            toml->error_msg = "invalid escape sequence";
+            return false;
+        } // switch
+        break;
+    } // switch
+
     if ( buf_len == sizeof buf - 1 ) {
       toml->error = TOML_ERR_STR_INVALID;
       toml->error_msg = "string too long";
       return false;
     }
-    if ( c == '"' )
-      break;
-    if ( c == '\\' ) {
-      if ( (c = toml_getc( toml )) == EOF ) {
-        /* error */;
-        return false;
-      }
-    }
     buf[ buf_len++ ] = STATIC_CAST( char, c );
   } // for
 
+done:
   buf[ buf_len ] = '\0';
   *ps = check_strdup( buf );
   return true;
+
+eof:
+  toml->error = TOML_ERR_UNEX_EOF;
+  return false;
 }
 
 /**
