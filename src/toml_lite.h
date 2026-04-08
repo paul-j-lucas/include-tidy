@@ -48,8 +48,9 @@
  * that the following are **_not_** supported:
  *
  *  + Floating-point numbers.
+ *  + Multi-line strings.
  *  + Dates or times.
- *  + UTF-8.
+ *  + Unicode.
  *  + Array of tables.
  *  + Inline tables.
  * @endparblock
