@@ -842,9 +842,12 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   if ( lang == NULL && ext != NULL )
     lang = get_ext_language( ext );
   char const *const clang_path = get_clang_path( *pargc, *pargv );
-
   if ( clang_path != NULL && lang != NULL )
     add_clang_include_paths( pargc, pargv, clang_path, lang );
+
+  // So #include "/path/to/current/directory/foo.h" will get relativized to
+  // "foo.h".
+  opt_include_paths_add( "." );
 
   int               opt;
   bool              opt_help = false;
