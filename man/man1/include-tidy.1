@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "April 6, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "April 8, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -403,18 +403,11 @@ via the command-line
 every time.
 .TP 5
 .BI add-c-includes " \f1=\fP " [ s " \f1[,\fP " s "\f1]*\fP ]"
-One or more include files,
-that are specified as a bracket-enclosed,
-comma-separated
-array of strings,
-are
+Like
+.BR std-c-includes ,
+but these are
 .I additionally
 to be considered ``standard'' C include files.
-These are used
-when the source file
-is either C or C++
-(since C++ programs
-can include C header files).
 .IP
 As the only special case to configuration file layering,
 the include files given for
@@ -449,6 +442,7 @@ that are specified as a bracket-enclosed,
 comma-separated
 array of strings,
 are to be considered ``standard'' C include files.
+Globbing is supported.
 These are used
 when the source file
 is either C or C++
@@ -456,16 +450,9 @@ is either C or C++
 can include C header files).
 .TP
 .BI std-cpp-includes " \f1=\fP " [ s " \f1[,\fP " s "\f1]*\fP ]"
-One or more include files,
-that are specified as a bracket-enclosed,
-comma-separated
-array of strings,
-are to be considered ``standard'' C++ include files.
-These are used
-only when the source file
-is C++
-(since C programs
-can not include C++ header files).
+Like
+.BR std-c-includes ,
+but only for C++ include files.
 .SS Header Tables
 This type of table specifies
 a relative path of an include file
