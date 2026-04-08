@@ -248,16 +248,6 @@
 #define EPUTS(S)                  fputs( (S), stderr )
 
 /**
- * Calls **ferror**(3) and exits if there was an error on \a STREAM.
- *
- * @param STREAM The `FILE` stream to check for an error.
- *
- * @sa #PERROR_EXIT_IF()
- */
-#define FERROR(STREAM) \
-  PERROR_EXIT_IF( ferror( STREAM ) != 0, EX_IOERR )
-
-/**
  * Convenience macro for iterating over the elements of a static array.
  *
  * @param TYPE The type of element.
@@ -636,19 +626,6 @@
  * used unique name.
  */
 #define UNIQUE_NAME(PREFIX)       NAME2(NAME2(PREFIX,_),__LINE__)
-
-////////// types //////////////////////////////////////////////////////////////
-
-/**
- * The signature for a function passed to **bsearch**(3).
- *
- * @param i_data A pointer to data.
- * @param j_data A pointer to data.
- * @return Returns an integer less than, equal to, or greater than 0, according
- * to whether the data pointed to by \a i_data is less than, equal to, or
- * greater than the data pointed to by \a j_data.
- */
-typedef int (*bsearch_cmp_fn_t)( void const *i_data, void const *j_data );
 
 ////////// extern variables ///////////////////////////////////////////////////
 
