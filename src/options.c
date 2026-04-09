@@ -51,7 +51,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define OPT_VERBOSE_ALL           "aiPsS"
+#define OPT_VERBOSE_ALL           "afiPsS"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -255,6 +255,9 @@ bool opt_verbose_parse( char const *verbose_format ) {
     switch ( *s ) {
       case 'a':
         verbose |= TIDY_VERBOSE_ARGS;
+        break;
+      case 'f':
+        verbose |= TIDY_VERBOSE_SOURCE_FILE;
         break;
       case 'i':
         verbose |= TIDY_VERBOSE_INCLUDES;

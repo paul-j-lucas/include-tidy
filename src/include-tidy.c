@@ -70,6 +70,8 @@ int main( int argc, char const *argv[] ) {
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_PROXIES) != 0 )
     include_proxies_dump();
   symbols_init( tu );
+  if ( (opt_verbose & TIDY_VERBOSE_SOURCE_FILE) != 0 )
+    verbose_printf( "%s\n", arg_source_path );
   includes_print();
   if ( tidy_includes_missing > 0 || tidy_includes_unnecessary > 0 )
     return TIDY_EX_VIOLATIONS;
