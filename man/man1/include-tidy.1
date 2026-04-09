@@ -100,20 +100,37 @@ to delete the line number.
 .SS Use with Make
 While
 .B include-tidy
-can be used on a per-file basis,
+can be run on a per-file basis,
 it can alternatively be used with
 .BR make (1)
-in place of either your C compiler:
+in place of either your C
+or C++
+compiler.
+In your
+.BR Makefile ,
+have:
 .cS
-make -k CC="include-tidy" CFLAGS="-Xtidy --error=never"
+TIDY_FLAGS = -Xtidy --verbose=f -Xtidy --error=never
+
+tidy:
+        @touch *.c
+        @$(MAKE) -s CC="include-tidy" CFLAGS="$(TIDY_FLAGS)"
 .cE
-or your C++ compiler:
-.cS
-make -k CXX="include-tidy" CXXFLAGS="-Xtidy --error=never"
-.cE
-to run it
-on all your source files
+then simply
+.B make tidy
+to tidy all your source files
 at once.
+(For C++,
+substitute
+\f(CW.cpp\fP for \f(CW.c\fP,
+.B CXX
+for
+.BR CC ,
+and
+.B CXXFLAGS
+for
+.BR CFLAGS .)
+.PP
 The advantage of doing this
 is that
 .B include-tidy
@@ -130,20 +147,37 @@ and
 options
 that affect compilation.
 .PP
-(The
-.B \-k
-or
-.B \-\-keep-going
-option is necessary for
-.BR make (1)
-since the
-.B \-\-error
-option causes
+The
+.B \-\-verbose=f
+says to print each source file's name
+and the
+.B \-\-error=never
+says always to exit with a zero status
+even for violations so
+.B make
+doesn't think anything went wrong.
+The
+.B @
+suppresses echoing of the commands,
+the
+.B touch
+is needed so
+.B make
+will run
 .B include-tidy
-always to exit with a non-zero exit status.
+on all \f(CW.c\fP files,
+and the
+.B \-s
+or
+.B \-\-silent
+suppresses
+.BR make 's
+output.
 (See the
 .B \-\-error
-option below.)
+and
+.B \-\-verbose
+options below.)
 .SS Proxies
 Headers often include other headers because:
 .nr step 1 1
@@ -702,15 +736,14 @@ is read.
 .SH EXIT STATUS
 .PD 0
 .IP 0
-No violations.
+No violations or the
+.B \-\-error=never
+option was given.
 .IP 1
 One or more violations.
 .IP 2
-No violations,
-but either the
-.B \-\-error
-or
-.B \-e
+No violations, but the
+.B \-\-error=always
 option was given.
 .IP 64
 Command-line usage error.
