@@ -30,6 +30,8 @@ AM_LDFLAGS =		$(LIBCLANG_LDFLAGS) -Wl,-rpath,$(LIBCLANG_LIBDIR)
 LDADD =			$(LIBCLANG_LIBS) $(top_builddir)/lib/libgnu.a
 TESTS =         	$(check_PROGRAMS)
 
+INCLUDE_TIDY_FLAGS =	-Xtidy --verbose=f -Xtidy --error=never
+
 include_tidy_SOURCES =	clang_util.c clang_util.h \
 			cli_options.c cli_options.h \
 			config_file.c config_file.h \
@@ -60,8 +62,6 @@ toml_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 
 util_test_SOURCES =	$(BASE_TEST_SOURCES) \
 			util_test.c
-
-INCLUDE_TIDY_FLAGS =	-Xtidy --verbose=f -Xtidy --error=never
 
 tidy:
 	@touch *.c
