@@ -1,5 +1,26 @@
+2026-04-09  Paul J. Lucas <paul@lucasmail.org>
+
+   * man/man1/include-tidy.1: Added mention of default for --error.
+   * man/man1/include-tidy.1: Updated use with make section and exit status.
+   * src/Makefile.am: Added tidy target.
+   * man/man1/include-tidy.1, cli_options.c, include-tidy.c, options.c,
+     options.h: --error now takes violations, always, never.
+   * man/man1/include-tidy.1, include-tidy.c, options.c, options.h: Added
+     --verbose=f.
+
 2026-04-08  Paul J. Lucas <paul@lucasmail.org>
 
+   * include-tidy.toml: Removed util.h.
+   * toml_test.c: Fixed includes.
+   * toml_test.c, util_test.c: Added pragmas to silence warnings.
+   * cli_options.c: Put opt_include_paths_add( "." ) back.
+   * include-tidy.toml: include-tidy's own include-tidy.toml file.
+   * includes.c, unit_test.c: #include fixes.
+   * man/man1/include-tidy.1, cli_options.c, cli_options-error.out,
+     cli_options.out: Can now specify "none" for --clang.
+   * man/man1/include-tidy.1: More man page.
+   * man/man1/include-tidy.1: Less wordy; added mention of globbing.
+   * etc/include-tidy.toml: Added openssl/* and X11/*.
    * toml_lite.c: Finished toml_string_parse().
    * toml_lite.c, toml_test.c: Fixed location for key with trailing dot.
    * toml_test.c: Test for leading . on key.
