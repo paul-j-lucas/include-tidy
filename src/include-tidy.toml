@@ -26,9 +26,4 @@ proxy = [
     "config.h",
 ]
 
-[util.h]
-proxy = [
-    "errno.h"
-]
-
 # vim:se et sw=4 ts=4:
