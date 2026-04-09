@@ -366,6 +366,23 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   CXFile            including_file;
   bool const        is_direct = clang_Location_isFromMainFile( include_loc );
 
+  clang_getSpellingLocation(
+    include_loc, &including_file, &include_line, /*column=*/NULL,
+    /*offset=*/NULL
+  );
+
+  if ( included_file == NULL ) {
+    CXString const    included_name_cxs = clang_getCursorSpelling( cursor );
+    char const *const included_name = clang_getCString( included_name_cxs );
+    CXString const    including_name_cxs = clang_getFileName( including_file );
+    char const *const including_name = clang_getCString( including_name_cxs );
+
+    fatal_error( EX_DATAERR,
+      "\"%s\":%u: \"%s\": file not found\n",
+      path_no_dot_slash( including_name ), include_line, included_name
+    );
+  }
+
   tidy_include new_include = {
     .file_id = tidy_getFileUniqueID( included_file )
   };
@@ -374,11 +391,6 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
 
   if ( !rv_rbi.inserted && !is_direct )
     goto skip;
-
-  clang_getSpellingLocation(
-    include_loc, &including_file, &include_line, /*column=*/NULL,
-    /*offset=*/NULL
-  );
 
   tidy_include *const include = RB_DINT( rv_rbi.node );
 
