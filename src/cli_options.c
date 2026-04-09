@@ -101,7 +101,7 @@ static struct option const OPTIONS[] = {
   { "clang",            required_argument,  NULL, COPT(CLANG)             },
   { "comment-style",    required_argument,  NULL, COPT(COMMENT_STYLE)     },
   { "config",           required_argument,  NULL, COPT(CONFIG)            },
-  { "error",            no_argument,        NULL, COPT(ERROR)             },
+  { "error",            required_argument,  NULL, COPT(ERROR)             },
   { "help",             no_argument,        NULL, COPT(HELP)              },
   { "line-length",      required_argument,  NULL, COPT(LINE_LENGTH)       },
   { "no-config-layers", no_argument,        NULL, COPT(NO_CONFIG_LAYERS)  },
@@ -124,7 +124,7 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(CLANG) ] = "Path of clang to use or \"none\"; default=\"" OPT_CLANG_DEFAULT "\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
   [ COPT(CONFIG) ] = "Configuration file path",
-  [ COPT(ERROR) ] = "Exit with non-zero status when no violations",
+  [ COPT(ERROR) ] = "When to exit with a non-zero status",
   [ COPT(HELP) ] = "Print this help and exit",
   [ COPT(LINE_LENGTH) ] = "Line length; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
   [ COPT(NO_CONFIG_LAYERS) ] = "Don't do configuration file layering",
@@ -898,7 +898,15 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         opt_config_path = optarg;
         break;
       case COPT(ERROR):
-        opt_error = true;
+        if ( *SKIP_WS( optarg ) == '\0' )
+          goto missing_arg;
+        if ( !opt_error_parse( optarg ) ) {
+          fatal_error( EX_USAGE,
+            "\"%s\": invalid value for %s;"
+            " must be one of \"violations\", \"always\", or \"never\"\n",
+            optarg, get_opt_format( opt )
+          );
+        }
         break;
       case COPT(HELP):
         opt_help = true;

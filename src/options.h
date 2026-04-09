@@ -42,6 +42,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
+ * When to exit with a non-zero status code.
+ */
+enum tidy_error {
+  TIDY_ERROR_VIOLATIONS,                ///< Non-zero only if violations.
+  TIDY_ERROR_ALWAYS,                    ///< Always exit with non-zero.
+  TIDY_ERROR_NEVER                      ///< Always exit with zero.
+};
+typedef enum tidy_error tidy_error;
+
+/**
  * Verbose mode.
  */
 enum tidy_verbose {
@@ -61,7 +71,7 @@ extern bool         opt_all_includes;     ///< Print all includes?
 extern char const  *opt_comment_style[2]; ///< Comment delimiters to use.
 extern bool         opt_config_layers;    ///< Do configuration file layering?
 extern char const  *opt_config_path;      ///< Configuration file path.
-extern bool         opt_error;            ///< Exit with non-zero on success?
+extern tidy_error   opt_error;            ///< When to exit with non-zero.
 extern unsigned     opt_line_length;      ///< Line length.
 extern tidy_verbose opt_verbose;          ///< Print verbose output?
 
@@ -93,6 +103,15 @@ bool opt_align_column_parse( char const *s );
  */
 NODISCARD
 bool opt_comment_style_parse( char const *s );
+
+/**
+ * Parses when to exit with a non-zero exit status.
+ *
+ * @param s The error to parse.
+ * @return Returns `true` only if \a s parsed successfully.
+ */
+NODISCARD
+bool opt_error_parse( char const *s );
 
 /**
  * Adds \a include_path to the global list of include (`-I`) paths.

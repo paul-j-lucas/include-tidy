@@ -40,7 +40,7 @@
  */
 enum {
   TIDY_EX_VIOLATIONS  = 1,              ///< One or more violations.
-  TIDY_EX_ERROR       = 2               ///< `--error` or `-e` was given.
+  TIDY_EX_ERROR       = 2               ///< No violations, but error anyway.
 };
 
 /// @cond DOXYGEN_IGNORE
@@ -73,9 +73,12 @@ int main( int argc, char const *argv[] ) {
   if ( (opt_verbose & TIDY_VERBOSE_SOURCE_FILE) != 0 )
     verbose_printf( "%s\n", arg_source_path );
   includes_print();
+
+  if ( opt_error == TIDY_ERROR_NEVER )
+    return EX_OK;
   if ( tidy_includes_missing > 0 || tidy_includes_unnecessary > 0 )
     return TIDY_EX_VIOLATIONS;
-  return opt_error ? TIDY_EX_ERROR : EX_OK;
+  return opt_error == TIDY_ERROR_ALWAYS ? TIDY_EX_ERROR : EX_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

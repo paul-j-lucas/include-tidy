@@ -105,11 +105,11 @@ it can alternatively be used with
 .BR make (1)
 in place of either your C compiler:
 .cS
-make -k CC="include-tidy" CFLAGS="-Xtidy --error"
+make -k CC="include-tidy" CFLAGS="-Xtidy --error=never"
 .cE
 or your C++ compiler:
 .cS
-make -k CXX="include-tidy" CXXFLAGS="-Xtidy --error"
+make -k CXX="include-tidy" CXXFLAGS="-Xtidy --error=never"
 .cE
 to run it
 on all your source files
@@ -298,9 +298,25 @@ are always printed.
 .BR \-\-config \f1=\fPf "\f1 | \fP" "" \-c " f"
 Specifies the path of the configuration file to use first.
 .TP
-.BR \-\-error " | " \-e
-Exits with a non-zero status
-even when there are no violations.
+.BR \-\-error \f1=\fPs "\f1 | \fP" "" \-e " s"
+When to exit with a non-zero status.
+Valid values for
+.I s
+are:
+.RS 8
+.TP 12
+.PD 0
+.B always
+Always exit with non-zero.
+.TP
+.B never
+Always exit with zero.
+.TP
+.B violations
+Only when violations.
+.RE
+.PD
+.IP
 This is needed to tell
 .BR make (1)
 that the corresponding \f(CW.o\fP file

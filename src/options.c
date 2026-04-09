@@ -61,7 +61,7 @@ bool          opt_all_includes;
 char const   *opt_comment_style[2] = { "// ", "" };
 bool          opt_config_layers = true;
 char const   *opt_config_path;
-bool          opt_error;
+tidy_error    opt_error;
 unsigned      opt_line_length = OPT_LINE_LENGTH_DEFAULT;
 tidy_verbose  opt_verbose;
 
@@ -169,6 +169,21 @@ bool opt_comment_style_parse( char const *s ) {
   else {
     return false;
   }
+
+  return true;
+}
+
+bool opt_error_parse( char const *s ) {
+  assert( s != NULL );
+
+  if ( strcmp( s, "always" ) == 0 )
+    opt_error = TIDY_ERROR_ALWAYS;
+  else if ( strcmp( s, "never" ) == 0 )
+    opt_error = TIDY_ERROR_NEVER;
+  else if ( strcmp( s, "violations" ) == 0 )
+    opt_error = TIDY_ERROR_VIOLATIONS;
+  else
+    return false;
 
   return true;
 }
