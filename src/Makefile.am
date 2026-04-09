@@ -61,4 +61,10 @@ toml_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 util_test_SOURCES =	$(BASE_TEST_SOURCES) \
 			util_test.c
 
+INCLUDE_TIDY_FLAGS =	-Xtidy --verbose=f -Xtidy --error=never
+
+tidy:
+	@touch *.c
+	@$(MAKE) -s CC="include-tidy" CFLAGS="$(INCLUDE_TIDY_FLAGS)"
+
 # vim:set noet sw=8 ts=8:
