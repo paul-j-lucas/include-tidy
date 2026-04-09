@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#pragma GCC diagnostic ignored "-Wunused-value"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 struct toml_test {

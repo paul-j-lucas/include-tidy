@@ -28,6 +28,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+#pragma GCC diagnostic ignored "-Wunused-value"
+
 ////////// test functions /////////////////////////////////////////////////////
 
 static bool test_path_ext( void ) {
