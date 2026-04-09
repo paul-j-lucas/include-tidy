@@ -27,6 +27,7 @@ EXTRA_DIST =		bootstrap \
 			m4/gnulib-cache.m4 \
 			m4/update_m4.sh \
 			makedoc.sh \
+			src/include-tidy.toml \
 			README.md
 
 DOCS_DIR =		docs
