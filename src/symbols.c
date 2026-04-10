@@ -71,7 +71,7 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Gets the "canonical" cursor for \a cursor, if any.
+ * Gets the "underlying" cursor for \a cursor, if any.
  *
  * @remarks
  * @parblock
@@ -81,21 +81,21 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
  *      // ...
  *      foo_t x;                        // cursor is at foo_t here
  *
- * where \a cursor is at a use of `foo_t`, we want to get the "canonical"
+ * where \a cursor is at a use of `foo_t`, we want to get the "underlying"
  * cursor, in this case for `foo`.
  * @endparblock
  *
- * @param cursor The original cursor to get the canonical cursor for.
- * @return Returns the canonical cursor for \a cursor or the null cursor if
+ * @param cursor The original cursor to get the underlying cursor for.
+ * @return Returns the underlying cursor for \a cursor or the null cursor if
  * none.
  */
 NODISCARD
-static CXCursor get_canonical_cursor( CXCursor cursor ) {
-  CXCursor canonical_cursor = clang_getNullCursor();
+static CXCursor get_underlying_cursor( CXCursor cursor ) {
+  CXCursor underlying_cursor = clang_getNullCursor();
 
   if ( clang_getCursorKind( cursor ) == CXCursor_TypeRef ) {
     CXType type = clang_getCanonicalType( clang_getCursorType( cursor ) );
-    bool is_indirect = true;
+    bool is_via_ptr_ref = true;
     do {
       switch ( type.kind ) {
         case CXType_Pointer:
@@ -104,14 +104,14 @@ static CXCursor get_canonical_cursor( CXCursor cursor ) {
           type = clang_getPointeeType( type );
           break;
         default:
-          is_indirect = false;
+          is_via_ptr_ref = false;
       } // switch
-    } while ( is_indirect );
+    } while ( is_via_ptr_ref );
 
-    canonical_cursor = clang_getTypeDeclaration( type );
+    underlying_cursor = clang_getTypeDeclaration( type );
   }
 
-  return canonical_cursor;
+  return underlying_cursor;
 }
 
 /**
@@ -253,7 +253,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
         break;
 
       maybe_add_symbol( first_cursor, vcvd );
-      CXCursor const canonical_cursor = get_canonical_cursor( cursor );
+      CXCursor const canonical_cursor = get_underlying_cursor( cursor );
       if ( !clang_Cursor_isNull( canonical_cursor ) )
         maybe_add_symbol( canonical_cursor, vcvd );
       break;
