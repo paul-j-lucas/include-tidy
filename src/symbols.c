@@ -70,6 +70,50 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
+ * Gets the "canonical" cursor for \a cursor, if any.
+ *
+ * @remarks
+ * @parblock
+ * For a case like:
+ *
+ *      typedef struct foo foo_t;
+ *      // ...
+ *      foo_t x;                        // cursor is at foo_t here
+ *
+ * where \a cursor is at a use of `foo_t`, we want to get the "canonical"
+ * cursor, in this case for `foo`.
+ * @endparblock
+ *
+ * @param cursor The original cursor to get the canonical cursor for.
+ * @return Returns the canonical cursor for \a cursor or the null cursor if
+ * none.
+ */
+NODISCARD
+static CXCursor get_canonical_cursor( CXCursor cursor ) {
+  CXCursor canonical_cursor = clang_getNullCursor();
+
+  if ( clang_getCursorKind( cursor ) == CXCursor_TypeRef ) {
+    CXType type = clang_getCanonicalType( clang_getCursorType( cursor ) );
+    bool is_indirect = true;
+    do {
+      switch ( type.kind ) {
+        case CXType_Pointer:
+        case CXType_LValueReference:
+        case CXType_RValueReference:
+          type = clang_getPointeeType( type );
+          break;
+        default:
+          is_indirect = false;
+      } // switch
+    } while ( is_indirect );
+
+    canonical_cursor = clang_getTypeDeclaration( type );
+  }
+
+  return canonical_cursor;
+}
+
+/**
  * Helper function for visitChildren_visitor that gets whether the symbol at \a
  * cursor is referenced from \a file.
  *
@@ -85,6 +129,67 @@ static bool is_symbol_in_file( CXCursor cursor, CXFile file ) {
   clang_getSpellingLocation( sym_loc, &sym_file,
                              /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL );
   return sym_file != NULL && clang_File_isEqual( sym_file, file );
+}
+
+/**
+ * Helper function for visitChildren_visitor that maybe adds a symbol to the
+ * global set.
+ *
+ * @param sym_cursor The cursor at the symbol.
+ * @param vcvd The visitChildren_visitor_data to use.
+ */
+static void maybe_add_symbol( CXCursor sym_cursor,
+                              visitChildren_visitor_data *vcvd ) {
+  assert( vcvd != NULL );
+
+  CXSourceLocation const  sym_loc = clang_getCursorLocation( sym_cursor );
+  CXFile                  sym_decl_file;
+
+  clang_getSpellingLocation(
+    sym_loc, &sym_decl_file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
+  );
+  if ( sym_decl_file == NULL )
+    return;
+
+  // If the symbol was first declared in the file being tidied, we don't care.
+  if ( clang_File_isEqual( sym_decl_file, vcvd->source_file ) )
+    return;
+
+  tidy_symbol new_symbol = {
+    .name_cxs = clang_getCursorSpelling( sym_cursor )
+  };
+  rb_insert_rv_t const rv_rbi =
+    rb_tree_insert( &symbol_set, &new_symbol, sizeof new_symbol );
+  if ( !rv_rbi.inserted )
+    goto clean_up;
+
+  tidy_symbol *const symbol      = RB_DINT( rv_rbi.node );
+  char const  *const symbol_name = clang_getCString( symbol->name_cxs );
+
+  CXFile include_file = config_get_symbol_include( symbol_name );
+  if ( include_file == NULL )
+    include_file = sym_decl_file;
+  bool const added_symbol = include_add_symbol( include_file, symbol );
+
+  if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
+    if ( !vcvd->verbose_printed ) {
+      verbose_printf( "symbols:\n" );
+      vcvd->verbose_printed = true;
+    }
+    CXString const abs_path_cxs = tidy_File_getRealPathName( include_file );
+    char const *const abs_path = clang_getCString( abs_path_cxs );
+    verbose_printf(
+      "  %s -> %s (%sadded)\n",
+      symbol_name, abs_path, added_symbol ? "" : "NOT "
+    );
+    clang_disposeString( abs_path_cxs );
+  }
+
+  if ( added_symbol )
+    return;
+
+clean_up:
+  tidy_symbol_cleanup( &new_symbol );
 }
 
 /**
@@ -128,6 +233,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     case CXCursor_DeclRefExpr:
     case CXCursor_FunctionDecl:
     case CXCursor_MacroExpansion:
+    case CXCursor_MemberRefExpr:
     case CXCursor_NamespaceRef:
     case CXCursor_TemplateRef:
     case CXCursor_TypeRef:
@@ -145,53 +251,15 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     goto skip;
 
   // Gets the cursor for the _first_ declaration of the symbol.
-  CXCursor const    first_cursor = clang_getCanonicalCursor( decl_cursor );
-  CXSourceLocation  first_loc = clang_getCursorLocation( first_cursor );
-  CXFile            first_file;
-
-  clang_getSpellingLocation(
-    first_loc, &first_file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
-  );
-  if ( first_file == NULL )
+  CXCursor const first_cursor = clang_getCanonicalCursor( decl_cursor );
+  if ( clang_isInvalid( first_cursor.kind ) )
     goto skip;
 
-  // If the symbol was first declared in the file being tidied, we don't care.
-  if ( clang_File_isEqual( first_file, vcvd->source_file ) )
-    goto skip;
+  maybe_add_symbol( first_cursor, vcvd );
 
-  tidy_symbol new_symbol = {
-    .name_cxs = clang_getCursorSpelling( first_cursor )
-  };
-  rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &symbol_set, &new_symbol, sizeof new_symbol );
-  if ( rv_rbi.inserted ) {
-    tidy_symbol *const symbol      = RB_DINT( rv_rbi.node );
-    char const  *const symbol_name = clang_getCString( symbol->name_cxs );
-
-    CXFile include_file = config_get_symbol_include( symbol_name );
-    if ( include_file == NULL )
-      include_file = first_file;
-    bool const added_symbol = include_add_symbol( include_file, symbol );
-
-    if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
-      if ( !vcvd->verbose_printed ) {
-        verbose_printf( "symbols:\n" );
-        vcvd->verbose_printed = true;
-      }
-      CXString const abs_path_cxs = tidy_File_getRealPathName( include_file );
-      char const *const abs_path = clang_getCString( abs_path_cxs );
-      verbose_printf(
-        "  %s -> %s (%sadded)\n",
-        symbol_name, abs_path, added_symbol ? "" : "NOT "
-      );
-      clang_disposeString( abs_path_cxs );
-    }
-
-    if ( added_symbol )
-      goto skip;
-  }
-
-  tidy_symbol_cleanup( &new_symbol );
+  CXCursor const canonical_cursor = get_canonical_cursor( cursor );
+  if ( !clang_Cursor_isNull( canonical_cursor ) )
+    maybe_add_symbol( canonical_cursor, vcvd );
 
 skip:
   return CXChildVisit_Recurse;
