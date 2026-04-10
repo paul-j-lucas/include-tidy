@@ -28,6 +28,7 @@
 
 // local
 #include "pjl_config.h"                 /* must go first */
+#include "util.h"
 
 /**
  * @defgroup printing-errors-warnings-group Printing Errors & Warnings
@@ -55,7 +56,8 @@
  */
 #define print_error(SOURCE_PATH, SOURCE_LINE, SOURCE_COL, FORMAT, ...)  \
   fl_print_error( __FILE__, __LINE__,                                   \
-    (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), FORMAT, __VA_ARGS__     \
+    (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), FORMAT                  \
+    VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__                              \
   )
 
 /**
@@ -76,7 +78,8 @@
  */
 #define print_warning(SOURCE_PATH, SOURCE_LINE, SOURCE_COL, FORMAT, ...)  \
   fl_print_warning( __FILE__, __LINE__,                                   \
-    (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), FORMAT, __VA_ARGS__       \
+    (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), FORMAT                    \
+    VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__                                \
   )
 
 ////////// extern functions ///////////////////////////////////////////////////

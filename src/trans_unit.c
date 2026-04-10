@@ -28,6 +28,7 @@
 #include "trans_unit.h"
 #include "include-tidy.h"
 #include "options.h"
+#include "print.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -134,10 +135,14 @@ static void trans_unit_failure( CXTranslationUnit tu ) {
     // libclang isn't specific enough about a failure, so see if the reason is
     // because the source file doesn't exist or isn't readable.
     FILE *const file = fopen( arg_source_path, "r" );
-    if ( file == NULL )
-      fatal_error( EX_NOINPUT, "\"%s\": %s\n", arg_source_path, STRERROR() );
-    fclose( file );
-    fatal_error( EX_DATAERR, "error: failed to parse the translation unit\n" );
+    if ( file == NULL ) {
+      print_error( arg_source_path, 0, 0, "%s\n", STRERROR() );
+    }
+    else {
+      fclose( file );
+      print_error( arg_source_path, 0, 0, "failed to parse\n" );
+    }
+    exit( EX_DATAERR );
   }
 
   print_diagnostics( tu );

@@ -74,20 +74,21 @@ static void fl_print_impl( char const *tidy_file, int tidy_line,
 
   if ( source_path != NULL ) {
     color_start( stderr, sgr_locus );
-    EPUTS( source_path );
+    EPRINTF( "\"%s\"", source_path );
     color_end( stderr, sgr_locus );
-    EPUTC( ':' );
-  }
 
-  if ( source_line > 0 ) {
-    color_start( stderr, sgr_locus );
-    EPRINTF( "%u", source_line );
-    color_end( stderr, sgr_locus );
-    if ( source_col > 0 ) {
-      EPUTC( ',' );
+    if ( source_line > 0 ) {
+      EPUTC( ':' );
       color_start( stderr, sgr_locus );
-      EPRINTF( "%u", source_col );
+      EPRINTF( "%u", source_line );
       color_end( stderr, sgr_locus );
+
+      if ( source_col > 0 ) {
+        EPUTC( ',' );
+        color_start( stderr, sgr_locus );
+        EPRINTF( "%u", source_col );
+        color_end( stderr, sgr_locus );
+      }
     }
   }
 

@@ -31,6 +31,7 @@
 #include "include-tidy.h"
 #include "includes.h"
 #include "options.h"
+#include "print.h"
 #include "red_black.h"
 #include "toml_lite.h"
 #include "trans_unit.h"
@@ -326,10 +327,11 @@ static bool bool_value_parse( char const *config_path, char const *key_name,
   assert( value != NULL );
 
   if ( value->type != TOML_BOOL ) {
-    fatal_error( EX_CONFIG,
-      "%s:%u:%u: invalid value for \"%s\"; expected boolean\n",
-      config_path, value->loc.line, value->loc.col, key_name
+    print_error(
+      config_path, value->loc.line, value->loc.col,
+      "invalid value for \"%s\"; expected boolean\n", key_name
     );
+    exit( EX_CONFIG );
   }
 
   return value->b;
@@ -355,10 +357,12 @@ static void comment_style_parse( char const *config_path,
     return;
 
   if ( !opt_comment_style_parse( string_value ) ) {
-    fatal_error( EX_CONFIG,
-      "%s:%u:%u: invalid value for \"comment-style\"; must be one of \"//\", \"/*\", or \"none\"\n",
-      config_path, value->loc.line, value->loc.col
+    print_error(
+      config_path, value->loc.line, value->loc.col,
+      "invalid value for \"comment-style\";"
+      " must be one of \"//\", \"/*\", or \"none\"\n"
     );
+    exit( EX_CONFIG );
   }
   opt_mark_set( COPT(COMMENT_STYLE) );
 }
@@ -508,14 +512,10 @@ static FILE* config_open( char const *path, config_opts opts ) {
         FALLTHROUGH;
       default:
         if ( (opts & CONFIG_OPT_ERROR_IS_FATAL) != 0 ) {
-          fatal_error( EX_NOINPUT,
-            "configuration file \"%s\": %s\n", path, STRERROR()
-          );
+          print_error( path, 0, 0, "%s\n", STRERROR() );
+          exit( EX_NOINPUT );
         }
-        EPRINTF(
-          "%s: warning: configuration file \"%s\": %s\n",
-          prog_name, path, STRERROR()
-        );
+        print_warning( path, 0, 0, "%s\n", STRERROR() );
         break;
     } // switch
   }
@@ -540,16 +540,18 @@ static void config_parse( char const *config_path, FILE *config_file ) {
 
   while ( toml_table_next( &toml, &table ) ) {
     if ( table.name == NULL ) {
-      fatal_error( EX_CONFIG,
-        "%s:%u:%u: required table name missing\n",
-        config_path, toml.loc.line, toml.loc.col
+      print_error(
+        config_path, toml.loc.line, toml.loc.col,
+        "required table name missing\n"
       );
+      exit( EX_CONFIG );
     }
     if ( toml_table_empty( &table ) ) {
-      fatal_error( EX_CONFIG,
-        "%s:%u:%u: \"%s\": empty table\n",
-        config_path, table.loc.line, table.loc.col, table.name
+      print_error(
+        config_path, table.loc.line, table.loc.col,
+        "\"%s\": empty table\n", table.name
       );
+      exit( EX_CONFIG );
     }
 
     bool const is_include_tidy_table =
@@ -561,18 +563,20 @@ static void config_parse( char const *config_path, FILE *config_file ) {
     for ( toml_key_value *kv; (kv = toml_iterator_next( &iter )) != NULL; ) {
       config_key const *const key = config_key_parse( kv->key );
       if ( key == NULL ) {
-        fatal_error( EX_CONFIG,
-          "%s:%u:%u: \"%s\": unknown key\n",
-          config_path, kv->key_loc.line, kv->key_loc.col, table.name
+        print_error(
+          config_path, kv->key_loc.line, kv->key_loc.col,
+          "\"%s\": unknown key\n", table.name
         );
+        exit( EX_CONFIG );
       }
 
       if ( key->table_kind != is_include_tidy_table ) {
-        fatal_error( EX_CONFIG,
-          "%s:%u:%u: \"%s\": key %s in \"include-tidy\" table\n",
-          config_path, kv->key_loc.line, kv->key_loc.col, key->name,
-          key->table_kind ? "only allowed" : "not allowed"
+        print_error(
+          config_path, kv->key_loc.line, kv->key_loc.col,
+          "\"%s\": key %s in \"include-tidy\" table\n",
+          key->name, key->table_kind ? "only allowed" : "not allowed"
         );
+        exit( EX_CONFIG );
       }
 
       (*key->parse_fn)( config_path, &table, &kv->value );
@@ -582,10 +586,11 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   toml_table_cleanup( &table );
 
   if ( toml.error ) {
-    fatal_error( EX_CONFIG,
-      "%s:%u:%u: %s\n",
-      config_path, toml.loc.line, toml.loc.col, toml_error_msg( &toml )
+    print_error(
+      config_path, toml.loc.line, toml.loc.col,
+      "%s\n", toml_error_msg( &toml )
     );
+    exit( EX_CONFIG );
   }
 
   toml_cleanup( &toml );
@@ -664,11 +669,11 @@ static void includes_parse( char const *config_path, toml_table const *table,
       for ( unsigned i = 0; i < value->a.size; ++i ) {
         toml_value const *const a_value = &value->a.values[i];
         if ( a_value->type != TOML_STRING ) {
-          fatal_error( EX_CONFIG,
-            "%s:%u:%u: "
+          print_error(
+            config_path, a_value->loc.line, a_value->loc.col,
             "invalid value for \"includes\"; expected string\n",
-            config_path, a_value->loc.line, a_value->loc.col
           );
+          exit( EX_CONFIG );
         }
         to_include_file = include_get_File( a_value->s );
         if ( to_include_file != NULL )
@@ -676,11 +681,11 @@ static void includes_parse( char const *config_path, toml_table const *table,
       } // for
       break;
     default:
-      fatal_error( EX_CONFIG,
-        "%s:%u:%u: "
-        "invalid value for \"includes\"; expected string or array\n",
-        config_path, value->loc.line, value->loc.col
+      print_error(
+        config_path, value->loc.line, value->loc.col,
+        "invalid value for \"includes\"; expected string or array\n"
       );
+      exit( EX_CONFIG );
   } // switch
 }
 
@@ -701,18 +706,20 @@ static long int_value_parse( char const *config_path, char const *key_name,
   assert( value != NULL );
 
   if ( value->type != TOML_INT ) {
-    fatal_error( EX_CONFIG,
-      "%s:%u:%u: invalid value for \"%s\"; expected integer\n",
-      config_path, value->loc.line, value->loc.col, key_name
+    print_error(
+      config_path, value->loc.line, value->loc.col,
+      "invalid value for \"%s\"; expected integer\n", key_name
     );
+    exit( EX_CONFIG );
   }
 
   if ( value->i < value_min || value->i > value_max ) {
-    fatal_error( EX_USAGE,
-      "%s:%u:%u: \"%ld\": invalid value for \"%s\"; must be %ld-%ld\n",
-      config_path, value->loc.line, value->loc.col, value->i, key_name,
-      value_min, value_max
+    print_error(
+      config_path, value->loc.line, value->loc.col,
+      "\"%ld\": invalid value for \"%s\"; must be %ld-%ld\n",
+      value->i, key_name, value_min, value_max
     );
+    exit( EX_CONFIG );
   }
 
   return value->i;
@@ -845,11 +852,11 @@ static void proxy_parse( char const *config_path, toml_table const *table,
       for ( unsigned i = 0; i < value->a.size; ++i ) {
         toml_value const *const a_value = &value->a.values[i];
         if ( a_value->type != TOML_STRING ) {
-          fatal_error( EX_CONFIG,
-            "%s:%u:%u: "
-            "invalid value for \"proxy\" key array; expected string\n",
-            config_path, a_value->loc.line, a_value->loc.col
+          print_error(
+            config_path, a_value->loc.line, a_value->loc.col,
+            "invalid value for \"proxy\" key array; expected string\n"
           );
+          exit( EX_CONFIG );
         }
         from_include_file = include_get_File( a_value->s );
         if ( from_include_file != NULL )
@@ -857,11 +864,11 @@ static void proxy_parse( char const *config_path, toml_table const *table,
       } // for
       break;
     default:
-      fatal_error( EX_CONFIG,
-        "%s:%u:%u: "
-        "invalid value for \"proxy\" key; expected string or array\n",
-        config_path, value->loc.line, value->loc.col
+      print_error(
+        config_path, value->loc.line, value->loc.col,
+        "invalid value for \"proxy\" key; expected string or array\n"
       );
+      exit( EX_CONFIG );
   } // switch
 }
 
@@ -921,11 +928,11 @@ static char** string_array_value_parse( char const *config_path,
   assert( value != NULL );
 
   if ( value->type != TOML_ARRAY ) {
-    fatal_error( EX_CONFIG,
-      "%s:%u:%u: "
-      "invalid value for \"%s\"; expected array\n",
-      config_path, value->loc.line, value->loc.col, key_name
+    print_error(
+      config_path, value->loc.line, value->loc.col,
+      "invalid value for \"%s\"; expected array\n", key_name
     );
+    exit( EX_CONFIG );
   }
 
   if ( value->a.size == 0 )
@@ -935,11 +942,11 @@ static char** string_array_value_parse( char const *config_path,
   for ( unsigned i = 0; i < value->a.size; ++i ) {
     toml_value *const a_value = &value->a.values[i];
     if ( a_value->type != TOML_STRING ) {
-      fatal_error( EX_CONFIG,
-        "%s:%u:%u: "
-        "invalid value for \"%s\"; expected string\n",
-        config_path, a_value->loc.line, a_value->loc.col, key_name
+      print_error(
+        config_path, a_value->loc.line, a_value->loc.col,
+        "invalid value for \"%s\"; expected string\n", key_name
       );
+      exit( EX_CONFIG );
     }
     array[i] = a_value->s;
     a_value->s = NULL;                  // steal value's string
@@ -964,10 +971,11 @@ static char const* string_value_parse( char const *config_path,
   assert( value != NULL );
 
   if ( value->type != TOML_STRING ) {
-    fatal_error( EX_CONFIG,
-      "%s:%u:%u: invalid value for \"%s\"; expected string\n",
-      config_path, value->loc.line, value->loc.col, key_name
+    print_error(
+      config_path, value->loc.line, value->loc.col,
+      "invalid value for \"%s\"; expected string\n", key_name
     );
+    exit( EX_CONFIG );
   }
 
   return value->s;
@@ -1086,21 +1094,21 @@ static void symbols_parse( char const *config_path, toml_table const *table,
       for ( unsigned i = 0; i < value->a.size; ++i ) {
         toml_value const *const a_value = &value->a.values[i];
         if ( a_value->type != TOML_STRING ) {
-          fatal_error( EX_CONFIG,
-            "%s:%u:%u: "
-            "invalid value for \"symbols\" key array; expected string\n",
-            config_path, a_value->loc.line, a_value->loc.col
+          print_error(
+            config_path, a_value->loc.line, a_value->loc.col,
+            "invalid value for \"symbols\" key array; expected string\n"
           );
+          exit( EX_CONFIG );
         }
         symbol_include_add( a_value->s, to_include_file );
       } // for
       break;
     default:
-      fatal_error( EX_CONFIG,
-        "%s:%u:%u: "
-        "invalid value for \"symbols\" key; expected string or array\n",
-        config_path, value->loc.line, value->loc.col
+      print_error(
+        config_path, value->loc.line, value->loc.col,
+        "invalid value for \"symbols\" key; expected string or array\n"
       );
+      exit( EX_CONFIG );
   } // switch
 }
 
@@ -1148,8 +1156,10 @@ void config_init( void ) {
     found_at_least_1 = true;
   } while ( opt_config_layers || !found_at_least_1 );
 
-  if ( !found_at_least_1 )
-    fatal_error( EX_CONFIG, "configuration file not found\n" );
+  if ( !found_at_least_1 ) {
+    print_error( "include-tidy.toml", 0, 0, "no configuration file found\n" );
+    exit( EX_CONFIG );
+  }
 
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_SYMBOLS) != 0 )
     symbol_includes_dump();
