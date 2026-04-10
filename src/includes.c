@@ -70,6 +70,7 @@ struct includes_print_visitor_data {
   bool  print_local;                    ///< Print local includes?
   bool  print_standard;                 ///< Print standard includes?
   bool  printed_any_includes;           ///< Did we print any includes?
+  bool  printed_source_file;            ///< Printed source file name?
 };
 
 /**
@@ -185,9 +186,15 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
     check_asprintf( &comment, "DELETE LINE %u", include->line );
   }
 
+  if ( (opt_verbose & TIDY_VERBOSE_SOURCE_FILE) != 0 &&
+       false_set( &ipvd->printed_source_file ) ) {
+    verbose_printf( "%s\n", arg_source_path );
+  }
+
   if ( true_clear( &ipvd->print_blank_line ) )
     putchar( '\n' );
   include_print( include, comment );
+
   free( comment );
   ipvd->printed_any_includes = true;
   if ( reset_opt_comment_style )
@@ -453,10 +460,8 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     include->line = include_line;
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
-    if ( !vcvd->verbose_printed ) {
+    if ( false_set( &vcvd->verbose_printed ) )
       verbose_printf( "includes:\n" );
-      vcvd->verbose_printed = true;
-    }
 
     char inc_delim[2];
     get_include_delims( include->is_local, inc_delim );

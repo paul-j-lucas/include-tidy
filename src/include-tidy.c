@@ -26,7 +26,6 @@
 #include "config_file.h"
 #include "includes.h"
 #include "options.h"
-#include "print.h"
 #include "symbols.h"
 #include "trans_unit.h"
 #include "util.h"
@@ -73,8 +72,6 @@ int main( int argc, char const *argv[] ) {
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_PROXIES) != 0 )
     include_proxies_dump();
   symbols_init( tu );
-  if ( (opt_verbose & TIDY_VERBOSE_SOURCE_FILE) != 0 )
-    verbose_printf( "%s\n", arg_source_path );
   includes_print();
 
   if ( opt_error == TIDY_ERROR_NEVER )
