@@ -34,11 +34,13 @@ INCLUDE_TIDY_FLAGS =	-Xtidy --verbose=f -Xtidy --error=never
 
 include_tidy_SOURCES =	clang_util.c clang_util.h \
 			cli_options.c cli_options.h \
+			color.c color.h \
 			config_file.c config_file.h \
 			include-tidy.c include-tidy.h \
 			includes.c includes.h \
 			options.c options.h \
 			pjl_config.h config.h \
+			print.c print.h \
 			red_black.c red_black.h \
 			symbols.c symbols.h \
 			toml_lite.c toml_lite.h \

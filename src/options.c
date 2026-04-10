@@ -26,6 +26,7 @@
 // local
 #include "pjl_config.h"                 /* must go first */
 #include "options.h"
+#include "color.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -58,6 +59,7 @@
 // extern option variables
 unsigned      opt_align_column = OPT_ALIGN_COLUMN_DEFAULT;
 bool          opt_all_includes;
+color_when    opt_color_when = COLOR_NOT_FILE;
 char const   *opt_comment_style[2] = { "// ", "" };
 bool          opt_config_layers = true;
 char const   *opt_config_path;
@@ -149,6 +151,35 @@ bool opt_align_column_parse( char const *s ) {
     return false;
   opt_align_column = STATIC_CAST( unsigned, ull );
   return true;
+}
+
+bool opt_color_parse( char const *s ) {
+  struct color_when_map {
+    char const *when_str;
+    color_when  when;
+  };
+  typedef struct color_when_map color_when_map;
+
+  static color_when_map const COLOR_WHEN_MAP[] = {
+    { "always",    COLOR_ALWAYS   },
+    { "auto",      COLOR_ISATTY   },    // grep compatibility
+    { "isatty",    COLOR_ISATTY   },    // explicit synonym for auto
+    { "never",     COLOR_NEVER    },
+    { "not_file",  COLOR_NOT_FILE },    // !ISREG( stdout )
+    { "not_isreg", COLOR_NOT_FILE },    // synonym for not_isfile
+    { "tty",       COLOR_ISATTY   },    // synonym for isatty
+  };
+
+  assert( s != NULL );
+
+  FOREACH_ARRAY_ELEMENT( color_when_map, m, COLOR_WHEN_MAP ) {
+    if ( strcasecmp( s, m->when_str ) == 0 ) {
+      opt_color_when = m->when;
+      return true;
+    }
+  } // for
+
+  return false;
 }
 
 bool opt_comment_style_parse( char const *s ) {

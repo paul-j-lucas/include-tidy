@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "April 9, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "April 10, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -315,6 +315,57 @@ via either
 or
 .B -isystem
 options.
+.TP
+.BR \-\-color \f1=\fPs "\f1 | \fP" "" \-k " s"
+Sets when to colorize output to
+.I s
+(which is case-insensitive).
+(See the
+.B INCLUDE_TIDY_COLORS
+environment variable about colorization.)
+The choices for
+.I s
+are:
+.RS
+.TP 8
+.B always
+Always colorize.
+.TP
+.BR auto " | " isatty " | " tty
+Colorize only when standard output
+or error
+is connected to a TTY
+(terminal).
+.TP
+.B never
+Never colorize.
+.TP
+.BR not_file " | " not_isreg
+Colorize only when
+.I not
+writing to a regular file
+(hence writing to a TTY or pipe).
+(Specifically,
+.BR fstat (3)
+is called on standard output
+and error:
+colorize only if \f(CWS_IFREG\fP is false.)
+.IP
+This is more useful than
+.B isatty
+since it accommodates the common case of allowing color output to be piped to
+.BR less (1)
+and still display in color since
+.B less
+understands
+.I SGR
+(``Select Graphic Rendition'')
+ASCII terminal escape sequences
+that produce color.
+.RE
+.IP
+The default is
+.BR not_file .
 .TP
 .BR \-\-comment-style \f1=\fPs "\f1 | \fP" "" \-s " s"
 Specifies the comment style to use,
@@ -785,6 +836,70 @@ no default configuration file
 under the user's home directory
 is read.
 .TP
+.B INCLUDE_TIDY_COLORS
+This variable specifies the colors and other attributes
+used to highlight various parts of the output
+in a manner similar to the
+.B GCC_COLORS
+variable
+used by
+.BR gcc .
+.IP
+As with
+.BR gcc ,
+the value is composed of a colon-separated sequence of capabilities.
+Each capability is of the form
+.IR name [= SGR ]
+where
+.I name
+is a capability name
+and
+.IR SGR ,
+if present,
+is a
+``Select Graphic Rendition''
+value
+that is a semicolon-separated list of integers
+in the range 0\-255.
+An example SGR value is \f(CW31;1\fP
+that specifies a bright red foreground
+on the terminal's default background.
+.IP
+Capability names containing upper-case letters are unique to
+.BR cdecl ;
+those in all lower-case are upwards compatible with
+.BR gcc .
+.RS
+.TP 13
+.BI caret= SGR
+SGR for the caret pointing to the error on the line above
+(as with
+.BR gcc ).
+The default is \f(CW32;1\fP
+(bright green foreground over current terminal background).
+.TP
+.BI error= SGR
+SGR for the word ``error.''
+The default is \f(CW31;1\fP
+(bright red foreground over current terminal background).
+.TP
+.BI locus= SGR
+SGR for location information in error and warning messages.
+The default is \f(CW1\fP
+(bold current foreground over current terminal background).
+.TP
+.BI warning= SGR
+SGR for the word ``warning.''
+The default is \f(CW33;1\fP
+(bright yellow foreground over current terminal background).
+.RE
+.IP
+The term ``color'' is used loosely.
+In addition to colors,
+other character attributes
+such as bold, underlined, reverse video, etc.,
+may be possible depending on the capabilities of the terminal.
+.TP
 .B XDG_CONFIG_DIRS
 If set to a colon separated list of paths,
 then for each
@@ -841,6 +956,7 @@ Paul J. Lucas
 .RI < paul@lucasmail.org >
 .SH SEE ALSO
 .BR clang (1),
+.BR gcc (1),
 .BR make (1),
 .BR sysexits (3)
 .\" vim:set et sw=2 ts=2:

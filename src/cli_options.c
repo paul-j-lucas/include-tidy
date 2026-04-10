@@ -99,6 +99,7 @@ static struct option const OPTIONS[] = {
   { "align-column",     required_argument,  NULL, COPT(ALIGN_COLUMN)      },
   { "all-includes",     no_argument,        NULL, COPT(ALL_INCLUDES)      },
   { "clang",            required_argument,  NULL, COPT(CLANG)             },
+  { "color",            required_argument,  NULL, COPT(COLOR)             },
   { "comment-style",    required_argument,  NULL, COPT(COMMENT_STYLE)     },
   { "config",           required_argument,  NULL, COPT(CONFIG)            },
   { "error",            required_argument,  NULL, COPT(ERROR)             },
@@ -122,6 +123,7 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(ALIGN_COLUMN) ] = "Align comments to this column; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
   [ COPT(ALL_INCLUDES) ] = "Print all include files",
   [ COPT(CLANG) ] = "Path of clang to use or \"none\"; default=\"" OPT_CLANG_DEFAULT "\"",
+  [ COPT(COLOR) ] = "When to colorize output; default=\"not_file\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
   [ COPT(CONFIG) ] = "Configuration file path",
   [ COPT(ERROR) ] = "When to exit with a non-zero status",
@@ -879,6 +881,16 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         opt_all_includes = true;
         break;
       case COPT(CLANG):                 // already handled
+        break;
+      case COPT(COLOR):
+        if ( *SKIP_WS( optarg ) == '\0' )
+          goto missing_arg;
+        if ( !opt_color_parse( optarg ) ) {
+          fatal_error( EX_USAGE,
+            "\"%s\": invalid value for %s\n",
+            optarg, get_opt_format( opt )
+          );
+        }
         break;
       case COPT(COMMENT_STYLE):
         if ( *SKIP_WS( optarg ) == '\0' )

@@ -29,6 +29,7 @@
 #include "clang_util.h"
 #include "config_file.h"
 #include "options.h"
+#include "print.h"
 #include "red_black.h"
 #include "symbols.h"
 #include "util.h"
@@ -360,14 +361,14 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   visitChildren_visitor_data *const vcvd =
     POINTER_CAST( visitChildren_visitor_data*, data );
 
-  unsigned          include_line;
+  unsigned          include_line, include_col;
   CXSourceLocation  include_loc = clang_getCursorLocation( cursor );
   CXFile const      included_file = clang_getIncludedFile( cursor );
   CXFile            including_file;
   bool const        is_direct = clang_Location_isFromMainFile( include_loc );
 
   clang_getSpellingLocation(
-    include_loc, &including_file, &include_line, /*column=*/NULL,
+    include_loc, &including_file, &include_line, &include_col,
     /*offset=*/NULL
   );
 
@@ -377,10 +378,11 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     CXString const    including_name_cxs = clang_getFileName( including_file );
     char const *const including_name = clang_getCString( including_name_cxs );
 
-    fatal_error( EX_DATAERR,
-      "\"%s\":%u: \"%s\": file not found\n",
-      path_no_dot_slash( including_name ), include_line, included_name
+    print_error(
+      path_no_dot_slash( including_name ), include_line, include_col,
+      "\"%s\": file not found\n", included_name
     );
+    exit( EX_DATAERR );
   }
 
   tidy_include new_include = {

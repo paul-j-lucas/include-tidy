@@ -22,6 +22,7 @@
 #include "pjl_config.h"
 #include "include-tidy.h"
 #include "cli_options.h"
+#include "color.h"
 #include "config_file.h"
 #include "includes.h"
 #include "options.h"
@@ -64,6 +65,7 @@ int main( int argc, char const *argv[] ) {
   prog_name = base_name( argv[0] );
   options_init();
   cli_options_init( &argc, &argv );
+  colors_init();
   CXTranslationUnit tu = trans_unit_init( argc, argv );
   includes_init( tu );
   config_init();

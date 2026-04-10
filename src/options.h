@@ -29,6 +29,7 @@
 
 // local
 #include "pjl_config.h"                 /* must go first */
+#include "color.h"
 
 // standard
 #include <stdbool.h>
@@ -68,6 +69,7 @@ typedef enum tidy_verbose tidy_verbose;
 // extern option variables
 extern unsigned     opt_align_column;     ///< Comment alignment column.
 extern bool         opt_all_includes;     ///< Print all includes?
+extern color_when   opt_color_when;       ///< When to colorize.
 extern char const  *opt_comment_style[2]; ///< Comment delimiters to use.
 extern bool         opt_config_layers;    ///< Do configuration file layering?
 extern char const  *opt_config_path;      ///< Configuration file path.
@@ -94,6 +96,15 @@ extern char const  *arg_source_path;      ///< The file being tidied.
  */
 NODISCARD
 bool opt_align_column_parse( char const *s );
+
+/**
+ * Parses when to colorize.
+ *
+ * @param s The string to parse.
+ * @return Returns `true` only if \a s was parsed successfully.
+ */
+NODISCARD
+bool opt_color_parse( char const *s );
 
 /**
  * Parses the comment style.
