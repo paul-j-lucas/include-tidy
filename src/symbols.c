@@ -64,6 +64,7 @@ typedef struct visitChildren_visitor_data visitChildren_visitor_data;
 
 // local functions
 static void tidy_symbol_cleanup( tidy_symbol* );
+static void visit_MacroDefinition( CXCursor, visitChildren_visitor_data* );
 
 static rb_tree_t symbol_set;            ///< Set of symbols.
 
@@ -228,6 +229,9 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   visitChildren_visitor_data *const vcvd =
     POINTER_CAST( visitChildren_visitor_data*, data );
 
+  if ( !is_symbol_in_file( cursor, vcvd->source_file ) )
+    goto skip;
+
   switch ( clang_getCursorKind( cursor ) ) {
     case CXCursor_CallExpr:
     case CXCursor_DeclRefExpr:
@@ -236,9 +240,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     case CXCursor_MemberRefExpr:
     case CXCursor_NamespaceRef:
     case CXCursor_TemplateRef:
-    case CXCursor_TypeRef:
-      if ( !is_symbol_in_file( cursor, vcvd->source_file ) )
-        break;
+    case CXCursor_TypeRef:;
 
       // Gets the cursor for _a_ declaration of the symbol.
       CXCursor const decl_cursor = clang_getCursorReferenced( cursor );
@@ -256,11 +258,44 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
         maybe_add_symbol( canonical_cursor, vcvd );
       break;
 
+    case CXCursor_MacroDefinition:
+      visit_MacroDefinition( cursor, vcvd );
+      break;
+
     default:
       /* suppress warning */;
   } // switch
 
+skip:
   return CXChildVisit_Recurse;
+}
+
+/**
+ * Visits a `CXCursor_MacroDefinition` kind of cursor.
+ *
+ * @param macro_cursor The macro definition's cursor.
+ * @param vcvd The visitChildren_visitor_data to use.
+ */
+static void visit_MacroDefinition( CXCursor macro_cursor,
+                                   visitChildren_visitor_data *vcvd ) {
+  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( macro_cursor );
+  CXSourceRange const macro_range = clang_getCursorExtent( macro_cursor );
+
+  CXToken *macro_tokens;
+  unsigned token_count;
+  clang_tokenize( tu, macro_range, &macro_tokens, &token_count );
+
+  for ( unsigned i = 0; i < token_count; ++i ) {
+    if ( clang_getTokenKind( macro_tokens[i] ) != CXToken_Identifier )
+      continue;
+    CXSourceLocation loc = clang_getTokenLocation( tu, macro_tokens[i] );
+    CXCursor const ident_cursor = clang_getCursor( tu, loc );
+    CXCursor const referenced = clang_getCursorReferenced( ident_cursor );
+    if ( !clang_isInvalid( referenced.kind ) )
+      maybe_add_symbol( referenced, vcvd );
+  } // for
+
+  clang_disposeTokens( tu, macro_tokens, token_count );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
