@@ -237,31 +237,29 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     case CXCursor_NamespaceRef:
     case CXCursor_TemplateRef:
     case CXCursor_TypeRef:
+      if ( !is_symbol_in_file( cursor, vcvd->source_file ) )
+        break;
+
+      // Gets the cursor for _a_ declaration of the symbol.
+      CXCursor const decl_cursor = clang_getCursorReferenced( cursor );
+      if ( clang_isInvalid( decl_cursor.kind ) )
+        break;
+
+      // Gets the cursor for the _first_ declaration of the symbol.
+      CXCursor const first_cursor = clang_getCanonicalCursor( decl_cursor );
+      if ( clang_isInvalid( first_cursor.kind ) )
+        break;
+
+      maybe_add_symbol( first_cursor, vcvd );
+      CXCursor const canonical_cursor = get_canonical_cursor( cursor );
+      if ( !clang_Cursor_isNull( canonical_cursor ) )
+        maybe_add_symbol( canonical_cursor, vcvd );
       break;
+
     default:
-      goto skip;
+      /* suppress warning */;
   } // switch
 
-  if ( !is_symbol_in_file( cursor, vcvd->source_file ) )
-    goto skip;
-
-  // Gets the cursor for _a_ declaration of the symbol.
-  CXCursor const decl_cursor = clang_getCursorReferenced( cursor );
-  if ( clang_isInvalid( decl_cursor.kind ) )
-    goto skip;
-
-  // Gets the cursor for the _first_ declaration of the symbol.
-  CXCursor const first_cursor = clang_getCanonicalCursor( decl_cursor );
-  if ( clang_isInvalid( first_cursor.kind ) )
-    goto skip;
-
-  maybe_add_symbol( first_cursor, vcvd );
-
-  CXCursor const canonical_cursor = get_canonical_cursor( cursor );
-  if ( !clang_Cursor_isNull( canonical_cursor ) )
-    maybe_add_symbol( canonical_cursor, vcvd );
-
-skip:
   return CXChildVisit_Recurse;
 }
 
