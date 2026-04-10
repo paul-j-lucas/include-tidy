@@ -1,5 +1,9 @@
 2026-04-10  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c, include-tidy.c, options.c, options.h, print.c, print.h,
+     symbols.c: Moved verbose_printf().
+   * symbols.c: Now properly handling identifiers inside macro definitions.
+   * etc/include-tidy.toml: Additions.
    * config_file.c, print.c, print.h, trans_unit.c: Now using print_error()
      instead of fatal_error().
    * includes.c: Print blank line only if opt_all_includes.
