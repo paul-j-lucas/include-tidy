@@ -36,9 +36,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>                     /* for PATH_MAX */
-#include <stdarg.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>                     /* for exit() */
 #include <string.h>                     /* for str...() */
 #include <sysexits.h>
