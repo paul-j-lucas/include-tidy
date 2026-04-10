@@ -133,16 +133,16 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     case CXCursor_TypeRef:
       break;
     default:
-      goto done;
+      goto skip;
   } // switch
 
   if ( !is_symbol_in_file( cursor, vcvd->source_file ) )
-    goto done;
+    goto skip;
 
   // Gets the cursor for _a_ declaration of the symbol.
   CXCursor const decl_cursor = clang_getCursorReferenced( cursor );
   if ( clang_isInvalid( decl_cursor.kind ) )
-    goto done;
+    goto skip;
 
   // Gets the cursor for the _first_ declaration of the symbol.
   CXCursor const    first_cursor = clang_getCanonicalCursor( decl_cursor );
@@ -153,11 +153,11 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     first_loc, &first_file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
   );
   if ( first_file == NULL )
-    goto done;
+    goto skip;
 
   // If the symbol was first declared in the file being tidied, we don't care.
   if ( clang_File_isEqual( first_file, vcvd->source_file ) )
-    goto done;
+    goto skip;
 
   tidy_symbol new_symbol = {
     .name_cxs = clang_getCursorSpelling( first_cursor )
@@ -188,12 +188,12 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     }
 
     if ( added_symbol )
-      goto done;
+      goto skip;
   }
 
   tidy_symbol_cleanup( &new_symbol );
 
-done:
+skip:
   return CXChildVisit_Recurse;
 }
 
