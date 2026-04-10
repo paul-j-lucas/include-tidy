@@ -1,5 +1,7 @@
 2026-04-10  Paul J. Lucas <paul@lucasmail.org>
 
+   * config_file.c, print.c, print.h, trans_unit.c: Now using print_error()
+     instead of fatal_error().
    * includes.c: Print blank line only if opt_all_includes.
    * cli_error.out, cli_options-error.out, cli_options.out, cli_error.test:
      Fixed --error tests.
