@@ -1,5 +1,10 @@
 2026-04-10  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c, symbols.c, util.h: Added false_set().
+   * include-tidy.c, includes.c: Now printing verbose file name only if
+     violations; now using false_set().
+   * options.c: #include fixes.
+   * color.c, config_file.c, trans_unit.c: #include fixes.
    * cli_options.c, include-tidy.c, options.c, options.h, print.c, print.h,
      symbols.c: Moved verbose_printf().
    * symbols.c: Now properly handling identifiers inside macro definitions.
