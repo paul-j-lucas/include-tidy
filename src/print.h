@@ -136,6 +136,17 @@ void fl_print_warning( char const *tidy_file, int tidy_line,
                        char const *source_path, unsigned source_line,
                        unsigned source_col, char const *format, ... );
 
+/**
+ * Prints verbose output.
+ *
+ * @param format The `printf()` format string literal to use.
+ * @param ... The `printf()` arguments.
+ * @return Returns the number of characters printed.
+ */
+PJL_DISCARD
+PJL_PRINTF_LIKE_FUNC(1)
+int verbose_printf( char const *format, ... );
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */

@@ -27,6 +27,7 @@
 #include "pjl_config.h"                 /* must go first */
 #include "print.h"
 #include "color.h"
+#include "options.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -141,6 +142,16 @@ void fl_print_warning( char const *tidy_file, int tidy_line,
     sgr_warning, format, args
   );
   va_end( args );
+}
+
+int verbose_printf( char const *format, ... ) {
+  assert( opt_verbose != TIDY_VERBOSE_NONE );
+  fputs( "// tidy | ", stdout );
+  va_list args;
+  va_start( args, format );
+  int const raw_len = vprintf( format, args );
+  va_end( args );
+  return raw_len;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

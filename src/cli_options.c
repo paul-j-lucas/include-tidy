@@ -28,6 +28,7 @@
 #include "cli_options.h"
 #include "include-tidy.h"
 #include "options.h"
+#include "print.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE

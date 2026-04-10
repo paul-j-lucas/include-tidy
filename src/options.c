@@ -331,16 +331,6 @@ void options_init( void ) {
   ATEXIT( &options_cleanup );
 }
 
-int verbose_printf( char const *format, ... ) {
-  assert( opt_verbose != TIDY_VERBOSE_NONE );
-  fputs( "// tidy | ", stdout );
-  va_list args;
-  va_start( args, format );
-  int const raw_len = vprintf( format, args );
-  va_end( args );
-  return raw_len;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */

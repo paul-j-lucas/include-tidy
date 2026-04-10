@@ -26,6 +26,7 @@
 #include "config_file.h"
 #include "includes.h"
 #include "options.h"
+#include "print.h"
 #include "symbols.h"
 #include "trans_unit.h"
 #include "util.h"
