@@ -28,7 +28,6 @@
 #include "config_file.h"
 #include "clang_util.h"
 #include "cli_options.h"
-#include "include-tidy.h"
 #include "includes.h"
 #include "options.h"
 #include "print.h"

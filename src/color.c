@@ -36,6 +36,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>                     /* for getenv() */
 #include <string.h>                     /* for str...() */
 #include <sys/stat.h>                   /* for stat() */
