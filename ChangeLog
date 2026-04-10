@@ -1,5 +1,17 @@
+2026-04-10  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_error.out, cli_options-error.out, cli_options.out, cli_error.test:
+     Fixed --error tests.
+   * symbols.c: Now handling indirect/incomplete types.
+   * configure.ac, man/man1/include-tidy.1, src/Makefile.am, cli_options.c,
+     cli_options.h, color.c, color.h, include-tidy.c, includes.c, options.c,
+     options.h, print.c, print.h: Initial color output.
+
 2026-04-09  Paul J. Lucas <paul@lucasmail.org>
 
+   * util.h: Added UNEXPECTED_INT_VALUE(), VA_OPT().
+   * Makefile.am: Added src/include-tidy.toml to EXTRA_DIST.
+   * includes.c: Now checking for missing include files.
    * man/man1/include-tidy.1: Added mention of default for --error.
    * man/man1/include-tidy.1: Updated use with make section and exit status.
    * src/Makefile.am: Added tidy target.
