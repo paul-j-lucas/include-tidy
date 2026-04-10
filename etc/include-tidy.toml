@@ -204,6 +204,9 @@ std-cpp-includes = [
   "version",
 ]
 
+[free]
+includes = "stdlib.h"
+
 [NULL]
 includes = [
   "locale.h",
@@ -225,5 +228,19 @@ includes = [
   "uchar.h",
   "wchar.h",
 ]
+
+[ssize_t]
+includes = [
+  "stddef.h",
+  "stdio.h",
+  "stdlib.h",
+  "string.h",
+  "time.h",
+  "uchar.h",
+  "wchar.h",
+]
+
+[time_t]
+includes = "time.h"
 
 # vim:se et sw=2 ts=2:
