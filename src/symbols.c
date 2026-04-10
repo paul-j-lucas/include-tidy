@@ -253,9 +253,9 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
         break;
 
       maybe_add_symbol( first_cursor, vcvd );
-      CXCursor const canonical_cursor = get_underlying_cursor( cursor );
-      if ( !clang_Cursor_isNull( canonical_cursor ) )
-        maybe_add_symbol( canonical_cursor, vcvd );
+      CXCursor const underlying_cursor = get_underlying_cursor( cursor );
+      if ( !clang_Cursor_isNull( underlying_cursor ) )
+        maybe_add_symbol( underlying_cursor, vcvd );
       break;
 
     case CXCursor_MacroDefinition:
