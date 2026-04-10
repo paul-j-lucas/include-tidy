@@ -53,6 +53,57 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Gets whether the argument(s) contains a comma, that is there are 2 or more
+ * arguments.
+ *
+ * @param ... Zero to 10 arguments, invariably `__VA_ARGS__`.
+ * @return Returns `0` for 0 or 1 argument, or `1` for 2 or more arguments.
+ */
+#define ARGS_HAS_COMMA(...) \
+  ARG_11( __VA_ARGS__, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 )
+
+/// @cond DOXYGEN_IGNORE
+#define ARG_11(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,...) _11
+/// @endcond
+
+/**
+ * Gets whether there are no arguments.
+ *
+ * @param ... Zero to 10 arguments, invariably `__VA_ARGS__`.
+ * @return Returns `0` for 0 arguments or `1` otherwise.
+ *
+ * @sa https://stackoverflow.com/a/66556553/99089
+ * @sa https://gustedt.wordpress.com/2010/06/08/detect-empty-macro-arguments/
+ */
+#define ARGS_IS_EMPTY(...)                                                  \
+  ARGS_IS_EMPTY_CASES(                                                      \
+    /*  Case 1: argument with a comma,                                      \
+        e.g. "ARG1, ARG2", "ARG1, ...", or ",". */                          \
+    ARGS_HAS_COMMA( __VA_ARGS__ ),                                          \
+    /*  Case 2: argument within parentheses,                                \
+        e.g., "(ARG)", "(...)", or "()". */                                 \
+    ARGS_HAS_COMMA( ARGS_IS_EMPTY_COMMA __VA_ARGS__ ),                      \
+    /*  Case 3: argument that is a macro that will expand the parentheses,  \
+        possibly generating a comma. */                                     \
+    ARGS_HAS_COMMA( __VA_ARGS__ () ),                                       \
+    /*  Case 4: __VA_ARGS__ doesn't generate a comma by itself, nor with    \
+        ARGS_IS_EMPTY_COMMA behind it, nor with () after it.  Therefore,    \
+        "ARGS_IS_EMPTY_COMMA __VA_ARGS__ ()" generates a comma only if      \
+        __VA_ARGS__ is empty.  So this is the empty __VA_ARGS__ case since  \
+        the previous cases are false. */                                    \
+    ARGS_HAS_COMMA( ARGS_IS_EMPTY_COMMA __VA_ARGS__ () )                    \
+  )
+
+/// @cond DOXYGEN_IGNORE
+#define ARGS_IS_EMPTY_CASES(_1,_2,_3,_4) \
+  ARGS_HAS_COMMA( NAME5( ARGS_IS_EMPTY_RESULT_, _1, _2, _3, _4 ) )
+#define ARGS_IS_EMPTY_COMMA(...)  ,
+#define ARGS_IS_EMPTY_RESULT_0001 ,
+#define NAME5(A,B,C,D,E)          NAME5_HELPER( A, B, C, D, E )
+#define NAME5_HELPER(A,B,C,D,E)   A ## B ## C ## D ## E
+/// @endcond
+
 /// @cond DOXYGEN_IGNORE
 
 #define CHARIFY_0 '0'
@@ -328,15 +379,19 @@
  * A special-case of fatal_error() that additionally prints the file and line
  * where an internal error occurred.
  *
- * @param FORMAT The `printf()` format to use.
+ * @param FORMAT The `printf()` format string literal to use.
  * @param ... The `printf()` arguments.
  *
  * @sa fatal_error()
- * @sa #PERROR_EXIT_IF()
  * @sa perror_exit()
+ * @sa #PERROR_EXIT_IF()
+ * @sa #UNEXPECTED_INT_VALUE()
  */
-#define INTERNAL_ERROR(FORMAT,...) \
-  fatal_error( EX_SOFTWARE, "%s:%d: internal error: " FORMAT, __FILE__, __LINE__, __VA_ARGS__ )
+#define INTERNAL_ERROR(FORMAT,...)                            \
+  fatal_error( EX_SOFTWARE,                                   \
+    "%s:%d: internal error: " FORMAT,                         \
+    __FILE__, __LINE__ VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__ \
+  )
 
 #ifdef HAVE___BUILTIN_EXPECT
 
@@ -451,6 +506,7 @@
  * @sa fatal_error()
  * @sa #INTERNAL_ERROR()
  * @sa perror_exit()
+ * @sa #UNEXPECTED_INT_VALUE()
  */
 #define PERROR_EXIT_IF( EXPR, STATUS ) \
   BLOCK( if ( unlikely( EXPR ) ) perror_exit( STATUS ); )
@@ -595,6 +651,18 @@
 #define STRINGIFY(X)              STRINGIFY_IMPL(X)
 
 /**
+ * Strips the enclosing parentheses from \a ARG.
+ *
+ * @param ARG The argument.  It _must_ be enclosed within parentheses.
+ * @return Returns \a ARG without enclosing parentheses.
+ */
+#define STRIP_PARENS(ARG)         STRIP_PARENS_HELPER ARG
+
+/// @cond DOXYGEN_IGNORE
+#define STRIP_PARENS_HELPER(...)  __VA_ARGS__
+/// @endcond
+
+/**
  * Gets the length of \a S.
  *
  * @param S The C string literal to get the length of.
@@ -615,6 +683,23 @@
 #define STRNCMPLIT(S,LIT)         strncmp( (S), (LIT), STRLITLEN( (LIT) ) )
 
 /**
+ * A special-case of #INTERNAL_ERROR() that prints an unexpected integer value.
+ *
+ * @param EXPR The expression having the unexpected value.
+ *
+ * @sa fatal_error()
+ * @sa #INTERNAL_ERROR()
+ * @sa perror_exit()
+ * @sa #PERROR_EXIT_IF()
+ */
+#define UNEXPECTED_INT_VALUE(EXPR)                      \
+  INTERNAL_ERROR(                                       \
+    "%lld (0x%llX): unexpected value for " #EXPR "\n",  \
+    STATIC_CAST( long long, (EXPR) ),                   \
+    STATIC_CAST( unsigned long long, (EXPR) )           \
+  )
+
+/**
  * Synthesises a name prefixed by \a PREFIX unique to the line on which it's
  * used.
  *
@@ -626,6 +711,44 @@
  * used unique name.
  */
 #define UNIQUE_NAME(PREFIX)       NAME2(NAME2(PREFIX,_),__LINE__)
+
+/**
+ * Pre-C23/C++20 substitution for `__VA_OPT__`, that is returns \a TOKENS only
+ * if 1 or more additional arguments are passed.
+ *
+ * @remarks
+ * @parblock
+ * For compilers that don't yet support `__VA_OPT__`, instead of doing
+ * something like:
+ *
+ *      ARG __VA_OPT__(,) __VA_ARGS__               // C23/C++20 way
+ *
+ * do this instead:
+ *
+ *      ARG VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__  // substitute way
+ *
+ * (It's unfortunately necessary to specify `__VA_ARGS__` twice.)
+ * @endparblock
+ *
+ * @param TOKENS The token(s) possibly to be returned.  They _must_ be enclosed
+ * within parentheses.
+ * @param ... Zero to 10 arguments, invariably `__VA_ARGS__`.
+ * @return Returns \a TOKENS (with enclosing parentheses stripped) followed by
+ * `__VA_ARGS__` only if 1 or more additional arguments are passed; returns
+ * nothing otherwise.
+ */
+#ifdef HAVE___VA_OPT__
+# define VA_OPT(TOKENS,...) \
+    __VA_OPT__( STRIP_PARENS( TOKENS ) )
+#else
+# define VA_OPT(TOKENS,...) \
+    NAME2( VA_OPT_EMPTY_, ARGS_IS_EMPTY( __VA_ARGS__ ) )( TOKENS, __VA_ARGS__ )
+
+  /// @cond DOXYGEN_IGNORE
+# define VA_OPT_EMPTY_0(TOKENS,...) STRIP_PARENS(TOKENS)
+# define VA_OPT_EMPTY_1(TOKENS,...) /* nothing */
+  /// @endcond
+#endif /* HAVE___VA_OPT__ */
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -718,6 +841,7 @@ inline char const* empty_if_null( char const *s ) {
  * @sa #INTERNAL_ERROR()
  * @sa perror_exit()
  * @sa #PERROR_EXIT_IF()
+ * @sa #UNEXPECTED_INT_VALUE()
  */
 PJL_PRINTF_LIKE_FUNC(2)
 _Noreturn void fatal_error( int status, char const *format, ... );
@@ -779,6 +903,11 @@ inline char const* path_no_dot_slash( char const *path ) {
  * Prints an error message for `errno` to standard error and exits.
  *
  * @param status The exit status code.
+ *
+ * @sa fatal_error()
+ * @sa #INTERNAL_ERROR()
+ * @sa #PERROR_EXIT_IF()
+ * @sa #UNEXPECTED_INT_VALUE()
  */
 _Noreturn void perror_exit( int status );
 
