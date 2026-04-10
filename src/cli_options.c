@@ -225,13 +225,12 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
       size_t const old_argc = STATIC_CAST( size_t, *pargc );
       size_t const new_argc = old_argc + 1/*new arg*/ + 1/*NULL*/;
 
-      if ( !is_argv_on_heap ) {
+      if ( false_set( &is_argv_on_heap ) ) {
         // We can't realloc the argv passed to main(), so in order to insert an
         // argument, we first have to duplicate it into the heap.
         char const **const heap_argv = MALLOC( char*, new_argc );
         memcpy( heap_argv, *pargv, old_argc * sizeof(char*) );
         *pargv = heap_argv;
-        is_argv_on_heap = true;
       }
       else {
         REALLOC( *pargv, char*, new_argc );

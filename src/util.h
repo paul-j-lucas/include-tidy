@@ -832,6 +832,21 @@ inline char const* empty_if_null( char const *s ) {
 }
 
 /**
+ * Checks \a flag: if `false`, sets it to `true`.
+ *
+ * @param flag A pointer to the Boolean flag to be tested and, if `false`,
+ * sets it to `true`.
+ * @return Returns `true` only if \a flag was `false` initially.
+ *
+ * @sa true_clear()
+ * @sa true_or_set()
+ */
+NODISCARD
+inline bool false_set( bool *flag ) {
+  return !*flag && (*flag = true);
+}
+
+/**
  * Prints an error message to standard error and exits with \a status code.
  *
  * @param status The status code to exit with.
@@ -966,6 +981,7 @@ char* str_trim( char *s );
  * it to `true`.
  * @return Returns `true` only if \a flag was `true` initially.
  *
+ * @sa false_set()
  * @sa true_clear()
  */
 NODISCARD
@@ -980,6 +996,7 @@ inline bool true_or_set( bool *flag ) {
  * to \c false.
  * @return Returns `true` only if \a *flag is `true`.
  *
+ * @sa false_set()
  * @sa true_or_set()
  */
 NODISCARD
