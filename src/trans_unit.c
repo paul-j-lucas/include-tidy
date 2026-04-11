@@ -50,14 +50,16 @@
  * @{
  */
 
-// local variables
+////////// local variables ////////////////////////////////////////////////////
+
 static CXIndex            tidy_index;   ///< Current libclang index.
 static CXTranslationUnit  tidy_tu;      ///< Current libclang translation unit.
+
+////////// extern variables ///////////////////////////////////////////////////
 
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-// extern variables
 enum CXLanguageKind       tidy_lang;
 
 /// @endcond

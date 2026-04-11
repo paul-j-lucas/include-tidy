@@ -60,9 +60,8 @@
  * @{
  */
 
-///////////////////////////////////////////////////////////////////////////////
+////////// local functions ////////////////////////////////////////////////////
 
-// local functions
 NODISCARD
 static char const** sgr_var_find( char const* );
 
@@ -72,7 +71,8 @@ static bool         sgr_var_set( char const**, char const* );
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-// extern variable definitions
+////////// extern variables ///////////////////////////////////////////////////
+
 char const *sgr_caret;
 char const *sgr_error;
 char const *sgr_include_add;
@@ -82,7 +82,8 @@ char const *sgr_warning;
 
 /// @endcond
 
-// local variables
+////////// local variables ////////////////////////////////////////////////////
+
 static char const *color_capabilities;  ///< Parsed color capabilities.
 
 /**

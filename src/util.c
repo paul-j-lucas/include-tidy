@@ -42,14 +42,21 @@
 #include <sysexits.h>
 #include <unistd.h>                     /* for close(2), getpid(3) */
 
-char const WS_CHARS[] =           " \n\t\r\f\v";
-
 /// @endcond
 
 /**
  * @addtogroup util-group
  * @{
  */
+
+////////// extern variables ///////////////////////////////////////////////////
+
+/// @cond DOXYGEN_IGNORE
+/// Otherwise Doxygen generates two entries.
+
+char const WS_CHARS[] =           " \n\t\r\f\v";
+
+/// @endcond
 
 ////////// local functions ////////////////////////////////////////////////////
 

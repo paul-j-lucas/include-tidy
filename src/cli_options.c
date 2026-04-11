@@ -60,6 +60,10 @@
 #define FOREACH_CLI_OPTION(VAR, OPTIONS) \
   for ( struct option const *VAR = (OPTIONS); (VAR)->name != NULL; ++(VAR) )
 
+////////// typedefs ///////////////////////////////////////////////////////////
+
+typedef struct ext_lang_map ext_lang_map;
+
 ////////// structures /////////////////////////////////////////////////////////
 
 /**
@@ -69,7 +73,6 @@ struct ext_lang_map {
   char const *ext;                      ///< Extension (without the `'.'`).
   char const *lang;                     ///< Language: either `"c"` or `"c++"`.
 };
-typedef struct ext_lang_map ext_lang_map;
 
 ////////// local constants ////////////////////////////////////////////////////
 

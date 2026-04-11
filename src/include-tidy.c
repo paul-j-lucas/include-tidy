@@ -36,6 +36,8 @@
 // libclang
 #include <clang-c/Index.h>
 
+////////// enumerations ///////////////////////////////////////////////////////
+
 /**
  * **include-tidy**-specific exit status codes.
  */
@@ -44,10 +46,11 @@ enum {
   TIDY_EX_NO_VIOLATIONS_ERROR = 2       ///< No violations, but error anyway.
 };
 
+////////// extern variables ///////////////////////////////////////////////////
+
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-// extern variable definitions
 char const *prog_name;
 
 /// @endcond

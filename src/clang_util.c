@@ -41,7 +41,8 @@
  * @{
  */
 
-#if HAVE_UNSIGNED_INT128
+///////////////////////////////////////////////////////////////////////////////
+
 /**
  * Creates a 128-bit `unsigned __int128` literal.
  *
@@ -55,13 +56,22 @@
 #define UINT128LIT(UPPER,LOWER) \
   ((STATIC_CAST( unsigned __int128, (UPPER) ) << 64) | (LOWER))
 
+////////// typedefs ///////////////////////////////////////////////////////////
+
 /**
  * Result type for Fowler-Noll-Vo hash function.
  *
  * @sa fnv1a_s()
  */
+#if HAVE_UNSIGNED_INT128
 typedef unsigned __int128 fnv1a_t;
+#else
+typedef uint64_t fnv1a_t;
+#endif /* HAVE_UNSIGNED_INT128 */
 
+////////// local constants ////////////////////////////////////////////////////
+
+#if HAVE_UNSIGNED_INT128
 /**
  * Initialization value for Fowler-Noll-Vo hash function.
  *
@@ -77,9 +87,8 @@ static fnv1a_t FNV1A_INIT =
  */
 static fnv1a_t FNV1A_PRIME =
   UINT128LIT( 0x0000000001000000ull, 0x000000000000013Bull );
-#else
-typedef uint64_t fnv1a_t;
 
+#else
 static fnv1a_t FNV1A_INIT  = 14695981039346656037UL;
 static fnv1a_t FNV1A_PRIME = 1099511628211UL;
 #endif /* HAVE_UNSIGNED_INT128 */

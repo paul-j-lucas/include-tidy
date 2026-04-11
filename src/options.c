@@ -52,9 +52,8 @@
 
 #define OPT_VERBOSE_ALL           "afiPsS"
 
-///////////////////////////////////////////////////////////////////////////////
+////////// extern variables ///////////////////////////////////////////////////
 
-// extern option variables
 unsigned      opt_align_column = OPT_ALIGN_COLUMN_DEFAULT;
 bool          opt_all_includes;
 color_when    opt_color_when = COLOR_NOT_FILE;
@@ -65,14 +64,15 @@ tidy_error    opt_error;
 unsigned      opt_line_length = OPT_LINE_LENGTH_DEFAULT;
 tidy_verbose  opt_verbose;
 
-// extern argument variables
 char const   *arg_source_path;
 
-// local option variables
+////////// local variables ////////////////////////////////////////////////////
+
 static char **opt_include_paths;        ///< Null-terminated list of `-I` paths.
 static bool   opt_is_set_impl[ 256 ];   ///< Was an option set?
 
-// local functions
+////////// local functions ////////////////////////////////////////////////////
+
 NODISCARD
 static unsigned long long parse_ull( char const* );
 

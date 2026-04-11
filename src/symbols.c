@@ -52,7 +52,11 @@
  * @{
  */
 
-///////////////////////////////////////////////////////////////////////////////
+////////// typedefs ///////////////////////////////////////////////////////////
+
+typedef struct visitChildren_visitor_data visitChildren_visitor_data;
+
+////////// structures /////////////////////////////////////////////////////////
 
 /**
  * Additional data passed to visitChildren_visitor.
@@ -61,11 +65,13 @@ struct visitChildren_visitor_data {
   CXFile  source_file;                  ///< The file being tidied.
   bool    verbose_printed;              ///< Printed any verbose output?
 };
-typedef struct visitChildren_visitor_data visitChildren_visitor_data;
 
-// local functions
+////////// local functions ////////////////////////////////////////////////////
+
 static void tidy_symbol_cleanup( tidy_symbol* );
 static void visit_MacroDefinition( CXCursor, visitChildren_visitor_data* );
+
+////////// local variables ////////////////////////////////////////////////////
 
 static rb_tree_t symbol_set;            ///< Set of symbols.
 

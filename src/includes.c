@@ -61,8 +61,12 @@
 
 #define VERBOSE_INCLUDE_INDENT    2     /**< Spaces per include depth. */
 
+////////// typedefs ///////////////////////////////////////////////////////////
+
 typedef struct includes_print_visitor_data  includes_print_visitor_data;
 typedef struct visitChildren_visitor_data   visitChildren_visitor_data;
+
+////////// structures /////////////////////////////////////////////////////////
 
 /**
  * Additional data for includes_print_visitor().
@@ -83,18 +87,20 @@ struct visitChildren_visitor_data {
   bool        verbose_printed;          ///< Printed any verbose output?
 };
 
+////////// local functions ////////////////////////////////////////////////////
 
-// local functions
 NODISCARD
 static char*  make_symbols_used_comment( tidy_include const* );
 
 static void   tidy_include_cleanup( tidy_include* );
 
-// extern variables
+////////// extern variables ///////////////////////////////////////////////////
+
 unsigned tidy_includes_missing;
 unsigned tidy_includes_unnecessary;
 
-// local variables
+////////// local variables ////////////////////////////////////////////////////
+
 static rb_tree_t include_set;           ///< Set of included files.
 
 ////////// local functions ////////////////////////////////////////////////////

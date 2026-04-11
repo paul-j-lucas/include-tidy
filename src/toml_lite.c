@@ -48,6 +48,8 @@
 #define TOML_KEY_LEN_MAX          128   /**< Maximum key length. */
 #define TOML_STRING_LEN_MAX       1024  /**< Maximum string length. */
 
+////////// local constants ////////////////////////////////////////////////////
+
 /**
  * TOML error messages.
  *
@@ -67,7 +69,8 @@ static char const *const TOML_ERROR_MSGS[] = {
   [ TOML_ERR_UNEX_VALUE     ] = "unexpected value",
 };
 
-// local functions
+////////// local functions ////////////////////////////////////////////////////
+
 NODISCARD
 static bool toml_space_skip( toml_file* ),
             toml_string_parse( toml_file*, char** ),
