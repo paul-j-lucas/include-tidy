@@ -1,3 +1,12 @@
+2026-04-11  Paul J. Lucas <paul@lucasmail.org>
+
+   * man/man1/include-tidy.1, config_file.c: Added config file support for
+     "color".
+   * man/man1/include-tidy.1, color.c, color.h, includes.c: Include lines to
+     add/delete are now in color.
+   * color.c, color.h: Now doing color seperately for stdout and stderr.
+   * symbols.c: Removed '!'.
+
 2026-04-10  Paul J. Lucas <paul@lucasmail.org>
 
    * cli_options.c, symbols.c, util.h: Added false_set().
