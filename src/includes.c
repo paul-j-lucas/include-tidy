@@ -39,6 +39,7 @@
 
 // standard
 #include <assert.h>
+#include <errno.h>
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdbool.h>
 #include <stdio.h>
@@ -394,7 +395,8 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
 
     print_error(
       path_no_dot_slash( including_name ), include_line, include_col,
-      "\"%s\": file not found\n", included_name
+      "\"%s\": %s (missing -I option?)\n",
+      included_name, strerror( ENOENT )
     );
     exit( EX_DATAERR );
   }
