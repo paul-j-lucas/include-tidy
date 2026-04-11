@@ -174,7 +174,7 @@ static void maybe_add_symbol( CXCursor sym_cursor,
   bool const added_symbol = include_add_symbol( include_file, symbol );
 
   if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
-    if ( false_set( &!vcvd->verbose_printed ) )
+    if ( false_set( &vcvd->verbose_printed ) )
       verbose_printf( "symbols:\n" );
 
     CXString const abs_path_cxs = tidy_File_getRealPathName( include_file );
