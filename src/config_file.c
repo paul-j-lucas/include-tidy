@@ -149,6 +149,7 @@ static void         all_includes_parse( char const*, toml_table const*,
 NODISCARD
 static bool         bool_value_parse( char const*, char const*, toml_value* );
 
+static void         color_parse( char const*, toml_table const*, toml_value* );
 static void         comment_style_parse( char const*, toml_table const*,
                                          toml_value* );
 
@@ -201,6 +202,7 @@ static config_key const CONFIG_KEYS[] = {
   { "add-c-includes",   TABLE_INCLUDE_TIDY,     &add_c_includes_parse   },
   { "align-column",     TABLE_INCLUDE_TIDY,     &align_column_parse     },
   { "all-includes",     TABLE_INCLUDE_TIDY,     &all_includes_parse     },
+  { "color",            TABLE_INCLUDE_TIDY,     &color_parse            },
   { "comment-style",    TABLE_INCLUDE_TIDY,     &comment_style_parse    },
   { "first",            TABLE_NOT_INCLUDE_TIDY, &first_parse            },
   { "includes",         TABLE_NOT_INCLUDE_TIDY, &includes_parse         },
@@ -334,6 +336,35 @@ static bool bool_value_parse( char const *config_path, char const *key_name,
   }
 
   return value->b;
+}
+
+/**
+ * Parses the value of an `"color"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table Not used.
+ * @param value The toml_value to parse.
+ */
+static void color_parse( char const *config_path, toml_table const *table,
+                         toml_value *value ) {
+  assert( config_path != NULL );
+  (void)table;
+  assert( value != NULL );
+
+  char const *const string_value =
+    string_value_parse( config_path, "color", value );
+
+  if ( opt_is_set( COPT(COLOR) ) )
+    return;
+
+  if ( !opt_color_parse( string_value ) ) {
+    print_error(
+      config_path, value->loc.line, value->loc.col,
+      "invalid value for \"color\"\n"
+    );
+    exit( EX_CONFIG );
+  }
+  opt_mark_set( COPT(COLOR) );
 }
 
 /**
