@@ -103,6 +103,8 @@ typedef enum color_when color_when;
 // extern variables
 extern char const  *sgr_caret;          ///< Color of the caret `^`.
 extern char const  *sgr_error;          ///< Color of `error`.
+extern char const  *sgr_include_add;    ///< Color for `#include` to add.
+extern char const  *sgr_include_del;    ///< Color for `#include` to delete.
 extern char const  *sgr_locus;          ///< Color of error location.
 extern char const  *sgr_warning;        ///< Color of `warning`.
 

@@ -48,6 +48,8 @@
 //
 #define COLOR_CAP_CARET           "caret"
 #define COLOR_CAP_ERROR           "error"
+#define COLOR_CAP_INCLUDE_ADD     "INCLUDE-add"
+#define COLOR_CAP_INCLUDE_DEL     "INCLUDE-del"
 #define COLOR_CAP_LOCUS           "locus"
 #define COLOR_CAP_WARNING         "warning"
 
@@ -73,6 +75,8 @@ static bool         sgr_var_set( char const**, char const* );
 // extern variable definitions
 char const *sgr_caret;
 char const *sgr_error;
+char const *sgr_include_add;
+char const *sgr_include_del;
 char const *sgr_locus;
 char const *sgr_warning;
 
@@ -281,10 +285,12 @@ static char const** sgr_var_find( char const *name ) {
   typedef struct cap_var_map cap_var_map_t;
 
   static cap_var_map_t const CAP_VAR_MAP[] = {
-    { COLOR_CAP_CARET,    &sgr_caret    },
-    { COLOR_CAP_ERROR,    &sgr_error    },
-    { COLOR_CAP_LOCUS,    &sgr_locus    },
-    { COLOR_CAP_WARNING,  &sgr_warning  },
+    { COLOR_CAP_CARET,        &sgr_caret        },
+    { COLOR_CAP_ERROR,        &sgr_error        },
+    { COLOR_CAP_INCLUDE_ADD,  &sgr_include_add  },
+    { COLOR_CAP_INCLUDE_DEL,  &sgr_include_del  },
+    { COLOR_CAP_LOCUS,        &sgr_locus        },
+    { COLOR_CAP_WARNING,      &sgr_warning      },
   };
 
   assert( name != NULL );
@@ -328,10 +334,12 @@ void colors_init( void ) {
   color_capabilities = colors_parse( getenv( "INCLUDE_TIDY_COLORS" ) );
   if ( color_capabilities == NULL ) {
     static char const COLORS_DEFAULT[] =
-      COLOR_CAP_CARET   "=" SGR_FG_GREEN  SGR_SEP SGR_BOLD  SGR_CAP_SEP
-      COLOR_CAP_ERROR   "=" SGR_FG_RED    SGR_SEP SGR_BOLD  SGR_CAP_SEP
-      COLOR_CAP_LOCUS   "="                       SGR_BOLD  SGR_CAP_SEP
-      COLOR_CAP_WARNING "=" SGR_FG_YELLOW SGR_SEP SGR_BOLD  ;
+      COLOR_CAP_CARET       "=" SGR_FG_GREEN  SGR_SEP SGR_BOLD  SGR_CAP_SEP
+      COLOR_CAP_ERROR       "=" SGR_FG_RED    SGR_SEP SGR_BOLD  SGR_CAP_SEP
+      COLOR_CAP_INCLUDE_ADD "=" SGR_FG_GREEN                    SGR_CAP_SEP
+      COLOR_CAP_INCLUDE_DEL "=" SGR_FG_RED                      SGR_CAP_SEP
+      COLOR_CAP_LOCUS       "="                       SGR_BOLD  SGR_CAP_SEP
+      COLOR_CAP_WARNING     "=" SGR_FG_YELLOW SGR_SEP SGR_BOLD  ;
 
     color_capabilities = colors_parse( COLORS_DEFAULT );
     assert( color_capabilities != NULL );

@@ -27,6 +27,7 @@
 #include "pjl_config.h"
 #include "includes.h"
 #include "clang_util.h"
+#include "color.h"
 #include "config_file.h"
 #include "options.h"
 #include "print.h"
@@ -118,20 +119,40 @@ static void get_include_delims( bool is_local, char delim[static 2] ) {
  * Prints a `#include` preprocessor directive.
  *
  * @param include The tidy_include to print.
- * @param comment The text of the comment (not including the delimiters).  May
- * be NULL.
  */
-static void include_print( tidy_include const *include, char const *comment ) {
+static void include_print( tidy_include const *include ) {
   assert( include != NULL );
 
-  char inc_delim[2];
-  get_include_delims( include->is_local, inc_delim );
+  char       *comment = NULL;
+  char        inc_delim[2];
+  bool const  is_direct = include->depth == 0;
+  bool        reset_opt_comment_style = false;
+  char const *sgr_color = NULL;
 
+  if ( include->is_needed ) {
+    if ( opt_comment_style[0][0] != '\0' )
+      comment = make_symbols_used_comment( include );
+    if ( !is_direct )
+      sgr_color = sgr_include_add;
+  }
+  else if ( is_direct ) {
+    if ( opt_comment_style[0][0] == '\0' ) {
+      opt_comment_style[0] = "// ";
+      reset_opt_comment_style = true;
+    }
+    check_asprintf( &comment, "DELETE LINE %u", include->line );
+    sgr_color = sgr_include_del;
+  }
+
+  get_include_delims( include->is_local, inc_delim );
+  color_start( stdout, sgr_color );
   int const raw_len = printf(
     "#include %c%s%c", inc_delim[0], include->rel_path, inc_delim[1]
   );
-  if ( unlikely( raw_len < 0 ) )
+  if ( unlikely( raw_len < 0 ) ) {
+    color_end( stdout, sgr_color );
     perror_exit( EX_IOERR );
+  }
 
   if ( comment != NULL ) {
     unsigned const column = STATIC_CAST( unsigned, raw_len ) + 1;
@@ -140,7 +161,12 @@ static void include_print( tidy_include const *include, char const *comment ) {
     printf( "%s%s%s", opt_comment_style[0], comment, opt_comment_style[1] );
   }
 
+  color_end( stdout, sgr_color );
   putchar( '\n' );
+
+  free( comment );
+  if ( reset_opt_comment_style )
+    opt_comment_style[0] = "";
 }
 
 /**
@@ -171,21 +197,6 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
   if ( ipvd->print_standard != config_is_standard_include( include->rel_path ) )
     goto skip;
 
-  char *comment = NULL;
-  bool  reset_opt_comment_style = false;
-
-  if ( include->is_needed ) {
-    if ( opt_comment_style[0][0] != '\0' )
-      comment = make_symbols_used_comment( include );
-  }
-  else if ( include->depth == 0 ) {
-    if ( opt_comment_style[0][0] == '\0' ) {
-      opt_comment_style[0] = "// ";
-      reset_opt_comment_style = true;
-    }
-    check_asprintf( &comment, "DELETE LINE %u", include->line );
-  }
-
   if ( (opt_verbose & TIDY_VERBOSE_SOURCE_FILE) != 0 &&
        false_set( &ipvd->printed_source_file ) ) {
     verbose_printf( "%s\n", arg_source_path );
@@ -193,12 +204,8 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
 
   if ( true_clear( &ipvd->print_blank_line ) )
     putchar( '\n' );
-  include_print( include, comment );
-
-  free( comment );
+  include_print( include );
   ipvd->printed_any_includes = true;
-  if ( reset_opt_comment_style )
-    opt_comment_style[0] = "";
 
 skip:
   return false;

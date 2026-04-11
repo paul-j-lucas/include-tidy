@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "April 10, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "April 11, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -862,7 +862,7 @@ value
 that is a semicolon-separated list of integers
 in the range 0\-255.
 An example SGR value is \f(CW31;1\fP
-that specifies a bright red foreground
+that specifies a bold red foreground
 on the terminal's default background.
 .IP
 Capability names containing upper-case letters are unique to
@@ -870,18 +870,28 @@ Capability names containing upper-case letters are unique to
 those in all lower-case are upwards compatible with
 .BR gcc .
 .RS
-.TP 13
+.TP 17
 .BI caret= SGR
 SGR for the caret pointing to the error on the line above
 (as with
 .BR gcc ).
 The default is \f(CW32;1\fP
-(bright green foreground over current terminal background).
+(bold green foreground over current terminal background).
 .TP
 .BI error= SGR
 SGR for the word ``error.''
 The default is \f(CW31;1\fP
-(bright red foreground over current terminal background).
+(bold red foreground over current terminal background).
+.TP
+.BI INCLUDE-add= SGR
+SGR for \f(CW#include\fP lines to add.
+The default is \f(CW32\fP
+(green foreground over current terminal background).
+.TP
+.BI INCLUDE-del= SGR
+SGR for \f(CW#include\fP lines to delete.
+The default is \f(CW31\fP
+(red foreground over current terminal background).
 .TP
 .BI locus= SGR
 SGR for location information in error and warning messages.
@@ -891,7 +901,7 @@ The default is \f(CW1\fP
 .BI warning= SGR
 SGR for the word ``warning.''
 The default is \f(CW33;1\fP
-(bright yellow foreground over current terminal background).
+(bold yellow foreground over current terminal background).
 .RE
 .IP
 The term ``color'' is used loosely.
