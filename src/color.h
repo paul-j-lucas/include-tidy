@@ -30,7 +30,6 @@
 
 // local
 #include "pjl_config.h"                 /* must go first */
-#include "util.h"
 
 /// @cond DOXYGEN_IGNORE
 
@@ -118,10 +117,7 @@ extern char const  *sgr_warning;        ///< Color of `warning`.
  *
  * @sa color_start()
  */
-inline void color_end( FILE *file, char const *sgr_color ) {
-  if ( sgr_color != NULL )
-    FPUTS( SGR_END SGR_EL, file );
-}
+void color_end( FILE *file, char const *sgr_color );
 
 /**
  * Starts printing in the predefined \a sgr_color.
@@ -131,10 +127,7 @@ inline void color_end( FILE *file, char const *sgr_color ) {
  *
  * @sa color_end()
  */
-inline void color_start( FILE *file, char const *sgr_color ) {
-  if ( sgr_color != NULL )
-    FPRINTF( file, SGR_START SGR_EL, sgr_color );
-}
+void color_start( FILE *file, char const *sgr_color );
 
 /**
  * Initializes when to print in color and the colors.
