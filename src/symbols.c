@@ -78,7 +78,7 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Gets the "underlying" cursor for \a cursor, if any.
+ * Gets the "underlying" cursor for \a cursor, if any, and incomplete.
  *
  * @remarks
  * @parblock
@@ -88,13 +88,27 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
  *      // ...
  *      foo_t x;                        // cursor is at foo_t here
  *
- * where \a cursor is at a use of `foo_t`, we want to get the "underlying"
- * cursor, in this case for `foo`.
+ * where \a cursor is at a use of `foo_t`, we want to get the cursor for the
+ * underlying type, in this case for `foo`.
+ *
+ * However, we care only when the underlying type is incomplete.  For the above
+ * case, `foo` would be incomplete only if the compiler hasn't seen the its
+ * definition.  If it is incomplete, then the source file needs to include the
+ * file containing said definition; but if it's complete, then the source file
+ * either included said file or defines the type itself, so we don't care about
+ * the underlying type.
+ *
+ * Additionally, for a case like:
+ *
+ *      typedef struct foo *foo_ptr_t;
+ *
+ * we have to traverse through all pointers (and references for C++) to get to
+ * the cursor for the underlying type.
  * @endparblock
  *
  * @param cursor The original cursor to get the underlying cursor for.
- * @return Returns the underlying cursor for \a cursor or the null cursor if
- * none.
+ * @return Returns the underlying cursor for \a cursor, if necessary, or the
+ * null cursor if not or none.
  */
 NODISCARD
 static CXCursor get_underlying_cursor( CXCursor cursor ) {
@@ -115,7 +129,16 @@ static CXCursor get_underlying_cursor( CXCursor cursor ) {
       } // switch
     } while ( is_via_ptr_ref );
 
-    underlying_cursor = clang_getTypeDeclaration( type );
+    // In libclang, the way to know whether a type is incomplete is to try to
+    // get its size.
+    switch ( clang_Type_getSizeOf( type ) ) {
+      case CXTypeLayoutError_Dependent: // C++ template parameter
+      case CXTypeLayoutError_Invalid:   // e.g., void
+        break;
+      case CXTypeLayoutError_Incomplete:
+        underlying_cursor = clang_getTypeDeclaration( type );
+        break;
+    } // case
   }
 
   return underlying_cursor;
