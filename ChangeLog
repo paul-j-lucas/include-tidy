@@ -1,5 +1,7 @@
 2026-04-11  Paul J. Lucas <paul@lucasmail.org>
 
+   * symbols.c: Now getting underlying type only if it's incomplete.
+   * includes.c: Now using strerror( ENOENT ).
    * man/man1/include-tidy.1, config_file.c: Added config file support for
      "color".
    * man/man1/include-tidy.1, color.c, color.h, includes.c: Include lines to
