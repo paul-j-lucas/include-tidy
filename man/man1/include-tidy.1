@@ -149,27 +149,24 @@ that affect compilation.
 .PP
 The
 .B \-\-verbose=f
-says to print each source file's name
-and the
+says to print each source file's name;
 .B \-\-error=never
 says always to exit with a zero status
 even for violations so
 .B make
-doesn't think anything went wrong.
-The
+doesn't think anything went wrong;
 .B @
-suppresses echoing of the commands,
-the
+suppresses echoing of commands;
 .B touch
 is needed so
 .B make
 will run
 .B include-tidy
-on all \f(CW.c\fP files,
-and the
+on all \f(CW.c\fP files;
+and
 .B \-s
-or
-.B \-\-silent
+(or
+.BR \-\-silent )
 suppresses
 .BR make 's
 output.
