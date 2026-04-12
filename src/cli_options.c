@@ -401,7 +401,7 @@ static struct option const* get_option( char short_opt ) {
 }
 
 /**
- * Gets the source path from the last argument, if any.
+ * Gets the likely source path from \a argv.
  *
  * @param argc The argument count from \c main().
  * @param argv The argument values from \c main().
@@ -411,12 +411,20 @@ static char const* get_source_path( int argc, char const *argv[] ) {
   assert( argc > 0 );
   assert( argv != NULL );
 
-  if ( argc < 2 )                       // can't be a source path
-    return NULL;
-  char const *const last_argv = (argv)[ argc - 1 ];
-  if ( last_argv[0] == '-' )            // last doesn't look like a filename
-    return NULL;
-  return last_argv;
+  // The source path tends to be last (or near it), so iterate backwards.
+  for ( int i = argc - 1; i >= 1; --i ) {
+    char const *const argi = argv[i];
+    if ( unlikely( argi[0] == '\0' ) || argi[0] == '-' )
+      continue;
+    char const *const ext = path_ext( argi );
+    if ( ext == NULL )
+      continue;
+    char const *const lang = get_ext_language( ext );
+    if ( lang != NULL )
+      return argi;
+  } // for
+
+  return NULL;
 }
 
 /**
