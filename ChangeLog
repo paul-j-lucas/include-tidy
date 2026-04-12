@@ -1,3 +1,13 @@
+2026-04-12  Paul J. Lucas <paul@lucasmail.org>
+
+   * include-tidy.c, includes.c, includes.h: Added
+     includes_init_implicit_proxies().
+   * util.c: Added missing extern incline false_set().
+   * man/man1/include-tidy.1, include-tidy.c, includes.c, options.c, options.h:
+     Now also print implicit include proxies.
+   * config_file.c, includes.c, util.c, util.h: Added path_is_relative().
+   * cli_options.c: Better get_source_path().
+
 2026-04-11  Paul J. Lucas <paul@lucasmail.org>
 
    * symbols.c: Now getting underlying type only if it's incomplete.
