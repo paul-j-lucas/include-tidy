@@ -50,7 +50,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define OPT_VERBOSE_ALL           "afiPsS"
+#define OPT_VERBOSE_ALL           "afipPsS"
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -311,8 +311,11 @@ bool opt_verbose_parse( char const *verbose_format ) {
       case 'i':
         verbose |= TIDY_VERBOSE_INCLUDES;
         break;
+      case 'p':
+        verbose |= TIDY_VERBOSE_PROXIES_EXPLICIT;
+        break;
       case 'P':
-        verbose |= TIDY_VERBOSE_CONFIG_PROXIES;
+        verbose |= TIDY_VERBOSE_PROXIES_IMPLICIT;
         break;
       case 's':
         verbose |= TIDY_VERBOSE_SYMBOLS;

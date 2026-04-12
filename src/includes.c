@@ -177,6 +177,40 @@ static void include_print( tidy_include const *include ) {
 }
 
 /**
+ * Dumps include proxies.
+ *
+ * @param want_explicit If `true`, dump explicit proxies only; if `false`, dump
+ * implicit proxies only.
+ */
+static void include_proxies_dump_impl( bool want_explicit ) {
+  bool printed_any = false;
+
+  rb_iterator_t iter;
+  rb_iterator_init( &include_set, &iter );
+
+  for ( tidy_include const *include;
+        (include = rb_iterator_next( &iter )) != NULL; ) {
+    if ( include->proxy == NULL )
+      continue;
+    if ( include->is_proxy_explicit != want_explicit )
+      continue;
+    if ( false_set( &printed_any ) ) {
+      verbose_printf(
+        "%s proxies:\n",
+        want_explicit ? "explicit" : "implicit"
+      );
+    }
+    verbose_printf(
+      "  \"%s\" -> \"%s\"\n",
+      include->rel_path, include->proxy->rel_path
+    );
+  } // for
+
+  if ( printed_any )
+    verbose_printf( "\n" );
+}
+
+/**
  * Cleans-up set of included files.
  */
 static void includes_cleanup( void ) {
@@ -564,19 +598,10 @@ CXFile include_get_File( char const *rel_path ) {
 void include_proxies_dump( void ) {
   if ( rb_tree_empty( &include_set ) )
     return;
-  verbose_printf( "configuration proxies:\n" );
-  rb_iterator_t iter;
-  rb_iterator_init( &include_set, &iter );
-  for ( tidy_include const *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( include->is_proxy_explicit ) {
-      verbose_printf(
-        "  \"%s\" -> \"%s\"\n",
-        include->rel_path, include->proxy->rel_path
-      );
-    }
-  } // for
-  verbose_printf( "\n" );
+  if ( (opt_verbose & TIDY_VERBOSE_PROXIES_EXPLICIT) != 0 )
+    include_proxies_dump_impl( /*want_explicit=*/true );
+  if ( (opt_verbose & TIDY_VERBOSE_PROXIES_IMPLICIT) != 0 )
+    include_proxies_dump_impl( /*want_explicit=*/false );
 }
 
 void includes_init( CXTranslationUnit tu ) {

@@ -56,15 +56,23 @@ typedef enum tidy_error tidy_error;
  * Verbose mode.
  */
 enum tidy_verbose {
-  TIDY_VERBOSE_NONE,                    ///< Don't be verbose.
-  TIDY_VERBOSE_ARGS           = 1 << 0, ///< Command-line arguments.
-  TIDY_VERBOSE_CONFIG_PROXIES = 1 << 1, ///< Configuration proxies.
-  TIDY_VERBOSE_CONFIG_SYMBOLS = 1 << 2, ///< Configuration symbols.
-  TIDY_VERBOSE_INCLUDES       = 1 << 3, ///< Files includes.
-  TIDY_VERBOSE_SOURCE_FILE    = 1 << 4, ///< Source file.
-  TIDY_VERBOSE_SYMBOLS        = 1 << 5, ///< Symbols referenced.
+  TIDY_VERBOSE_NONE,                      ///< Don't be verbose.
+  TIDY_VERBOSE_ARGS             = 1 << 0, ///< Command-line arguments.
+  TIDY_VERBOSE_CONFIG_SYMBOLS   = 1 << 1, ///< Configuration symbols.
+  TIDY_VERBOSE_INCLUDES         = 1 << 2, ///< Files includes.
+  TIDY_VERBOSE_PROXIES_EXPLICIT = 1 << 3, ///< Explicit include proxies.
+  TIDY_VERBOSE_PROXIES_IMPLICIT = 1 << 4, ///< Implicit include proxies.
+  TIDY_VERBOSE_SOURCE_FILE      = 1 << 5, ///< Source file.
+  TIDY_VERBOSE_SYMBOLS          = 1 << 6, ///< Symbols referenced.
 };
 typedef enum tidy_verbose tidy_verbose;
+
+/**
+ * Shorthand for either #TIDY_VERBOSE_PROXIES_EXPLICIT or
+ * #TIDY_VERBOSE_PROXIES_IMPLICIT.
+ */
+#define TIDY_VERBOSE_PROXIES_EITHER \
+  ( TIDY_VERBOSE_PROXIES_EXPLICIT | TIDY_VERBOSE_PROXIES_IMPLICIT )
 
 // extern option variables
 extern unsigned     opt_align_column;     ///< Comment alignment column.
