@@ -766,6 +766,7 @@ static long int_value_parse( char const *config_path, char const *key_name,
 NODISCARD
 static bool is_standard_include( char const *rel_path, char *includes[] ) {
   assert( rel_path != NULL );
+  assert( path_is_relative( rel_path ) );
 
   if ( includes != NULL ) {
     for ( char **ppattern = includes; *ppattern != NULL; ++ppattern ) {
@@ -1198,13 +1199,11 @@ void config_init( void ) {
 
 bool config_is_standard_include( char const *rel_path ) {
   assert( rel_path != NULL );
+  assert( path_is_relative( rel_path ) );
 
-  if ( tidy_lang == CXLanguage_CPlusPlus &&
-       is_standard_include( rel_path, std_cpp_includes ) ) {
-    return true;
-  }
-
-  return is_standard_include( rel_path, std_c_includes );
+  return  (tidy_lang == CXLanguage_CPlusPlus &&
+           is_standard_include( rel_path, std_cpp_includes )) ||
+          is_standard_include( rel_path, std_c_includes );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

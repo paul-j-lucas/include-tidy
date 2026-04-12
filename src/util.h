@@ -896,6 +896,17 @@ NODISCARD
 char const* path_ext( char const *path );
 
 /**
+ * Gets whether \a path is a relative path.
+ *
+ * @param path the path to check.
+ * @return Returns `true` only if \a path is relative.
+ */
+NODISCARD
+inline bool path_is_relative( char const *path ) {
+  return path[0] != '/';
+}
+
+/**
  * Gets the pathname without the filename extension of \a path, if any.
  *
  * @param path The path.

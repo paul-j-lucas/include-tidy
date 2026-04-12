@@ -536,6 +536,7 @@ tidy_include* include_find( CXFile file ) {
 
 CXFile include_get_File( char const *rel_path ) {
   assert( rel_path != NULL );
+  assert( path_is_relative( rel_path ) );
 
   bool          found = false;
   rb_iterator_t iter;
