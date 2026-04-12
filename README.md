@@ -3,8 +3,9 @@
 ## Introduction
 
 **include-tidy** is a command-line tool
-that allows you to tidy-up the st of `#include` directives
-used in either a C or C++ source file, specifically:
+that allows you to tidy-up the set of `#include` directives
+used in either a C or C++ source file,
+specifically:
 
 + For every symbol (type, variable, function, or macro) that you reference
   in a source file, you should directly `#include` the header
@@ -14,7 +15,7 @@ That means **include-tidy** will print the `#include` directives
 for every header your source file:
 
 1. Is missing (and so should be added).
-2. Is present for no reason (and so should be deleted).
+2. Is unnecessary (and so should be deleted).
 
 **include-tidy** has the same purpose as
 [**include-what-you-use**](https://include-what-you-use.org) (IWYU),
@@ -22,20 +23,22 @@ but IWYU has a number of [issues](https://github.com/include-what-you-use/includ
 
 ## Dependencies
 
-**include-tidy** depends on
-[Libclang](https://clang.llvm.org/docs/LibClang.html)
-(typically installed as part of either a `clang`
-or `clang-devel`
-package,
-if not from source),
-the `llvm-config` command
-(typically installed as part of either an `llvm`
-or `llvm-devel`
-package,
-if not from source),
-and the
-[Clang](https://clang.llvm.org)
-compiler.
+**include-tidy** has the following dependencies:
+
++ [Libclang](https://clang.llvm.org/docs/LibClang.html)
+  (typically installed as part of either a `clang`
+  or `clang-devel`
+  package,
+  if not from source).
+
++ The [`llvm-config`](https://llvm.org/docs/CommandGuide/llvm-config.html)
+  command
+  (typically installed as part of either an `llvm`
+  or `llvm-devel`
+  package,
+  if not from source).
+
++ The [Clang](https://clang.llvm.org) compiler.
 
 ## Installation
 

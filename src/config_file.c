@@ -760,10 +760,11 @@ static long int_value_parse( char const *config_path, char const *key_name,
  *
  * @param rel_path The relative path of an include file, e.g., `"stdio.h"` or
  * `"sys/wait.h"`.
+ * @param includes A NULL-terminated array of include paths.
  * @return Returns `true` only if \a rel_path is among \a includes.
  */
 NODISCARD
-static bool is_standard_include( char const *rel_path, char **includes ) {
+static bool is_standard_include( char const *rel_path, char *includes[] ) {
   assert( rel_path != NULL );
 
   if ( includes != NULL ) {

@@ -54,6 +54,9 @@
 
 ////////// extern variables ///////////////////////////////////////////////////
 
+/// @cond DOXYGEN_IGNORE
+/// Otherwise Doxygen generates two entries.
+
 unsigned      opt_align_column = OPT_ALIGN_COLUMN_DEFAULT;
 bool          opt_all_includes;
 color_when    opt_color_when = COLOR_NOT_FILE;
@@ -65,6 +68,8 @@ unsigned      opt_line_length = OPT_LINE_LENGTH_DEFAULT;
 tidy_verbose  opt_verbose;
 
 char const   *arg_source_path;
+
+/// @endcond
 
 ////////// local variables ////////////////////////////////////////////////////
 
