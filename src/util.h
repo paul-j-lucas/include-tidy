@@ -889,6 +889,8 @@ inline char const* null_if_empty( char const *s ) {
  * @param path The path to get the filename extension of.
  * @return Returns a pointer into \a path pointing at the first character of
  * the extension (not the dot) or NULL if \a path has no extension.
+ *
+ * @sa path_no_ext()
  */
 NODISCARD
 char const* path_ext( char const *path );
@@ -900,6 +902,8 @@ char const* path_ext( char const *path );
  * @param path_buf A path buffer to use only if \a path has an extension.
  * @return If \a path has no extension, returns \a path as-is; otherwise copies
  * \a path into \a path_buf without the extension and returns \a path_buf.
+ *
+ * @sa path_ext()
  */
 NODISCARD
 char const* path_no_ext( char const *path, char path_buf[static PATH_MAX] );
