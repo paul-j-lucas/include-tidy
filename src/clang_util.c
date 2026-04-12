@@ -156,8 +156,9 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
   assert( file != NULL );
 
   CXFileUniqueID id;
-  int const rv = clang_getFileUniqueID( file, &id );
-  if ( unlikely( rv != 0 ) ) {
+  if ( unlikely( clang_getFileUniqueID( file, &id ) != 0 ) ) {
+    // clang_getFileUniqueID() failed, but we still want an ID: get a hash of
+    // its full path.
     CXString const    abs_path_cxs = tidy_File_getRealPathName( file );
     char const *const abs_path = clang_getCString( abs_path_cxs );
     fnv1a_t const     hash = fnv1a_s( abs_path );

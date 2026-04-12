@@ -146,15 +146,17 @@ static CXCursor get_underlying_cursor( CXCursor cursor ) {
 
 /**
  * Helper function for visitChildren_visitor that gets whether the symbol at \a
- * cursor is referenced from \a file.
+ * sym_cursor is referenced from \a file.
  *
- * @param cursor The cursor for the symbol.
+ * @param sym_cursor The cursor for the symbol.
  * @param file The file of interest.
  * @return Returns `true` only if the symbol is referenced from \a file.
  */
 NODISCARD
-static bool is_symbol_in_file( CXCursor cursor, CXFile file ) {
-  CXSourceLocation const  sym_loc = clang_getCursorLocation( cursor );
+static bool is_symbol_in_file( CXCursor sym_cursor, CXFile file ) {
+  assert( file != NULL );
+
+  CXSourceLocation const  sym_loc = clang_getCursorLocation( sym_cursor );
   CXFile                  sym_file;
 
   clang_getSpellingLocation( sym_loc, &sym_file,
@@ -166,7 +168,7 @@ static bool is_symbol_in_file( CXCursor cursor, CXFile file ) {
  * Helper function for visitChildren_visitor that maybe adds a symbol to the
  * global set.
  *
- * @param sym_cursor The cursor at the symbol.
+ * @param sym_cursor The cursor for the symbol.
  * @param vcvd The visitChildren_visitor_data to use.
  */
 static void maybe_add_symbol( CXCursor sym_cursor,

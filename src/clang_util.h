@@ -95,6 +95,8 @@ CXString tidy_File_getRealPathName( CXFile file );
 /**
  * Gets a unique ID for \a file.
  *
+ * @remarks Unlike `clang_getFileUniqueID()`, this function never fails.
+ *
  * @param file The file to get the unique ID for.
  * @return Returns said unique ID.
  */
