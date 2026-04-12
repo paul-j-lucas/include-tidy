@@ -770,7 +770,8 @@ static bool is_standard_include( char const *rel_path, char *includes[] ) {
 
   if ( includes != NULL ) {
     for ( char **ppattern = includes; *ppattern != NULL; ++ppattern ) {
-      switch ( fnmatch( *ppattern, rel_path, /*flags=*/0 ) ) {
+      int const flags = strstr( *ppattern, "**" ) == NULL ? FNM_PATHNAME : 0;
+      switch ( fnmatch( *ppattern, rel_path, flags ) ) {
         case 0:
           return true;
         case FNM_NOMATCH:

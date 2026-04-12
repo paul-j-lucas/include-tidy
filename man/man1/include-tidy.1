@@ -593,12 +593,23 @@ that are specified as a bracket-enclosed,
 comma-separated
 array of strings,
 are to be considered ``standard'' C include files.
-Globbing is supported.
 These are used
 when the source file
 is either C or C++
 (since C++ programs
 can include C header files).
+.IP
+Globbing is supported.
+A single
+.B *
+matches any sequence of characters except
+.B /
+that limits matching within a single directory.
+A double
+.B **
+matches any sequence of characters including
+.B /
+that matches within any subdirectory.
 .TP
 .BI std-cpp-includes " \f1=\fP " [ s " \f1[,\fP " s "\f1]*\fP ]"
 Like
