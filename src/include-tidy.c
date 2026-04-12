@@ -66,15 +66,17 @@ char const *prog_name;
  */
 int main( int argc, char const *argv[] ) {
   prog_name = base_name( argv[0] );
+
+  // Initialization MUST happen in this order.
   options_init();
   cli_options_init( &argc, &argv );
   colors_init();
   CXTranslationUnit tu = trans_unit_init( argc, argv );
   includes_init( tu );
   config_init();
-  if ( (opt_verbose & TIDY_VERBOSE_PROXIES_EITHER) != 0 )
-    include_proxies_dump();
+  includes_init_implicit_proxies( tu );
   symbols_init( tu );
+
   includes_print();
 
   if ( opt_error == TIDY_ERROR_NEVER )

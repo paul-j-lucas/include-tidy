@@ -62,6 +62,7 @@ struct tidy_include {
   CXFileUniqueID  file_id;              ///< Unique file ID.
   CXString        abs_path_cxs;         ///< Absolute path of \a file.
   char const     *rel_path;             ///< Relative path of \a file.
+  tidy_include   *includer;             ///< Include including this, if any.
   tidy_include   *proxy;                ///< Proxy include, if any.
   unsigned        depth;                ///< Include depth.
   unsigned        count;                ///< Number of times included.
@@ -131,16 +132,22 @@ NODISCARD
 CXFile include_get_File( char const *rel_path );
 
 /**
- * Dumps all include proxies.
- */
-void include_proxies_dump( void );
-
-/**
  * Initializes the set of files included in the given translation unit.
  *
  * @param tu The translation unit to use.
+ *
+ * @sa includes_init_implicit_proxies()
  */
 void includes_init( CXTranslationUnit tu );
+
+/**
+ * Initializes the implicit include proxies for the given translation unit.
+ *
+ * @param tu The translation unit to use.
+ *
+ * @sa includes_init()
+ */
+void includes_init_implicit_proxies( CXTranslationUnit tu );
 
 /**
  * Prints include files.

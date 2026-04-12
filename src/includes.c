@@ -63,8 +63,8 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
+typedef struct includes_init_visitor_data   includes_init_visitor_data;
 typedef struct includes_print_visitor_data  includes_print_visitor_data;
-typedef struct visitChildren_visitor_data   visitChildren_visitor_data;
 
 ////////// structures /////////////////////////////////////////////////////////
 
@@ -80,9 +80,9 @@ struct includes_print_visitor_data {
 };
 
 /**
- * Additional data passed to visitChildren_visitor().
+ * Additional data passed to includes_init_visitor().
  */
-struct visitChildren_visitor_data {
+struct includes_init_visitor_data {
   char const *source_file_no_ext;       ///< File being tidied without ext.
   bool        verbose_printed;          ///< Printed any verbose output?
 };
@@ -182,7 +182,7 @@ static void include_print( tidy_include const *include ) {
  * @param want_explicit If `true`, dump explicit proxies only; if `false`, dump
  * implicit proxies only.
  */
-static void include_proxies_dump_impl( bool want_explicit ) {
+static void include_proxies_dump( bool want_explicit ) {
   bool printed_any = false;
 
   rb_iterator_t iter;
@@ -397,14 +397,15 @@ static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
 }
 
 /**
- * Visits each `#include` directive in a translation unit.
+ * Visits each `#include` directive in a translation unit to initialize \ref
+ * include_set.
  *
  * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent Not used.
- * @param data A pointer to a visitChildren_visitor_data.
+ * @param data A pointer to a includes_init_visitor_data.
  * @return Always returns `CXChildVisit_Continue`.
  */
-static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
+static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
                                                       CXCursor parent,
                                                       CXClientData data ) {
   (void)parent;
@@ -413,8 +414,8 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
     goto skip;
 
-  visitChildren_visitor_data *const vcvd =
-    POINTER_CAST( visitChildren_visitor_data*, data );
+  includes_init_visitor_data *const iivd =
+    POINTER_CAST( includes_init_visitor_data*, data );
 
   unsigned          include_line, include_col;
   CXSourceLocation  include_loc = clang_getCursorLocation( cursor );
@@ -462,15 +463,9 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
     include->rel_path     = opt_include_paths_relativize( abs_path );
 
     if ( !is_direct ) {
-      tidy_include *const includer = include_find( including_file );
-      assert( includer != NULL );
-      include->depth = includer->depth + 1;
-      if ( is_implicit_proxy( includer, include ) ) {
-        tidy_include *proxy = includer;
-        while ( proxy->proxy != NULL )
-          proxy = proxy->proxy;
-        include->proxy = proxy;
-      }
+      include->includer = include_find( including_file );
+      assert( include->includer != NULL );
+      include->depth = include->includer->depth + 1;
     }
 
     char const *const include_ext = path_ext( include->rel_path );
@@ -478,7 +473,7 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       char path_buf[ PATH_MAX ];
       char const *const include_no_ext =
         path_no_ext( include->rel_path, path_buf );
-      if ( strcmp( include_no_ext, vcvd->source_file_no_ext ) == 0 ) {
+      if ( strcmp( include_no_ext, iivd->source_file_no_ext ) == 0 ) {
         //
         // This include file's name matches the source file's (without
         // extensions), hence it's the .h corresponding to the .c so sort the
@@ -502,14 +497,14 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   }
   else {                                // is_direct must be true here
     include->depth = 0;
-    include->proxy = NULL;
+    include->includer = NULL;
   }
 
   if ( is_direct )
     include->line = include_line;
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
-    if ( false_set( &vcvd->verbose_printed ) )
+    if ( false_set( &iivd->verbose_printed ) )
       verbose_printf( "includes:\n" );
 
     char inc_delim[2];
@@ -521,6 +516,41 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       STATIC_CAST( int, include->depth * VERBOSE_INCLUDE_INDENT ), "",
       inc_delim[0], clang_getCString( include->abs_path_cxs ), inc_delim[1]
     );
+  }
+
+skip:
+  return CXChildVisit_Continue;
+}
+
+/**
+ * Visits each `#include` directive in a translation unit for initializing
+ * implicit include proxies.
+ *
+ * @param cursor The cursor for the symbol in the AST being visited.
+ * @param parent Not used.
+ * @param data A Not used.
+ * @return Always returns `CXChildVisit_Continue`.
+ */
+static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
+                                                         CXCursor parent,
+                                                         CXClientData data ) {
+  (void)parent;
+  (void)data;
+
+  if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
+    goto skip;
+
+  CXFile const included_file = clang_getIncludedFile( cursor );
+  assert( included_file != NULL );
+  tidy_include *const include = include_find( included_file );
+  assert( include != NULL );
+
+  tidy_include *const includer = include->includer;
+  if ( includer != NULL && is_implicit_proxy( includer, include ) ) {
+    tidy_include *proxy = includer;
+    while ( proxy->proxy != NULL )
+      proxy = proxy->proxy;
+    include->proxy = proxy;
   }
 
 skip:
@@ -595,15 +625,6 @@ CXFile include_get_File( char const *rel_path ) {
   return NULL;
 }
 
-void include_proxies_dump( void ) {
-  if ( rb_tree_empty( &include_set ) )
-    return;
-  if ( (opt_verbose & TIDY_VERBOSE_PROXIES_EXPLICIT) != 0 )
-    include_proxies_dump_impl( /*want_explicit=*/true );
-  if ( (opt_verbose & TIDY_VERBOSE_PROXIES_IMPLICIT) != 0 )
-    include_proxies_dump_impl( /*want_explicit=*/false );
-}
-
 void includes_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
   rb_tree_init(
@@ -612,13 +633,25 @@ void includes_init( CXTranslationUnit tu ) {
   ATEXIT( &includes_cleanup );
 
   char path_buf[ PATH_MAX ];
-  visitChildren_visitor_data vcvd = {
+  includes_init_visitor_data iivd = {
     .source_file_no_ext = path_no_ext( base_name( arg_source_path ), path_buf )
   };
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
-  clang_visitChildren( cursor, &visitChildren_visitor, &vcvd );
-  if ( vcvd.verbose_printed )
+  clang_visitChildren( cursor, &includes_init_visitor, &iivd );
+  if ( iivd.verbose_printed )
     verbose_printf( "\n" );
+}
+
+void includes_init_implicit_proxies( CXTranslationUnit tu ) {
+  ASSERT_RUN_ONCE();
+
+  CXCursor cursor = clang_getTranslationUnitCursor( tu );
+  clang_visitChildren( cursor, &implicit_proxies_visitor, /*data=*/NULL );
+
+  if ( (opt_verbose & TIDY_VERBOSE_PROXIES_EXPLICIT) != 0 )
+    include_proxies_dump( /*want_explicit=*/true );
+  if ( (opt_verbose & TIDY_VERBOSE_PROXIES_IMPLICIT) != 0 )
+    include_proxies_dump( /*want_explicit=*/false );
 }
 
 void includes_print( void ) {
