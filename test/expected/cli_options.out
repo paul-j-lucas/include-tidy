@@ -4,7 +4,7 @@ usage: include-tidy [-Xtidy tidy-option]... [clang-option]... source-file
 
 tidy options:
   --align-column=ARG  (-a) Align comments to this column; default=80.
-  --all-includes      (-A) Print all include files.
+  --all-includes      (-A) Print all includes, not just those in violation.
   --clang=ARG         (-C) Path of clang to use or "none"; default="clang".
   --color=ARG         (-k) When to colorize output; default="not_file".
   --comment-style=ARG (-s) Comment style: "//", "/*", or "none".

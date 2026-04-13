@@ -125,7 +125,7 @@ static struct option const OPTIONS[] = {
  */
 static char const *const OPTIONS_HELP[] = {
   [ COPT(ALIGN_COLUMN) ] = "Align comments to this column; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
-  [ COPT(ALL_INCLUDES) ] = "Print all include files",
+  [ COPT(ALL_INCLUDES) ] = "Print all includes, not just those in violation",
   [ COPT(CLANG) ] = "Path of clang to use or \"none\"; default=\"" OPT_CLANG_DEFAULT "\"",
   [ COPT(COLOR) ] = "When to colorize output; default=\"not_file\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
