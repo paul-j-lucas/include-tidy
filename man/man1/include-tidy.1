@@ -735,7 +735,7 @@ in the following locations
 in order:
 .nr step 1 1
 .IP \n[step]. 3
-The value of either the
+The path given as the value for either the
 .B \-\-config
 or
 .B \-c
@@ -743,15 +743,12 @@ option.
 .IP \n+[step].
 .B ./include-tidy.toml
 .IP \n+[step].
-The first of these files:
-.RS 8
-.TP
-.PD 0
-.B $XDG_CONFIG_HOME/include-tidy.toml
-.TP
-.B ~/.config/include-tidy.toml
-.RE
-.PD
+.B $XDG_CONFIG_HOME/include-tidy/config.toml
+.IP \n+[step].
+.BR ~/.config/include-tidy/config.toml ,
+but only if
+.B XDG_CONFIG_HOME
+is empty or unset.
 .IP \n+[step].
 If the
 .B XDG_CONFIG_DIRS
@@ -761,9 +758,12 @@ then for each
 .I path
 in it,
 the first of
-.IB path /include-tidy.toml \f1.\fP
+.IB path /include-tidy/config.toml \f1.\fP
 .IP \n+[step].
-.B /etc/xdg/include-tidy.toml
+.BR /etc/xdg/include-tidy/config.toml ,
+but only if
+.B XDG_CONFIG_DIRS
+is empty or unset.
 .PP
 If no configuration file is found,
 it's an error.
@@ -777,16 +777,13 @@ with the only exception of the
 option.
 For example,
 if in
-.B include-tidy.toml
-in
-.B ./
-(the current working directory),
+.BR ./include-tidy.toml ,
 .B align-colum
 is set to 35,
 but in
-.B include-tidy.toml
+.B config.toml
 in
-.BR /etc/xdg ,
+.BR /etc/xdg/include-tidy ,
 it's set to 40,
 then 35
 (the value in the first file found in order)
@@ -837,14 +834,14 @@ Configuration file error.
 .SH ENVIRONMENT
 .TP
 .B HOME
-Used to locate a configuration file in
-.B ~/.config
-only when
+Used only when
 .B XDG_CONFIG_HOME
-is unset.
+is empty or unset
+to locate a configuration file in
+.BR ~/.config/include-tidy/config.toml .
 If
 .B HOME
-is also unset,
+is also empty or unset,
 the home directory is obtained from the password database entry
 for the effective user.
 If that fails,
@@ -932,28 +929,30 @@ then for each
 .I path
 in it,
 the first of
-.IB path /include-tidy.toml
+.IB path /include-tidy/config.toml
 to exist
 and be readable
-is used as the configuration file.
+is used as a configuration file.
 .TP
 .B XDG_CONFIG_HOME
 If set to a path
 of a directory
 and
-.B $XDG_CONFIG_HOME/include-tidy.toml
+.B $XDG_CONFIG_HOME/include-tidy/config.toml
 exists and is readable,
-then that used as the configuration file.
+then that used as a configuration file.
 .SH FILES
-.TP
-.B $XDG_CONFIG_HOME/include-tidy
 .PD 0
 .TP
-.B ~/.config/include-tidy
+.B ~/include-tidy.toml
 .TP
-.B /etc/xdg/include-tidy
+.B $XDG_CONFIG_HOME/include-tidy/config.toml
+.TP
+.B ~/.config/include-tidy/config.toml
+.TP
+.B /etc/xdg/include-tidy/config.toml
 .PD
-The configuration file.
+Configuration files.
 .SH CAVEATS
 .SS Unsupported TOML
 The following parts of TOML are

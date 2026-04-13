@@ -405,12 +405,12 @@ static void comment_style_parse( char const *config_path,
  * The path of the configuration file is determined as follows (in priority
  * order):
  *
- *  1. The value of either the `--config` or `-c` command-line option; or:
- *  2. `$PWD/include-tidy.toml`; or:
- *  3. `$XDG_CONFIG_HOME/include-tidy.toml` or `~/.config/include-tidy.toml`;
- *     or:
- *  4. `$XDG_CONFIG_DIRS/include-tidy.toml` for each path or
- *     `/etc/xdg/include-tidy.toml`.
+ *  1. The value of either the `--config` or `-c` command-line option.
+ *  2. `$PWD/include-tidy.toml`.
+ *  3. `$XDG_CONFIG_HOME/include-tidy/config.toml`.  If `XDG_CONFIG_HOME` is
+ *     empty or unset, then ``~/.config/` is used.
+ *  4. `$XDG_CONFIG_DIRS/include-tidy/config.toml` for each path.  If
+ *     `XDG_CONFIG_DIRS` is empty or unset, then `/etc/xdg` is used.
  * @endparblock
  *
  * @param config_path The full path to a configuration file.  May be NULL.
@@ -451,8 +451,8 @@ static FILE* config_find( char const *config_path,
       FALLTHROUGH;
 
     case 3:
-      // Try $XDG_CONFIG_HOME/include-tidy.toml and
-      // $HOME/.config/include-tidy.toml.
+      // Try $XDG_CONFIG_HOME/include-tidy/config.toml or
+      // $HOME/.config/include-tidy/config.toml.
       ++case_num;
       if ( (home = home_dir()) != NULL ) {
         char const *const config_dir =
@@ -467,7 +467,8 @@ static FILE* config_find( char const *config_path,
           // LCOV_EXCL_STOP
         }
         if ( path_buf[0] != '\0' ) {
-          path_append( path_buf, SIZE_MAX, PACKAGE ".toml" );
+          path_append( path_buf, SIZE_MAX, PACKAGE );
+          path_append( path_buf, SIZE_MAX, "config.toml" );
           config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
           if ( config_file != NULL )
             break;
@@ -476,7 +477,8 @@ static FILE* config_find( char const *config_path,
       FALLTHROUGH;
 
     case 4:
-      // Try $XDG_CONFIG_DIRS/include-tidy and /etc/xdg/include-tidy.
+      // Try $XDG_CONFIG_DIRS/include-tidy/config.toml or
+      // /etc/xdg/include-tidy.config.toml.
       ++case_num;
       char const *config_dirs = null_if_empty( getenv( "XDG_CONFIG_DIRS" ) );
       if ( config_dirs == NULL )
@@ -489,6 +491,7 @@ static FILE* config_find( char const *config_path,
         if ( dir_len > 0 ) {
           strncpy_0( path_buf, config_dirs, dir_len );
           path_append( path_buf, dir_len, PACKAGE );
+          path_append( path_buf, dir_len, "config.toml" );
           config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
           path_buf[0] = '\0';
           if ( config_file != NULL )
