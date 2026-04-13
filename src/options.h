@@ -59,7 +59,7 @@ enum tidy_verbose {
   TIDY_VERBOSE_NONE,                      ///< Don't be verbose.
   TIDY_VERBOSE_ARGS             = 1 << 0, ///< Command-line arguments.
   TIDY_VERBOSE_CONFIG_SYMBOLS   = 1 << 1, ///< Configuration symbols.
-  TIDY_VERBOSE_INCLUDES         = 1 << 2, ///< Files includes.
+  TIDY_VERBOSE_INCLUDES         = 1 << 2, ///< Files included.
   TIDY_VERBOSE_PROXIES_EXPLICIT = 1 << 3, ///< Explicit include proxies.
   TIDY_VERBOSE_PROXIES_IMPLICIT = 1 << 4, ///< Implicit include proxies.
   TIDY_VERBOSE_SOURCE_FILE      = 1 << 5, ///< Source file.
