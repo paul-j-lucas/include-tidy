@@ -1,5 +1,7 @@
 2026-04-12  Paul J. Lucas <paul@lucasmail.org>
 
+   * man/man1/include-tidy.1, config_file.c: Now using
+     include-tidy/config.toml.
    * etc/include-tidy.toml: Expanded sys/*.
    * man/man1/include-tidy.1, config_file.c: Added * vs ** globbing support.
    * include-tidy.c, includes.c, includes.h: Added
