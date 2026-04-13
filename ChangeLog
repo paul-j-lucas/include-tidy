@@ -1,5 +1,16 @@
+2026-04-13  Paul J. Lucas <paul@lucasmail.org>
+
+   * symbols.c: Now putting fully-scoped names in #include comments.
+   * src/Makefile.am, includes.c, strbuf.c, strbuf.h, strbuf_test.c: Added
+     strbuf.
+   * cli_options.c, config_file.c, includes.c, options.c, toml_lite.c, util.h:
+     Eliminated TYPE argument from REALLOC().
+   * clang_util.c, clang_util.h, includes.c, symbols.c, symbols.h: Now storing
+     strdup'd name in tidy_symbol rather than CXString.
+
 2026-04-12  Paul J. Lucas <paul@lucasmail.org>
 
+   * config_file.c, util.c, util.h: Moved path_append().
    * man/man1/include-tidy.1, config_file.c: Now using
      include-tidy/config.toml.
    * etc/include-tidy.toml: Expanded sys/*.
