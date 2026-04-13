@@ -32,6 +32,7 @@
 #include "options.h"
 #include "print.h"
 #include "red_black.h"
+#include "strbuf.h"
 #include "symbols.h"
 #include "util.h"
 
@@ -305,40 +306,37 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
   size_t const fixed_len = opt_align_column +
     strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
 
-  bool            done = false;
-  rb_iterator_t   iter;
-  char           *symbols = NULL;
-  size_t          symbols_len = 0;
+  bool          comma = false;
+  bool          done = false;
+  rb_iterator_t iter;
+  strbuf_t      symbols_buf;
 
+  strbuf_init( &symbols_buf );
   rb_iterator_init( &include->symbol_set, &iter );
+
   for ( tidy_symbol const *sym;
         !done && (sym = rb_iterator_next( &iter )) != NULL; ) {
     char const   *sym_name = sym->name;
     size_t const  sym_name_len = strlen( sym_name );
+    size_t        add_len = (comma ? STRLITLEN( ", " ) : 0) + sym_name_len;
+    size_t        new_line_len = fixed_len + symbols_buf.len + add_len;
 
-    if ( symbols_len == 0 ) {
-      symbols = check_strdup( sym_name );
-      symbols_len = sym_name_len;
-      continue;
-    }
-
-    size_t add_len = STRLITLEN( ", " ) + sym_name_len;
-    size_t line_len = fixed_len + symbols_len + add_len;
-    if ( line_len > opt_line_length ) {
+    if ( new_line_len > opt_line_length ) {
       // The next symbol doesn't fit: try adding ", ..." instead.
       add_len = STRLITLEN( ", ..." );
-      line_len = fixed_len + symbols_len + add_len;
-      if ( line_len > opt_line_length ) // ", ..." didn't fit either
-        break;
+      new_line_len = fixed_len + symbols_buf.len + add_len;
+      if ( new_line_len > opt_line_length )
+        break;                          // ", ..." didn't fit either
       sym_name = "...";
       done = true;
     }
-    REALLOC( symbols, symbols_len + add_len + 1 );
-    sprintf( symbols + symbols_len, ", %s", sym_name );
-    symbols_len += add_len;
+
+    strbuf_sepsn_puts(
+      &symbols_buf, ", ", STRLITLEN( ", " ), &comma, sym_name
+    );
   } // for
 
-  return symbols;
+  return strbuf_take( &symbols_buf );
 }
 
 /**
