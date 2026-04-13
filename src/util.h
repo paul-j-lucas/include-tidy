@@ -35,7 +35,7 @@
 // standard
 #include <assert.h>
 #include <errno.h>
-#include <limits.h>                     /* for CHAR_BIT */
+#include <limits.h>                     /* for CHAR_BIT, PATH_MAX */
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>                      /* for FILE */
@@ -882,6 +882,18 @@ NODISCARD
 inline char const* null_if_empty( char const *s ) {
   return s != NULL && *SKIP_CHARS( s, WS_CHARS ) == '\0' ? NULL : s;
 }
+
+/**
+ * Appends a component to a path ensuring that exactly one `/ `separates them.
+ *
+ * @param path The path to append to.
+ * @param path_len The length of \a path.  If `SIZE_MAX`,
+ * <code>strlen(</code>\a path<code>)</code> is used instead; if zero, does
+ * nothing.
+ * @param component The component to append.
+ */
+void path_append( char path[static PATH_MAX], size_t path_len,
+                  char const *component );
 
 /**
  * Gets the filename extension of \a path, if any.

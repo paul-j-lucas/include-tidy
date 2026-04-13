@@ -174,7 +174,6 @@ static long         int_value_parse( char const*, char const*, toml_value*,
 static void         keep_parse( char const*, toml_table const*, toml_value* );
 static void         line_length_parse( char const*, toml_table const*,
                                        toml_value* );
-static void         path_append( char*, size_t, char const* );
 static void         proxy_parse( char const*, toml_table const*, toml_value* );
 static void         std_c_includes_parse( char const*, toml_table const*,
                                           toml_value* );
@@ -833,30 +832,6 @@ static void line_length_parse( char const *config_path,
   if ( !opt_is_set( COPT(LINE_LENGTH) ) ) {
     opt_line_length = STATIC_CAST( unsigned, int_value );
     opt_mark_set( COPT(LINE_LENGTH) );
-  }
-}
-
-/**
- * Appends a component to a path ensuring that exactly one `/ `separates them.
- *
- * @param path The path to append to.  The buffer pointed to must be big enough
- * to hold the new path.
- * @param path_len The length of \a path.  If `SIZE_MAX`,
- * <code>strlen(</code>\a path<code>)</code> is used instead.
- * @param component The component to append.
- */
-static void path_append( char *path, size_t path_len, char const *component ) {
-  assert( path != NULL );
-  assert( component != NULL );
-
-  if ( path_len == SIZE_MAX )
-    path_len = strlen( path );
-
-  if ( path_len > 0 ) {
-    path += path_len - 1;
-    if ( *path != '/' )
-      *++path = '/';
-    strcpy( ++path, component );
   }
 }
 

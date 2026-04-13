@@ -160,6 +160,22 @@ char const* get_cwd( size_t *plen ) {
   return cwd_path_buf;
 }
 
+void path_append( char path[static PATH_MAX], size_t path_len,
+                  char const *component ) {
+  assert( path != NULL );
+  assert( component != NULL );
+
+  if ( path_len == SIZE_MAX )
+    path_len = strlen( path );
+
+  if ( path_len > 0 ) {
+    path += path_len - 1;
+    if ( *path != '/' )
+      *++path = '/';
+    strcpy( ++path, component );
+  }
+}
+
 char const* path_ext( char const *path ) {
   assert( path != NULL );
   // Do base_name() first for a case like "a.b/c".
