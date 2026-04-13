@@ -218,6 +218,7 @@ static config_key const CONFIG_KEYS[] = {
 static char   **std_c_includes;         ///< Standard-ish C include files.
 static size_t   std_c_includes_size;    ///< Size of \ref std_c_includes.
 static char   **std_cpp_includes;       ///< Standard C++ include files.
+static bool     verbose_printed_any;    ///< Print any configuration files?
 
 /**
  * Mapping from symbols to the include file(s) they're declared in.
@@ -535,8 +536,17 @@ NODISCARD
 static FILE* config_open( char const *path, config_opts opts ) {
   if ( path == NULL )
     return NULL;
+
   FILE *const config_file = fopen( path, "r" );
-  if ( config_file == NULL ) {
+  bool const  ok = config_file != NULL;
+
+  if ( (opt_verbose & TIDY_VERBOSE_CONFIG_FILES) != 0 ) {
+    if ( false_set( &verbose_printed_any ) )
+      verbose_printf( "configuration files:\n" );
+    verbose_printf( "  \"%s\": %s\n", path, ok ? "OK" : STRERROR() );
+  }
+
+  if ( !ok ) {
     switch ( errno ) {
       case ENOENT:
         if ( (opts & CONFIG_OPT_IGNORE_NOT_FOUND) != 0 )
@@ -551,6 +561,7 @@ static FILE* config_open( char const *path, config_opts opts ) {
         break;
     } // switch
   }
+
   return config_file;
 }
 
@@ -1171,6 +1182,9 @@ void config_init( void ) {
     print_error( "include-tidy.toml", 0, 0, "no configuration file found\n" );
     exit( EX_CONFIG );
   }
+
+  if ( verbose_printed_any )
+    verbose_printf( "\n" );
 
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_SYMBOLS) != 0 )
     symbol_includes_dump();

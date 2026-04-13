@@ -58,12 +58,13 @@ typedef enum tidy_error tidy_error;
 enum tidy_verbose {
   TIDY_VERBOSE_NONE,                      ///< Don't be verbose.
   TIDY_VERBOSE_ARGS             = 1 << 0, ///< Command-line arguments.
-  TIDY_VERBOSE_CONFIG_SYMBOLS   = 1 << 1, ///< Configuration symbols.
-  TIDY_VERBOSE_INCLUDES         = 1 << 2, ///< Files included.
-  TIDY_VERBOSE_PROXIES_EXPLICIT = 1 << 3, ///< Explicit include proxies.
-  TIDY_VERBOSE_PROXIES_IMPLICIT = 1 << 4, ///< Implicit include proxies.
-  TIDY_VERBOSE_SOURCE_FILE      = 1 << 5, ///< Source file.
-  TIDY_VERBOSE_SYMBOLS          = 1 << 6, ///< Symbols referenced.
+  TIDY_VERBOSE_CONFIG_FILES     = 1 << 1, ///< Configuration files.
+  TIDY_VERBOSE_CONFIG_SYMBOLS   = 1 << 2, ///< Configuration symbols.
+  TIDY_VERBOSE_INCLUDES         = 1 << 3, ///< Files included.
+  TIDY_VERBOSE_PROXIES_EXPLICIT = 1 << 4, ///< Explicit include proxies.
+  TIDY_VERBOSE_PROXIES_IMPLICIT = 1 << 5, ///< Implicit include proxies.
+  TIDY_VERBOSE_SOURCE_FILE      = 1 << 6, ///< Source file.
+  TIDY_VERBOSE_SYMBOLS          = 1 << 7, ///< Symbols referenced.
 };
 typedef enum tidy_verbose tidy_verbose;
 
