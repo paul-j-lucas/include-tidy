@@ -48,7 +48,7 @@
  * A symbol declared in a translation unit.
  */
 struct tidy_symbol {
-  CXString  name_cxs;                   ///< Symbol name.
+  char const *name;                     ///< Symbol name.
 };
 typedef struct tidy_symbol tidy_symbol;
 

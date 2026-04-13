@@ -313,7 +313,7 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
   rb_iterator_init( &include->symbol_set, &iter );
   for ( tidy_symbol const *sym;
         !done && (sym = rb_iterator_next( &iter )) != NULL; ) {
-    char const   *sym_name = clang_getCString( sym->name_cxs );
+    char const   *sym_name = sym->name;
     size_t const  sym_name_len = strlen( sym_name );
 
     if ( symbols_len == 0 ) {

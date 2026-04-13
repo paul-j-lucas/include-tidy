@@ -93,6 +93,16 @@ NODISCARD
 CXString tidy_File_getRealPathName( CXFile file );
 
 /**
+ * Calls `clang_getCursorSpelling()` and `clang_getCString()`.
+ *
+ * @param cursor The cursor to use.
+ * @return Returns the C string version of \a cursor.  The caller is
+ * responsible for freeing it.
+ */
+NODISCARD
+char* tidy_getCursorSpelling( CXCursor cursor );
+
+/**
  * Gets a unique ID for \a file.
  *
  * @remarks Unlike `clang_getFileUniqueID()`, this function never fails.

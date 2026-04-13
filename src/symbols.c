@@ -189,17 +189,17 @@ static void maybe_add_symbol( CXCursor sym_cursor,
     return;
 
   tidy_symbol new_symbol = {
-    .name_cxs = clang_getCursorSpelling( sym_cursor )
+    .name = tidy_getCursorSpelling( sym_cursor )
   };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_set, &new_symbol, sizeof new_symbol );
-  if ( !rv_rbi.inserted )
-    goto clean_up;
+  if ( !rv_rbi.inserted ) {
+    tidy_symbol_cleanup( &new_symbol );
+    return;
+  }
 
-  tidy_symbol *const symbol      = RB_DINT( rv_rbi.node );
-  char const  *const symbol_name = clang_getCString( symbol->name_cxs );
-
-  CXFile include_file = config_get_symbol_include( symbol_name );
+  tidy_symbol *const symbol = RB_DINT( rv_rbi.node );
+  CXFile include_file = config_get_symbol_include( symbol->name );
   if ( include_file == NULL )
     include_file = sym_decl_file;
   bool const added_symbol = include_add_symbol( include_file, symbol );
@@ -213,16 +213,10 @@ static void maybe_add_symbol( CXCursor sym_cursor,
 
     verbose_printf(
       "  %s -> %s (%sadded)\n",
-      symbol_name, abs_path, added_symbol ? "" : "NOT "
+      symbol->name, abs_path, added_symbol ? "" : "NOT "
     );
     clang_disposeString( abs_path_cxs );
   }
-
-  if ( added_symbol )
-    return;
-
-clean_up:
-  tidy_symbol_cleanup( &new_symbol );
 }
 
 /**
@@ -242,7 +236,7 @@ static void symbols_cleanup( void ) {
 static void tidy_symbol_cleanup( tidy_symbol *sym ) {
   if ( sym == NULL )
     return;
-  clang_disposeString( sym->name_cxs );
+  FREE( sym->name );
 }
 
 /**
@@ -264,7 +258,8 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   if ( !is_symbol_in_file( cursor, vcvd->source_file ) )
     goto skip;
 
-  switch ( clang_getCursorKind( cursor ) ) {
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  switch ( kind ) {
     case CXCursor_CallExpr:
     case CXCursor_DeclRefExpr:
     case CXCursor_FunctionDecl:
@@ -351,10 +346,7 @@ void symbols_init( CXTranslationUnit tu ) {
 int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
   assert( i_sym != NULL );
   assert( j_sym != NULL );
-
-  char const *const i_sym_name = clang_getCString( i_sym->name_cxs );
-  char const *const j_sym_name = clang_getCString( j_sym->name_cxs );
-  return strcmp( i_sym_name, j_sym_name );
+  return strcmp( i_sym->name, j_sym->name );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

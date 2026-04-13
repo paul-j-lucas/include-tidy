@@ -152,6 +152,13 @@ CXString tidy_File_getRealPathName( CXFile file ) {
   return abs_path_cxs;
 }
 
+char* tidy_getCursorSpelling( CXCursor cursor ) {
+  CXString cxs = clang_getCursorSpelling( cursor );
+  char *const s = check_strdup( clang_getCString( cxs ) );
+  clang_disposeString( cxs );
+  return s;
+}
+
 CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
   assert( file != NULL );
 
