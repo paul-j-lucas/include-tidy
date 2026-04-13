@@ -192,8 +192,9 @@ static bool is_symbol_in_file( CXCursor sym_cursor, CXFile file ) {
   CXSourceLocation const  sym_loc = clang_getCursorLocation( sym_cursor );
   CXFile                  sym_file;
 
-  clang_getSpellingLocation( sym_loc, &sym_file,
-                             /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL );
+  clang_getSpellingLocation(
+    sym_loc, &sym_file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
+  );
   return sym_file != NULL && clang_File_isEqual( sym_file, file );
 }
 
