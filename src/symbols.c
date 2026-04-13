@@ -316,7 +316,9 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
     case CXCursor_CallExpr:
+    case CXCursor_Constructor:
     case CXCursor_DeclRefExpr:
+    case CXCursor_Destructor:
     case CXCursor_FunctionDecl:
     case CXCursor_MacroExpansion:
     case CXCursor_MemberRefExpr:
