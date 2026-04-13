@@ -76,7 +76,7 @@ struct includes_print_visitor_data {
   bool  print_blank_line;               ///< Print a blank line?
   bool  print_local;                    ///< Print local includes?
   bool  print_standard;                 ///< Print standard includes?
-  bool  printed_any_includes;           ///< Did we print any includes?
+  bool  printed_any_includes;           ///< Print any includes?
   bool  printed_source_file;            ///< Printed source file name?
 };
 
