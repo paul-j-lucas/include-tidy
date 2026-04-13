@@ -236,7 +236,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
         *pargv = heap_argv;
       }
       else {
-        REALLOC( *pargv, char*, new_argc );
+        REALLOC( *pargv, new_argc );
       }
 
       // Insert new -isystem option before last argv (the filename).

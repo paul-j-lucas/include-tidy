@@ -333,7 +333,7 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
       sym_name = "...";
       done = true;
     }
-    REALLOC( symbols, char, symbols_len + add_len + 1 );
+    REALLOC( symbols, symbols_len + add_len + 1 );
     sprintf( symbols + symbols_len, ", %s", sym_name );
     symbols_len += add_len;
   } // for

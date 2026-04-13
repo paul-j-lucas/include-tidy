@@ -243,7 +243,7 @@ static void add_c_includes_parse( char const *config_path,
 
   char **const add_c_includes =
     string_array_value_parse( config_path, "add-c-includes", value );
-  REALLOC( std_c_includes, char**, std_c_includes_size + value->a.size + 1 );
+  REALLOC( std_c_includes, std_c_includes_size + value->a.size + 1 );
   memcpy( std_c_includes + std_c_includes_size, add_c_includes,
           value->a.size * sizeof std_c_includes[0] );
   free( add_c_includes );

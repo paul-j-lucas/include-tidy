@@ -238,7 +238,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
     if ( !toml_value_parse( toml, &value ) )
       break;
     if ( a.size + 1 >= array_cap )
-      REALLOC( a.values, toml_value, array_cap *= 2 );
+      REALLOC( a.values, array_cap *= 2 );
     a.values[ a.size++ ] = value;
   } // for
 

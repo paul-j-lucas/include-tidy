@@ -428,7 +428,8 @@
  * @sa check_realloc()
  * @sa #REALLOC()
  */
-#define MALLOC(TYPE,N)            check_realloc( NULL, sizeof(TYPE) * (N) )
+#define MALLOC(TYPE,N) \
+  check_realloc( NULL, sizeof(TYPE) * STATIC_CAST( size_t, (N) ) )
 
 /**
  * Gets the number of characters needed to represent the largest magnitide
@@ -569,14 +570,13 @@
  *
  * @param PTR The pointer to memory to reallocate.  It is set to the newly
  * reallocated memory.
- * @param TYPE The type of object to reallocate.
  * @param N The number of objects of \a TYPE to reallocate.
  *
  * @sa check_realloc()
  * @sa #MALLOC()
  */
-#define REALLOC(PTR,TYPE,N) \
-  ((PTR) = check_realloc( (PTR), sizeof(TYPE) * (size_t)(N) ))
+#define REALLOC(PTR,N) \
+  ((PTR) = check_realloc( (PTR), sizeof *(PTR) * STATIC_CAST( size_t, (N) ) ))
 
 /**
  * Runs a statement at most once even if control passes through it more than

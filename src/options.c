@@ -242,7 +242,7 @@ void opt_include_paths_add( char const *include_path ) {
     } // for
     if ( i >= opt_include_paths_cap ) {
       opt_include_paths_cap *= 2;
-      REALLOC( opt_include_paths, char*, opt_include_paths_cap + 1/*NULL*/ );
+      REALLOC( opt_include_paths, opt_include_paths_cap + 1/*NULL*/ );
     }
   }
 
