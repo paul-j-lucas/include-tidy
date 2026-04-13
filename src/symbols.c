@@ -252,8 +252,9 @@ static void maybe_add_symbol( CXCursor sym_cursor,
     return;
   }
 
-  tidy_symbol *const symbol = RB_DINT( rv_rbi.node );
-  CXFile include_file = config_get_symbol_include( symbol->name );
+  tidy_symbol *const  symbol = RB_DINT( rv_rbi.node );
+  CXFile              include_file = config_get_symbol_include( symbol->name );
+
   if ( include_file == NULL )
     include_file = sym_decl_file;
   bool const added_symbol = include_add_symbol( include_file, symbol );
@@ -262,7 +263,7 @@ static void maybe_add_symbol( CXCursor sym_cursor,
     if ( false_set( &vcvd->verbose_printed ) )
       verbose_printf( "symbols:\n" );
 
-    CXString const abs_path_cxs = tidy_File_getRealPathName( include_file );
+    CXString const    abs_path_cxs = tidy_File_getRealPathName( include_file );
     char const *const abs_path = clang_getCString( abs_path_cxs );
 
     verbose_printf(
