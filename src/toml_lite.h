@@ -98,6 +98,7 @@ enum toml_error {
   TOML_ERR_KEY_DUPLICATE,               ///< Duplicate key.
   TOML_ERR_KEY_INVALID,                 ///< Invalid key.
   TOML_ERR_STR_INVALID,                 ///< Invalid string.
+  TOML_ERR_TABLE_DUPLICATE,             ///< Duplicate table name.
   TOML_ERR_UNEX_CHAR,                   ///< Unexpected character.
   TOML_ERR_UNEX_EOF,                    ///< Unexpected end of file.
   TOML_ERR_UNEX_NEWLINE,                ///< Unexpected newline.
@@ -156,6 +157,7 @@ struct toml_file {
   unsigned    col_prev;                 ///< Previous column within file.
   toml_loc    loc;                      ///< Current source location.
   bool        in_key_value;             ///< Started parsing _key_ = _value_?
+  rb_tree_t   table_names;              ///< Table names seen so far.
 };
 
 /**

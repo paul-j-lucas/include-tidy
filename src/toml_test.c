@@ -168,7 +168,29 @@ static bool test_key_bad_trailing_dot( void ) {
   TEST_FUNC_END();
 }
 
-static bool test_valid_table_names( void ) {
+static bool test_table_names_duplicate( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test-key]   \n"
+    "key = false  \n"
+    "[test-key]   \n"
+    "key = false  \n"
+  );
+
+  TEST( toml_table_next( &test.toml, &test.table ) )
+    && TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_TABLE_DUPLICATE )
+    && TEST( test.toml.loc.line == 3 )
+    && TEST( test.toml.loc.col == 2 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_table_names_valid( void ) {
   TEST_FUNC_BEGIN();
 
   static char const *const VALID_TABLE_NAMES[] = {
@@ -450,7 +472,8 @@ static bool test_value_string( void ) {
 int main( int argc, char const *const argv[] ) {
   test_prog_init( argc, argv );
 
-  test_valid_table_names();
+  test_table_names_duplicate();
+  test_table_names_valid();
   test_value_bool();
   test_comments();
   test_value_int();

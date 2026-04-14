@@ -57,16 +57,17 @@
  * with a more specific one.
  */
 static char const *const TOML_ERROR_MSGS[] = {
-  [ TOML_ERR_NONE           ] = "no error",
-  [ TOML_ERR_INT_INVALID    ] = "invalid integer",
-  [ TOML_ERR_INT_RANGE      ] = "integer out of range",
-  [ TOML_ERR_KEY_DUPLICATE  ] = "duplicate key",
-  [ TOML_ERR_KEY_INVALID    ] = "invalid key",
-  [ TOML_ERR_STR_INVALID    ] = "invalid string",
-  [ TOML_ERR_UNEX_CHAR      ] = "unexpected character",
-  [ TOML_ERR_UNEX_EOF       ] = "unexpected end of file",
-  [ TOML_ERR_UNEX_NEWLINE   ] = "unexpected newline",
-  [ TOML_ERR_UNEX_VALUE     ] = "unexpected value",
+  [ TOML_ERR_NONE            ] = "no error",
+  [ TOML_ERR_INT_INVALID     ] = "invalid integer",
+  [ TOML_ERR_INT_RANGE       ] = "integer out of range",
+  [ TOML_ERR_KEY_DUPLICATE   ] = "duplicate key",
+  [ TOML_ERR_KEY_INVALID     ] = "invalid key",
+  [ TOML_ERR_STR_INVALID     ] = "invalid string",
+  [ TOML_ERR_TABLE_DUPLICATE ] = "duplicate table",
+  [ TOML_ERR_UNEX_CHAR       ] = "unexpected character",
+  [ TOML_ERR_UNEX_EOF        ] = "unexpected end of file",
+  [ TOML_ERR_UNEX_NEWLINE    ] = "unexpected newline",
+  [ TOML_ERR_UNEX_VALUE      ] = "unexpected value",
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -482,10 +483,13 @@ error:
  * @param toml The toml_file to use.
  * @param pkey The string to receive the key.  The caller is responsible for
  * freeing it.
+ * @param pkey_col If not NULL, a pointer to receive the key's column.
+ * @param pkey_len If not NULL, a pointer to receive the key's length.
  * @return Returns `true` only if a key was parsed successfully.
  */
 NODISCARD
-static bool toml_key_parse( toml_file *toml, char **pkey ) {
+static bool toml_key_parse( toml_file *toml, char **pkey, unsigned *pkey_col,
+                            size_t *pkey_len ) {
   assert( toml != NULL );
   assert( pkey != NULL );
 
@@ -547,6 +551,10 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
     goto error;
   }
 
+  if ( pkey_col != NULL )
+    *pkey_col = first_col;
+  if ( pkey_len != NULL )
+    *pkey_len = key_buf.len;
   *pkey = strbuf_take( &key_buf );
   return true;
 
@@ -600,7 +608,7 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *kv ) {
   toml_loc    key_loc = toml->loc;
   toml_value  value = { 0 };
 
-  if ( !toml_key_parse( toml, &key ) )
+  if ( !toml_key_parse( toml, &key, /*pkey_col=*/NULL, /*pkey_len=*/NULL ) )
     return false;
 
   assert( !toml->in_key_value );
@@ -736,12 +744,14 @@ error:
  *
  * @param toml The toml_file to use.
  * @param pname A pointer to receive the table name.
+ * @param pname_len If not NULL, a pointer to receive the name's length.
  * @return Returns `true` only if a table name was parsed successfully.
  *
  * @note Assumes the caller has already parsed the `[`.
  */
 NODISCARD
-static bool toml_table_name_parse( toml_file *toml, char **pname ) {
+static bool toml_table_name_parse( toml_file *toml, char **pname,
+                                   unsigned *pname_col, size_t *pname_len ) {
   assert( toml != NULL );
   assert( pname != NULL );
 
@@ -749,7 +759,7 @@ static bool toml_table_name_parse( toml_file *toml, char **pname ) {
 
   bool const ok =
     toml_space_skip( toml ) &&
-    toml_key_parse( toml, &key ) &&
+    toml_key_parse( toml, &key, pname_col, pname_len ) &&
     toml_space_skip( toml ) &&
     toml_char_parse( toml, ']' );
 
@@ -872,6 +882,8 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
 void toml_cleanup( toml_file *toml ) {
   if ( toml == NULL )
     return;
+  // Table names are copied into the nodes, so nothing to free.
+  rb_tree_cleanup( &toml->table_names, /*free_fn=*/NULL );
   *toml = (toml_file){ 0 };
 }
 
@@ -893,6 +905,11 @@ void toml_init( toml_file *toml, FILE *file ) {
     .file = file,
     .loc = { .line = 1, .col = 0 }
   };
+
+  rb_tree_init(
+    &toml->table_names, RB_DINT,
+    POINTER_CAST( rb_cmp_fn_t, &strcmp )
+  );
 }
 
 void toml_table_cleanup( toml_table *table ) {
@@ -937,11 +954,25 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   if ( c != '[' )
     return false;
 
-  char *table_name;
-  if ( !toml_table_name_parse( toml, &table_name ) )
+  char     *table_name;
+  unsigned  table_name_col;
+  size_t    table_name_len;
+
+  if ( !toml_table_name_parse( toml, &table_name, &table_name_col,
+                               &table_name_len ) ) {
     return false;
+  }
 
   toml_table_cleanup( table );
+
+  rb_insert_rv_t rb_rbi =
+    rb_tree_insert( &toml->table_names, table_name, table_name_len + 1 );
+  if ( !rb_rbi.inserted ) {
+    toml->error = TOML_ERR_TABLE_DUPLICATE;
+    toml->loc.col = table_name_col;
+    return false;
+  }
+
   toml_table_init( table );
   table->name = table_name;
   table->loc = table_loc;
@@ -956,8 +987,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
     if ( !toml_key_value_parse( toml, &kv ) )
       break;
 
-    rb_insert_rv_t const rb_rbi =
-      rb_tree_insert( &table->keys_values, &kv, sizeof kv );
+    rb_rbi = rb_tree_insert( &table->keys_values, &kv, sizeof kv );
     if ( !rb_rbi.inserted ) {
       toml_key_value_cleanup( &kv );
       toml->error = TOML_ERR_KEY_DUPLICATE;
