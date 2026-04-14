@@ -98,7 +98,8 @@ extern unsigned tidy_includes_unnecessary;
  * @param from_include_file The file to add the proxy from.
  * @param to_include_file The file to add the proxy to.
  */
-void include_add_proxy( CXFile from_include_file, CXFile to_include_file );
+void include_add_explicit_proxy( CXFile from_include_file,
+                                 CXFile to_include_file );
 
 /**
  * Adds \a sym to the set of symbols that are used in the file being tidied and

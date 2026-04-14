@@ -869,7 +869,7 @@ static void proxy_parse( char const *config_path, toml_table const *table,
     case TOML_STRING:
       from_include_file = include_get_File( value->s );
       if ( from_include_file != NULL )
-        include_add_proxy( from_include_file, to_include_file );
+        include_add_explicit_proxy( from_include_file, to_include_file );
       break;
     case TOML_ARRAY:
       for ( unsigned i = 0; i < value->a.size; ++i ) {
@@ -883,7 +883,7 @@ static void proxy_parse( char const *config_path, toml_table const *table,
         }
         from_include_file = include_get_File( a_value->s );
         if ( from_include_file != NULL )
-          include_add_proxy( from_include_file, to_include_file );
+          include_add_explicit_proxy( from_include_file, to_include_file );
       } // for
       break;
     default:

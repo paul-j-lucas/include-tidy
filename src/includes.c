@@ -557,7 +557,8 @@ skip:
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void include_add_proxy( CXFile from_include_file, CXFile to_include_file ) {
+void include_add_explicit_proxy( CXFile from_include_file,
+                                 CXFile to_include_file ) {
   assert( from_include_file != NULL );
   assert( to_include_file != NULL );
 
