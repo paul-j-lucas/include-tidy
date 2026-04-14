@@ -55,14 +55,14 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-typedef struct visitChildren_visitor_data visitChildren_visitor_data;
+typedef struct symbols_init_visitor_data symbols_init_visitor_data;
 
 ////////// structures /////////////////////////////////////////////////////////
 
 /**
- * Additional data passed to visitChildren_visitor.
+ * Additional data passed to symbols_init_visitor.
  */
-struct visitChildren_visitor_data {
+struct symbols_init_visitor_data {
   CXFile  source_file;                  ///< The file being tidied.
   bool    verbose_printed;              ///< Printed any verbose output?
 };
@@ -70,7 +70,7 @@ struct visitChildren_visitor_data {
 ////////// local functions ////////////////////////////////////////////////////
 
 static void tidy_symbol_cleanup( tidy_symbol* );
-static void visit_MacroDefinition( CXCursor, visitChildren_visitor_data* );
+static void visit_MacroDefinition( CXCursor, symbols_init_visitor_data* );
 
 ////////// local variables ////////////////////////////////////////////////////
 
@@ -98,12 +98,15 @@ void get_fully_scoped_name( CXCursor sym_cursor, strbuf_t *name_buf ) {
     sym_name_cxs = clang_getCursorSpelling( parent_cursor );
     sym_name = clang_getCString( sym_name_cxs );
     if ( sym_name != NULL ) {
+      // Recurse all the way up to the outermost scope ...
       get_fully_scoped_name( parent_cursor, name_buf );
+      // ... then on the way back down, add the "::" ...
       strbuf_putsn( name_buf, "::", STRLITLEN( "::" ) );
     }
     clang_disposeString( sym_name_cxs );
   }
 
+  // ... followed by the scope name.
   sym_name_cxs = clang_getCursorSpelling( sym_cursor );
   sym_name = clang_getCString( sym_name_cxs );
   strbuf_puts( name_buf, sym_name );
@@ -145,11 +148,13 @@ void get_fully_scoped_name( CXCursor sym_cursor, strbuf_t *name_buf ) {
  */
 NODISCARD
 static CXCursor get_underlying_cursor( CXCursor cursor ) {
-  CXCursor underlying_cursor = clang_getNullCursor();
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  CXCursor                underlying_cursor = clang_getNullCursor();
 
-  if ( clang_getCursorKind( cursor ) == CXCursor_TypeRef ) {
-    CXType type = clang_getCanonicalType( clang_getCursorType( cursor ) );
-    bool is_via_ptr_ref = true;
+  if ( kind == CXCursor_TypeRef ) {
+    bool    is_via_ptr_ref = true;
+    CXType  type = clang_getCanonicalType( clang_getCursorType( cursor ) );
+
     do {
       switch ( type.kind ) {
         case CXType_Pointer:
@@ -178,7 +183,7 @@ static CXCursor get_underlying_cursor( CXCursor cursor ) {
 }
 
 /**
- * Helper function for visitChildren_visitor that gets whether the symbol at \a
+ * Helper function for symbols_init_visitor that gets whether the symbol at \a
  * sym_cursor is referenced from \a file.
  *
  * @param sym_cursor The cursor for the symbol.
@@ -199,15 +204,15 @@ static bool is_symbol_in_file( CXCursor sym_cursor, CXFile file ) {
 }
 
 /**
- * Helper function for visitChildren_visitor that maybe adds a symbol to the
+ * Helper function for symbols_init_visitor that maybe adds a symbol to the
  * global set.
  *
  * @param sym_cursor The cursor for the symbol.
- * @param vcvd The visitChildren_visitor_data to use.
+ * @param sivd The symbols_init_visitor_data to use.
  */
 static void maybe_add_symbol( CXCursor sym_cursor,
-                              visitChildren_visitor_data *vcvd ) {
-  assert( vcvd != NULL );
+                              symbols_init_visitor_data *sivd ) {
+  assert( sivd != NULL );
 
   CXSourceLocation const  sym_loc = clang_getCursorLocation( sym_cursor );
   CXFile                  sym_decl_file;
@@ -219,11 +224,11 @@ static void maybe_add_symbol( CXCursor sym_cursor,
     return;
 
   // If the symbol was first declared in the file being tidied, we don't care.
-  if ( clang_File_isEqual( sym_decl_file, vcvd->source_file ) )
+  if ( clang_File_isEqual( sym_decl_file, sivd->source_file ) )
     return;
 
-  enum CXCursorKind sym_kind = clang_getCursorKind( sym_cursor );
-  char             *sym_name;
+  enum CXCursorKind const   sym_kind = clang_getCursorKind( sym_cursor );
+  char                     *sym_name;
 
   switch ( sym_kind ) {
     case CXCursor_ClassDecl:
@@ -243,7 +248,7 @@ static void maybe_add_symbol( CXCursor sym_cursor,
     default:
       sym_name = tidy_getCursorSpelling( sym_cursor );
       break;
-  } //
+  } // switch
 
   tidy_symbol new_symbol = { .name = sym_name };
   rb_insert_rv_t const rv_rbi =
@@ -261,7 +266,7 @@ static void maybe_add_symbol( CXCursor sym_cursor,
   bool const added_symbol = include_add_symbol( include_file, symbol );
 
   if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
-    if ( false_set( &vcvd->verbose_printed ) )
+    if ( false_set( &sivd->verbose_printed ) )
       verbose_printf( "symbols:\n" );
 
     CXString const    abs_path_cxs = tidy_File_getRealPathName( include_file );
@@ -285,33 +290,22 @@ static void symbols_cleanup( void ) {
 }
 
 /**
- * Cleans-up a tidy_symbol.
- *
- * @param sym The tidy_symbol to clean up.  If NULL, does nothing.
- */
-static void tidy_symbol_cleanup( tidy_symbol *sym ) {
-  if ( sym == NULL )
-    return;
-  FREE( sym->name );
-}
-
-/**
  * Visits each symbol in a translation unit.
  *
  * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent Not used.
- * @param data A pointer to a visitChildren_visitor_data.
+ * @param data A pointer to a symbols_init_visitor_data.
  * @return Always returns `CXChildVisit_Recurse`.
  */
-static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
-                                                      CXCursor parent,
-                                                      CXClientData data ) {
+static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
+                                                     CXCursor parent,
+                                                     CXClientData data ) {
   (void)parent;
   assert( data != NULL );
-  visitChildren_visitor_data *const vcvd =
-    POINTER_CAST( visitChildren_visitor_data*, data );
+  symbols_init_visitor_data *const sivd =
+    POINTER_CAST( symbols_init_visitor_data*, data );
 
-  if ( !is_symbol_in_file( cursor, vcvd->source_file ) )
+  if ( !is_symbol_in_file( cursor, sivd->source_file ) )
     goto skip;
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
@@ -337,14 +331,14 @@ static enum CXChildVisitResult visitChildren_visitor( CXCursor cursor,
       if ( clang_isInvalid( first_cursor.kind ) )
         break;
 
-      maybe_add_symbol( first_cursor, vcvd );
+      maybe_add_symbol( first_cursor, sivd );
       CXCursor const underlying_cursor = get_underlying_cursor( cursor );
       if ( !clang_Cursor_isNull( underlying_cursor ) )
-        maybe_add_symbol( underlying_cursor, vcvd );
+        maybe_add_symbol( underlying_cursor, sivd );
       break;
 
     case CXCursor_MacroDefinition:
-      visit_MacroDefinition( cursor, vcvd );
+      visit_MacroDefinition( cursor, sivd );
       break;
 
     default:
@@ -356,13 +350,24 @@ skip:
 }
 
 /**
+ * Cleans-up a tidy_symbol.
+ *
+ * @param sym The tidy_symbol to clean up.  If NULL, does nothing.
+ */
+static void tidy_symbol_cleanup( tidy_symbol *sym ) {
+  if ( sym == NULL )
+    return;
+  FREE( sym->name );
+}
+
+/**
  * Visits a `CXCursor_MacroDefinition` kind of cursor.
  *
  * @param macro_cursor The macro definition's cursor.
- * @param vcvd The visitChildren_visitor_data to use.
+ * @param sivd The symbols_init_visitor_data to use.
  */
 static void visit_MacroDefinition( CXCursor macro_cursor,
-                                   visitChildren_visitor_data *vcvd ) {
+                                   symbols_init_visitor_data *sivd ) {
   CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( macro_cursor );
   CXSourceRange const macro_range = clang_getCursorExtent( macro_cursor );
 
@@ -377,7 +382,7 @@ static void visit_MacroDefinition( CXCursor macro_cursor,
     CXCursor const ident_cursor = clang_getCursor( tu, loc );
     CXCursor const referenced = clang_getCursorReferenced( ident_cursor );
     if ( !clang_isInvalid( referenced.kind ) )
-      maybe_add_symbol( referenced, vcvd );
+      maybe_add_symbol( referenced, sivd );
   } // for
 
   clang_disposeTokens( tu, macro_tokens, token_count );
@@ -393,11 +398,11 @@ void symbols_init( CXTranslationUnit tu ) {
   ATEXIT( &symbols_cleanup );
 
   CXCursor const cursor = clang_getTranslationUnitCursor( tu );
-  visitChildren_visitor_data vcvd = {
+  symbols_init_visitor_data sivd = {
     .source_file = clang_getFile( tu, arg_source_path )
   };
-  clang_visitChildren( cursor, &visitChildren_visitor, &vcvd );
-  if ( vcvd.verbose_printed )
+  clang_visitChildren( cursor, &symbols_init_visitor, &sivd );
+  if ( sivd.verbose_printed )
     verbose_printf( "\n" );
 }
 
