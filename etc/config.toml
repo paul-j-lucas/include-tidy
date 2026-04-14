@@ -1,6 +1,6 @@
 ##
 #       include-tidy -- #include tidier
-#       include-tidy.toml -- default configuration file
+#       etc/config.toml -- default configuration file
 #
 #       Copyright (C) 2026  Paul J. Lucas
 #

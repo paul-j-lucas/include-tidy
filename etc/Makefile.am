@@ -18,6 +18,8 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-dist_sysconf_DATA =	include-tidy.toml
+tidy_configdir =	$(sysconfdir)/xdg/include-tidy
+
+dist_tidy_config_DATA =	config.toml
 
 # vim:set noet sw=8 ts=8:
