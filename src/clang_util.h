@@ -103,6 +103,17 @@ NODISCARD
 char* tidy_getCursorSpelling( CXCursor cursor );
 
 /**
+ * Calls `clang_getFileLocation()` and returns the `CXFile`.
+ *
+ * @param loc The `CXSourceLocation` to use.
+ * @return Returns its `CXFile`.
+ *
+ * @sa tidy_getSpellingLocation_File()
+ */
+NODISCARD
+CXFile tidy_getFileLocation_File( CXSourceLocation loc );
+
+/**
  * Gets a unique ID for \a file.
  *
  * @remarks Unlike `clang_getFileUniqueID()`, this function never fails.
@@ -112,6 +123,17 @@ char* tidy_getCursorSpelling( CXCursor cursor );
  */
 NODISCARD
 CXFileUniqueID tidy_getFileUniqueID( CXFile file );
+
+/**
+ * Calls `clang_getSpellingLocation()` and returns the `CXFile`.
+ *
+ * @param loc The `CXSourceLocation` to use.
+ * @return Returns its `CXFile`.
+ *
+ * @sa tidy_getFileLocation_File()
+ */
+NODISCARD
+CXFile tidy_getSpellingLocation_File( CXSourceLocation loc );
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -159,6 +159,14 @@ char* tidy_getCursorSpelling( CXCursor cursor ) {
   return s;
 }
 
+CXFile tidy_getFileLocation_File( CXSourceLocation loc ) {
+  CXFile file;
+  clang_getFileLocation(
+    loc, &file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
+  );
+  return file;
+}
+
 CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
   assert( file != NULL );
 
@@ -181,6 +189,14 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
     };
   }
   return id;
+}
+
+CXFile tidy_getSpellingLocation_File( CXSourceLocation loc ) {
+  CXFile file;
+  clang_getSpellingLocation(
+    loc, &file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
+  );
+  return file;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

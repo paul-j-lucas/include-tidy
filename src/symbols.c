@@ -195,11 +195,8 @@ static bool is_symbol_in_file( CXCursor sym_cursor, CXFile file ) {
   assert( file != NULL );
 
   CXSourceLocation const  sym_loc = clang_getCursorLocation( sym_cursor );
-  CXFile                  sym_file;
+  CXFile const            sym_file = tidy_getSpellingLocation_File( sym_loc );
 
-  clang_getSpellingLocation(
-    sym_loc, &sym_file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
-  );
   return sym_file != NULL && clang_File_isEqual( sym_file, file );
 }
 
@@ -215,16 +212,19 @@ static void maybe_add_symbol( CXCursor sym_cursor,
   assert( sivd != NULL );
 
   CXSourceLocation const  sym_loc = clang_getCursorLocation( sym_cursor );
-  CXFile                  sym_decl_file;
+  CXFile                  sym_file = tidy_getSpellingLocation_File( sym_loc );
 
-  clang_getSpellingLocation(
-    sym_loc, &sym_decl_file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
-  );
-  if ( sym_decl_file == NULL )
+  if ( sym_file == NULL ) {
+    // If tidy_getSpellingLocation_File() returns a NULL file, it can mean that
+    // the symbol was formed via preprocessor token pasting, e.g., foo_ ## bar.
+    // Fall back to tidy_getFileLocation_File().
+    sym_file = tidy_getFileLocation_File( sym_loc );
+  }
+  if ( sym_file == NULL )
     return;
 
   // If the symbol was first declared in the file being tidied, we don't care.
-  if ( clang_File_isEqual( sym_decl_file, sivd->source_file ) )
+  if ( clang_File_isEqual( sym_file, sivd->source_file ) )
     return;
 
   enum CXCursorKind const   sym_kind = clang_getCursorKind( sym_cursor );
@@ -262,7 +262,7 @@ static void maybe_add_symbol( CXCursor sym_cursor,
   CXFile              include_file = config_get_symbol_include( symbol->name );
 
   if ( include_file == NULL )
-    include_file = sym_decl_file;
+    include_file = sym_file;
   bool const added_symbol = include_add_symbol( include_file, symbol );
 
   if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
