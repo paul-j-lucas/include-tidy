@@ -168,16 +168,27 @@ static bool test_key_bad_trailing_dot( void ) {
   TEST_FUNC_END();
 }
 
-static bool test_valid_table_names( char const *const table_names[] ) {
+static bool test_valid_table_names( void ) {
   TEST_FUNC_BEGIN();
 
-  for ( char const *const *table_name = table_names;
-        *table_name != NULL; ++table_name ) {
+  static char const *const VALID_TABLE_NAMES[] = {
+    "[ab]",
+    "[ ab ]",
+    "[a.b]",
+    "[a .b]",
+    "[a  .b]",
+    "[a . b]",
+    "[a  .  b]",
+    "[a. b]",
+    "[a.  b]"
+  };
+
+  FOREACH_ARRAY_ELEMENT( char const*, ptable_name, VALID_TABLE_NAMES ) {
     toml_test test;
-    toml_test_init( &test, *table_name );
+    toml_test_init( &test, *ptable_name );
     if ( TEST( toml_table_next( &test.toml, &test.table ) ) &&
          TEST( test.table.name != NULL ) ) {
-      char *const expected_name = strdup( *table_name );
+      char *const expected_name = strdup( *ptable_name );
       strip_table_name( expected_name );
       TEST( strcmp( test.table.name, expected_name ) == 0 );
       free( expected_name );
@@ -439,20 +450,7 @@ static bool test_value_string( void ) {
 int main( int argc, char const *const argv[] ) {
   test_prog_init( argc, argv );
 
-  static char const *const VALID_TABLE_NAMES[] = {
-    "[ab]",
-    "[ ab ]",
-    "[a.b]",
-    "[a .b]",
-    "[a  .b]",
-    "[a . b]",
-    "[a  .  b]",
-    "[a. b]",
-    "[a.  b]",
-    NULL
-  };
-
-  test_valid_table_names( VALID_TABLE_NAMES );
+  test_valid_table_names();
   test_value_bool();
   test_comments();
   test_value_int();
