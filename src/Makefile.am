@@ -64,6 +64,7 @@ strbuf_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 
 toml_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 			red_black.c red_black.h \
+			strbuf.c strbuf.h \
 			toml_lite.c toml_lite.h \
 			toml_test.c
 

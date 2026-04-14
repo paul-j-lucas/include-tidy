@@ -27,6 +27,7 @@
 #include "pjl_config.h"
 #include "toml_lite.h"
 #include "red_black.h"
+#include "strbuf.h"
 #include "util.h"
 
 // standard
@@ -508,9 +509,10 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
       return false;
   } // switch
 
-  char    key[ TOML_STRING_LEN_MAX + 1/*'\0'*/ ];
-  size_t  key_len = 0;
-  char    prev_c = '\0';
+  strbuf_t  key_buf;
+  char      prev_c = '\0';
+
+  strbuf_init( &key_buf );
 
   do {
     if ( is_toml_space( c ) ) {
@@ -527,35 +529,29 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
       break;
     }
 
-    if ( key_len + 1 == sizeof key - 1 ) {
-      toml->error = TOML_ERR_KEY_INVALID;
-      toml->error_msg = "key too long";
-      goto error;
-    }
-    key[ key_len++ ] = STATIC_CAST( char, c );
-
     prev_c = STATIC_CAST( char, c );
+    strbuf_putc( &key_buf, prev_c );
     c = toml_getc( toml );
   } while ( c != EOF );
 
-  if ( key_len == 0 ) {
+  if ( key_buf.len == 0 ) {
     toml->error = TOML_ERR_KEY_INVALID;
     toml->error_msg = "empty key";
     goto error;
   }
 
-  if ( key[ key_len - 1 ] == '.' ) {
-    toml->loc.col = col_first + STATIC_CAST( unsigned, key_len ) - 1;
+  if ( key_buf.str[ key_buf.len - 1 ] == '.' ) {
+    toml->loc.col = col_first + STATIC_CAST( unsigned, key_buf.len ) - 1;
     toml->error = TOML_ERR_KEY_INVALID;
     toml->error_msg = "bare key can not end with '.'";
     goto error;
   }
 
-  key[ key_len ] = '\0';
-  *pkey = check_strdup( key );
+  *pkey = strbuf_take( &key_buf );
   return true;
 
 error:
+  strbuf_cleanup( &key_buf );
   return false;
 }
 
@@ -686,8 +682,8 @@ static bool toml_string_parse( toml_file *toml, char **ps ) {
   assert( toml != NULL );
   assert( ps != NULL );
 
-  char    buf[ TOML_STRING_LEN_MAX + 1/*'\0'*/ ];
-  size_t  buf_len = 0;
+  strbuf_t sbuf;
+  strbuf_init( &sbuf );
 
   for (;;) {
     int c = toml_getc( toml );
@@ -698,7 +694,7 @@ static bool toml_string_parse( toml_file *toml, char **ps ) {
       case '\n':
         toml->error = TOML_ERR_STR_INVALID;
         toml->error_msg = "unterminated string";
-        return false;
+        goto error;
       case '"':
         goto done;
       case '\\':
@@ -716,26 +712,22 @@ static bool toml_string_parse( toml_file *toml, char **ps ) {
           default:
             toml->error = TOML_ERR_STR_INVALID;
             toml->error_msg = "invalid escape sequence";
-            return false;
+            goto error;
         } // switch
         break;
     } // switch
 
-    if ( buf_len == sizeof buf - 1 ) {
-      toml->error = TOML_ERR_STR_INVALID;
-      toml->error_msg = "string too long";
-      return false;
-    }
-    buf[ buf_len++ ] = STATIC_CAST( char, c );
+    strbuf_putc( &sbuf, STATIC_CAST( char, c ) );
   } // for
 
 done:
-  buf[ buf_len ] = '\0';
-  *ps = check_strdup( buf );
+  *ps = strbuf_take( &sbuf );
   return true;
 
 eof:
   toml->error = TOML_ERR_UNEX_EOF;
+error:
+  strbuf_cleanup( &sbuf );
   return false;
 }
 
