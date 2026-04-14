@@ -543,12 +543,14 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   tidy_include *const include = include_find( included_file );
   assert( include != NULL );
 
-  tidy_include *const includer = include->includer;
-  if ( includer != NULL && is_implicit_proxy( includer, include ) ) {
-    tidy_include *proxy = includer;
-    while ( proxy->proxy != NULL )
-      proxy = proxy->proxy;
-    include->proxy = proxy;
+  if ( include->proxy == NULL ) {
+    tidy_include *const includer = include->includer;
+    if ( includer != NULL && is_implicit_proxy( includer, include ) ) {
+      tidy_include *proxy = includer;
+      while ( proxy->proxy != NULL )
+        proxy = proxy->proxy;
+      include->proxy = proxy;
+    }
   }
 
 skip:
@@ -556,22 +558,6 @@ skip:
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
-
-void include_add_explicit_proxy( CXFile from_include_file,
-                                 CXFile to_include_file ) {
-  assert( from_include_file != NULL );
-  assert( to_include_file != NULL );
-
-  tidy_include *const from_include = include_find( from_include_file );
-  if ( from_include == NULL )
-    return;
-  tidy_include *const to_include = include_find( to_include_file );
-  if ( to_include == NULL )
-    return;
-
-  from_include->proxy = to_include;
-  from_include->is_proxy_explicit = true;
-}
 
 bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
   assert( include_file != NULL );
@@ -622,6 +608,20 @@ CXFile include_get_File( char const *rel_path ) {
   } // for
 
   return NULL;
+}
+
+bool include_proxy_would_cycle( tidy_include const *from_include,
+                                tidy_include const *to_include ) {
+  assert( from_include != NULL );
+  assert( to_include != NULL );
+
+  for ( tidy_include const *include = to_include; include != NULL;
+        include = include->proxy ) {
+    if ( include == from_include )
+      return true;
+  } // for
+
+  return false;
 }
 
 void includes_init( CXTranslationUnit tu ) {

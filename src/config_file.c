@@ -689,6 +689,45 @@ static void first_parse( char const *config_path, toml_table const *table,
 }
 
 /**
+ * Adds a proxy from \a from_include_file to \a to_include_file.
+ *
+ * @param from_include_file The file to add the proxy from.
+ * @param to_include_file The file to add the proxy to.
+ */
+static void include_add_explicit_proxy( char const *config_path,
+                                        CXFile from_include_file,
+                                        toml_loc const *from_loc,
+                                        CXFile to_include_file ) {
+  assert( config_path != NULL );
+  assert( from_include_file != NULL );
+  assert( from_loc != NULL );
+  assert( to_include_file != NULL );
+
+  tidy_include *const from_include = include_find( from_include_file );
+  if ( from_include == NULL )
+    return;
+  tidy_include *const to_include = include_find( to_include_file );
+  if ( to_include == NULL )
+    return;
+
+  if ( from_include->proxy != NULL ) {
+    // TODO
+  }
+  else {
+    if ( include_proxy_would_cycle( from_include, to_include ) ) {
+      print_warning(
+        config_path, from_loc->line, from_loc->col,
+        "\"%s\": proxy cycle detected\n", from_include->rel_path
+      );
+    }
+    else {
+      from_include->proxy = to_include;
+      from_include->is_proxy_explicit = true;
+    }
+  }
+}
+
+/**
  * Parses the value of an `"includes"` key.
  *
  * @param config_path The full path to the configurarion file.
@@ -868,8 +907,11 @@ static void proxy_parse( char const *config_path, toml_table const *table,
   switch ( value->type ) {
     case TOML_STRING:
       from_include_file = include_get_File( value->s );
-      if ( from_include_file != NULL )
-        include_add_explicit_proxy( from_include_file, to_include_file );
+      if ( from_include_file != NULL ) {
+        include_add_explicit_proxy(
+          config_path, from_include_file, &value->loc, to_include_file
+        );
+      }
       break;
     case TOML_ARRAY:
       for ( unsigned i = 0; i < value->a.size; ++i ) {
@@ -882,8 +924,11 @@ static void proxy_parse( char const *config_path, toml_table const *table,
           exit( EX_CONFIG );
         }
         from_include_file = include_get_File( a_value->s );
-        if ( from_include_file != NULL )
-          include_add_explicit_proxy( from_include_file, to_include_file );
+        if ( from_include_file != NULL ) {
+          include_add_explicit_proxy(
+            config_path, from_include_file, &a_value->loc, to_include_file
+          );
+        }
       } // for
       break;
     default:
