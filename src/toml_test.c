@@ -452,8 +452,6 @@ int main( int argc, char const *const argv[] ) {
     NULL
   };
 
-    test_key_bad_trailing_dot();
-
   test_valid_table_names( VALID_TABLE_NAMES );
   test_value_bool();
   test_comments();
@@ -461,6 +459,7 @@ int main( int argc, char const *const argv[] ) {
   test_value_string();
   if ( test_failures == 0 ) {
     test_key_bad_leading_dot();
+    test_key_bad_trailing_dot();
     test_value_array();
     test_value_array_bad_comma();
     test_value_array_unex_eof();
