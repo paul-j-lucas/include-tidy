@@ -203,7 +203,7 @@ DATA_DIR="$srcdir/data"
 EXPECTED_DIR="$srcdir/expected"
 
 [ "$TOP_SRCDIR" ] || error 78 '$TOP_SRCDIR not set'
-TEST_CONFIG="$TOP_SRCDIR/etc/include-tidy.toml"
+TEST_CONFIG="$TOP_SRCDIR/etc/config.toml"
 
 ##
 # Must put $ABS_TOP_BUILDDIR/src first in PATH so we get the correct version of

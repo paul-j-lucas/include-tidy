@@ -1,11 +1,11 @@
-$ include-tidy -Xtidy --config=../etc/include-tidy.toml data/hello.c
+$ include-tidy -Xtidy --config=../etc/config.toml data/hello.c
 
-$ include-tidy -Xtidy --config=../etc/include-tidy.toml -Xtidy --all-includes data/hello.c
+$ include-tidy -Xtidy --config=../etc/config.toml -Xtidy --all-includes data/hello.c
 #include <stdio.h>                      // printf
 
-$ include-tidy -Xtidy --config=../etc/include-tidy.toml -Xtidy --all-includes -Xtidy --align-column=35 data/hello.c
+$ include-tidy -Xtidy --config=../etc/config.toml -Xtidy --all-includes -Xtidy --align-column=35 data/hello.c
 #include <stdio.h>                // printf
 
-$ include-tidy -Xtidy --config=../etc/include-tidy.toml -Xtidy --all-includes -Xtidy --comment-style=/* data/hello.c
+$ include-tidy -Xtidy --config=../etc/config.toml -Xtidy --all-includes -Xtidy --comment-style=/* data/hello.c
 #include <stdio.h>                      /* printf */
 
