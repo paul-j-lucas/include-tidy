@@ -1,5 +1,7 @@
 2026-04-14  Paul J. Lucas <paul@lucasmail.org>
 
+   * toml_lite.c: Fixed TOML value location.
+   * config_file.c, includes.c, includes.h: Now checking for proxy cycles.
    * toml_lite.c: Fixed crash for not setting table_name_len in case table name
      is a quoted string.
    * cli_error.out, hello.out, run_test.sh: Fixed tests.
