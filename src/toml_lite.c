@@ -830,8 +830,8 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
   assert( v != NULL );
 
   for (;;) {
-    toml_loc const value_loc = toml->loc;
     int const c = toml_getc( toml );
+    toml_loc const value_loc = toml->loc;
     switch ( c ) {
       case '"':;
         char *s;
