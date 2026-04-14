@@ -478,19 +478,20 @@ static FILE* config_find( char const *config_path,
 
     case 4:
       // Try $XDG_CONFIG_DIRS/include-tidy/config.toml or
-      // /etc/xdg/include-tidy.config.toml.
+      // /etc/xdg/include-tidy/config.toml.
       ++case_num;
       char const *config_dirs = null_if_empty( getenv( "XDG_CONFIG_DIRS" ) );
       if ( config_dirs == NULL )
         config_dirs = "/etc/xdg";       // LCOV_EXCL_LINE
       for (;;) {
         char const *const next_sep = strchr( config_dirs, ':' );
-        size_t const dir_len = next_sep != NULL ?
+        size_t dir_len = next_sep != NULL ?
           STATIC_CAST( size_t, next_sep - config_dirs ) :
           strlen( config_dirs );
         if ( dir_len > 0 ) {
           strncpy_0( path_buf, config_dirs, dir_len );
           path_append( path_buf, dir_len, PACKAGE );
+          dir_len += STRLITLEN( PACKAGE );
           path_append( path_buf, dir_len, "config.toml" );
           config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
           path_buf[0] = '\0';
