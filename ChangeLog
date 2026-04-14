@@ -1,5 +1,27 @@
+2026-04-14  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.c: Fixed crash for not setting table_name_len in case table name
+     is a quoted string.
+   * cli_error.out, hello.out, run_test.sh: Fixed tests.
+   * toml_lite.c, toml_lite.h, toml_test.c: Now checking for duplicate table
+     names.
+   * src/Makefile.am, toml_lite.c: TOML now uses strbuf.
+   * toml_lite.c: Removed TOML_KEY_LEN_MAX.
+
 2026-04-13  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c, clang_util.h, symbols.c: Now falling back to
+     clang_getFileLocation() if clang_getSpellingLocation() returns NULL for
+     the CXFile.
+   * util.c: Added missing include.
+   * include-tidy.c: Added tidy_status().
+   * config_file.c: Fixed /etc/xdg/include-tidy/config.toml.
+   * etc/Makefile.am: Now installing into etc/include-tidy/config.toml.
+   * man/man1/include-tidy.1, config_file.c, options.c, options.h: Added
+     --verbose=c (configuration files).
+   * cli_options.c, cli_options-error.out, cli_options.out: Updated help for
+     --all-includes.
+   * symbols.c: Added CXCursor_Constructor & CXCursor_Destructor.
    * symbols.c: Now putting fully-scoped names in #include comments.
    * src/Makefile.am, includes.c, strbuf.c, strbuf.h, strbuf_test.c: Added
      strbuf.
