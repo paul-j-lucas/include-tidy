@@ -36,6 +36,7 @@
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdint.h>                     /* SIZE_MAX */
 #include <stdio.h>
 #include <stdlib.h>                     /* for malloc(), ... */
 #include <string.h>
