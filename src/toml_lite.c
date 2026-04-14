@@ -496,7 +496,7 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
     "-._";
 
   int             c = toml_getc( toml );
-  unsigned const  col_first = toml->loc.col;
+  unsigned const  first_col = toml->loc.col;
 
   switch ( c ) {
     case '"':
@@ -541,7 +541,7 @@ static bool toml_key_parse( toml_file *toml, char **pkey ) {
   }
 
   if ( key_buf.str[ key_buf.len - 1 ] == '.' ) {
-    toml->loc.col = col_first + STATIC_CAST( unsigned, key_buf.len ) - 1;
+    toml->loc.col = first_col + STATIC_CAST( unsigned, key_buf.len ) - 1;
     toml->error = TOML_ERR_KEY_INVALID;
     toml->error_msg = "bare key can not end with '.'";
     goto error;
