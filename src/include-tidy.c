@@ -55,6 +55,24 @@ char const *prog_name;
 
 /// @endcond
 
+////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Gets the status **include-tidy** should exit with.
+ *
+ * @return Returns said exit status.
+ */
+NODISCARD
+static int tidy_status( void ) {
+  if ( opt_error != TIDY_ERROR_NEVER ) {
+    if ( tidy_includes_missing > 0 || tidy_includes_unnecessary > 0 )
+      return TIDY_EX_VIOLATIONS;
+    if ( opt_error == TIDY_ERROR_ALWAYS )
+      return TIDY_EX_NO_VIOLATIONS_ERROR;
+  }
+  return EX_OK;
+}
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
@@ -78,15 +96,7 @@ int main( int argc, char const *argv[] ) {
   symbols_init( tu );
 
   includes_print();
-
-  if ( opt_error == TIDY_ERROR_NEVER )
-    return EX_OK;
-  if ( tidy_includes_missing > 0 || tidy_includes_unnecessary > 0 )
-    return TIDY_EX_VIOLATIONS;
-  if ( opt_error == TIDY_ERROR_ALWAYS )
-    return TIDY_EX_NO_VIOLATIONS_ERROR;
-
-  return EX_OK;
+  return tidy_status();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
