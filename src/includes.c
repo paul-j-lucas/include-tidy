@@ -288,28 +288,6 @@ skip:
 }
 
 /**
- * Gets whether \a includer should be an implicit proxy for \a include.
- *
- * @param includer The include file that includes \a include.
- * @param include An include file.
- * @return Returns `true` only if \a includer should be a proxy for \a include.
- */
-NODISCARD
-static bool is_implicit_proxy( tidy_include const *includer,
-                               tidy_include const *include ) {
-  assert( includer != NULL );
-  assert( include != NULL );
-
-  if ( includer->is_local || include->is_local )
-    return false;
-
-  if ( !config_is_standard_include( include->rel_path ) )
-    return true;
-
-  return path_base_name_cmp( include->rel_path, includer->rel_path ) == 0;
-}
-
-/**
  * Gets whether \a abs_path refers to a local include file (as opposed to a
  * system include file).
  *
@@ -580,8 +558,10 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
 
   if ( include->proxy != NULL )
     goto done;
+  if ( include->is_local )
+    goto done;
 
-  if ( include->depth > 0 && !include->is_local ) {
+  if ( include->depth > 0 ) {
     rb_iterator_t iter;
     rb_iterator_init( &include_set, &iter );
     for ( tidy_include *includer;
@@ -599,10 +579,13 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
     } // for
   }
 
-  tidy_include *includer = include->includer;
-  if ( includer != NULL && is_implicit_proxy( includer, include ) ) {
-    while ( includer->proxy != NULL )
-      includer = includer->proxy;
+  tidy_include *const includer = include->includer;
+  if ( includer == NULL )
+    goto done;
+  if ( includer->is_local )
+    goto done;
+  if ( !config_is_standard_include( include->rel_path ) ||
+       path_base_name_cmp( include->rel_path, includer->rel_path ) == 0 ) {
     include->proxy = includer;
   }
 
