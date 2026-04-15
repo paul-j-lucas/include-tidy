@@ -559,18 +559,19 @@ skip:
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-bool include_add_symbol( CXFile include_file, tidy_symbol *sym ) {
+tidy_include const* include_add_symbol( CXFile include_file,
+                                        tidy_symbol *sym ) {
   assert( include_file != NULL );
   assert( sym != NULL );
 
   tidy_include *include = include_find( include_file );
   if ( include == NULL )
-    return false;
+    return NULL;
   while ( include->proxy != NULL )
     include = include->proxy;
   include->is_needed = true;
   PJL_DISCARD_RV( rb_tree_insert( &include->symbol_set, sym, sizeof *sym ) );
-  return true;
+  return include;
 }
 
 tidy_include* include_find( CXFile file ) {

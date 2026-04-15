@@ -263,20 +263,26 @@ static void maybe_add_symbol( CXCursor sym_cursor,
 
   if ( include_file == NULL )
     include_file = sym_file;
-  bool const added_symbol = include_add_symbol( include_file, symbol );
+  tidy_include const *const added_include =
+    include_add_symbol( include_file, symbol );
 
   if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
     if ( false_set( &sivd->verbose_printed ) )
       verbose_printf( "symbols:\n" );
 
-    CXString const    abs_path_cxs = tidy_File_getRealPathName( include_file );
-    char const *const abs_path = clang_getCString( abs_path_cxs );
-
-    verbose_printf(
-      "  %s -> %s (%sadded)\n",
-      symbol->name, abs_path, added_symbol ? "" : "NOT "
-    );
-    clang_disposeString( abs_path_cxs );
+    if ( added_include != NULL ) {
+      verbose_printf(
+        "  %s -> %s (added)\n", symbol->name, added_include->abs_path
+      );
+    }
+    else {
+      CXString const abs_path_cxs = tidy_File_getRealPathName( include_file );
+      char const *const abs_path = clang_getCString( abs_path_cxs );
+      verbose_printf(
+        "  %s -> %s (NOT added)\n", symbol->name, abs_path
+      );
+      clang_disposeString( abs_path_cxs );
+    }
   }
 }
 

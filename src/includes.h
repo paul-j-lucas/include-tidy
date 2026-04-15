@@ -98,10 +98,10 @@ extern unsigned tidy_includes_unnecessary;
  *
  * @param include_file The file that declares \a sym.
  * @param sym The symbol that is used.
- * @return Returns `true` only if the symbol was added.
+ * @return Returns the include file is was added to or NULL for none.
  */
 NODISCARD
-bool include_add_symbol( CXFile include_file, tidy_symbol *sym );
+tidy_include const* include_add_symbol( CXFile include_file, tidy_symbol *sym );
 
 /**
  * Attempts to find \a file by its unique file ID among the set of files
