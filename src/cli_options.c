@@ -905,7 +905,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   char const      **tidy_argv;
 
   move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
-  insert_D__include_tidy__( pargc, pargv );
 
   opterr = 1;
   for (;;) {
@@ -1057,6 +1056,9 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     EPUTS( "; or use -xc[++]\n" );
     exit( EX_USAGE );
   }
+
+  // We have do do this after --help and --version have been checked.
+  insert_D__include_tidy__( pargc, pargv );
 
   // argv[argc-1] is the source file, but we've already copied it into
   // arg_source_path, so just NULL it out.
