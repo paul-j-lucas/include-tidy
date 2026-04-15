@@ -65,6 +65,7 @@ struct tidy_include {
   tidy_include   *includer;             ///< Include including this, if any.
   tidy_include   *proxy;                ///< Proxy include, if any.
   unsigned        depth;                ///< Include depth.
+  unsigned        seq_id;               ///< Creation sequence ID.
   unsigned        count;                ///< Number of times included.
   unsigned        line;                 ///< Line included from.
   bool            is_local;             ///< Local include file?
