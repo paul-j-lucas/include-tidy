@@ -151,6 +151,8 @@ void opt_include_paths_add( char const *include_path );
  * @param abs_path The absolte path of a file being included.
  * @return Returns the shortened path of \a abs_path relative to one of the
  * `-I` absolute paths.
+ *
+ * @note The pointer returned points to within \a abs_path.
  */
 NODISCARD
 char const* opt_include_paths_relativize( char const *abs_path );
