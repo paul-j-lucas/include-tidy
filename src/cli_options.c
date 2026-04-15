@@ -146,6 +146,8 @@ static char const*  get_opt_format( int ),
                  *  is_long_opt( int, char const *const[], char const*, int* ),
                  *  is_short_opt( int, char const *const[], char, int* );
 
+static void         grow_argv( int*, char const**[] );
+
 NODISCARD
 static bool         is_Xtidy_opt( int, char const *const[], int* );
 
@@ -189,7 +191,6 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
     goto error;
 
   bool    found_include_search_paths = false;
-  bool    is_argv_on_heap = false;
   char   *line_buf = NULL;
   size_t  line_cap = 0;
 
@@ -225,28 +226,14 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
       if ( include_path[0] != '/' )
         continue;
 
-      size_t const old_argc = STATIC_CAST( size_t, *pargc );
-      size_t const new_argc = old_argc + 1/*new arg*/ + 1/*NULL*/;
-
-      if ( false_set( &is_argv_on_heap ) ) {
-        // We can't realloc the argv passed to main(), so in order to insert an
-        // argument, we first have to duplicate it into the heap.
-        char const **const heap_argv = MALLOC( char*, new_argc );
-        memcpy( heap_argv, *pargv, old_argc * sizeof(char*) );
-        *pargv = heap_argv;
-      }
-      else {
-        REALLOC( *pargv, new_argc );
-      }
-
       // Insert new -isystem option before last argv (the filename).
+      grow_argv( pargc, pargv );
       memmove( &(*pargv)[ argi + 1 ], &(*pargv)[ argi ],
-               STATIC_CAST( size_t, *pargc - argi + 1 ) * sizeof(char*) );
+               STATIC_CAST( size_t, *pargc - argi ) * sizeof(char*) );
 
       char *new_arg = NULL;
       check_asprintf( &new_arg, "-isystem%s", include_path );
       (*pargv)[ argi++ ] = new_arg;
-      ++*pargc;
     } // while
 
     (*pargv)[ *pargc ] = NULL;
@@ -453,6 +440,35 @@ static char const* get_x_language( int argc, char const *const argv[] ) {
   } // for
 
   return NULL;
+}
+
+/**
+ * Makes \a *pargv one element longer.
+ *
+ * @param pargc A pointer to the argument count from \c main().  It is
+ * incremented by 1.
+ * @param pargv A pointer to the argument values from \c main().
+ */
+static void grow_argv( int *pargc, char const **pargv[] ) {
+  assert(  pargc != NULL );
+  assert( *pargc > 0 );
+  assert(  pargv != NULL );
+  assert( *pargv != NULL );
+
+  static bool   is_argv_on_heap = false;
+  size_t const  old_argc = STATIC_CAST( size_t, (*pargc)++ );
+  size_t const  new_argc = old_argc + 1/*new arg*/ + 1/*NULL*/;
+
+  if ( false_set( &is_argv_on_heap ) ) {
+    // We can't realloc the argv passed to main(), so in order to insert an
+    // argument, we first have to duplicate it into the heap.
+    char const **const heap_argv = MALLOC( char*, new_argc );
+    memcpy( heap_argv, *pargv, old_argc * sizeof(char*) );
+    *pargv = heap_argv;
+  }
+  else {
+    REALLOC( *pargv, new_argc );
+  }
 }
 
 /**
