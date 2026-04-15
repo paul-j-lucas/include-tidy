@@ -472,6 +472,25 @@ static void grow_argv( int *pargc, char const **pargv[] ) {
 }
 
 /**
+ * Inserts a `-D__include_tidy__` option into \a *pargv.
+ *
+ * @param pargc A pointer to the argument count from \c main().  It is
+ * incremented by 1.
+ * @param pargv A pointer to the argument values from \c main().
+ */
+static void insert_D__include_tidy__( int *pargc, char const **pargv[] ) {
+  assert(  pargc != NULL );
+  assert( *pargc > 0 );
+  assert(  pargv != NULL );
+  assert( *pargv != NULL );
+
+  size_t const old_argc = STATIC_CAST( size_t, *pargc );
+  grow_argv( pargc, pargv );
+  memmove( &(*pargv)[2], &(*pargv)[1], old_argc * sizeof(char*) );
+  (*pargv)[1] = "-D__include_tidy__";
+}
+
+/**
  * Checks whether the \a argv[\a *pargi] is a long option \a opt having an
  * argument.
  *
@@ -886,6 +905,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   char const      **tidy_argv;
 
   move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
+  insert_D__include_tidy__( pargc, pargv );
 
   opterr = 1;
   for (;;) {
