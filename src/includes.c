@@ -203,7 +203,7 @@ static void include_proxies_dump( bool want_explicit ) {
     }
     verbose_printf(
       "  \"%s\" -> \"%s\"\n",
-      include->rel_path, include->proxy->rel_path
+      include->abs_path, include->proxy->abs_path
     );
   } // for
 
