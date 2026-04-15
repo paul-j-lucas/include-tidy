@@ -378,7 +378,7 @@ static void visit_MacroDefinition( CXCursor macro_cursor,
   for ( unsigned i = 0; i < token_count; ++i ) {
     if ( clang_getTokenKind( macro_tokens[i] ) != CXToken_Identifier )
       continue;
-    CXSourceLocation loc = clang_getTokenLocation( tu, macro_tokens[i] );
+    CXSourceLocation const loc = clang_getTokenLocation( tu, macro_tokens[i] );
     CXCursor const ident_cursor = clang_getCursor( tu, loc );
     CXCursor const referenced = clang_getCursorReferenced( ident_cursor );
     if ( !clang_isInvalid( referenced.kind ) )
