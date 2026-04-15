@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "April 12, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "April 15, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -175,6 +175,28 @@ output.
 and
 .B \-\-verbose
 options below.)
+.SS Predefined Macro
+.B include-tidy
+implicitly defines a macro
+.B __include_tidy__
+that can be tested for
+in a source file being tidied:
+.cS
+#ifdef __include_tidy__
+// ... code seen only by include-tidy ...
+#endif
+.cE
+This can be used in corner cases
+where other code in the same file
+references a symbol
+formed via the preprocessor's \f(CW##\fP (paste) operator,
+but defined in a header.
+See
+.B Symbols via ##
+under
+.B BUGS
+for details
+and an example.
 .SS Proxies
 Headers often include other headers because:
 .nr step 1 1
@@ -474,7 +496,7 @@ are
 options
 and are passed to
 .B clang
-(libclang)
+.RB ( libclang )
 verbatim.
 .SS Other Options
 These options are given directly as-is
@@ -956,6 +978,63 @@ then that used as a configuration file.
 .B /etc/xdg/include-tidy/config.toml
 .PD
 Configuration files.
+.SH BUGS
+.SS Symbols via ##
+Symbols formed via the preprocessor's \f(CW##\fP (paste) operator
+aren't ``seen'' by
+.BR libclang .
+Consequently,
+if such a symbol is declared in a header is referenced
+and no other symbols from that header
+are referenced,
+.B include-tidy
+won't think the header is necessary.
+For example:
+.cS
+#include <readline/readline.h>
+
+#define RL_PROMPT_IGNORE(SBUF, WHEN) \\
+  strbuf_putc( (SBUF), RL_PROMPT_ ## WHEN ## _IGNORE )
+
+void prompt_create( strbuf_t *sbuf ) {
+  RL_PROMPT_IGNORE( sbuf, START );
+  // ...
+.cE
+The expansion of \f(CWRL_PROMPT_IGNORE\fP
+will create \f(CWRL_PROMPT_START_IGNORE\fP
+that's declared in \f(CWreadline.h\fP.
+If no other symbols from it are referenced,
+.B include-tidy
+will incorrectly think the header is unnecessary.
+.PP
+As an alternative to not using \f(CW##\fP here,
+you can add dummy code
+seen only by
+.B include-tidy
+(and
+.BR libclang ):
+.cS
+#ifdef __include_tidy__
+void explicitly_reference_symbols() {
+  (void)RL_PROMPT_START_IGNORE;
+}
+#endif
+.cE
+By explicitly referencing such a symbol directly
+via dummy code,
+.B libclang
+will ``see'' it
+and
+.B include-tidy
+will correctly think the header is necessary.
+Because such code is never compiled,
+the code can be anything
+(but it still has to be legal
+and should not generate warnings).
+.SS See Also
+.nh
+\f(CWhttps://github.com/paul-j-lucas/include-tidy/issues\fP
+.hy
 .SH CAVEATS
 .SS Unsupported TOML
 The following parts of TOML are
