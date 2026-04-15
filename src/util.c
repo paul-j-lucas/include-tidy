@@ -205,6 +205,15 @@ void path_append( char path[static PATH_MAX], size_t path_len,
   }
 }
 
+int path_base_name_cmp( char const *i_path, char const *j_path ) {
+  assert( i_path != NULL );
+  assert( j_path != NULL );
+
+  i_path = base_name( i_path );
+  j_path = base_name( j_path );
+  return strcmp( i_path, j_path );
+}
+
 char const* path_ext( char const *path ) {
   assert( path != NULL );
   // Do base_name() first for a case like "a.b/c".

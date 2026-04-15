@@ -306,9 +306,7 @@ static bool is_implicit_proxy( tidy_include const *includer,
   if ( !config_is_standard_include( include->rel_path ) )
     return true;
 
-  char const *const include_name = base_name( include->rel_path );
-  char const *const includer_name = base_name( includer->rel_path );
-  return strcmp( include_name, includer_name ) == 0;
+  return path_base_name_cmp( include->rel_path, includer->rel_path ) == 0;
 }
 
 /**
