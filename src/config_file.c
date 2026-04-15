@@ -1193,17 +1193,32 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   if ( found_rb == NULL )
     return NULL;
   symbol_includes const *const found_si = RB_DINT( found_rb );
+  if ( rb_tree_empty( &found_si->to_include_files ) )
+    return NULL;
 
   rb_iterator_t iter;
   rb_iterator_init( &found_si->to_include_files, &iter );
+
   for ( CXFile *pto_include_file;
         (pto_include_file = rb_iterator_next( &iter )) != NULL; ) {
-    tidy_include const *const include = include_find( *pto_include_file );
-    if ( include != NULL && include->depth == 0 )
+    tidy_include const *include = include_find( *pto_include_file );
+    if ( include == NULL )
+      continue;
+    while ( include->proxy != NULL )
+      include = include->proxy;
+    if ( include->depth == 0 )
       return *pto_include_file;
   } // for
 
+#if 0
+  // Keep this code for now since we might want to return one of the includes.
+  rb_iterator_init( &found_si->to_include_files, &iter );
+  CXFile const *const pto_include_file = rb_iterator_next( &iter );
+  assert( pto_include_file != NULL );
+  return *pto_include_file;
+#else
   return NULL;
+#endif
 }
 
 void config_init( void ) {
