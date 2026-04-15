@@ -711,19 +711,21 @@ static void include_add_explicit_proxy( char const *config_path,
     return;
 
   if ( from_include->proxy != NULL ) {
-    // TODO
+    print_warning(
+      config_path, from_loc->line, from_loc->col,
+      "\"%s\" already has proxy \"%s\"\n",
+      from_include->rel_path, from_include->proxy->rel_path
+    );
+  }
+  else if ( include_proxy_would_cycle( from_include, to_include ) ) {
+    print_warning(
+      config_path, from_loc->line, from_loc->col,
+      "\"%s\": proxy cycle detected\n", from_include->rel_path
+    );
   }
   else {
-    if ( include_proxy_would_cycle( from_include, to_include ) ) {
-      print_warning(
-        config_path, from_loc->line, from_loc->col,
-        "\"%s\": proxy cycle detected\n", from_include->rel_path
-      );
-    }
-    else {
-      from_include->proxy = to_include;
-      from_include->is_proxy_explicit = true;
-    }
+    from_include->proxy = to_include;
+    from_include->is_proxy_explicit = true;
   }
 }
 
