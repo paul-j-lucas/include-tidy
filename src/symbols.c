@@ -228,7 +228,7 @@ static void maybe_add_symbol( CXCursor sym_cursor,
     return;
 
   enum CXCursorKind const   sym_kind = clang_getCursorKind( sym_cursor );
-  char                     *sym_name;
+  char const               *sym_name;
 
   switch ( sym_kind ) {
     case CXCursor_ClassDecl:
