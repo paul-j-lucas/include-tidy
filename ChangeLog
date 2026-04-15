@@ -1,5 +1,22 @@
+2026-04-15  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c: Eliminated is_implicit_proxy().
+   * includes.c, util.c, util.h: Added path_base_name_cmp().
+   * includes.c, includes.h, util.c, util.h: Now using include-include matrix.
+   * includes.c: Now finding whether an include file already included can be a
+     proxy for another.
+   * symbols.c: Removed #include <stdlib.h>.
+   * symbols.c: Added "const".
+   * cli_options.c: Moved insert_D__include_tidy__() to near last so checking
+     for --help and --version work.
+   * includes.c, includes.h, symbols.c: include_add_symbol() now returns the
+     tidy_include it was actually added to.
+   * man/man1/include-tidy.1: Finished __include_tidy__ documentation.
+
 2026-04-14  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c: Added -D__include_tidy__.
+   * cli_options.c: Added grow_argv().
    * config_file.c: In config_get_symbol_include(), now returning proxy, if
      any.
    * symbols.c: Added "const".
