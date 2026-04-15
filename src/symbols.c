@@ -40,7 +40,6 @@
 // standard
 #include <assert.h>
 #include <stdbool.h>
-#include <stdlib.h>                     /* for atexit() */
 #include <string.h>
 
 // libclang
