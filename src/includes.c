@@ -545,12 +545,11 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   assert( include != NULL );
 
   if ( include->proxy == NULL ) {
-    tidy_include *const includer = include->includer;
+    tidy_include *includer = include->includer;
     if ( includer != NULL && is_implicit_proxy( includer, include ) ) {
-      tidy_include *proxy = includer;
-      while ( proxy->proxy != NULL )
-        proxy = proxy->proxy;
-      include->proxy = proxy;
+      while ( includer->proxy != NULL )
+        includer = includer->proxy;
+      include->proxy = includer;
     }
   }
 
