@@ -64,10 +64,22 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
+typedef struct iii_visitor_data             iii_visitor_data;
 typedef struct includes_init_visitor_data   includes_init_visitor_data;
 typedef struct includes_print_visitor_data  includes_print_visitor_data;
 
 ////////// structures /////////////////////////////////////////////////////////
+
+/**
+ * Additional data for iii_visitor().
+ */
+struct iii_visitor_data {
+  CXFile  includer_file;                ///< The file including another.
+  CXFile  included_file;                ///< The file that was included.
+
+  /// Set to `true` only if includer_file includes included_file.
+  bool    includer_includes_included;
+};
 
 /**
  * Additional data for includes_print_visitor().
@@ -121,6 +133,38 @@ static void get_include_delims( bool is_local, char delim[static 2] ) {
     delim[0] = '<';
     delim[1] = '>';
   }
+}
+
+/**
+ * Visits each include file in a translation unit for determining whether one
+ * include file includes another.
+ *
+ * @param included_file The file that was included.
+ * @param inclusion_stack The list of include files to get to included_file.
+ * @param include_len The length of includsion_stack.
+ * @param data A pointer to iii_visitor_data.
+ */
+static void iii_visitor( CXFile included_file,
+                         CXSourceLocation *inclusion_stack,
+                         unsigned include_len, CXClientData data ) {
+  assert( included_file != NULL );
+  assert( data != NULL );
+
+  iii_visitor_data *const iiivd = data;
+
+  if ( iiivd->includer_includes_included )
+    return;
+  if ( !clang_File_isEqual( included_file, iiivd->included_file ) )
+    return;
+
+  for ( unsigned i = 0; i < include_len; ++i ) {
+    CXFile const includer_file =
+      tidy_getFileLocation_File( inclusion_stack[i] );
+    if ( clang_File_isEqual( includer_file, iiivd->includer_file ) ) {
+      iiivd->includer_includes_included = true;
+      break;
+    }
+  } // for
 }
 
 /**
@@ -209,6 +253,30 @@ static void include_proxies_dump( bool want_explicit ) {
 
   if ( printed_any )
     verbose_printf( "\n" );
+}
+
+/**
+ * Gets whether \a includer includes \a included, either directly or
+ * indirectly.
+ *
+ * @param tu The CXTranslationUnit to use.
+ * @param includer An include file including another.
+ * @param included An include file included by another.
+ * @return Returns `true` only if \a includer includes \a included.
+ */
+NODISCARD
+static bool includer_includes_included( CXTranslationUnit tu,
+                                        tidy_include const *includer,
+                                        tidy_include const *included ) {
+  assert( includer != NULL );
+  assert( included != NULL );
+
+  iii_visitor_data iiivd = {
+    .includer_file = includer->file,
+    .included_file = included->file
+  };
+  clang_getInclusions( tu, iii_visitor, &iiivd );
+  return iiivd.includer_includes_included;
 }
 
 /**
@@ -544,13 +612,33 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   tidy_include *const include = include_find( included_file );
   assert( include != NULL );
 
-  if ( include->proxy == NULL ) {
-    tidy_include *includer = include->includer;
-    if ( includer != NULL && is_implicit_proxy( includer, include ) ) {
-      while ( includer->proxy != NULL )
-        includer = includer->proxy;
-      include->proxy = includer;
-    }
+  if ( include->proxy != NULL )
+    goto skip;
+
+  if ( include->depth > 0 ) {
+    CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( cursor );
+    rb_iterator_t iter;
+    rb_iterator_init( &include_set, &iter );
+    for ( tidy_include *curr_include;
+          (curr_include = rb_iterator_next( &iter )) != NULL; ) {
+      if ( curr_include == include )
+        continue;
+      if ( curr_include->depth != 0 )
+        continue;
+      if ( !config_is_standard_include( curr_include->rel_path ) )
+        continue;
+      if ( includer_includes_included( tu, curr_include, include ) ) {
+        include->proxy = curr_include;
+        goto skip;
+      }
+    } // for
+  }
+
+  tidy_include *includer = include->includer;
+  if ( includer != NULL && is_implicit_proxy( includer, include ) ) {
+    while ( includer->proxy != NULL )
+      includer = includer->proxy;
+    include->proxy = includer;
   }
 
 skip:
