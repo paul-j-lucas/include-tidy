@@ -349,8 +349,8 @@ static void tidy_include_cleanup( tidy_include *include ) {
   if ( include == NULL )
     return;
 
-  clang_disposeString( include->abs_path_cxs );
-  // rel_path points into abs_path_cxs, so it doesn't need to be freed.
+  FREE( include->abs_path );
+  // rel_path points into abs_path, so it doesn't need to be freed.
 
   // Because the nodes point to existing tidy_symbol objects, use NULL.
   rb_tree_cleanup( &include->symbol_set, /*free_fn=*/NULL );
@@ -452,13 +452,14 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   tidy_include *const include = RB_DINT( rv_rbi.node );
 
   if ( rv_rbi.inserted ) {
-    CXString const    abs_path_cxs = tidy_File_getRealPathName( included_file );
-    char const *const abs_path = clang_getCString( abs_path_cxs );
+    CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
 
-    include->abs_path_cxs = abs_path_cxs;
-    include->file         = included_file;
-    include->is_local     = is_local_include( abs_path );
-    include->rel_path     = opt_include_paths_relativize( abs_path );
+    include->abs_path = check_strdup( clang_getCString( abs_path_cxs ) );
+    include->file     = included_file;
+    include->is_local = is_local_include( include->abs_path );
+    include->rel_path = opt_include_paths_relativize( include->abs_path );
+
+    clang_disposeString( abs_path_cxs );
 
     if ( !is_direct ) {
       include->includer = include_find( including_file );
@@ -512,7 +513,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       "  %2u%*s %c%s%c\n",
       include->depth,
       STATIC_CAST( int, include->depth * VERBOSE_INCLUDE_INDENT ), "",
-      inc_delim[0], clang_getCString( include->abs_path_cxs ), inc_delim[1]
+      inc_delim[0], include->abs_path, inc_delim[1]
     );
   }
 
@@ -594,13 +595,13 @@ CXFile include_get_File( char const *rel_path ) {
   rb_iterator_init( &include_set, &iter );
   for ( tidy_include const *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    char const *const abs_path      = clang_getCString( include->abs_path_cxs );
-    size_t const      abs_path_len  = strlen( abs_path );
+    size_t const abs_path_len = strlen( include->abs_path );
 
     if ( rel_path_len <= abs_path_len ) {
-      char const *const suffix = abs_path + (abs_path_len - rel_path_len);
+      char const *const suffix =
+        include->abs_path + (abs_path_len - rel_path_len);
       found = strcmp( rel_path, suffix ) == 0 &&
-              (suffix == abs_path || suffix[-1] == '/');
+              (suffix == include->abs_path || suffix[-1] == '/');
     }
 
     if ( found )

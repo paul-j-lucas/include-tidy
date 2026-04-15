@@ -60,7 +60,7 @@ typedef struct tidy_include tidy_include;
 struct tidy_include {
   CXFile          file;                 ///< File that was included.
   CXFileUniqueID  file_id;              ///< Unique file ID.
-  CXString        abs_path_cxs;         ///< Absolute path of \a file.
+  char const     *abs_path;             ///< Absolute path of \a file.
   char const     *rel_path;             ///< Relative path of \a file.
   tidy_include   *includer;             ///< Include including this, if any.
   tidy_include   *proxy;                ///< Proxy include, if any.
