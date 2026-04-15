@@ -1,5 +1,11 @@
 2026-04-14  Paul J. Lucas <paul@lucasmail.org>
 
+   * config_file.c: In config_get_symbol_include(), now returning proxy, if
+     any.
+   * symbols.c: Added "const".
+   * includes.c: Now dumping absolute path for include proxies.
+   * includes.c, includes.h: s/abs_path_cxs/abs_path/
+   * config_file.c: Replaced TODO with warning.
    * toml_lite.c: Fixed TOML value location.
    * config_file.c, includes.c, includes.h: Now checking for proxy cycles.
    * toml_lite.c: Fixed crash for not setting table_name_len in case table name
