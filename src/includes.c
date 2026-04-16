@@ -193,7 +193,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   if ( included->is_local )
     goto done;
 
-  tidy_include *const includer = included->includer;
+  tidy_include *includer = included->includer;
   if ( includer == NULL )
     goto done;
   if ( includer->is_local )
@@ -207,8 +207,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   if ( included->depth > 0 ) {
     rb_iterator_t iter;
     rb_iterator_init( &include_set, &iter );
-    for ( tidy_include *includer;
-          (includer = rb_iterator_next( &iter )) != NULL; ) {
+    while ( (includer = rb_iterator_next( &iter )) != NULL ) {
       if ( includer == included )
         continue;
       if ( includer->depth > 0 || includer->is_local )
@@ -219,7 +218,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
         included->proxy = includer;
         goto done;
       }
-    } // for
+    } // while
   }
 
 done:
