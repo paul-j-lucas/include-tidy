@@ -430,7 +430,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
         //      #include "a.h"
         //      #include "b.h"
         //
-        include->sort_rank = -1;
+        include->sort_rank = TIDY_SORT_CORRESPONDING;
       }
     }
 

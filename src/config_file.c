@@ -685,7 +685,7 @@ static void first_parse( char const *config_path, toml_table const *table,
 
   tidy_include *const include = include_find_by_rel_path( table->name );
   if ( include != NULL )
-    include->sort_rank = -2;
+    include->sort_rank = TIDY_SORT_FIRST;
 }
 
 /**

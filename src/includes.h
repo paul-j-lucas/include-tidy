@@ -48,6 +48,22 @@
  * @{
  */
 
+////////// enumerations ///////////////////////////////////////////////////////
+
+/**
+ * Sorting "ranks" when includes are printed.
+ *
+ * @remarks In order for an include's \ref tidy_include::sort_rank "sort_rank"
+ * to default to #TIDY_SORT_DEFAULT, it's value should be 0 since the value of
+ * members whose designated initializers are omitted defaults to 0.  Given
+ * that, the other values must be negative to sort before the default.
+ */
+enum tidy_include_sort_rank {
+  TIDY_SORT_FIRST         = -2,         ///< The very first `#include`.
+  TIDY_SORT_CORRESPONDING = -1,         ///< After first, but before default.
+  TIDY_SORT_DEFAULT       =  0          ///< Default sort rank.
+};
+
 ////////// typedefs ///////////////////////////////////////////////////////////
 
 typedef struct tidy_include tidy_include;
