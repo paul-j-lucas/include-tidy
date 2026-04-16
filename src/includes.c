@@ -65,7 +65,6 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-typedef struct ii_visitor_data              ii_visitor_data;
 typedef struct includes_init_visitor_data   includes_init_visitor_data;
 typedef struct includes_print_visitor_data  includes_print_visitor_data;
 
