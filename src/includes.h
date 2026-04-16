@@ -64,10 +64,10 @@ struct tidy_include {
   char const     *rel_path;             ///< Relative path of \a file.
   tidy_include   *includer;             ///< Include including this, if any.
   tidy_include   *proxy;                ///< Proxy include, if any.
-  unsigned        depth;                ///< Include depth.
-  unsigned        seq_id;               ///< Creation sequence ID.
   unsigned        count;                ///< Number of times included.
+  unsigned        depth;                ///< Include depth.
   unsigned        line;                 ///< Line included from.
+  unsigned        seq_id;               ///< Creation sequence ID.
   bool            is_local;             ///< Local include file?
   bool            is_needed;            ///< Include needed?
   bool            is_proxy_explicit;    ///< Was \ref proxy explicitly added?
