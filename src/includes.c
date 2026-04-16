@@ -130,7 +130,8 @@ static void get_include_delims( bool is_local, char delim[static 2] ) {
 
 /**
  * Visits each include file in a translation unit to populate an include-
- * include matrix.
+ * include matrix, i.e., `ii_matrix[i][j]` is true only if include-i includes
+ * include-j.
  *
  * @param included_file The file that was included.
  * @param inclusion_stack The list of include files to get to included_file.
@@ -140,6 +141,7 @@ static void get_include_delims( bool is_local, char delim[static 2] ) {
 static void ii_visitor( CXFile included_file, CXSourceLocation *inclusion_stack,
                         unsigned include_len, CXClientData data ) {
   assert( included_file != NULL );
+  assert( inclusion_stack != NULL );
   assert( data != NULL );
   bool *const *const ii_matrix = data;
 
