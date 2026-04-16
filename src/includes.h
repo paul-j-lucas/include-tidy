@@ -116,13 +116,13 @@ tidy_include* include_find( CXFile file );
 
 /**
  * Given a relative path to an include file, e.g.: `clang-c/Index.h`, gets its
- * corresponding file.
+ * corresponding include.
  *
  * @param rel_path The relative path of the include file to find.
- * @return Returns its corresponding file or NULL if not found.
+ * @return Returns its corresponding tidy_include or NULL if not found.
  */
 NODISCARD
-CXFile include_get_File( char const *rel_path );
+tidy_include* include_find_by_rel_path( char const *rel_path );
 
 /**
  * Checks whether adding a proxy from \a from_include to \a to_include would

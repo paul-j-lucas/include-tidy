@@ -624,7 +624,7 @@ tidy_include* include_find( CXFile file ) {
   return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }
 
-CXFile include_get_File( char const *rel_path ) {
+tidy_include* include_find_by_rel_path( char const *rel_path ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
@@ -633,7 +633,7 @@ CXFile include_get_File( char const *rel_path ) {
   size_t const  rel_path_len = strlen( rel_path );
 
   rb_iterator_init( &include_set, &iter );
-  for ( tidy_include const *include;
+  for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
     size_t const abs_path_len = strlen( include->abs_path );
 
@@ -645,7 +645,7 @@ CXFile include_get_File( char const *rel_path ) {
     }
 
     if ( found )
-      return include->file;
+      return include;
   } // for
 
   return NULL;

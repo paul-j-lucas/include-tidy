@@ -187,7 +187,7 @@ static char**       string_array_value_parse( char const*, char const*,
 NODISCARD
 static char const*  string_value_parse( char const*, char const*, toml_value* );
 
-static void         symbol_include_add( char const*, CXFile );
+static void         symbol_include_add( char const*, tidy_include* );
 static void         symbol_include_cleanup( symbol_includes* );
 static void         symbols_parse( char const*, toml_table const*,
                                    toml_value* );
@@ -680,12 +680,9 @@ static void first_parse( char const *config_path, toml_table const *table,
   if ( !first )
     return;
 
-  CXFile include_file = include_get_File( table->name );
-  if ( include_file == NULL )
-    return;
-  tidy_include *const include = include_find( include_file );
-  assert( include != NULL );
-  include->sort_rank = -2;
+  tidy_include *const include = include_find_by_rel_path( table->name );
+  if ( include != NULL )
+    include->sort_rank = -2;
 }
 
 /**
@@ -742,13 +739,13 @@ static void includes_parse( char const *config_path, toml_table const *table,
   assert( table != NULL );
   assert( value != NULL );
 
-  CXFile to_include_file;
+  tidy_include *to_include;
 
   switch ( value->type ) {
     case TOML_STRING:
-      to_include_file = include_get_File( value->s );
-      if ( to_include_file != NULL )
-        symbol_include_add( table->name, to_include_file );
+      to_include = include_find_by_rel_path( value->s );
+      if ( to_include != NULL )
+        symbol_include_add( table->name, to_include );
       break;
     case TOML_ARRAY:
       for ( unsigned i = 0; i < value->a.size; ++i ) {
@@ -760,9 +757,9 @@ static void includes_parse( char const *config_path, toml_table const *table,
           );
           exit( EX_CONFIG );
         }
-        to_include_file = include_get_File( a_value->s );
-        if ( to_include_file != NULL )
-          symbol_include_add( table->name, to_include_file );
+        to_include = include_find_by_rel_path( a_value->s );
+        if ( to_include != NULL )
+          symbol_include_add( table->name, to_include );
       } // for
       break;
     default:
@@ -857,12 +854,9 @@ static void keep_parse( char const *config_path, toml_table const *table,
   if ( !keep )
     return;
 
-  CXFile include_file = include_get_File( table->name );
-  if ( include_file == NULL )
-    return;
-  tidy_include *const include = include_find( include_file );
-  assert( include != NULL );
-  include->is_needed = true;
+  tidy_include *const include = include_find_by_rel_path( table->name );
+  if ( include != NULL )
+    include->is_needed = true;
 }
 
 /**
@@ -901,17 +895,17 @@ static void proxy_parse( char const *config_path, toml_table const *table,
   assert( table != NULL );
   assert( value != NULL );
 
-  CXFile to_include_file = include_get_File( table->name );
-  if ( to_include_file == NULL )
+  tidy_include *const to_include = include_find_by_rel_path( table->name );
+  if ( to_include == NULL )
     return;
-  CXFile from_include_file;
+  tidy_include *from_include;
 
   switch ( value->type ) {
     case TOML_STRING:
-      from_include_file = include_get_File( value->s );
-      if ( from_include_file != NULL ) {
+      from_include = include_find_by_rel_path( value->s );
+      if ( from_include != NULL ) {
         include_add_explicit_proxy(
-          config_path, from_include_file, &value->loc, to_include_file
+          config_path, from_include->file, &value->loc, to_include->file
         );
       }
       break;
@@ -925,10 +919,10 @@ static void proxy_parse( char const *config_path, toml_table const *table,
           );
           exit( EX_CONFIG );
         }
-        from_include_file = include_get_File( a_value->s );
-        if ( from_include_file != NULL ) {
+        from_include = include_find_by_rel_path( a_value->s );
+        if ( from_include != NULL ) {
           include_add_explicit_proxy(
-            config_path, from_include_file, &a_value->loc, to_include_file
+            config_path, from_include->file, &a_value->loc, to_include->file
           );
         }
       } // for
@@ -1080,6 +1074,14 @@ static int symbol_include_cmp( symbol_includes const *i_si,
   return strcmp( i_si->from_symbol_name, j_si->from_symbol_name );
 }
 
+NODISCARD
+static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
+                                         tidy_include const *j_include ) {
+  assert( i_include != NULL );
+  assert( j_include != NULL );
+  return strcmp( i_include->rel_path, j_include->rel_path );
+}
+
 /**
  * Maps \a from_symbol_name to \a to_include_file so that if \a
  * from_symbol_name is referenced, it'll require \a to_include_file.
@@ -1088,9 +1090,9 @@ static int symbol_include_cmp( symbol_includes const *i_si,
  * @param to_include_file The include file that supposedly declares it.
  */
 static void symbol_include_add( char const *from_symbol_name,
-                                CXFile to_include_file ) {
+                                tidy_include *to_include ) {
   assert( from_symbol_name != NULL );
-  assert( to_include_file != NULL );
+  assert( to_include != NULL );
 
   symbol_includes new_si = { .from_symbol_name = from_symbol_name };
   rb_insert_rv_t const rv_rbi =
@@ -1099,13 +1101,13 @@ static void symbol_include_add( char const *from_symbol_name,
   if ( rv_rbi.inserted ) {
     si->from_symbol_name = check_strdup( from_symbol_name );
     rb_tree_init(
-      &si->to_include_files, RB_DINT,
-      POINTER_CAST( rb_cmp_fn_t, &tidy_CXFile_cmp )
+      &si->to_include_files, RB_DPTR,
+      POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_rel_path )
     );
   }
   PJL_DISCARD_RV(
     rb_tree_insert(
-      &si->to_include_files, &to_include_file, sizeof to_include_file
+      &si->to_include_files, to_include, 0
     )
   );
 }
@@ -1152,13 +1154,13 @@ static void symbols_parse( char const *config_path, toml_table const *table,
   assert( table != NULL );
   assert( value != NULL );
 
-  CXFile to_include_file = include_get_File( table->name );
-  if ( to_include_file == NULL )
+  tidy_include *const to_include = include_find_by_rel_path( table->name );
+  if ( to_include == NULL )
     return;
 
   switch ( value->type ) {
     case TOML_STRING:
-      symbol_include_add( value->s, to_include_file );
+      symbol_include_add( value->s, to_include );
       break;
     case TOML_ARRAY:
       for ( unsigned i = 0; i < value->a.size; ++i ) {
@@ -1170,7 +1172,7 @@ static void symbols_parse( char const *config_path, toml_table const *table,
           );
           exit( EX_CONFIG );
         }
-        symbol_include_add( a_value->s, to_include_file );
+        symbol_include_add( a_value->s, to_include );
       } // for
       break;
     default:
