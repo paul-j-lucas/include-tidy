@@ -1,3 +1,13 @@
+2026-04-16  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c, includes.c, includes.h:
+     s/include_find/include_find_by_CXFile/
+   * config_file.c: include_add_explicit_proxy() now takes tidy_include*.
+   * config_file.c, includes.c, includes.h:
+     s/include_get_File/include_find_by_rel_path/; symbol-include map now has
+     tidy_include* as value.
+   * includes.c: Removed unnecessary typedef.
+
 2026-04-15  Paul J. Lucas <paul@lucasmail.org>
 
    * includes.c: Eliminated is_implicit_proxy().
