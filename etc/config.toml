@@ -21,7 +21,7 @@
 [include-tidy]
 std-c-includes = [
   "aio.h",
-  "arpa/*",
+  "arpa/inet.h",
   "assert.h",
   "complex.h",
   "cpio.h",
@@ -43,18 +43,16 @@ std-c-includes = [
   "langinfo.h",
   "libgen.h",
   "limits.h",
-  "linux/*",
   "locale.h",
   "math.h",
   "monetary.h",
   "mqueue.h",
   "ndbm.h",
-  "net/*",
   "netdb.h",
-  "netinet/*",
-  "netinet6/*",
+  "net/in.h",
+  "netinet6/in.h",
+  "netinet/in.h",
   "nl_types.h",
-  "openssl/*",
   "poll.h",
   "pthread.h",
   "pwd.h",
@@ -70,6 +68,7 @@ std-c-includes = [
   "strings.h",
   "stropts.h",
   "sys/ipc.h",
+  "syslog.h",
   "sys/mman.h",
   "sys/msg.h",
   "sys/resource.h",
@@ -86,15 +85,11 @@ std-c-includes = [
   "sys/un.h",
   "sys/utsname.h",
   "sys/wait.h",
-  "sysexits.h",
-  "syslog.h",
   "tar.h",
   "termios.h",
   "tgmath.h",
-  "threads.h",
   "time.h",
   "trace.h",
-  "uchar.h",
   "ulimit.h",
   "unistd.h",
   "utime.h",
@@ -102,7 +97,23 @@ std-c-includes = [
   "wchar.h",
   "wctype.h",
   "wordexp.h",
+
+  # BSD, macOS
+  "sysexits.h",
+
+  # C11 not in POSIX
+  "threads.h",
+  "uchar.h",
+
+  # Other Unix
+  "curses.h",
+  "linux/*",
+  "ncurses.h",
+  "term.h",
   "X11/*",
+
+  # Popular 3rd-party libraries
+  "openssl/*",
 ]
 
 std-cpp-includes = [
