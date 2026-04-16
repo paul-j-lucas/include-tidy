@@ -186,40 +186,41 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
 
   CXFile const included_file = clang_getIncludedFile( cursor );
   assert( included_file != NULL );
-  tidy_include *const include = include_find_by_CXFile( included_file );
-  assert( include != NULL );
+  tidy_include *const included = include_find_by_CXFile( included_file );
+  assert( included != NULL );
 
-  if ( include->proxy != NULL )
+  if ( included->proxy != NULL )
     goto done;
-  if ( include->is_local )
+  if ( included->is_local )
     goto done;
 
-  if ( include->depth > 0 ) {
+  tidy_include *const includer = included->includer;
+  if ( includer == NULL )
+    goto done;
+  if ( includer->is_local )
+    goto done;
+  if ( !config_is_standard_include( included->rel_path ) ||
+       path_base_name_cmp( included->rel_path, includer->rel_path ) == 0 ) {
+    included->proxy = includer;
+    goto done;
+  }
+
+  if ( included->depth > 0 ) {
     rb_iterator_t iter;
     rb_iterator_init( &include_set, &iter );
     for ( tidy_include *includer;
           (includer = rb_iterator_next( &iter )) != NULL; ) {
-      if ( includer == include )
+      if ( includer == included )
         continue;
       if ( includer->depth > 0 || includer->is_local )
         continue;
       if ( !config_is_standard_include( includer->rel_path ) )
         continue;
-      if ( ii_matrix[ includer->seq_id ][ include->seq_id ] ) {
-        include->proxy = includer;
+      if ( ii_matrix[ includer->seq_id ][ included->seq_id ] ) {
+        included->proxy = includer;
         goto done;
       }
     } // for
-  }
-
-  tidy_include *const includer = include->includer;
-  if ( includer == NULL )
-    goto done;
-  if ( includer->is_local )
-    goto done;
-  if ( !config_is_standard_include( include->rel_path ) ||
-       path_base_name_cmp( include->rel_path, includer->rel_path ) == 0 ) {
-    include->proxy = includer;
   }
 
 done:
