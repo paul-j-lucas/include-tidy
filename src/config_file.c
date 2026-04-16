@@ -191,6 +191,10 @@ static void         symbol_include_cleanup( symbol_includes* );
 static void         symbols_parse( char const*, toml_table const*,
                                    toml_value* );
 
+NODISCARD
+static int          tidy_include_cmp_by_rel_path( tidy_include const*,
+                                                  tidy_include const* );
+
 ////////// local constants ////////////////////////////////////////////////////
 
 /**
@@ -1066,14 +1070,6 @@ static int symbol_include_cmp( symbol_includes const *i_si,
   return strcmp( i_si->from_symbol_name, j_si->from_symbol_name );
 }
 
-NODISCARD
-static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
-                                         tidy_include const *j_include ) {
-  assert( i_include != NULL );
-  assert( j_include != NULL );
-  return strcmp( i_include->rel_path, j_include->rel_path );
-}
-
 /**
  * Maps \a from_symbol_name to \a to_include_file so that if \a
  * from_symbol_name is referenced, it'll require \a to_include_file.
@@ -1170,6 +1166,23 @@ static void symbols_parse( char const *config_path, toml_table const *table,
       );
       exit( EX_CONFIG );
   } // switch
+}
+
+/**
+ * Compares two \ref tidy_include objects by their relative paths.
+ *
+ * @param i_include The first tidy_include.
+ * @param j_include The second tidy_include.
+ * @return Returns a number less than 0, 0, or greater than 0 if the relative
+ * path of \a i_include is less than, equal to, or greater than the relative
+ * path of \a j_include, respectively.
+ */
+NODISCARD
+static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
+                                         tidy_include const *j_include ) {
+  assert( i_include != NULL );
+  assert( j_include != NULL );
+  return strcmp( i_include->rel_path, j_include->rel_path );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////

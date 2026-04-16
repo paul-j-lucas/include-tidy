@@ -599,7 +599,7 @@ static int tidy_include_cmp_by_id( tidy_include const *i_include,
 }
 
 /**
- * Compares two \ref tidy_include objects by their relative paths.
+ * Compares two \ref tidy_include objects by their relative paths for printing.
  *
  * @param i_include The first tidy_include.
  * @param j_include The second tidy_include.
@@ -608,8 +608,8 @@ static int tidy_include_cmp_by_id( tidy_include const *i_include,
  * path of \a j_include, respectively.
  */
 NODISCARD
-static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
-                                         tidy_include const *j_include ) {
+static int tidy_include_cmp_for_print( tidy_include const *i_include,
+                                       tidy_include const *j_include ) {
   assert( i_include != NULL );
   assert( j_include != NULL );
   if ( i_include->sort_rank < j_include->sort_rank )
@@ -721,7 +721,7 @@ void includes_print( void ) {
     // Use RB_DPTR to make nodes point to existing tidy_include objects in
     // include_set.
     &include_set_by_rel_path, RB_DPTR,
-    POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_rel_path )
+    POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_for_print )
   );
   rb_iterator_t iter;
   rb_iterator_init( &include_set, &iter );
