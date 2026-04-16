@@ -93,6 +93,9 @@ struct includes_init_visitor_data {
 ////////// local functions ////////////////////////////////////////////////////
 
 NODISCARD
+static bool   is_local_include( char const* );
+
+NODISCARD
 static char*  make_symbols_used_comment( tidy_include const* );
 
 static void   tidy_include_cleanup( tidy_include* );
@@ -155,6 +158,67 @@ static void ii_visitor( CXFile included_file, CXSourceLocation *inclusion_stack,
     assert( includer->seq_id < tidy_include_count );
     ii_matrix[ includer->seq_id ][ included->seq_id ] = true;
   } // for
+}
+
+/**
+ * Visits each `#include` directive in a translation unit for initializing
+ * implicit include proxies.
+ *
+ * @param cursor The cursor for the symbol in the AST being visited.
+ * @param parent Not used.
+ * @param data A pointer to the include-include matrix to use.
+ * @return Always returns `CXChildVisit_Continue`.
+ */
+static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
+                                                         CXCursor parent,
+                                                         CXClientData data ) {
+  (void)parent;
+  assert( data != NULL );
+  bool const *const *const ii_matrix = data;
+
+  if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
+    goto done;
+
+  CXFile const included_file = clang_getIncludedFile( cursor );
+  assert( included_file != NULL );
+  tidy_include *const include = include_find( included_file );
+  assert( include != NULL );
+
+  if ( include->proxy != NULL )
+    goto done;
+  if ( include->is_local )
+    goto done;
+
+  if ( include->depth > 0 ) {
+    rb_iterator_t iter;
+    rb_iterator_init( &include_set, &iter );
+    for ( tidy_include *includer;
+          (includer = rb_iterator_next( &iter )) != NULL; ) {
+      if ( includer == include )
+        continue;
+      if ( includer->depth > 0 || includer->is_local )
+        continue;
+      if ( !config_is_standard_include( includer->rel_path ) )
+        continue;
+      if ( ii_matrix[ includer->seq_id ][ include->seq_id ] ) {
+        include->proxy = includer;
+        goto done;
+      }
+    } // for
+  }
+
+  tidy_include *const includer = include->includer;
+  if ( includer == NULL )
+    goto done;
+  if ( includer->is_local )
+    goto done;
+  if ( !config_is_standard_include( include->rel_path ) ||
+       path_base_name_cmp( include->rel_path, includer->rel_path ) == 0 ) {
+    include->proxy = includer;
+  }
+
+done:
+  return CXChildVisit_Continue;
 }
 
 /**
@@ -252,6 +316,134 @@ static void includes_cleanup( void ) {
   rb_tree_cleanup(
     &include_set, POINTER_CAST( rb_free_fn_t, &tidy_include_cleanup )
   );
+}
+
+/**
+ * Visits each `#include` directive in a translation unit to initialize \ref
+ * include_set.
+ *
+ * @param cursor The cursor for the symbol in the AST being visited.
+ * @param parent Not used.
+ * @param data A pointer to a includes_init_visitor_data.
+ * @return Always returns `CXChildVisit_Continue`.
+ */
+static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
+                                                      CXCursor parent,
+                                                      CXClientData data ) {
+  (void)parent;
+  assert( data != NULL );
+
+  if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
+    goto skip;
+
+  includes_init_visitor_data *const iivd =
+    POINTER_CAST( includes_init_visitor_data*, data );
+
+  unsigned          include_line, include_col;
+  CXSourceLocation  include_loc = clang_getCursorLocation( cursor );
+  CXFile const      included_file = clang_getIncludedFile( cursor );
+  CXFile            including_file;
+  bool const        is_direct = clang_Location_isFromMainFile( include_loc );
+
+  clang_getSpellingLocation(
+    include_loc, &including_file, &include_line, &include_col,
+    /*offset=*/NULL
+  );
+
+  if ( included_file == NULL ) {
+    CXString const    included_name_cxs = clang_getCursorSpelling( cursor );
+    char const *const included_name = clang_getCString( included_name_cxs );
+    CXString const    including_name_cxs = clang_getFileName( including_file );
+    char const *const including_name = clang_getCString( including_name_cxs );
+
+    print_error(
+      path_no_dot_slash( including_name ), include_line, include_col,
+      "\"%s\": %s (missing -I option?)\n",
+      included_name, strerror( ENOENT )
+    );
+    exit( EX_DATAERR );
+  }
+
+  tidy_include new_include = {
+    .file_id = tidy_getFileUniqueID( included_file )
+  };
+  rb_insert_rv_t const rv_rbi =
+    rb_tree_insert( &include_set, &new_include, sizeof new_include );
+
+  if ( !rv_rbi.inserted && !is_direct )
+    goto skip;
+
+  tidy_include *const include = RB_DINT( rv_rbi.node );
+
+  if ( rv_rbi.inserted ) {
+    CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
+
+    include->abs_path = check_strdup( clang_getCString( abs_path_cxs ) );
+    include->seq_id   = tidy_include_count++;
+    include->file     = included_file;
+    include->is_local = is_local_include( include->abs_path );
+    include->rel_path = opt_include_paths_relativize( include->abs_path );
+
+    clang_disposeString( abs_path_cxs );
+
+    if ( !is_direct ) {
+      include->includer = include_find( including_file );
+      assert( include->includer != NULL );
+      include->depth = include->includer->depth + 1;
+    }
+
+    char const *const include_ext = path_ext( include->rel_path );
+    if ( include_ext != NULL && include_ext[0] == 'h' ) {
+      char path_buf[ PATH_MAX ];
+      char const *const include_no_ext =
+        path_no_ext( include->rel_path, path_buf );
+      if ( strcmp( include_no_ext, iivd->source_file_no_ext ) == 0 ) {
+        //
+        // This include file's name matches the source file's (without
+        // extensions), hence it's the .h corresponding to the .c so sort the
+        // this include file first, e.g.:
+        //
+        //      // foo.c
+        //      #include "foo.h"        // corresponding header sorted first
+        //      #include "a.h"
+        //      #include "b.h"
+        //
+        include->sort_rank = -1;
+      }
+    }
+
+    rb_tree_init(
+      // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
+      // symbol_set in symbols.c
+      &include->symbol_set, RB_DPTR,
+      POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
+    );
+  }
+  else {                                // is_direct must be true here
+    include->depth = 0;
+    include->includer = NULL;
+  }
+
+  if ( is_direct )
+    include->line = include_line;
+
+  if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
+    if ( false_set( &iivd->verbose_printed ) )
+      verbose_printf( "includes:\n" );
+
+    char inc_delim[2];
+    get_include_delims( include->is_local, inc_delim );
+
+    verbose_printf(
+      "  %2u%*s %c%s%c\n",
+      include->depth,
+      STATIC_CAST( int, include->depth * VERBOSE_INCLUDE_INDENT ), "",
+      inc_delim[0], include->abs_path, inc_delim[1]
+    );
+  }
+
+skip:
+  return CXChildVisit_Continue;
 }
 
 /**
@@ -402,195 +594,6 @@ static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
   if ( i_include->sort_rank > j_include->sort_rank )
     return 1;
   return strcmp( i_include->rel_path, j_include->rel_path );
-}
-
-/**
- * Visits each `#include` directive in a translation unit to initialize \ref
- * include_set.
- *
- * @param cursor The cursor for the symbol in the AST being visited.
- * @param parent Not used.
- * @param data A pointer to a includes_init_visitor_data.
- * @return Always returns `CXChildVisit_Continue`.
- */
-static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
-                                                      CXCursor parent,
-                                                      CXClientData data ) {
-  (void)parent;
-  assert( data != NULL );
-
-  if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
-    goto skip;
-
-  includes_init_visitor_data *const iivd =
-    POINTER_CAST( includes_init_visitor_data*, data );
-
-  unsigned          include_line, include_col;
-  CXSourceLocation  include_loc = clang_getCursorLocation( cursor );
-  CXFile const      included_file = clang_getIncludedFile( cursor );
-  CXFile            including_file;
-  bool const        is_direct = clang_Location_isFromMainFile( include_loc );
-
-  clang_getSpellingLocation(
-    include_loc, &including_file, &include_line, &include_col,
-    /*offset=*/NULL
-  );
-
-  if ( included_file == NULL ) {
-    CXString const    included_name_cxs = clang_getCursorSpelling( cursor );
-    char const *const included_name = clang_getCString( included_name_cxs );
-    CXString const    including_name_cxs = clang_getFileName( including_file );
-    char const *const including_name = clang_getCString( including_name_cxs );
-
-    print_error(
-      path_no_dot_slash( including_name ), include_line, include_col,
-      "\"%s\": %s (missing -I option?)\n",
-      included_name, strerror( ENOENT )
-    );
-    exit( EX_DATAERR );
-  }
-
-  tidy_include new_include = {
-    .file_id = tidy_getFileUniqueID( included_file )
-  };
-  rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &include_set, &new_include, sizeof new_include );
-
-  if ( !rv_rbi.inserted && !is_direct )
-    goto skip;
-
-  tidy_include *const include = RB_DINT( rv_rbi.node );
-
-  if ( rv_rbi.inserted ) {
-    CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
-
-    include->abs_path = check_strdup( clang_getCString( abs_path_cxs ) );
-    include->seq_id   = tidy_include_count++;
-    include->file     = included_file;
-    include->is_local = is_local_include( include->abs_path );
-    include->rel_path = opt_include_paths_relativize( include->abs_path );
-
-    clang_disposeString( abs_path_cxs );
-
-    if ( !is_direct ) {
-      include->includer = include_find( including_file );
-      assert( include->includer != NULL );
-      include->depth = include->includer->depth + 1;
-    }
-
-    char const *const include_ext = path_ext( include->rel_path );
-    if ( include_ext != NULL && include_ext[0] == 'h' ) {
-      char path_buf[ PATH_MAX ];
-      char const *const include_no_ext =
-        path_no_ext( include->rel_path, path_buf );
-      if ( strcmp( include_no_ext, iivd->source_file_no_ext ) == 0 ) {
-        //
-        // This include file's name matches the source file's (without
-        // extensions), hence it's the .h corresponding to the .c so sort the
-        // this include file first, e.g.:
-        //
-        //      // foo.c
-        //      #include "foo.h"        // corresponding header sorted first
-        //      #include "a.h"
-        //      #include "b.h"
-        //
-        include->sort_rank = -1;
-      }
-    }
-
-    rb_tree_init(
-      // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
-      // symbol_set in symbols.c
-      &include->symbol_set, RB_DPTR,
-      POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
-    );
-  }
-  else {                                // is_direct must be true here
-    include->depth = 0;
-    include->includer = NULL;
-  }
-
-  if ( is_direct )
-    include->line = include_line;
-
-  if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
-    if ( false_set( &iivd->verbose_printed ) )
-      verbose_printf( "includes:\n" );
-
-    char inc_delim[2];
-    get_include_delims( include->is_local, inc_delim );
-
-    verbose_printf(
-      "  %2u%*s %c%s%c\n",
-      include->depth,
-      STATIC_CAST( int, include->depth * VERBOSE_INCLUDE_INDENT ), "",
-      inc_delim[0], include->abs_path, inc_delim[1]
-    );
-  }
-
-skip:
-  return CXChildVisit_Continue;
-}
-
-/**
- * Visits each `#include` directive in a translation unit for initializing
- * implicit include proxies.
- *
- * @param cursor The cursor for the symbol in the AST being visited.
- * @param parent Not used.
- * @param data A pointer to the include-include matrix to use.
- * @return Always returns `CXChildVisit_Continue`.
- */
-static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
-                                                         CXCursor parent,
-                                                         CXClientData data ) {
-  (void)parent;
-  assert( data != NULL );
-  bool const *const *const ii_matrix = data;
-
-  if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
-    goto done;
-
-  CXFile const included_file = clang_getIncludedFile( cursor );
-  assert( included_file != NULL );
-  tidy_include *const include = include_find( included_file );
-  assert( include != NULL );
-
-  if ( include->proxy != NULL )
-    goto done;
-  if ( include->is_local )
-    goto done;
-
-  if ( include->depth > 0 ) {
-    rb_iterator_t iter;
-    rb_iterator_init( &include_set, &iter );
-    for ( tidy_include *includer;
-          (includer = rb_iterator_next( &iter )) != NULL; ) {
-      if ( includer == include )
-        continue;
-      if ( includer->depth > 0 || includer->is_local )
-        continue;
-      if ( !config_is_standard_include( includer->rel_path ) )
-        continue;
-      if ( ii_matrix[ includer->seq_id ][ include->seq_id ] ) {
-        include->proxy = includer;
-        goto done;
-      }
-    } // for
-  }
-
-  tidy_include *const includer = include->includer;
-  if ( includer == NULL )
-    goto done;
-  if ( includer->is_local )
-    goto done;
-  if ( !config_is_standard_include( include->rel_path ) ||
-       path_base_name_cmp( include->rel_path, includer->rel_path ) == 0 ) {
-    include->proxy = includer;
-  }
-
-done:
-  return CXChildVisit_Continue;
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
