@@ -92,12 +92,15 @@ struct includes_init_visitor_data {
 ////////// local functions ////////////////////////////////////////////////////
 
 NODISCARD
-static bool   is_local_include( char const* );
+static tidy_include*  include_find_by_CXFile( CXFile );
 
 NODISCARD
-static char*  make_symbols_used_comment( tidy_include const* );
+static bool           is_local_include( char const* );
 
-static void   tidy_include_cleanup( tidy_include* );
+NODISCARD
+static char*          make_symbols_used_comment( tidy_include const* );
+
+static void           tidy_include_cleanup( tidy_include* );
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -145,7 +148,7 @@ static void ii_visitor( CXFile included_file, CXSourceLocation *inclusion_stack,
   assert( data != NULL );
   bool *const *const ii_matrix = data;
 
-  tidy_include const *const included = include_find( included_file );
+  tidy_include const *const included = include_find_by_CXFile( included_file );
   if ( included == NULL )               // when file is source file
     return;
   assert( included->seq_id < tidy_include_count );
@@ -153,7 +156,8 @@ static void ii_visitor( CXFile included_file, CXSourceLocation *inclusion_stack,
   for ( unsigned i = 0; i < include_len; ++i ) {
     CXFile const includer_file =
       tidy_getFileLocation_File( inclusion_stack[i] );
-    tidy_include const *const includer = include_find( includer_file );
+    tidy_include const *const includer =
+      include_find_by_CXFile( includer_file );
     if ( includer == NULL )             // when file is source file
       continue;
     assert( includer->seq_id < tidy_include_count );
@@ -182,7 +186,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
 
   CXFile const included_file = clang_getIncludedFile( cursor );
   assert( included_file != NULL );
-  tidy_include *const include = include_find( included_file );
+  tidy_include *const include = include_find_by_CXFile( included_file );
   assert( include != NULL );
 
   if ( include->proxy != NULL )
@@ -220,6 +224,24 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
 
 done:
   return CXChildVisit_Continue;
+}
+
+/**
+ * Attempts to find \a file by its unique file ID among the set of files
+ * included.
+ *
+ * @param file The file to find.
+ * @return Returns the corresponding tidy_include if found or NULL if not.
+ */
+NODISCARD
+static tidy_include* include_find_by_CXFile( CXFile file ) {
+  assert( file != NULL );
+
+  tidy_include find_include = {
+    .file_id = tidy_getFileUniqueID( file )
+  };
+  rb_node_t const *const found_rb = rb_tree_find( &include_set, &find_include );
+  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }
 
 /**
@@ -388,7 +410,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     clang_disposeString( abs_path_cxs );
 
     if ( !is_direct ) {
-      include->includer = include_find( including_file );
+      include->includer = include_find_by_CXFile( including_file );
       assert( include->includer != NULL );
       include->depth = include->includer->depth + 1;
     }
@@ -604,7 +626,7 @@ tidy_include const* include_add_symbol( CXFile include_file,
   assert( include_file != NULL );
   assert( sym != NULL );
 
-  tidy_include *include = include_find( include_file );
+  tidy_include *include = include_find_by_CXFile( include_file );
   if ( include == NULL )
     return NULL;
   while ( include->proxy != NULL )
@@ -612,16 +634,6 @@ tidy_include const* include_add_symbol( CXFile include_file,
   include->is_needed = true;
   PJL_DISCARD_RV( rb_tree_insert( &include->symbol_set, sym, sizeof *sym ) );
   return include;
-}
-
-tidy_include* include_find( CXFile file ) {
-  assert( file != NULL );
-
-  tidy_include find_include = {
-    .file_id = tidy_getFileUniqueID( file )
-  };
-  rb_node_t const *const found_rb = rb_tree_find( &include_set, &find_include );
-  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }
 
 tidy_include* include_find_by_rel_path( char const *rel_path ) {

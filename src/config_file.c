@@ -26,7 +26,6 @@
 // local
 #include "pjl_config.h"
 #include "config_file.h"
-#include "clang_util.h"
 #include "cli_options.h"
 #include "includes.h"
 #include "options.h"
@@ -134,7 +133,7 @@ struct config_key {
  */
 struct symbol_includes {
   char const *from_symbol_name;         ///< Symbol name.
-  rb_tree_t   to_include_files;         ///< Include file(s).
+  rb_tree_t   to_includes;              ///< Include file(s).
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -1047,7 +1046,7 @@ static void symbol_include_cleanup( symbol_includes *si ) {
   if ( si == NULL )
     return;
   FREE( si->from_symbol_name );
-  rb_tree_cleanup( &si->to_include_files, /*free_fn=*/NULL );
+  rb_tree_cleanup( &si->to_includes, /*free_fn=*/NULL );
 }
 
 /**
@@ -1094,15 +1093,11 @@ static void symbol_include_add( char const *from_symbol_name,
   if ( rv_rbi.inserted ) {
     si->from_symbol_name = check_strdup( from_symbol_name );
     rb_tree_init(
-      &si->to_include_files, RB_DPTR,
+      &si->to_includes, RB_DPTR,
       POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_rel_path )
     );
   }
-  PJL_DISCARD_RV(
-    rb_tree_insert(
-      &si->to_include_files, to_include, 0
-    )
-  );
+  PJL_DISCARD_RV( rb_tree_insert( &si->to_includes, to_include, 0 ) );
 }
 
 /**
@@ -1119,15 +1114,15 @@ static void symbol_includes_dump( void ) {
     verbose_printf( "  \"%s\" -> [ ", si->from_symbol_name );
 
     bool comma = false;
-    rb_iterator_t tif_iter;
-    rb_iterator_init( &si->to_include_files, &tif_iter );
-    for ( CXFile *pto_include_file;
-          (pto_include_file = rb_iterator_next( &tif_iter )) != NULL; ) {
-      CXString const abs_path_cxs =
-        tidy_File_getRealPathName( *pto_include_file );
-      char const *const abs_path = clang_getCString( abs_path_cxs );
-      printf( "%s\"%s\"", true_or_set( &comma ) ? ", " : "", abs_path );
-      clang_disposeString( abs_path_cxs );
+    rb_iterator_t ti_iter;
+    rb_iterator_init( &si->to_includes, &ti_iter );
+    for ( tidy_include *to_include;
+          (to_include = rb_iterator_next( &ti_iter )) != NULL; ) {
+      printf(
+        "%s\"%s\"",
+        true_or_set( &comma ) ? ", " : "",
+        to_include->abs_path
+      );
     } // for
     puts( " ]" );
   }
@@ -1188,29 +1183,27 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   if ( found_rb == NULL )
     return NULL;
   symbol_includes const *const found_si = RB_DINT( found_rb );
-  if ( rb_tree_empty( &found_si->to_include_files ) )
+  if ( rb_tree_empty( &found_si->to_includes ) )
     return NULL;
 
   rb_iterator_t iter;
-  rb_iterator_init( &found_si->to_include_files, &iter );
+  rb_iterator_init( &found_si->to_includes, &iter );
 
-  for ( CXFile *pto_include_file;
-        (pto_include_file = rb_iterator_next( &iter )) != NULL; ) {
-    tidy_include const *include = include_find( *pto_include_file );
-    if ( include == NULL )
-      continue;
+  for ( tidy_include *to_include;
+        (to_include = rb_iterator_next( &iter )) != NULL; ) {
+    tidy_include const *include = to_include;
     while ( include->proxy != NULL )
       include = include->proxy;
     if ( include->depth == 0 )
-      return *pto_include_file;
+      return include->file;
   } // for
 
 #if 0
   // Keep this code for now since we might want to return one of the includes.
-  rb_iterator_init( &found_si->to_include_files, &iter );
-  CXFile const *const pto_include_file = rb_iterator_next( &iter );
-  assert( pto_include_file != NULL );
-  return *pto_include_file;
+  rb_iterator_init( &found_si->to_includes, &iter );
+  include_tidy *const to_include = rb_iterator_next( &iter );
+  assert( to_include != NULL );
+  return to_include->file;
 #else
   return NULL;
 #endif

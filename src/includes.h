@@ -105,16 +105,6 @@ NODISCARD
 tidy_include const* include_add_symbol( CXFile include_file, tidy_symbol *sym );
 
 /**
- * Attempts to find \a file by its unique file ID among the set of files
- * included.
- *
- * @param file The file to find.
- * @return Returns the corresponding tidy_include if found or NULL if not.
- */
-NODISCARD
-tidy_include* include_find( CXFile file );
-
-/**
  * Given a relative path to an include file, e.g.: `clang-c/Index.h`, gets its
  * corresponding include.
  *
