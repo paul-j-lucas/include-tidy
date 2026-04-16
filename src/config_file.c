@@ -688,24 +688,17 @@ static void first_parse( char const *config_path, toml_table const *table,
 /**
  * Adds a proxy from \a from_include_file to \a to_include_file.
  *
- * @param from_include_file The file to add the proxy from.
- * @param to_include_file The file to add the proxy to.
+ * @param from_include The include to add the proxy from.
+ * @param to_include The include to add the proxy to.
  */
 static void include_add_explicit_proxy( char const *config_path,
-                                        CXFile from_include_file,
+                                        tidy_include *from_include,
                                         toml_loc const *from_loc,
-                                        CXFile to_include_file ) {
+                                        tidy_include *to_include ) {
   assert( config_path != NULL );
-  assert( from_include_file != NULL );
+  assert( from_include != NULL );
   assert( from_loc != NULL );
-  assert( to_include_file != NULL );
-
-  tidy_include *const from_include = include_find( from_include_file );
-  if ( from_include == NULL )
-    return;
-  tidy_include *const to_include = include_find( to_include_file );
-  if ( to_include == NULL )
-    return;
+  assert( to_include != NULL );
 
   if ( from_include->proxy != NULL ) {
     print_warning(
@@ -905,7 +898,7 @@ static void proxy_parse( char const *config_path, toml_table const *table,
       from_include = include_find_by_rel_path( value->s );
       if ( from_include != NULL ) {
         include_add_explicit_proxy(
-          config_path, from_include->file, &value->loc, to_include->file
+          config_path, from_include, &value->loc, to_include
         );
       }
       break;
@@ -922,7 +915,7 @@ static void proxy_parse( char const *config_path, toml_table const *table,
         from_include = include_find_by_rel_path( a_value->s );
         if ( from_include != NULL ) {
           include_add_explicit_proxy(
-            config_path, from_include->file, &a_value->loc, to_include->file
+            config_path, from_include, &a_value->loc, to_include
           );
         }
       } // for
