@@ -691,7 +691,9 @@ static void first_parse( char const *config_path, toml_table const *table,
 /**
  * Adds a proxy from \a from_include_file to \a to_include_file.
  *
+ * @param config_path The full path to the configurarion file.
  * @param from_include The include to add the proxy from.
+ * @param from_loc The configuration file source location of \a from_include.
  * @param to_include The include to add the proxy to.
  */
 static void include_add_explicit_proxy( char const *config_path,
@@ -960,7 +962,8 @@ static void std_c_includes_parse( char const *config_path,
  * @param value The toml_value to parse.
  */
 static void std_cpp_includes_parse( char const *config_path,
-                              toml_table const *table, toml_value *value ) {
+                                    toml_table const *table,
+                                    toml_value *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
@@ -1075,7 +1078,7 @@ static int symbol_include_cmp( symbol_includes const *i_si,
  * from_symbol_name is referenced, it'll require \a to_include_file.
  *
  * @param from_symbol_name The name of the symbol.
- * @param to_include_file The include file that supposedly declares it.
+ * @param to_include The include file that supposedly declares it.
  */
 static void symbol_include_add( char const *from_symbol_name,
                                 tidy_include *to_include ) {
