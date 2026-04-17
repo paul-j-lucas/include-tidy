@@ -29,6 +29,7 @@
 // local
 #include "pjl_config.h"
 #include "red_black.h"
+#include "array.h"
 #include "symbols.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -80,9 +81,8 @@ struct tidy_include {
   char const     *rel_path;             ///< Relative path of \a file.
   tidy_include   *includer;             ///< Include including this, if any.
   tidy_include   *proxy;                ///< Proxy include, if any.
-  unsigned        count;                ///< Number of times included.
   unsigned        depth;                ///< Include depth.
-  unsigned        line;                 ///< Line included from.
+  array_t         lines;                ///< Line number(s) included from.
   unsigned        seq_id;               ///< Creation sequence ID.
   bool            is_local;             ///< Local include file?
   bool            is_needed;            ///< Include needed?

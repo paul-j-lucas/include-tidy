@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "April 15, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "April 16, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -58,14 +58,18 @@ source file
 by enforcing the
 .I include-what-you-use
 principle,
-namely that a source file
-directly includes
-header files from which it references symbols
-and does not include header files
+namely that a source file:
+.IP \(bu 3
+Directly includes every header file
+exactly once
+from which it references symbols.
+.IP \(bu
+Does not include a header file
 from which it does not reference symbols.
+.PP
 A source file that is either
 missing a direct
-or unnecessary
+or has an unnecessary
 \f(CW#include\fP
 is in ``violation.''
 .PP

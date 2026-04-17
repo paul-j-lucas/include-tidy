@@ -26,6 +26,7 @@
 // local
 #include "pjl_config.h"
 #include "includes.h"
+#include "array.h"
 #include "clang_util.h"
 #include "color.h"
 #include "config_file.h"
@@ -226,6 +227,42 @@ done:
 }
 
 /**
+ * Prints an `#include` preprocessor directive.
+ *
+ * @param sgr_color The SGR color to use, if any.
+ * @param inc_delim The include delimiters.
+ * @param rel_path The include's relative path.
+ * @param comment The comment, if any.
+ *
+ * @sa include_print()
+ */
+static void include_directive_print( char const *sgr_color,
+                                     char const inc_delim[static 2],
+                                     char const *rel_path,
+                                     char const *comment ) {
+  assert( rel_path != NULL );
+
+  color_start( stdout, sgr_color );
+  int const raw_len = printf(
+    "#include %c%s%c", inc_delim[0], rel_path, inc_delim[1]
+  );
+  if ( unlikely( raw_len < 0 ) ) {
+    color_end( stdout, sgr_color );
+    perror_exit( EX_IOERR );
+  }
+
+  if ( comment != NULL ) {
+    unsigned const column = STATIC_CAST( unsigned, raw_len ) + 1;
+    if ( column < opt_align_column )
+      FPUTNSP( opt_align_column - column, stdout );
+    printf( "%s%s%s", opt_comment_style[0], comment, opt_comment_style[1] );
+  }
+
+  color_end( stdout, sgr_color );
+  PUTC( '\n' );
+}
+
+/**
  * Attempts to find \a file by its unique file ID among the set of files
  * included.
  *
@@ -244,9 +281,11 @@ static tidy_include* include_find_by_CXFile( CXFile file ) {
 }
 
 /**
- * Prints a `#include` preprocessor directive.
+ * Prints a tidy_include.
  *
  * @param include The tidy_include to print.
+ *
+ * @sa include_directive_print()
  */
 static void include_print( tidy_include const *include ) {
   assert( include != NULL );
@@ -254,43 +293,59 @@ static void include_print( tidy_include const *include ) {
   char       *comment = NULL;
   char        inc_delim[2];
   bool const  is_direct = include->depth == 0;
+  bool        print_include = false;
   bool        reset_opt_comment_style = false;
   char const *sgr_color = NULL;
 
   if ( include->is_needed ) {
-    if ( opt_comment_style[0][0] != '\0' )
-      comment = make_symbols_used_comment( include );
-    if ( !is_direct )
+    if ( is_direct ) {
+      print_include = opt_all_includes;
+    }
+    else {
       sgr_color = sgr_include_add;
+      print_include = true;
+    }
+    if ( print_include && opt_comment_style[0][0] != '\0' )
+      comment = make_symbols_used_comment( include );
   }
   else if ( is_direct ) {
     if ( opt_comment_style[0][0] == '\0' ) {
       opt_comment_style[0] = "// ";
       reset_opt_comment_style = true;
     }
-    check_asprintf( &comment, "DELETE LINE %u", include->line );
+    unsigned const line = *(unsigned*)array_at( &include->lines, 0 );
+    check_asprintf( &comment, "DELETE LINE %u", line );
     sgr_color = sgr_include_del;
+    print_include = true;
   }
 
   get_include_delims( include->is_local, inc_delim );
-  color_start( stdout, sgr_color );
-  int const raw_len = printf(
-    "#include %c%s%c", inc_delim[0], include->rel_path, inc_delim[1]
-  );
-  if ( unlikely( raw_len < 0 ) ) {
-    color_end( stdout, sgr_color );
-    perror_exit( EX_IOERR );
-  }
+  if ( print_include )
+    include_directive_print( sgr_color, inc_delim, include->rel_path, comment );
 
-  if ( comment != NULL ) {
-    unsigned const column = STATIC_CAST( unsigned, raw_len ) + 1;
-    if ( column < opt_align_column )
-      FPUTNSP( opt_align_column - column, stdout );
-    printf( "%s%s%s", opt_comment_style[0], comment, opt_comment_style[1] );
-  }
+  if ( include->lines.len > 1 ) {
+    if ( opt_comment_style[0][0] == '\0' ) {
+      opt_comment_style[0] = "// ";
+      reset_opt_comment_style = true;
+    }
+    unsigned const line_first = *(unsigned*)array_at( &include->lines, 0 );
 
-  color_end( stdout, sgr_color );
-  putchar( '\n' );
+    for ( unsigned i = 1; i < include->lines.len; ++i ) {
+      free( comment );
+      unsigned const line = *(unsigned*)array_at( &include->lines, i );
+      if ( include->is_needed ) {
+        check_asprintf( &comment,
+          "DELETE line %u (same as line %u)", line, line_first
+        );
+      }
+      else {
+        check_asprintf( &comment, "DELETE line %u", line );
+      }
+      include_directive_print(
+        sgr_include_del, inc_delim, include->rel_path, comment
+      );
+    } // for
+  }
 
   free( comment );
   if ( reset_opt_comment_style )
@@ -391,11 +446,10 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
+  tidy_include *const include = RB_DINT( rv_rbi.node );
 
   if ( !rv_rbi.inserted && !is_direct )
-    goto skip;
-
-  tidy_include *const include = RB_DINT( rv_rbi.node );
+    goto done;
 
   if ( rv_rbi.inserted ) {
     CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
@@ -413,6 +467,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       assert( include->includer != NULL );
       include->depth = include->includer->depth + 1;
     }
+    array_init( &include->lines, sizeof(unsigned) );
 
     char const *const include_ext = path_ext( include->rel_path );
     if ( include_ext != NULL && include_ext[0] == 'h' ) {
@@ -446,9 +501,6 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     include->includer = NULL;
   }
 
-  if ( is_direct )
-    include->line = include_line;
-
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
     if ( false_set( &iivd->verbose_printed ) )
       verbose_printf( "includes:\n" );
@@ -463,6 +515,10 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       inc_delim[0], include->abs_path, inc_delim[1]
     );
   }
+
+done:
+  if ( is_direct )
+    *(unsigned*)array_push_back( &include->lines ) = include_line;
 
 skip:
   return CXChildVisit_Continue;
@@ -573,6 +629,8 @@ static void tidy_include_cleanup( tidy_include *include ) {
 
   FREE( include->abs_path );
   // rel_path points into abs_path, so it doesn't need to be freed.
+
+  array_cleanup( &include->lines, /*free_fn=*/NULL );
 
   // Because the nodes point to existing tidy_symbol objects, use NULL.
   rb_tree_cleanup( &include->symbol_set, /*free_fn=*/NULL );
@@ -725,8 +783,9 @@ void includes_print( void ) {
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
     bool const is_direct = include->depth == 0;
-    if ( include->is_needed ? (!is_direct || opt_all_includes) : is_direct ) {
-      if ( !include->is_needed )
+    if ( (include->is_needed ? (!is_direct || opt_all_includes) : is_direct) ||
+         include->lines.len > 1 ) {
+      if ( !include->is_needed || include->lines.len > 1 )
         ++tidy_includes_unnecessary;
       else if ( !is_direct )
         ++tidy_includes_missing;
@@ -738,12 +797,12 @@ void includes_print( void ) {
   rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
 
   if ( opt_all_includes && true_clear( &ipvd.printed_any_includes ) )
-    putchar( '\n' );
+    PUTC( '\n' );
   ipvd.print_local = !ipvd.print_local;
   rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
 
   if ( opt_all_includes && true_clear( &ipvd.printed_any_includes ) )
-    putchar( '\n' );
+    PUTC( '\n' );
   ipvd.print_standard = true;
   rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
 

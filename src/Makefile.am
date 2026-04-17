@@ -32,7 +32,8 @@ TESTS =         	$(check_PROGRAMS)
 
 INCLUDE_TIDY_FLAGS =	-Xtidy --verbose=f -Xtidy --error=never
 
-include_tidy_SOURCES =	clang_util.c clang_util.h \
+include_tidy_SOURCES =	array.c array.h \
+			clang_util.c clang_util.h \
 			cli_options.c cli_options.h \
 			color.c color.h \
 			config_file.c config_file.h \
