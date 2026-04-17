@@ -1,5 +1,15 @@
 2026-04-16  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c: Silence libclang unknown warnings.
+   * configure.ac: Don't need host type.
+   * man/man1/include-tidy.1, src/Makefile.am, array.c, array.h, includes.c,
+     includes.h: Now also print duplicate includes.
+   * config_file.c, includes.c, includes.h: Added tidy_include_sort_rank.
+   * includes.c: Eliminated shadows warning.
+   * includes.c: Eliminated print_blank_line.
+   * etc/config.toml: Updated.
+   * includes.c: Best version so far!
+   * print.c: Removed #include <string.h>.
    * config_file.c, includes.c, includes.h:
      s/include_find/include_find_by_CXFile/
    * config_file.c: include_add_explicit_proxy() now takes tidy_include*.
