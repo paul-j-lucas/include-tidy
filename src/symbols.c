@@ -102,6 +102,27 @@ static int include_link_cmp( include_link const *i_link,
 }
 
 /**
+ * TODO
+ *
+ * @param include_map The include map to use.
+ * @param included_file TODO.
+ * @return Returns TODO.
+ */
+NODISCARD
+static CXFile get_includer_File( rb_tree_t const *include_map,
+                                 CXFile included_file ) {
+  assert( include_map != NULL );
+  assert( included_file != NULL );
+
+  include_link find_il = { .included_file = included_file };
+  rb_node_t const *const found_il = rb_tree_find( include_map, &find_il );
+  if ( found_il == NULL )
+    return NULL;
+  include_link const *const link = RB_DINT( found_il );
+  return link->includer_file;
+}
+
+/**
  * Gets whether \a includer_file directly or indirectly includes \a
  * included_file.
  *
@@ -113,23 +134,18 @@ static int include_link_cmp( include_link const *i_link,
 NODISCARD
 static bool is_dependency_of( rb_tree_t const *include_map,
                               CXFile macro_file, CXFile symbol_file ) {
-    assert( include_map != NULL );
-    assert( macro_file != NULL );
-    assert( symbol_file != NULL );
+  assert( include_map != NULL );
+  assert( macro_file != NULL );
+  assert( symbol_file != NULL );
 
-    CXFile curr_file = macro_file;
-    for (;;) {
-      if ( clang_File_isEqual( curr_file, symbol_file ) )
-        return true;
-      include_link find_il = { .included_file = curr_file };
-      rb_node_t const *const found_il = rb_tree_find( include_map, &find_il );
-      if ( found_il == NULL )
-        break;
-      include_link const *const link = RB_DINT( found_il );
-      curr_file = link->includer_file;
-    } // for
+  CXFile curr_file = macro_file;
+  while ( curr_file != NULL ) {
+    if ( clang_File_isEqual( curr_file, symbol_file ) )
+      return true;
+    curr_file = get_includer_File( include_map, curr_file );
+  } // while
 
-    return false;
+  return false;
 }
 
 /**
