@@ -146,7 +146,7 @@ static char const*  get_opt_format( int ),
                  *  is_long_opt( int, char const *const[], char const*, int* ),
                  *  is_short_opt( int, char const *const[], char, int* );
 
-static void         grow_argv( int*, char const**[] );
+static void         grow_argv( int*, char const**[], size_t );
 
 NODISCARD
 static bool         is_Xtidy_opt( int, char const *const[], int* );
@@ -227,7 +227,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
         continue;
 
       // Insert new -isystem option before last argv (the filename).
-      grow_argv( pargc, pargv );
+      grow_argv( pargc, pargv, 1 );
       memmove( &(*pargv)[ argi + 1 ], &(*pargv)[ argi ],
                STATIC_CAST( size_t, *pargc - argi ) * sizeof(char*) );
 
@@ -443,21 +443,25 @@ static char const* get_x_language( int argc, char const *const argv[] ) {
 }
 
 /**
- * Makes \a *pargv one element longer.
+ * Makes \a *pargv \a n elements longer.
  *
  * @param pargc A pointer to the argument count from \c main().  It is
- * incremented by 1.
+ * incremented by \a n.
  * @param pargv A pointer to the argument values from \c main().
+ * @param n The number of elements to grow \a *pargv by.
  */
-static void grow_argv( int *pargc, char const **pargv[] ) {
+static void grow_argv( int *pargc, char const **pargv[], size_t n ) {
   assert(  pargc != NULL );
   assert( *pargc > 0 );
   assert(  pargv != NULL );
   assert( *pargv != NULL );
 
+  if ( n == 0 )
+    return;
+
   static bool   is_argv_on_heap = false;
-  size_t const  old_argc = STATIC_CAST( size_t, (*pargc)++ );
-  size_t const  new_argc = old_argc + 1/*new arg*/ + 1/*NULL*/;
+  size_t const  old_argc = STATIC_CAST( size_t, *pargc );
+  size_t const  new_argc = old_argc + n + 1/*NULL*/;
 
   if ( false_set( &is_argv_on_heap ) ) {
     // We can't realloc the argv passed to main(), so in order to insert an
@@ -469,25 +473,31 @@ static void grow_argv( int *pargc, char const **pargv[] ) {
   else {
     REALLOC( *pargv, new_argc );
   }
+
+  *pargc += STATIC_CAST( int, n );
 }
 
 /**
- * Inserts a `-D__include_tidy__` option into \a *pargv.
+ * Inserts an argument into \a *pargv.
  *
  * @param pargc A pointer to the argument count from \c main().  It is
  * incremented by 1.
  * @param pargv A pointer to the argument values from \c main().
+ * @param args_len The length of \a args.
+ * @param args The arguments to insert.
  */
-static void insert_D__include_tidy__( int *pargc, char const **pargv[] ) {
+static void insert_argv( int *pargc, char const **pargv[], size_t args_len,
+                         char const *const args[args_len] ) {
   assert(  pargc != NULL );
   assert( *pargc > 0 );
   assert(  pargv != NULL );
   assert( *pargv != NULL );
 
   size_t const old_argc = STATIC_CAST( size_t, *pargc );
-  grow_argv( pargc, pargv );
-  memmove( &(*pargv)[2], &(*pargv)[1], old_argc * sizeof(char*) );
-  (*pargv)[1] = "-D__include_tidy__";
+  grow_argv( pargc, pargv, args_len );
+  memmove( &(*pargv)[1 + args_len], &(*pargv)[1], old_argc * sizeof(char*) );
+  for ( size_t i = 0; i < args_len; ++i )
+    (*pargv)[1 + i] = args[i];
 }
 
 /**
@@ -1058,7 +1068,12 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   }
 
   // We have do do this after --help and --version have been checked.
-  insert_D__include_tidy__( pargc, pargv );
+  char const *const CLANG_ARGS[] = {
+    "-D_include_tidy__",
+    "-Qunused-arguments",
+    "-Wno-unknown-warning-option",
+  };
+  insert_argv( pargc, pargv, ARRAY_SIZE( CLANG_ARGS ), CLANG_ARGS );
 
   // argv[argc-1] is the source file, but we've already copied it into
   // arg_source_path, so just NULL it out.
