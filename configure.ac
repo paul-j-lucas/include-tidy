@@ -33,7 +33,7 @@ AS_IF([test "x$ac_cv_prog_cc_c11" = xno],
 gl_EARLY
 AC_PROG_INSTALL
 
-# External dependency: libclang
+# External dependency: llvm-config (and libclang)
 AC_ARG_WITH([llvm-config],
   [AS_HELP_STRING([--with-llvm-config=PATH], [path to llvm-config program])],
   [
@@ -53,17 +53,6 @@ LIBCLANG_CPPFLAGS=`$LLVM_CONFIG --cppflags`
 LIBCLANG_LIBDIR=`$LLVM_CONFIG --libdir`
 LIBCLANG_LDFLAGS=`$LLVM_CONFIG --ldflags`
 LIBCLANG_LIBS="-lclang"
-
-# Check host type.
-AC_CANONICAL_HOST
-case "x$host_os" in
-xdarwin*)
-  AC_DEFINE([SHLIB_PATH_VAR], [DYLD_LIBRARY_PATH], [Define to platform shared library path variable.])
-  ;;
-*)
-  AC_DEFINE([SHLIB_PATH_VAR], [LD_LIBRARY_PATH], [Define to platform shared library path variable.])
-  ;;
-esac
 
 # Checks for headers.
 save_CPPFLAGS="$CPPFLAGS"
