@@ -54,16 +54,26 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-typedef struct symbols_init_visitor_data symbols_init_visitor_data;
+typedef struct include_link               include_link;
+typedef struct symbols_init_visitor_data  symbols_init_visitor_data;
 
 ////////// structures /////////////////////////////////////////////////////////
+
+/**
+ * TODO
+ */
+struct include_link {
+  CXFile included_file;                 ///< TODO.
+  CXFile includer_file;                 ///< TODO.
+};
 
 /**
  * Additional data passed to symbols_init_visitor.
  */
 struct symbols_init_visitor_data {
-  CXFile  source_file;                  ///< The file being tidied.
-  bool    verbose_printed;              ///< Printed any verbose output?
+  rb_tree_t  *include_map;              ///< TODO.
+  CXFile      source_file;              ///< The file being tidied.
+  bool        verbose_printed;          ///< Printed any verbose output?
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -76,6 +86,77 @@ static void visit_MacroDefinition( CXCursor, symbols_init_visitor_data* );
 static rb_tree_t symbol_set;            ///< Set of symbols.
 
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * TODO.
+ *
+ * @param i_link TODO.
+ * @param j_link TODO.
+ * @return Returns a number less than 0, 0, or greater than 0 if \a i_file is
+ * less than, equal to, or greater than \a j_file, respectively.
+ */
+NODISCARD
+static int include_link_cmp( include_link const *i_link,
+                             include_link const *j_link ) {
+  return tidy_CXFile_cmp( &i_link->included_file, &j_link->included_file );
+}
+
+/**
+ * Gets whether \a includer_file directly or indirectly includes \a
+ * included_file.
+ *
+ * @param include_map The include map to use.
+ * @param includer_file TODO.
+ * @param included_file TODO.
+ * @return Returns `true` only if \a includer_file includes \a included_file.
+ */
+NODISCARD
+static bool is_includer_of( rb_tree_t const *include_map,
+                            CXFile includer_file, CXFile included_file ) {
+    assert( include_map != NULL );
+    assert( includer_file != NULL );
+    assert( included_file != NULL );
+
+    for (;;) {
+      if ( clang_File_isEqual( included_file, includer_file ) )
+        return true;
+      include_link find_il = { .included_file = included_file };
+      rb_node_t const *const found_il = rb_tree_find( include_map, &find_il );
+      if ( found_il == NULL )
+        break;
+      include_link const *const link = RB_DINT( found_il );
+      included_file = link->includer_file;
+    } // for
+
+    return false;
+}
+
+/**
+ * TODO.
+ *
+ * @param included_file The file that was included.
+ * @param inclusion_stack The list of include files to get to included_file.
+ * @param include_len The length of includsion_stack.
+ * @param data A pointer to the include map.
+ */
+static void include_map_visitor( CXFile included_file,
+                                 CXSourceLocation *inclusion_stack,
+                                 unsigned include_len, CXClientData data ) {
+  assert( included_file != NULL );
+  assert( inclusion_stack != NULL );
+  assert( data != NULL );
+  rb_tree_t *const include_map = data;
+
+  if ( include_len == 0 )
+    return;
+
+  include_link link = {
+    .included_file = included_file,
+    .includer_file = tidy_getSpellingLocation_File( inclusion_stack[0] )
+  };
+
+  PJL_DISCARD_RV( rb_tree_insert( include_map, &link, sizeof link ) );
+}
 
 /**
  * Given a cursor at a local name of an enumeration, class, class member, class
@@ -373,8 +454,12 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
  */
 static void visit_MacroDefinition( CXCursor macro_cursor,
                                    symbols_init_visitor_data *sivd ) {
-  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( macro_cursor );
+  CXSourceLocation const macro_loc = clang_getCursorLocation( macro_cursor );
+  CXFile const macro_file = tidy_getSpellingLocation_File( macro_loc );
+  bool const macro_in_source_file =
+    clang_File_isEqual( macro_file, sivd->source_file );
   CXSourceRange const macro_range = clang_getCursorExtent( macro_cursor );
+  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( macro_cursor );
 
   CXToken *macro_tokens;
   unsigned token_count;
@@ -385,9 +470,23 @@ static void visit_MacroDefinition( CXCursor macro_cursor,
       continue;
     CXSourceLocation const loc = clang_getTokenLocation( tu, macro_tokens[i] );
     CXCursor const ident_cursor = clang_getCursor( tu, loc );
-    CXCursor const referenced = clang_getCursorReferenced( ident_cursor );
-    if ( !clang_isInvalid( referenced.kind ) )
-      maybe_add_symbol( referenced, sivd );
+    CXCursor const ref_cursor = clang_getCursorReferenced( ident_cursor );
+    if ( clang_isInvalid( ref_cursor.kind ) )
+      continue;
+
+    CXSourceLocation const ref_loc = clang_getCursorLocation( ref_cursor );
+    CXFile const symbol_file = tidy_getSpellingLocation_File( ref_loc );
+    if ( symbol_file == NULL )
+      continue;
+    if ( clang_File_isEqual( symbol_file, sivd->source_file ) )
+      continue;
+
+    if ( !macro_in_source_file &&
+         is_includer_of( sivd->include_map, macro_file, symbol_file ) ) {
+      continue;
+    }
+
+    maybe_add_symbol( ref_cursor, sivd );
   } // for
 
   clang_disposeTokens( tu, macro_tokens, token_count );
@@ -402,13 +501,22 @@ void symbols_init( CXTranslationUnit tu ) {
   );
   ATEXIT( &symbols_cleanup );
 
+  rb_tree_t include_map;
+  rb_tree_init(
+    &include_map, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &include_link_cmp )
+  );
+  clang_getInclusions( tu, &include_map_visitor, &include_map );
+
   CXCursor const cursor = clang_getTranslationUnitCursor( tu );
   symbols_init_visitor_data sivd = {
-    .source_file = clang_getFile( tu, arg_source_path )
+    .source_file = clang_getFile( tu, arg_source_path ),
+    .include_map = &include_map
   };
   clang_visitChildren( cursor, &symbols_init_visitor, &sivd );
   if ( sivd.verbose_printed )
     verbose_printf( "\n" );
+
+  rb_tree_cleanup( &include_map, /*free_fn=*/NULL );
 }
 
 int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
