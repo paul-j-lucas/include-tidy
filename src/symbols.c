@@ -106,26 +106,27 @@ static int include_link_cmp( include_link const *i_link,
  * included_file.
  *
  * @param include_map The include map to use.
- * @param includer_file TODO.
- * @param included_file TODO.
+ * @param macro_file TODO.
+ * @param symbol_file TODO.
  * @return Returns `true` only if \a includer_file includes \a included_file.
  */
 NODISCARD
-static bool is_includer_of( rb_tree_t const *include_map,
-                            CXFile includer_file, CXFile included_file ) {
+static bool is_dependency_of( rb_tree_t const *include_map,
+                              CXFile macro_file, CXFile symbol_file ) {
     assert( include_map != NULL );
-    assert( includer_file != NULL );
-    assert( included_file != NULL );
+    assert( macro_file != NULL );
+    assert( symbol_file != NULL );
 
+    CXFile curr_file = macro_file;
     for (;;) {
-      if ( clang_File_isEqual( included_file, includer_file ) )
+      if ( clang_File_isEqual( curr_file, symbol_file ) )
         return true;
-      include_link find_il = { .included_file = included_file };
+      include_link find_il = { .included_file = curr_file };
       rb_node_t const *const found_il = rb_tree_find( include_map, &find_il );
       if ( found_il == NULL )
         break;
       include_link const *const link = RB_DINT( found_il );
-      included_file = link->includer_file;
+      curr_file = link->includer_file;
     } // for
 
     return false;
@@ -482,7 +483,7 @@ static void visit_MacroDefinition( CXCursor macro_cursor,
       continue;
 
     if ( !macro_in_source_file &&
-         is_includer_of( sivd->include_map, macro_file, symbol_file ) ) {
+         is_dependency_of( sivd->include_map, macro_file, symbol_file ) ) {
       continue;
     }
 
