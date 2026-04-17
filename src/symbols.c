@@ -164,12 +164,12 @@ static void include_map_visitor( CXFile included_file,
   assert( data != NULL );
   rb_tree_t *const include_map = data;
 
-  if ( include_len == 0 )
-    return;
+  CXFile includer_file = include_len > 0 ?
+    tidy_getSpellingLocation_File( inclusion_stack[0] ) : NULL;
 
   include_link link = {
     .included_file = included_file,
-    .includer_file = tidy_getSpellingLocation_File( inclusion_stack[0] )
+    .includer_file = includer_file
   };
 
   PJL_DISCARD_RV( rb_tree_insert( include_map, &link, sizeof link ) );
