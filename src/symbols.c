@@ -385,9 +385,9 @@ static void visit_MacroDefinition( CXCursor macro_cursor,
       continue;
     CXSourceLocation const loc = clang_getTokenLocation( tu, macro_tokens[i] );
     CXCursor const ident_cursor = clang_getCursor( tu, loc );
-    CXCursor const referenced = clang_getCursorReferenced( ident_cursor );
-    if ( !clang_isInvalid( referenced.kind ) )
-      maybe_add_symbol( referenced, sivd );
+    CXCursor const ref_cursor = clang_getCursorReferenced( ident_cursor );
+    if ( !clang_isInvalid( ref_cursor.kind ) )
+      maybe_add_symbol( ref_cursor, sivd );
   } // for
 
   clang_disposeTokens( tu, macro_tokens, token_count );
