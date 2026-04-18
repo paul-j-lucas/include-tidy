@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "April 16, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "April 18, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -195,12 +195,12 @@ where other code in the same file
 references a symbol
 formed via the preprocessor's \f(CW##\fP (paste) operator,
 but defined in a header.
-See
+(See
 .B Symbols via ##
 under
 .B BUGS
 for details
-and an example.
+and an example.)
 .SS Proxies
 Headers often include other headers because:
 .nr step 1 1
@@ -316,11 +316,30 @@ The default is 40.
 .BR \-\-all-includes " | " \-A
 Prints all include files,
 not just those in violation.
-Local includes
-are printed before system includes.
-The include corresponding to the current
-\f(CW.c\fP or \f(CW.cpp\fP
+Includes are printed in three groups;
+local (i.e., \f(CW""\fP),
+system (i.e., \f(CW<>\fP, but not standard),
+and standard (i.e., \f(CW<>\fP and standard).
+A blank line is printed between groups.
+.IP
+Within a group,
+includes are sorted by their relative path names
+with two exceptions.
+For the local group:
+.RS 5
+.nr step 1 1
+.IP \n[step]. 3
+An include specified in a configuration file with a
+.B first
+key having a value
+.BR true ,
+if any,
 is printed first.
+.IP \n+[step].
+The include corresponding to the current
+\f(CW.c\fP or \f(CW.cpp\fP file being tidied
+is printed next.
+.RE
 .TP
 .BR \-\-clang \f1=\fPf "\f1 | \fP" "" \-C " f"
 Specifies the path to
@@ -425,7 +444,7 @@ Only when violations.
 .RE
 .PD
 .IP
-This is needed to tell
+This can be used to tell
 .BR make (1)
 that a corresponding \f(CW.o\fP file
 has not been built.
@@ -440,6 +459,7 @@ The default is 80.
 .TP
 .BR \-\-no-config-layers " | " \-L
 Suppresses configuration file layering.
+Only the first configuration file found is used.
 (See
 .B Layering
 under
@@ -463,7 +483,7 @@ and
 Configuration files read or attempted.
 .TP
 .B f
-Source file being tidied.
+Name of source file being tidied.
 .TP
 .B i
 Files included.
@@ -490,6 +510,7 @@ Alternatively,
 \f(CW*\fP may be given to mean ``all''
 or
 \f(CW-\fP may be given to mean ``none.''
+THe default is none.
 .SS Clang Options
 Options that are neither one of
 .B "Other Options"
@@ -518,9 +539,13 @@ and exits.
 Prints the version number
 and exits.
 .SH CONFIGRATION FILES
-An
+A file named either
 .B include-tidy.toml
-file is used to configure
+or
+.B config.toml
+in a subdirectory named
+.B include-tidy
+is used to configure
 .BR include-tidy .
 The file is ``lite'' version of TOML.
 (See
@@ -538,9 +563,6 @@ where each section is started by a line of the form:
 that is a left bracket,
 a table name,
 and a right bracket.
-There must be
-.I no
-whitespace between the brackets.
 If a table name
 contains a character other than
 a valid TOML key character of
@@ -550,8 +572,8 @@ then the table name
 .I must
 be quoted.
 .PP
-The order in which tables are given
-doesn't matter.
+Neither the order of the tables in a file
+nor the keys in a table matters.
 For the keys below,
 a value
 .I b
@@ -638,7 +660,9 @@ A double
 .B **
 matches any sequence of characters including
 .B /
-that matches within any subdirectory.
+that matches within
+.I any
+subdirectory.
 .TP
 .BI std-cpp-includes " \f1=\fP " [ s " \f1[,\fP " s "\f1]*\fP ]"
 Like
