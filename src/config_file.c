@@ -69,9 +69,9 @@
  * Options for the config_open() function.
  */
 enum config_opts {
-  CONFIG_OPT_NONE              = 0,       ///< No options.
-  CONFIG_OPT_ERROR_IS_FATAL    = 1 << 0,  ///< An error is fatal.
-  CONFIG_OPT_IGNORE_NOT_FOUND  = 1 << 1   ///< Ignore file not found.
+  CONFIG_OPT_NONE           = 0,        ///< No options.
+  CONFIG_OPT_ERROR_IS_FATAL = 1 << 0,   ///< An error is fatal.
+  CONFIG_OPT_IGNORE_ENOENT  = 1 << 1    ///< Ignore file not found.
 };
 
 /**
@@ -448,7 +448,7 @@ static FILE* config_find( char const *config_path,
       size_t cwd_len;
       strcpy( path_buf, get_cwd( &cwd_len ) );
       path_append( path_buf, cwd_len, PACKAGE ".toml" );
-      config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
+      config_file = config_open( path_buf, CONFIG_OPT_IGNORE_ENOENT );
       if ( config_file != NULL )
         break;
       FALLTHROUGH;
@@ -472,7 +472,7 @@ static FILE* config_find( char const *config_path,
         if ( path_buf[0] != '\0' ) {
           path_append( path_buf, SIZE_MAX, PACKAGE );
           path_append( path_buf, SIZE_MAX, "config.toml" );
-          config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
+          config_file = config_open( path_buf, CONFIG_OPT_IGNORE_ENOENT );
           if ( config_file != NULL )
             break;
         }
@@ -496,7 +496,7 @@ static FILE* config_find( char const *config_path,
           path_append( path_buf, dir_len, PACKAGE );
           dir_len += STRLITLEN( PACKAGE );
           path_append( path_buf, dir_len, "config.toml" );
-          config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
+          config_file = config_open( path_buf, CONFIG_OPT_IGNORE_ENOENT );
           path_buf[0] = '\0';
           if ( config_file != NULL )
             break;
@@ -553,7 +553,7 @@ static FILE* config_open( char const *path, config_opts opts ) {
   if ( !ok ) {
     switch ( errno ) {
       case ENOENT:
-        if ( (opts & CONFIG_OPT_IGNORE_NOT_FOUND) != 0 )
+        if ( (opts & CONFIG_OPT_IGNORE_ENOENT) != 0 )
           break;
         FALLTHROUGH;
       default:
