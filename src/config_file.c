@@ -488,7 +488,7 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
         config_dirs = "/etc/xdg";       // LCOV_EXCL_LINE
       for (;;) {
         char const *const next_sep = strchr( config_dirs, ':' );
-        size_t dir_len = next_sep != NULL ?
+        size_t const dir_len = next_sep != NULL ?
           STATIC_CAST( size_t, next_sep - config_dirs ) :
           strlen( config_dirs );
         if ( dir_len > 0 ) {
