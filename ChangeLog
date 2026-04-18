@@ -1,3 +1,7 @@
+2026-04-18  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c, util.c, util.h: Now using strbuf in config_file.c.
+
 2026-04-16  Paul J. Lucas <paul@lucasmail.org>
 
    * cli_options.c: Silence libclang unknown warnings.
