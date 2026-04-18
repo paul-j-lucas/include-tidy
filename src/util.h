@@ -902,18 +902,6 @@ inline char const* null_if_empty( char const *s ) {
 }
 
 /**
- * Appends a component to a path ensuring that exactly one `/ `separates them.
- *
- * @param path The path to append to.
- * @param path_len The length of \a path.  If `SIZE_MAX`,
- * <code>strlen(</code>\a path<code>)</code> is used instead; if zero, does
- * nothing.
- * @param component The component to append.
- */
-void path_append( char path[static PATH_MAX], size_t path_len,
-                  char const *component );
-
-/**
  * Compares two paths by their base names.
  *
  * @param i_path The first path.

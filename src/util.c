@@ -36,7 +36,6 @@
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stdint.h>                     /* SIZE_MAX */
 #include <stdio.h>
 #include <stdlib.h>                     /* for malloc(), ... */
 #include <string.h>
@@ -187,22 +186,6 @@ void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim,
   for ( size_t i = 0; i < idim; ++i )
     rows[i] = &elements[ i * rows_size ];
   return rows;
-}
-
-void path_append( char path[static PATH_MAX], size_t path_len,
-                  char const *component ) {
-  assert( path != NULL );
-  assert( component != NULL );
-
-  if ( path_len == SIZE_MAX )
-    path_len = strlen( path );
-
-  if ( path_len > 0 ) {
-    path += path_len - 1;
-    if ( *path != '/' )
-      *++path = '/';
-    strcpy( ++path, component );
-  }
 }
 
 int path_base_name_cmp( char const *i_path, char const *j_path ) {
