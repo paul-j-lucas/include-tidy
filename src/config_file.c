@@ -405,15 +405,16 @@ static void comment_style_parse( char const *config_path,
  *
  * @remarks
  * @parblock
- * The path of the configuration file is determined as follows (in priority
- * order):
+ * Configuration files are opened (if they exist) in this order:
  *
- *  1. The value of either the `--config` or `-c` command-line option.
+ *  1. The value of either the `--config` or `-c` command-line option.  (If
+ *     specified, this _must_ exist.)
  *  2. `$PWD/include-tidy.toml`.
  *  3. `$XDG_CONFIG_HOME/include-tidy/config.toml`.  If `XDG_CONFIG_HOME` is
  *     empty or unset, then ``~/.config/` is used.
- *  4. `$XDG_CONFIG_DIRS/include-tidy/config.toml` for each path.  If
- *     `XDG_CONFIG_DIRS` is empty or unset, then `/etc/xdg` is used.
+ *  4. For each _path_ in `$XDG_CONFIG_DIRS`, the first of
+ *     <i>path</i><tt>/include-tidy/config.toml</tt> to exist and be readable.
+ *     If `XDG_CONFIG_DIRS` is empty or unset, then `/etc/xdg` is used.
  * @endparblock
  *
  * @param config_path The full path to a configuration file.  May be NULL.
