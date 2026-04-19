@@ -105,7 +105,7 @@ static void           tidy_include_cleanup( tidy_include* );
 ////////// extern variables ///////////////////////////////////////////////////
 
 unsigned tidy_includes_missing;         ///< Number of includes missing.
-unsigned tidy_includes_unnecessary;     ///< Number of includes unnecessary..
+unsigned tidy_includes_unnecessary;     ///< Number of includes unnecessary.
 
 ////////// local variables ////////////////////////////////////////////////////
 
