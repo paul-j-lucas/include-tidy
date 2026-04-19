@@ -204,8 +204,8 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
 
   if (// This handles a case like:
       //
-      //       </usr/include/stdlib.h>
-      //         </usr/include/_stdlib.h>
+      //      </usr/include/stdlib.h>
+      //        </usr/include/_stdlib.h>
       //
       // That is, a standard header includes an implementation header that
       // isn't a standard headers.  The standard header should be a proxy for
@@ -214,8 +214,8 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
 
       // This handles a case like:
       //
-      //       <../lib/stdlib.h>
-      //         </usr/include/stdlib.h>
+      //      <../lib/stdlib.h>
+      //        </usr/include/stdlib.h>
       //
       // That is, a local implementation of a standard header (as is done when
       // using Gnulib) eventually does a (non-standard) #include_next to
