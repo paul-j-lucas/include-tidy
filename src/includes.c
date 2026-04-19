@@ -466,7 +466,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
-  tidy_include *const include = RB_DINT( rv_rbi.node );
+  tidy_include *const included = RB_DINT( rv_rbi.node );
 
   if ( !rv_rbi.inserted && !is_direct )
     goto done;
@@ -474,26 +474,26 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   if ( rv_rbi.inserted ) {
     CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
 
-    include->abs_path = check_strdup( clang_getCString( abs_path_cxs ) );
-    include->seq_id   = tidy_include_count++;
-    include->file     = included_file;
-    include->is_local = is_local_include( include->abs_path );
-    include->rel_path = opt_include_paths_relativize( include->abs_path );
+    included->abs_path = check_strdup( clang_getCString( abs_path_cxs ) );
+    included->seq_id   = tidy_include_count++;
+    included->file     = included_file;
+    included->is_local = is_local_include( included->abs_path );
+    included->rel_path = opt_include_paths_relativize( included->abs_path );
 
     clang_disposeString( abs_path_cxs );
 
     if ( !is_direct ) {
-      include->includer = include_find_by_CXFile( includer_file );
-      assert( include->includer != NULL );
-      include->depth = include->includer->depth + 1;
+      included->includer = include_find_by_CXFile( includer_file );
+      assert( included->includer != NULL );
+      included->depth = included->includer->depth + 1;
     }
-    array_init( &include->lines, sizeof(unsigned) );
+    array_init( &included->lines, sizeof(unsigned) );
 
-    char const *const include_ext = path_ext( include->rel_path );
+    char const *const include_ext = path_ext( included->rel_path );
     if ( include_ext != NULL && include_ext[0] == 'h' ) {
       char path_buf[ PATH_MAX ];
       char const *const include_no_ext =
-        path_no_ext( include->rel_path, path_buf );
+        path_no_ext( included->rel_path, path_buf );
       if ( strcmp( include_no_ext, iivd->source_file_no_ext ) == 0 ) {
         //
         // This include file's name matches the source file's (without
@@ -505,20 +505,20 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
         //      #include "a.h"
         //      #include "b.h"
         //
-        include->sort_rank = TIDY_SORT_CORRESPONDING;
+        included->sort_rank = TIDY_SORT_CORRESPONDING;
       }
     }
 
     rb_tree_init(
       // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
       // symbol_set in symbols.c
-      &include->symbol_set, RB_DPTR,
+      &included->symbol_set, RB_DPTR,
       POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
     );
   }
   else {                                // is_direct must be true here
-    include->depth = 0;
-    include->includer = NULL;
+    included->depth = 0;
+    included->includer = NULL;
   }
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
@@ -526,19 +526,19 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       verbose_printf( "includes:\n" );
 
     char inc_delim[2];
-    get_include_delims( include->is_local, inc_delim );
+    get_include_delims( included->is_local, inc_delim );
 
     verbose_printf(
       "  %2u%*s %c%s%c\n",
-      include->depth,
-      STATIC_CAST( int, include->depth * VERBOSE_INCLUDE_INDENT ), "",
-      inc_delim[0], include->abs_path, inc_delim[1]
+      included->depth,
+      STATIC_CAST( int, included->depth * VERBOSE_INCLUDE_INDENT ), "",
+      inc_delim[0], included->abs_path, inc_delim[1]
     );
   }
 
 done:
   if ( is_direct )
-    *(unsigned*)array_push_back( &include->lines ) = include_line;
+    *(unsigned*)array_push_back( &included->lines ) = include_line;
 
 skip:
   return CXChildVisit_Continue;
