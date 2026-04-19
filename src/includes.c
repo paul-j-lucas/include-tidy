@@ -208,7 +208,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       //        </usr/include/_stdlib.h>
       //
       // That is, a standard header includes an implementation header that
-      // isn't a standard headers.  The standard header should be a proxy for
+      // isn't a standard header.  The standard header should be a proxy for
       // the implementation header.
       !config_is_standard_include( included->rel_path ) ||
 
