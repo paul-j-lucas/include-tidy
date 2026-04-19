@@ -191,6 +191,8 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
 
   if ( included->proxy != NULL )
     goto done;
+  if ( included->depth == 0 )
+    goto done;
   if ( included->is_local )
     goto done;
 
@@ -225,22 +227,20 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
     goto done;
   }
 
-  if ( included->depth > 0 ) {
-    rb_iterator_t iter;
-    rb_iterator_init( &include_set, &iter );
-    while ( (includer = rb_iterator_next( &iter )) != NULL ) {
-      if ( includer == included )
-        continue;
-      if ( includer->depth > 0 || includer->is_local )
-        continue;
-      if ( !config_is_standard_include( includer->rel_path ) )
-        continue;
-      if ( ii_matrix[ includer->seq_id ][ included->seq_id ] ) {
-        included->proxy = includer;
-        goto done;
-      }
-    } // while
-  }
+  rb_iterator_t iter;
+  rb_iterator_init( &include_set, &iter );
+  while ( (includer = rb_iterator_next( &iter )) != NULL ) {
+    if ( includer == included )
+      continue;
+    if ( includer->depth > 0 || includer->is_local )
+      continue;
+    if ( !config_is_standard_include( includer->rel_path ) )
+      continue;
+    if ( ii_matrix[ includer->seq_id ][ included->seq_id ] ) {
+      included->proxy = includer;
+      goto done;
+    }
+  } // while
 
 done:
   return CXChildVisit_Continue;
