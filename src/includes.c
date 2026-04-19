@@ -439,22 +439,22 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   unsigned          include_line, include_col;
   CXSourceLocation  include_loc = clang_getCursorLocation( cursor );
   CXFile const      included_file = clang_getIncludedFile( cursor );
-  CXFile            including_file;
+  CXFile            includer_file;
   bool const        is_direct = clang_Location_isFromMainFile( include_loc );
 
   clang_getSpellingLocation(
-    include_loc, &including_file, &include_line, &include_col,
+    include_loc, &includer_file, &include_line, &include_col,
     /*offset=*/NULL
   );
 
   if ( included_file == NULL ) {
     CXString const    included_name_cxs = clang_getCursorSpelling( cursor );
     char const *const included_name = clang_getCString( included_name_cxs );
-    CXString const    including_name_cxs = clang_getFileName( including_file );
-    char const *const including_name = clang_getCString( including_name_cxs );
+    CXString const    includer_name_cxs = clang_getFileName( includer_file );
+    char const *const includer_name = clang_getCString( includer_name_cxs );
 
     print_error(
-      path_no_dot_slash( including_name ), include_line, include_col,
+      path_no_dot_slash( includer_name ), include_line, include_col,
       "\"%s\": %s (missing -I option?)\n",
       included_name, strerror( ENOENT )
     );
@@ -483,7 +483,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     clang_disposeString( abs_path_cxs );
 
     if ( !is_direct ) {
-      include->includer = include_find_by_CXFile( including_file );
+      include->includer = include_find_by_CXFile( includer_file );
       assert( include->includer != NULL );
       include->depth = include->includer->depth + 1;
     }
