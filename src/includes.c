@@ -202,27 +202,27 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   if ( includer->is_local )
     goto done;
 
-  if ( // This handles a case like:
-       //
-       //       </usr/include/stdlib.h>
-       //         </usr/include/_stdlib.h>
-       //
-       // That is, a standard header includes an implementation header that
-       // isn't a standard headers.  The standard header should be a proxy for
-       // the implementation header.
-       !config_is_standard_include( included->rel_path ) ||
+  if (// This handles a case like:
+      //
+      //       </usr/include/stdlib.h>
+      //         </usr/include/_stdlib.h>
+      //
+      // That is, a standard header includes an implementation header that
+      // isn't a standard headers.  The standard header should be a proxy for
+      // the implementation header.
+      !config_is_standard_include( included->rel_path ) ||
 
-       // This handles a case like:
-       //
-       //       <../lib/stdlib.h>
-       //         </usr/include/stdlib.h>
-       //
-       // That is, a local implementation of a standard header (as is done when
-       // using Gnulib) eventually does a (non-standard) #include_next to
-       // include the real standard one.  The local header should be a proxy
-       // for the real one.
-       strcmp( base_name( included->rel_path ),
-               base_name( includer->rel_path ) ) == 0 ) {
+      // This handles a case like:
+      //
+      //       <../lib/stdlib.h>
+      //         </usr/include/stdlib.h>
+      //
+      // That is, a local implementation of a standard header (as is done when
+      // using Gnulib) eventually does a (non-standard) #include_next to
+      // include the real standard one.  The local header should be a proxy
+      // for the real one.
+      strcmp( base_name( included->rel_path ),
+              base_name( includer->rel_path ) ) == 0 ) {
     included->proxy = includer;
     goto done;
   }
