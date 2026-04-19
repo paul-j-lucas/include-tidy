@@ -104,8 +104,8 @@ static void           tidy_include_cleanup( tidy_include* );
 
 ////////// extern variables ///////////////////////////////////////////////////
 
-unsigned tidy_includes_missing;
-unsigned tidy_includes_unnecessary;
+unsigned tidy_includes_missing;         ///< Number of includes missing.
+unsigned tidy_includes_unnecessary;     ///< Number of includes unnecessary..
 
 ////////// local variables ////////////////////////////////////////////////////
 
@@ -200,7 +200,8 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   if ( includer->is_local )
     goto done;
   if ( !config_is_standard_include( included->rel_path ) ||
-       path_base_name_cmp( included->rel_path, includer->rel_path ) == 0 ) {
+       strcmp( base_name( included->rel_path ),
+               base_name( includer->rel_path ) ) == 0 ) {
     included->proxy = includer;
     goto done;
   }

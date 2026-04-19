@@ -902,20 +902,6 @@ inline char const* null_if_empty( char const *s ) {
 }
 
 /**
- * Compares two paths by their base names.
- *
- * @param i_path The first path.
- * @param j_path The second path.
- * @return Returns a number less than 0, 0, or greater than 0 if the base name
- * of \a i_path is less than, equal to, or greater than the base name of \a
- * j_path, respectively.
- *
- * @sa base_name()
- */
-NODISCARD
-int path_base_name_cmp( char const *i_path, char const *j_path );
-
-/**
  * Gets the filename extension of \a path, if any.
  *
  * @param path The path to get the filename extension of.

@@ -188,15 +188,6 @@ void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim,
   return rows;
 }
 
-int path_base_name_cmp( char const *i_path, char const *j_path ) {
-  assert( i_path != NULL );
-  assert( j_path != NULL );
-
-  i_path = base_name( i_path );
-  j_path = base_name( j_path );
-  return strcmp( i_path, j_path );
-}
-
 char const* path_ext( char const *path ) {
   assert( path != NULL );
   // Do base_name() first for a case like "a.b/c".
