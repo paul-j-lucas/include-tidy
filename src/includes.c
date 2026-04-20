@@ -43,7 +43,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>                     /* for PATH_MAX */
-#include <stdalign.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for atexit(3) */
@@ -132,54 +131,19 @@ static void get_include_delims( bool is_local, char delim[static 2] ) {
 }
 
 /**
- * Visits each include file in a translation unit to populate an include-
- * include matrix, i.e., `ii_matrix[i][j]` is true only if include-i includes
- * include-j.
- *
- * @param included_file The file that was included.
- * @param inclusion_stack The list of include files to get to included_file.
- * @param include_len The length of includsion_stack.
- * @param data A pointer to the include-include matrix to populate.
- */
-static void ii_visitor( CXFile included_file, CXSourceLocation *inclusion_stack,
-                        unsigned include_len, CXClientData data ) {
-  assert( included_file != NULL );
-  assert( inclusion_stack != NULL );
-  assert( data != NULL );
-  bool *const *const ii_matrix = data;
-
-  tidy_include const *const included = include_find_by_CXFile( included_file );
-  if ( included == NULL )               // when file is source file
-    return;
-  assert( included->seq_id < tidy_include_count );
-
-  for ( unsigned i = 0; i < include_len; ++i ) {
-    CXFile const includer_file =
-      tidy_getFileLocation_File( inclusion_stack[i] );
-    tidy_include const *const includer =
-      include_find_by_CXFile( includer_file );
-    if ( includer == NULL )             // when file is source file
-      continue;
-    assert( includer->seq_id < tidy_include_count );
-    ii_matrix[ includer->seq_id ][ included->seq_id ] = true;
-  } // for
-}
-
-/**
  * Visits each `#include` directive in a translation unit for initializing
  * implicit include proxies.
  *
  * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent Not used.
- * @param data A pointer to the include-include matrix to use.
+ * @param data Not used.
  * @return Always returns `CXChildVisit_Continue`.
  */
 static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
                                                          CXCursor parent,
                                                          CXClientData data ) {
   (void)parent;
-  assert( data != NULL );
-  bool const *const *const ii_matrix = data;
+  (void)data;
 
   if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
     goto done;
@@ -196,7 +160,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   if ( included->is_local )
     goto done;
 
-  tidy_include *includer = included->includer;
+  tidy_include *const includer = included->includer;
   if ( includer == NULL )
     goto done;
   if ( includer->is_local )
@@ -224,23 +188,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       strcmp( base_name( included->rel_path ),
               base_name( includer->rel_path ) ) == 0 ) {
     included->proxy = includer;
-    goto done;
   }
-
-  rb_iterator_t iter;
-  rb_iterator_init( &include_set, &iter );
-  while ( (includer = rb_iterator_next( &iter )) != NULL ) {
-    if ( includer == included )
-      continue;
-    if ( includer->depth > 0 || includer->is_local )
-      continue;
-    if ( !config_is_standard_include( includer->rel_path ) )
-      continue;
-    if ( ii_matrix[ includer->seq_id ][ included->seq_id ] ) {
-      included->proxy = includer;
-      goto done;
-    }
-  } // while
 
 done:
   return CXChildVisit_Continue;
@@ -468,9 +416,6 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
   tidy_include *const included = RB_DINT( rv_rbi.node );
 
-  if ( !rv_rbi.inserted && !is_direct )
-    goto done;
-
   if ( rv_rbi.inserted ) {
     CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
 
@@ -516,9 +461,53 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
     );
   }
-  else {                                // is_direct must be true here
+  else if ( is_direct ) {
+    //
+    // This handles a case like:
+    //
+    //      "util.h"
+    //        </usr/include/stdlib.h>
+    //      ...
+    //      </usr/include/stdlib.h>
+    //
+    // That is, a header was initially included indirectly, but then later
+    // included directly.
+    //
     included->depth = 0;
     included->includer = NULL;
+  }
+  else {
+    tidy_include *const old_includer = included->includer;
+    if ( old_includer != NULL ) {
+      //
+      // This handles a case like:
+      //
+      //      </usr/include/sys/wait.h>
+      //        </usr/include/sys/signal.h> // #define SIGSTOP 17
+      //      ...
+      //      </usr/include/signal.h>
+      //        </usr/include/sys/signal.h>
+      //
+      // That is, a standard header (e.g., sys/wait.h) includes a non-standard
+      // a header (e.g., sys/signal.h) so sys/signal.h's includer is set to
+      // sys/wait.h.
+      //
+      // Later, the standard header version of the non-standard header (e.g.,
+      // signal.h) is included that also includes the non-standard header
+      // (sys/signal.h), so sys/signal.h's includer should be reset to be
+      // signal.h because, later still, sys/signal's proxy will then be set to
+      // be signal.h, not sys/wait.h, so signal.h will be considered the header
+      // that defines SIGSTOP (which is correct) instead of sys/wait.h (which
+      // is incorrect).
+      //
+      tidy_include *const includer = include_find_by_CXFile( includer_file );
+      if ( includer != old_includer &&
+           strcmp( base_name( included->rel_path ),
+                   base_name( includer->rel_path ) ) == 0 ) {
+        included->includer = includer;
+      }
+    }
+    goto done;
   }
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
@@ -772,17 +761,8 @@ void includes_init( CXTranslationUnit tu ) {
 void includes_init_implicit_proxies( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
 
-  // Create an include-include matrix, i.e., ii_matrix[i][j] is true only if
-  // include-i includes include-j.
-  void *const ii_matrix = matrix2d_new(
-    sizeof(bool), alignof(bool),
-    tidy_include_count, tidy_include_count, /*zero=*/true
-  );
-  clang_getInclusions( tu, ii_visitor, ii_matrix );
-
   CXCursor const cursor = clang_getTranslationUnitCursor( tu );
-  clang_visitChildren( cursor, &implicit_proxies_visitor, ii_matrix );
-  free( ii_matrix );
+  clang_visitChildren( cursor, &implicit_proxies_visitor, /*data=*/NULL );
 
   if ( (opt_verbose & TIDY_VERBOSE_PROXIES_EXPLICIT) != 0 )
     include_proxies_dump( /*want_explicit=*/true );

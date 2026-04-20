@@ -871,24 +871,6 @@ NODISCARD
 char const* get_cwd( size_t *plen );
 
 /**
- * Dynamically allocates a two-dimensional matrix [\a idim][\a jdim] elements
- * of size \a esize.
- *
- * @param esize The size in bytes of a single element.
- * @param ealign The alignment of a single element.
- * @param idim The number of elements in the _i_ dimension.
- * @param jdim The number of elements in the _j_ dimension.
- * @param zero If `true`, elements are zeroed; if `false`, elements are left
- * uninitialized.
- * @return Returns a pointer to a new two-dimensional matrix that may be cast
- * to `T**` where `T` is the type of element.  The caller is responsible for
- * freeing it via **free**(3).
- */
-NODISCARD
-void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim,
-                     bool zero );
-
-/**
  * Checks whether \a s is null, an empty string, or consists only of
  * whitespace.
  *

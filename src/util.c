@@ -61,18 +61,6 @@ char const WS_CHARS[] =           " \n\t\r\f\v";
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Rounds \a n up to a multiple of \a multiple.
- *
- * @param n The number to round up.  Must be &gt; 0.
- * @param multiple The multiple to round up to.  It _must_ be a power of 2.
- * @return Returns \a n rounded up to a multiple of \a multiple.
- */
-NODISCARD
-static inline size_t round_up_pow_2( size_t n, size_t multiple ) {
-  return (n + multiple - 1) & ~(multiple - 1);
-}
-
-/**
  * Checks whether \a s is any one of \a matches, case-insensitive.
  *
  * @param s The null-terminated string to check or null.  May be NULL.
@@ -170,22 +158,6 @@ char const* get_cwd( size_t *plen ) {
   if ( plen != NULL )
     *plen = cwd_path_len;
   return cwd_path_buf;
-}
-
-void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim,
-                     bool zero ) {
-  // ensure &elements[0] is suitably aligned
-  size_t const ptrs_size = round_up_pow_2( sizeof(void*) * idim, ealign );
-  size_t const rows_size = esize * jdim;
-  size_t const data_size = idim * rows_size;
-  // allocate the row pointers followed by the elements
-  void **const rows = MALLOC( char, ptrs_size + data_size );
-  char *const elements = POINTER_CAST( char*, rows ) + ptrs_size;
-  if ( zero )
-    memset( elements, 0, data_size );
-  for ( size_t i = 0; i < idim; ++i )
-    rows[i] = &elements[ i * rows_size ];
-  return rows;
 }
 
 char const* path_ext( char const *path ) {
