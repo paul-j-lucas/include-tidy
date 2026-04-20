@@ -94,7 +94,7 @@ static void print_diagnostics( CXTranslationUnit tu ) {
   unsigned error_count = 0;
 
   for ( unsigned i = 0; i < diag_count; ++i ) {
-    CXDiagnostic diag = clang_getDiagnostic( tu, i );
+    CXDiagnostic const diag = clang_getDiagnostic( tu, i );
     switch ( clang_getDiagnosticSeverity( diag ) ) {
       case CXDiagnostic_Error:
       case CXDiagnostic_Fatal:
