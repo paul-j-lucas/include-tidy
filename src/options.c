@@ -215,7 +215,7 @@ bool opt_error_parse( char const *s ) {
   else if ( strcmp( s, "never" ) == 0 )
     opt_error = TIDY_ERROR_NEVER;
   else if ( strcmp( s, "violations" ) == 0 )
-    opt_error = TIDY_ERROR_VIOLATIONS;
+    opt_error = TIDY_ERROR_INCLUDE_VIOLATIONS;
   else
     return false;
 
