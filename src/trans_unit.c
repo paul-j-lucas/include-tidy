@@ -91,7 +91,6 @@ static void print_diagnostics( CXTranslationUnit tu ) {
   if ( diag_count == 0 )
     return;
 
-  unsigned const diag_opts = clang_defaultDiagnosticDisplayOptions();
   unsigned error_count = 0;
 
   for ( unsigned i = 0; i < diag_count; ++i ) {
@@ -100,9 +99,17 @@ static void print_diagnostics( CXTranslationUnit tu ) {
       case CXDiagnostic_Error:
       case CXDiagnostic_Fatal:
         ++error_count;
-        CXString diag_cxs = clang_formatDiagnostic( diag, diag_opts );
-        EPRINTF( "%s: %s\n", prog_name, clang_getCString( diag_cxs ) );
-        clang_disposeString( diag_cxs );
+        CXSourceLocation const diag_loc = clang_getDiagnosticLocation( diag );
+        unsigned diag_line, diag_column;
+        clang_getSpellingLocation(
+          diag_loc, /*file=*/NULL, &diag_line, &diag_column, /*offset=*/NULL
+        );
+        CXString const diag_msg_cxs = clang_getDiagnosticSpelling( diag );
+        print_error(
+          arg_source_path, diag_line, diag_column,
+          "%s\n",  clang_getCString( diag_msg_cxs )
+        );
+        clang_disposeString( diag_msg_cxs );
         break;
       default:
         /* suppress warning */;
@@ -112,28 +119,17 @@ static void print_diagnostics( CXTranslationUnit tu ) {
 
   if ( error_count > 0 ) {
     fatal_error( EX_DATAERR,
-      "%u error%s\n", error_count, plural_s( error_count )
+      "%u error%s generated\n", error_count, plural_s( error_count )
     );
   }
 }
 
 /**
- * Cleans-up the translation unit.
- */
-static void trans_unit_cleanup( void ) {
-  if ( tidy_tu != NULL )
-    clang_disposeTranslationUnit( tidy_tu );
-  if ( tidy_index != NULL )
-    clang_disposeIndex( tidy_index );
-}
-
-/**
- * Handles a translation unit CXError_Failure.
+ * Checks for and handles a translation unit failures.
  *
  * @param tu The CXTranslationUnit to use.  May be NULL.
  */
-_Noreturn
-static void trans_unit_failure( CXTranslationUnit tu ) {
+static void trans_unit_check_for_errors( CXTranslationUnit tu ) {
   if ( tu == NULL ) {
     // libclang isn't specific enough about a failure, so see if the reason is
     // because the source file doesn't exist or isn't readable.
@@ -149,10 +145,16 @@ static void trans_unit_failure( CXTranslationUnit tu ) {
   }
 
   print_diagnostics( tu );
+}
 
-  // This function is called only upon failure, so we should have caught the
-  // failure above.
-  assert( false && "should have caught the failure" );
+/**
+ * Cleans-up the translation unit.
+ */
+static void trans_unit_cleanup( void ) {
+  if ( tidy_tu != NULL )
+    clang_disposeTranslationUnit( tidy_tu );
+  if ( tidy_index != NULL )
+    clang_disposeIndex( tidy_index );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -184,11 +186,17 @@ CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
       fatal_error( EX_UNAVAILABLE, "libclang AST error\n" );
     case CXError_Crashed:
       fatal_error( EX_UNAVAILABLE, "libclang crashed\n" );
-    case CXError_Failure:
-      trans_unit_failure( tidy_tu );
     case CXError_InvalidArguments:
       fatal_error( EX_SOFTWARE, "invalid arguments given to libclang\n" );
+
     case CXError_Success:
+      //
+      // All a CXError_Success means is that clang's parser didn't crash; it
+      // doesn't mean the code is valid, so we have to check for errors
+      // explicitly.
+      //
+    case CXError_Failure:
+      trans_unit_check_for_errors( tidy_tu );
       break;
   } // switch
 
