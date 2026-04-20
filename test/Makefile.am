@@ -30,7 +30,8 @@ TESTS=	tests/cli_error.test \
 	tests/cli_options.test \
 	tests/cli_options-error.test
 
-TESTS+=	tests/hello.test
+TESTS+=	tests/duplicate.test \
+	tests/hello.test
 
 ###############################################################################
 
