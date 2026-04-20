@@ -852,7 +852,7 @@ static void keep_parse( char const *config_path, toml_table const *table,
 
   tidy_include *const include = include_find_by_rel_path( table->name );
   if ( include != NULL )
-    include->is_needed = true;
+    include->keep = true;
 }
 
 /**

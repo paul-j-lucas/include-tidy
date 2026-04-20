@@ -83,6 +83,7 @@ struct tidy_include {
   tidy_include   *proxy;                ///< Proxy include, if any.
   unsigned        depth;                ///< Include depth.
   array_t         lines;                ///< Line number(s) included from.
+  bool            keep;                 ///< Keep even if unnecessary?
   bool            is_local;             ///< Local include file?
   bool            is_needed;            ///< Include needed?
   bool            is_proxy_explicit;    ///< Was \ref proxy explicitly added?

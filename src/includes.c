@@ -264,8 +264,8 @@ static void include_print( tidy_include const *include ) {
   bool        reset_opt_comment_style = false;
   char const *sgr_color = NULL;
 
-  if ( include->is_needed ) {
-    if ( is_direct ) {
+  if ( include->is_needed || include->keep ) {
+    if ( is_direct || include->keep ) {
       print_include = opt_all_includes;
     }
     else {
@@ -545,6 +545,8 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
   tidy_include const *const include = node_data;
   includes_print_visitor_data *const ipvd = visit_data;
 
+  if ( include->keep && !opt_all_includes )
+    goto skip;
   if ( ipvd->print_local != include->is_local )
     goto skip;
   if ( ipvd->print_standard != config_is_standard_include( include->rel_path ) )
@@ -782,11 +784,14 @@ void includes_print( void ) {
         (include = rb_iterator_next( &iter )) != NULL; ) {
     bool const is_direct = include->depth == 0;
     if ( (include->is_needed ? (!is_direct || opt_all_includes) : is_direct) ||
+         (include->keep && opt_all_includes) ||
          include->lines.len > 1 ) {
-      if ( !include->is_needed || include->lines.len > 1 )
-        ++tidy_includes_unnecessary;
-      else if ( !is_direct )
-        ++tidy_includes_missing;
+      if ( !include->keep ) {
+        if ( !include->is_needed || include->lines.len > 1 )
+          ++tidy_includes_unnecessary;
+        else if ( !is_direct )
+          ++tidy_includes_missing;
+      }
       PJL_DISCARD_RV( rb_tree_insert( &include_set_by_rel_path, include, 0 ) );
     }
   } // for
