@@ -109,7 +109,6 @@ unsigned tidy_includes_unnecessary;     ///< Number of includes unnecessary.
 ////////// local variables ////////////////////////////////////////////////////
 
 static rb_tree_t  include_set;          ///< Set of included files.
-static unsigned   tidy_include_count;   ///< Number of tidy_include objects.
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -385,13 +384,13 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     POINTER_CAST( includes_init_visitor_data*, data );
 
   unsigned          include_line, include_col;
-  CXSourceLocation  include_loc = clang_getCursorLocation( cursor );
+  CXSourceLocation  includer_loc = clang_getCursorLocation( cursor );
   CXFile const      included_file = clang_getIncludedFile( cursor );
   CXFile            includer_file;
-  bool const        is_direct = clang_Location_isFromMainFile( include_loc );
+  bool const        is_direct = clang_Location_isFromMainFile( includer_loc );
 
   clang_getSpellingLocation(
-    include_loc, &includer_file, &include_line, &include_col,
+    includer_loc, &includer_file, &include_line, &include_col,
     /*offset=*/NULL
   );
 
@@ -420,7 +419,6 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
 
     included->abs_path = check_strdup( clang_getCString( abs_path_cxs ) );
-    included->seq_id   = tidy_include_count++;
     included->file     = included_file;
     included->is_local = is_local_include( included->abs_path );
     included->rel_path = opt_include_paths_relativize( included->abs_path );
