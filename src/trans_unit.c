@@ -107,7 +107,7 @@ static void print_diagnostics( CXTranslationUnit tu ) {
         CXString const diag_msg_cxs = clang_getDiagnosticSpelling( diag );
         print_error(
           arg_source_path, diag_line, diag_column,
-          "%s\n",  clang_getCString( diag_msg_cxs )
+          "%s\n", clang_getCString( diag_msg_cxs )
         );
         clang_disposeString( diag_msg_cxs );
         break;
