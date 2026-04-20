@@ -2,21 +2,25 @@ EXPECTED_EXIT=0
 
 test_include_tidy \
     -Xtidy --config=$TEST_CONFIG \
+    -Xtidy --no-config-layers \
     data/hello.c
 
 test_include_tidy \
     -Xtidy --config=$TEST_CONFIG \
+    -Xtidy --no-config-layers \
     -Xtidy --all-includes \
     data/hello.c
 
 test_include_tidy \
     -Xtidy --config=$TEST_CONFIG \
+    -Xtidy --no-config-layers \
     -Xtidy --all-includes \
     -Xtidy --align-column=35 \
     data/hello.c
 
 test_include_tidy \
     -Xtidy --config=$TEST_CONFIG \
+    -Xtidy --no-config-layers \
     -Xtidy --all-includes \
     -Xtidy --comment-style='/*' \
     data/hello.c
