@@ -61,7 +61,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define VERBOSE_INCLUDE_INDENT    2     /**< Spaces per include depth. */
+#define INCLUDE_VERBOSE_INDENT    2     /**< Spaces per include depth. */
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
@@ -518,7 +518,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     verbose_printf(
       "  %2u%*s %c%s%c\n",
       included->depth,
-      STATIC_CAST( int, included->depth * VERBOSE_INCLUDE_INDENT ), "",
+      STATIC_CAST( int, included->depth * INCLUDE_VERBOSE_INDENT ), "",
       inc_delim[0], included->abs_path, inc_delim[1]
     );
   }
