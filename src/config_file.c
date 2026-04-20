@@ -425,7 +425,6 @@ static void comment_style_parse( char const *config_path,
 NODISCARD
 static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
   assert( path_buf != NULL );
-  strbuf_reset( path_buf );
 
   static unsigned case_num = 1;
 
@@ -438,6 +437,7 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
       ++case_num;
       config_file = config_open( config_path, CONFIG_OPT_ERROR_IS_FATAL );
       if ( config_file != NULL ) {
+        strbuf_reset( path_buf );
         strbuf_puts( path_buf, config_path );
         break;
       }
@@ -446,6 +446,7 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
     case 2:
       // Try $PWD/include-tidy.toml
       ++case_num;
+      strbuf_reset( path_buf );
       strbuf_puts( path_buf, get_cwd( /*cwd_len=*/NULL ) );
       strbuf_paths( path_buf, PACKAGE ".toml" );
       config_file = config_open( path_buf->str, CONFIG_OPT_IGNORE_ENOENT );
@@ -458,6 +459,7 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
       // $HOME/.config/include-tidy/config.toml.
       ++case_num;
       if ( (home = home_dir()) != NULL ) {
+        strbuf_reset( path_buf );
         char const *const config_dir =
           null_if_empty( getenv( "XDG_CONFIG_HOME" ) );
         if ( config_dir != NULL ) {
@@ -486,6 +488,7 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
       char const *config_dirs = null_if_empty( getenv( "XDG_CONFIG_DIRS" ) );
       if ( config_dirs == NULL )
         config_dirs = "/etc/xdg";       // LCOV_EXCL_LINE
+      strbuf_reset( path_buf );
       for (;;) {
         char const *const next_sep = strchr( config_dirs, ':' );
         size_t const dir_len = next_sep != NULL ?
