@@ -1,5 +1,6 @@
 2026-04-21  Paul J. Lucas <paul@lucasmail.org>
 
+   * etc/config.toml: Added optarg, opterr, etc.
    * configure.ac: Now requiring Autconf 2.70.
    * configure.ac: Poisoning cache since we don't want C23.
    * toml_lite.c: Now calling toml_ungetc() in toml_table_next() if c != '['.
