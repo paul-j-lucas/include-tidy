@@ -20,7 +20,7 @@
 #       along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.70])
 AC_INIT([include-tidy], [0.1], [https://github.com/paul-j-lucas/include-tidy/issues],,[https://github.com/paul-j-lucas/include-tidy])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
