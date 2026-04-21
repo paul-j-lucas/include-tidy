@@ -20,6 +20,10 @@ test_include_tidy -Xtidy --config
 test_include_tidy -Xtidy --config=
 test_include_tidy -Xtidy -c
 
+test_include_tidy -Xtidy --directory
+test_include_tidy -Xtidy --directory=
+test_include_tidy -Xtidy -d
+
 test_include_tidy -Xtidy --line-length
 test_include_tidy -Xtidy --line-length=
 test_include_tidy -Xtidy --line-length=X

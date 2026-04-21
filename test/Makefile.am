@@ -26,9 +26,11 @@ AUTOMAKE_OPTIONS = 1.12			# needed for TEST_LOG_DRIVER
 ###############################################################################
 
 # Command-line option tests
-TESTS=	tests/cli_error.test \
-	tests/cli_options.test \
-	tests/cli_options-error.test
+TESTS=	tests/cli-align-column.test \
+	tests/cli-comment-style.test \
+	tests/cli-error-always.test \
+	tests/cli-help.test \
+	tests/cli-options-error.test
 
 TESTS+=	tests/duplicate.test \
 	tests/hello.test

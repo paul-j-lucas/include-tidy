@@ -3,9 +3,3 @@ $ include-tidy -Xtidy --config=../etc/config.toml -Xtidy --no-config-layers data
 $ include-tidy -Xtidy --config=../etc/config.toml -Xtidy --no-config-layers -Xtidy --all-includes data/hello.c
 #include <stdio.h>                      // printf
 
-$ include-tidy -Xtidy --config=../etc/config.toml -Xtidy --no-config-layers -Xtidy --all-includes -Xtidy --align-column=35 data/hello.c
-#include <stdio.h>                // printf
-
-$ include-tidy -Xtidy --config=../etc/config.toml -Xtidy --no-config-layers -Xtidy --all-includes -Xtidy --comment-style=/* data/hello.c
-#include <stdio.h>                      /* printf */
-

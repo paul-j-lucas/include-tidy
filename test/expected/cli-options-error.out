@@ -46,6 +46,15 @@ include-tidy: error: "--config/-c" requires an argument
 $ include-tidy -Xtidy -c
 include-tidy: error: "-c" requires an argument
 
+$ include-tidy -Xtidy --directory
+include-tidy: error: "--directory/-d" requires an argument
+
+$ include-tidy -Xtidy --directory=
+include-tidy: error: "--directory/-d" requires an argument
+
+$ include-tidy -Xtidy -d
+include-tidy: error: "-d" requires an argument
+
 $ include-tidy -Xtidy --line-length
 include-tidy: error: "--line-length/-l" requires an argument
 
