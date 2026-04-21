@@ -38,6 +38,7 @@
 #define OPT_CONFIG                c
 #define OPT_CLANG                 C
 #define OPT_COLOR                 k
+#define OPT_DIRECTORY             d
 #define OPT_ERROR                 e
 #define OPT_HELP                  h
 #define OPT_INCLUDE               I

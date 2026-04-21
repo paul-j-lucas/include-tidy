@@ -42,6 +42,7 @@
 #include <stdlib.h>                     /* for exit() */
 #include <string.h>                     /* for str...() */
 #include <sysexits.h>
+#include <unistd.h>                     /* for chdir(2) */
 
 /// @endcond
 
@@ -106,6 +107,7 @@ static struct option const OPTIONS[] = {
   { "color",            required_argument,  NULL, COPT(COLOR)             },
   { "comment-style",    required_argument,  NULL, COPT(COMMENT_STYLE)     },
   { "config",           required_argument,  NULL, COPT(CONFIG)            },
+  { "directory",        required_argument,  NULL, COPT(DIRECTORY)         },
   { "error",            required_argument,  NULL, COPT(ERROR)             },
   { "help",             no_argument,        NULL, COPT(HELP)              },
   { "line-length",      required_argument,  NULL, COPT(LINE_LENGTH)       },
@@ -130,6 +132,7 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(COLOR) ] = "When to colorize output; default=\"not_file\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
   [ COPT(CONFIG) ] = "Configuration file path",
+  [ COPT(DIRECTORY) ] = "Change directory before tidying",
   [ COPT(ERROR) ] = "When to exit with a non-zero status",
   [ COPT(HELP) ] = "Print this help and exit",
   [ COPT(LINE_LENGTH) ] = "Line length; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
@@ -908,6 +911,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   opt_include_paths_add( "." );
 
   int               opt;
+  char const       *opt_directory = NULL;
   bool              opt_help = false;
   bool              opt_version = false;
   char const *const short_opts = make_short_opts( OPTIONS, SOPT(INCLUDE) ":" );
@@ -964,6 +968,11 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         if ( *SKIP_WS( optarg ) == '\0' )
           goto missing_arg;
         opt_config_path = optarg;
+        break;
+      case COPT(DIRECTORY):
+        if ( *SKIP_WS( optarg ) == '\0' )
+          goto missing_arg;
+        opt_directory = optarg;
         break;
       case COPT(ERROR):
         if ( *SKIP_WS( optarg ) == '\0' )
@@ -1065,6 +1074,15 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       EPRINTF( true_or_set( &comma ) ? ", %s" : "%s", m->ext );
     EPUTS( "; or use -xc[++]\n" );
     exit( EX_USAGE );
+  }
+
+  if ( opt_directory != NULL ) {
+    if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )
+      verbose_printf( "change directory: \"%s\"\n", opt_directory );
+    if ( chdir( opt_directory ) != 0 )
+      fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
+    if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )
+      verbose_printf( "\n" );
   }
 
   // We have do do this after --help and --version have been checked.

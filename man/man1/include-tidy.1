@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "April 18, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "April 20, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -297,6 +297,9 @@ option is given only to
 .PP
 For the options below,
 an option argument
+.I d
+means
+.IR directory ,
 .I f
 means
 .IR file ,
@@ -425,6 +428,11 @@ are always printed.
 .BR \-\-config \f1=\fPf "\f1 | \fP" "" \-c " f"
 Specifies the path of the configuration file to use first.
 .TP
+.BR \-\-directory \f1=\fPd "\f1 | \fP" "" \-d " d"
+Change to directory
+.I d
+before tidying.
+.TP
 .BR \-\-error \f1=\fPs "\f1 | \fP" "" \-e " s"
 When to exit with a non-zero status.
 Valid values for
@@ -481,6 +489,13 @@ and
 .TP
 .B c
 Configuration files read or attempted.
+.TP
+.B d
+Directory changing to from the
+.B \-\-directory
+or
+.B \-d
+option.
 .TP
 .B f
 Name of source file being tidied.
