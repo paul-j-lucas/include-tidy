@@ -48,6 +48,7 @@ dist-hook:
 
 UPDATE_TEST = $(srcdir)/update_test.sh
 update:
-	@ls $(TESTS) | xargs -n255 -r $(UPDATE_TEST) -s $(ABS_TOP_BUILDDIR)/src
+	@ls $(TESTS) | xargs -n255 -r \
+	$(UPDATE_TEST) -B "$(ABS_TOP_BUILDDIR)" -s "$(TOP_SRCDIR)"
 
 # vim:set noet sw=8 ts=8:

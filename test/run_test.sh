@@ -174,6 +174,9 @@ TEST_NAME=$(local_basename "$TEST_NAME")
 
 ########## Initialize #########################################################
 
+[ "$ABS_TOP_BUILDDIR" ] || error 78 '$ABS_TOP_BUILDDIR not set'
+[ "$TOP_SRCDIR" ] || error 78 '$TOP_SRCDIR not set'
+
 if [ "$COLOR_TESTS" = yes -a -t 1 ]
 then
   COLOR_BLUE="[1;34m"
@@ -201,14 +204,12 @@ trap "x=$?; rm -f $TMPDIR/*_$$_* 2>/dev/null; exit $x" EXIT HUP INT TERM
 DATA_DIR="$srcdir/data"
 EXPECTED_DIR="$srcdir/expected"
 
-[ "$TOP_SRCDIR" ] || error 78 '$TOP_SRCDIR not set'
 TEST_CONFIG="$TOP_SRCDIR/etc/config.toml"
 
 ##
 # Must put $ABS_TOP_BUILDDIR/src first in PATH so we get the correct version of
 # include-tidy.
 ##
-[ "$ABS_TOP_BUILDDIR" ] || error 78 '$ABS_TOP_BUILDDIR not set'
 PATH="$ABS_TOP_BUILDDIR/src:$PATH"
 
 ##
