@@ -2,7 +2,7 @@ $ include-tidy -Xtidy --align-column
 include-tidy: error: "--align-column/-a" requires an argument
 
 $ include-tidy -Xtidy --align-column=
-include-tidy: error: "": invalid integer
+include-tidy: error: "--align-column/-a" requires an argument
 
 $ include-tidy -Xtidy --align-column=X
 include-tidy: error: "X": invalid integer
@@ -59,7 +59,7 @@ $ include-tidy -Xtidy --line-length
 include-tidy: error: "--line-length/-l" requires an argument
 
 $ include-tidy -Xtidy --line-length=
-include-tidy: error: "": invalid integer
+include-tidy: error: "--line-length/-l" requires an argument
 
 $ include-tidy -Xtidy --line-length=X
 include-tidy: error: "X": invalid integer

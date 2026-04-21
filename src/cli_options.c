@@ -928,6 +928,12 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     );
     if ( opt == -1 )
       break;
+    struct option const *const option = get_option( opt );
+    if ( option != NULL && option->has_arg != no_argument ) {
+      SKIP_WS( optarg );
+      if ( option->has_arg == required_argument && optarg[0] == '\0' )
+        goto missing_arg;
+    }
     switch ( opt ) {
       case COPT(ALIGN_COLUMN):;
         if ( !opt_align_column_parse( optarg ) ) {
@@ -943,8 +949,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       case COPT(CLANG):                 // already handled
         break;
       case COPT(COLOR):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
         if ( !opt_color_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s\n",
@@ -953,8 +957,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         }
         break;
       case COPT(COMMENT_STYLE):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
         if ( !opt_comment_style_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s;"
@@ -965,18 +967,12 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         opt_mark_set( COPT(COMMENT_STYLE) );
         break;
       case COPT(CONFIG):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
         opt_config_path = optarg;
         break;
       case COPT(DIRECTORY):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
         opt_directory = optarg;
         break;
       case COPT(ERROR):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
         if ( !opt_error_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s;"
@@ -989,8 +985,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         opt_help = true;
         break;
       case COPT(INCLUDE):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
         opt_include_paths_add( optarg );
         break;
       case COPT(LINE_LENGTH):
@@ -1005,8 +999,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         opt_config_layers = false;
         break;
       case COPT(VERBOSE):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
         if ( !opt_verbose_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s; must be [ais]\n",
