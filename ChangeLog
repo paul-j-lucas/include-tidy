@@ -1,5 +1,29 @@
+2026-04-21  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c, type_traits.h, util.c, util.h: Handline null optarg.
+   * cli_options.c: Reworked get_opt* functions.
+   * cli_options.c, cli-options-error.out: Better empty argument handling.
+   * options.c: s/||/&&/
+   * man/man1/include-tidy.1: Removed ...''.
+   * test/Makefile.am, keep.c, keep.h, keep.toml, keep.out, keep.test: Added
+     "keep" test.
+   * cli-align-column.out, cli-comment-style.out, cli-error-always.out,
+     duplicate.out, hello.out, run_test.sh, cli-align-column.test,
+     cli-comment-style.test, cli-error-always.test, duplicate.test, hello.test,
+     update_test.sh: Split out TIDY_TEST_CONFIG.
+   * cli-align-column.out, cli-comment-style.out, cli-error-always.out,
+     duplicate.out, hello.out, run_test.sh, cli-align-column.test,
+     cli-comment-style.test, cli-error-always.test, duplicate.test, hello.test,
+     update_test.sh: Now using --directory.
+   * test/Makefile.am, cli-align-column.out, cli-comment-style.out, hello.out,
+     cli-align-column.test, cli-comment-style.test, hello.test: More tests.
+   * test/Makefile.am, run_test.sh, update_test.sh: Made update_test.sh work
+     again; made things more consistens.
+
 2026-04-20  Paul J. Lucas <paul@lucasmail.org>
 
+   * util.c, cli_options-error.out: Added "error" to fatal_error().
+   * cli_options-error.out, cli_options.out: Updated tests.
    * man/man1/include-tidy.1, cli_options.c, cli_options.h, options.c,
      options.h: Added --directory/-d option.
    * print.c, print.h: verbose_printf() now prints nothing if opt_verbose ==
