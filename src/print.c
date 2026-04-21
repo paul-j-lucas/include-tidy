@@ -146,7 +146,8 @@ void fl_print_warning( char const *tidy_file, int tidy_line,
 }
 
 int verbose_printf( char const *format, ... ) {
-  assert( opt_verbose != TIDY_VERBOSE_NONE );
+  if ( opt_verbose == TIDY_VERBOSE_NONE )
+    return 0;
   fputs( "// tidy | ", stdout );
   va_list args;
   va_start( args, format );
