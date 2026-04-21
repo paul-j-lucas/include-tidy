@@ -1,5 +1,31 @@
+2026-04-20  Paul J. Lucas <paul@lucasmail.org>
+
+   * man/man1/include-tidy.1, cli_options.c, cli_options.h, options.c,
+     options.h: Added --directory/-d option.
+   * print.c, print.h: verbose_printf() now prints nothing if opt_verbose ==
+     TIDY_VERBOSE_NONE.
+   * cli_options.c: Fixed spelling of __include_tidy__.
+   * trans_unit.c: Removed #include "include-tidy.h".
+   * trans_unit.c: Added "const".
+   * trans_unit.c: Now checking for invalid code correctly.
+   * config_file.c: Fixed config file path handling with strbuf.
+   * config_file.c, includes.c, includes.h: Added separate flag for "keep".
+   * test/Makefile.am, hello-2-stdio.c, duplicate.out, duplicate.test: Added
+     test for duplicate includes.
+   * hello.out, hello.test: Added --no-config-layers.
+
+2026-04-19  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c, includes.h: Eliminated seq_id and tidy_include_count.
+   * includes.c, util.c, util.h: Eliminated include-include matrix by doing
+     retroactive include->includer resetting.
+
 2026-04-18  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c: Moved check included->depth == 0 earlier.
+   * etc/config.toml: Split C/POSIX.
+   * includes.c, util.c, util.h: Eliminated path_base_name_cmp().
+   * config_file.c: Added "const".
    * config_file.c, util.c, util.h: Now using strbuf in config_file.c.
 
 2026-04-16  Paul J. Lucas <paul@lucasmail.org>
