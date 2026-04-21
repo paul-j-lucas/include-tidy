@@ -72,6 +72,7 @@ tidy options:
   --color=ARG         (-k) When to colorize output; default="not_file".
   --comment-style=ARG (-s) Comment style: "//", "/*", or "none".
   --config=ARG        (-c) Configuration file path.
+  --directory=ARG     (-d) Change directory before tidying.
   --error=ARG         (-e) When to exit with a non-zero status.
   --line-length=ARG   (-l) Line length; default=80.
   --no-config-layers  (-L) Don't do configuration file layering.
@@ -107,6 +108,7 @@ tidy options:
   --color=ARG         (-k) When to colorize output; default="not_file".
   --comment-style=ARG (-s) Comment style: "//", "/*", or "none".
   --config=ARG        (-c) Configuration file path.
+  --directory=ARG     (-d) Change directory before tidying.
   --error=ARG         (-e) When to exit with a non-zero status.
   --line-length=ARG   (-l) Line length; default=80.
   --no-config-layers  (-L) Don't do configuration file layering.
