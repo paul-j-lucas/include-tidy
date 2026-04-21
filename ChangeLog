@@ -1,5 +1,9 @@
 2026-04-21  Paul J. Lucas <paul@lucasmail.org>
 
+   * configure.ac: Now requiring Autconf 2.70.
+   * configure.ac: Poisoning cache since we don't want C23.
+   * toml_lite.c: Now calling toml_ungetc() in toml_table_next() if c != '['.
+   * toml_test.c: Eliminated GNU extension.
    * cli_options.c, type_traits.h, util.c, util.h: Handline null optarg.
    * cli_options.c: Reworked get_opt* functions.
    * cli_options.c, cli-options-error.out: Better empty argument handling.
