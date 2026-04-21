@@ -132,7 +132,7 @@ char* check_strdup( char const *s ) {
 }
 
 void fatal_error( int status, char const *format, ... ) {
-  EPRINTF( "%s: ", prog_name );
+  EPRINTF( "%s: error: ", prog_name );
   va_list args;
   va_start( args, format );
   vfprintf( stderr, format, args );
