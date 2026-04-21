@@ -204,7 +204,8 @@ trap "x=$?; rm -f $TMPDIR/*_$$_* 2>/dev/null; exit $x" EXIT HUP INT TERM
 DATA_DIR="$srcdir/data"
 EXPECTED_DIR="$srcdir/expected"
 
-TIDY_TEST_OPTIONS="-Xtidy --config=../$TOP_SRCDIR/etc/config.toml -Xtidy --directory=data -Xtidy --no-config-layers"
+TIDY_TEST_CONFIG="-Xtidy --config=../$TOP_SRCDIR/etc/config.toml"
+TIDY_TEST_OPTIONS="-Xtidy --directory=data -Xtidy --no-config-layers"
 
 ##
 # Must put $ABS_TOP_BUILDDIR/src first in PATH so we get the correct version of
