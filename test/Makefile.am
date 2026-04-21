@@ -33,7 +33,8 @@ TESTS=	tests/cli-align-column.test \
 	tests/cli-options-error.test
 
 TESTS+=	tests/duplicate.test \
-	tests/hello.test
+	tests/hello.test \
+	tests/keep.test
 
 ###############################################################################
 
