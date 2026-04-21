@@ -194,7 +194,6 @@ fi
 [ -n "$TMPDIR" ] || TMPDIR=/tmp
 trap "x=$?; rm -f $TMPDIR/*_$$_* 2>/dev/null; exit $x" EXIT HUP INT TERM
 
-
 ##
 # Automake sets $srcdir.
 ##
