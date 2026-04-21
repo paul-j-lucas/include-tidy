@@ -232,9 +232,16 @@ char* str_trim( char *s ) {
 
 /// @cond DOXYGEN_IGNORE
 
-extern inline char const* empty_if_null( char const* );
+// See comment for NONCONST_OVERLOAD regarding ().
+extern inline char const* (empty_if_null)( char const* );
+
 extern inline bool false_set( bool* );
-extern inline char const* null_if_empty( char const* );
+extern inline char* nonconst_null_if_empty( char* );
+extern inline char* nonconst_empty_if_null( char* );
+
+// See comment for NONCONST_OVERLOAD regarding ().
+extern inline char const* (null_if_empty)( char const* );
+
 extern inline bool path_is_relative( char const* );
 extern inline char const* path_no_dot_slash( char const* );
 extern inline char* strncpy_0( char*, char const*, size_t );

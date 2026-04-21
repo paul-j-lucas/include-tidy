@@ -118,6 +118,19 @@
 #endif /* HAVE_TYPEOF */
 
 /**
+ * Checks (at compile-time) whether \a EXPR is a pointer to `const`.
+ *
+ * @param EXPR A pointer expression.
+ * @return Returns 1 (true) only if \a EXPR is a pointer to `const`; 0 (false)
+ * otherwise.
+ */
+#define IS_PTR_TO_CONST_EXPR(EXPR)      \
+  _Generic( TO_VOID_PTR_EXPR( (EXPR) ), \
+    void const* : 1,                    \
+    default     : 0                     \
+  )
+
+/**
  * Checks (at compile-time) whether the type of \a EXPR is a signed integral
  * type.
  *
@@ -192,6 +205,33 @@
  */
 #define STATIC_ASSERT_EXPR(EXPR,MSG) \
   (!!sizeof( struct { static_assert( (EXPR), MSG ); int required; } ))
+
+/**
+ * Implements a "static if" similar to `if constexpr` in C++.
+ *
+ * @param EXPR An expression (evaluated at compile-time).
+ * @param THEN An expression returned only if \a EXPR is non-zero (true).
+ * @param ELSE An expression returned only if \a EXPR is zero (false).
+ * @return Returns:
+ *  + \a THEN only if \a EXPR is non-zero (true); or:
+ *  + \a ELSE only if \a EXPR is zero (false).
+ */
+#define STATIC_IF(EXPR,THEN,ELSE)     \
+  _Generic( &(char[1 + !!(EXPR)]){0}, \
+    char (*)[2]: (THEN),              \
+    char (*)[1]: (ELSE)               \
+  )
+
+/**
+ * Converts \a EXPR (a pointer expression) to a pointer to `void` preserving
+ * `const`-ness.
+ *
+ * @param EXPR A pointer expression.
+ * @return Returns:
+ *  + `(void*)(EXPR)` only if \a EXPR is a pointer to non-`const`; or:
+ *  + `(void const*)(EXPR)` only if \a EXPR is a pointer to `const`.
+ */
+#define TO_VOID_PTR_EXPR(EXPR)    (1 ? (EXPR) : (void*)(EXPR))
 
 ///////////////////////////////////////////////////////////////////////////////
 
