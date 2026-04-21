@@ -112,7 +112,7 @@ NODISCARD
 static unsigned long long parse_ull( char const *s ) {
   assert( s != NULL );
   SKIP_WS( s );
-  if ( likely( s[0] != '\0' || s[0] != '-' ) ) {
+  if ( likely( s[0] != '\0' && s[0] != '-' ) ) {
     char *end = NULL;
     errno = 0;
     unsigned long long const n = strtoull( s, &end, 0 );
