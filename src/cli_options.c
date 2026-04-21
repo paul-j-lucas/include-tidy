@@ -1069,7 +1069,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   // We have do do this after --help and --version have been checked.
   char const *const CLANG_ARGS[] = {
-    "-D_include_tidy__",
+    "-D__include_tidy__",
     "-Qunused-arguments",
     "-Wno-unknown-warning-option",
   };
