@@ -95,7 +95,7 @@ DATA_DIR="$srcdir/data"
 EXPECTED_DIR="$srcdir/expected"
 ACTUAL_OUTPUT="$TMPDIR/cdecl_test_output_$$_"
 
-TEST_CONFIG="$TOP_SRCDIR/etc/config.toml"
+TIDY_TEST_OPTIONS="-Xtidy --config=../$TOP_SRCDIR/etc/config.toml -Xtidy --directory=data -Xtidy --no-config-layers"
 
 ##
 # Must put $ABS_TOP_BUILDDIR/src first in PATH so we get the correct version of

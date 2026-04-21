@@ -1,6 +1,4 @@
 EXPECTED_EXIT=1
 
-test_include_tidy \
-    -Xtidy --config=$TEST_CONFIG \
-    -Xtidy --no-config-layers \
-    data/hello-2-stdio.c
+test_include_tidy $TIDY_TEST_OPTIONS \
+    hello-2-stdio.c

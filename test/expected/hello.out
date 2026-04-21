@@ -1,5 +1,5 @@
-$ include-tidy -Xtidy --config=../etc/config.toml -Xtidy --no-config-layers data/hello.c
+$ include-tidy -Xtidy --config=../../etc/config.toml -Xtidy --directory=data -Xtidy --no-config-layers hello.c
 
-$ include-tidy -Xtidy --config=../etc/config.toml -Xtidy --no-config-layers -Xtidy --all-includes data/hello.c
+$ include-tidy -Xtidy --config=../../etc/config.toml -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --all-includes hello.c
 #include <stdio.h>                      // printf
 

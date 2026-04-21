@@ -1,8 +1,6 @@
 EXPECTED_EXIT=0
 
-test_include_tidy \
-    -Xtidy --config=$TEST_CONFIG \
-    -Xtidy --no-config-layers \
+test_include_tidy $TIDY_TEST_OPTIONS \
     -Xtidy --all-includes \
     -Xtidy --align-column=35 \
-    data/hello.c
+    hello.c

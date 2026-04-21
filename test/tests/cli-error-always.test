@@ -1,11 +1,9 @@
 EXPECTED_EXIT=2
 
-test_include_tidy \
-    -Xtidy --config=$TEST_CONFIG \
+test_include_tidy $TIDY_TEST_OPTIONS \
     -Xtidy --error=always \
-    data/hello.c
+    hello.c
 
-test_include_tidy \
-    -Xtidy --config=$TEST_CONFIG \
+test_include_tidy $TIDY_TEST_OPTIONS \
     -Xtidy -e always \
-    data/hello.c
+    hello.c

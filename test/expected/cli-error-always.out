@@ -1,4 +1,4 @@
-$ include-tidy -Xtidy --config=../etc/config.toml -Xtidy --error=always data/hello.c
+$ include-tidy -Xtidy --config=../../etc/config.toml -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --error=always hello.c
 
-$ include-tidy -Xtidy --config=../etc/config.toml -Xtidy -e always data/hello.c
+$ include-tidy -Xtidy --config=../../etc/config.toml -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy -e always hello.c
 
