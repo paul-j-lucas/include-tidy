@@ -238,6 +238,7 @@ std-cpp-includes = [
 [free]
 includes = "stdlib.h"
 
+# NULL is declared in all of these, so any one is sufficient.
 [NULL]
 includes = [
   "locale.h",
@@ -249,6 +250,21 @@ includes = [
   "wchar.h",
 ]
 
+# These extern variables are used both by getopt(3), which is declared in
+# unistd.h, and getopt_long(3), which is declared in getopt.h.  Therefore,
+# including either one is sufficient.
+[optarg]
+includes = [ "getopt.h", "unistd.h" }
+[opterr]
+includes = [ "getopt.h", "unistd.h" }
+[optind]
+includes = [ "getopt.h", "unistd.h" }
+[optopt]
+includes = [ "getopt.h", "unistd.h" }
+[optreset]
+includes = [ "getopt.h", "unistd.h" }
+
+# size_t is declared in all of these, so any one is sufficient.
 [size_t]
 includes = [
   "stddef.h",
@@ -260,6 +276,7 @@ includes = [
   "wchar.h",
 ]
 
+# ssize_t is declared in all of these, so any one is sufficient.
 [ssize_t]
 includes = [
   "stddef.h",
