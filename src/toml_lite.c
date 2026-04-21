@@ -206,13 +206,13 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
   toml_array  a = { .values = MALLOC( toml_value, array_cap ) };
   int         c = '\0';
   bool        ok = false;
-  char        prev_c;
+  char        c_prev;
 
   ++toml->array_depth;
 
   for (;;) {
     PJL_DISCARD_RV( toml_space_skip( toml ) );
-    prev_c = STATIC_CAST( char, c );
+    c_prev = STATIC_CAST( char, c );
     c = toml_getc( toml );
     switch ( c ) {
       case EOF:
@@ -222,7 +222,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
         toml_comment_parse( toml );
         continue;
       case ',':
-        if ( a.size == 0 || prev_c == ',' ) {
+        if ( a.size == 0 || c_prev == ',' ) {
           toml->error = TOML_ERR_UNEX_CHAR;
           goto done;
         }
@@ -342,15 +342,15 @@ static void toml_comment_parse( toml_file *toml ) {
  */
 NODISCARD
 static int toml_getc( toml_file *toml ) {
-  int const c = fgetc( toml->file );
+  assert( toml != NULL );
 
+  int const c = fgetc( toml->file );
   if ( c != EOF ) {
     if ( toml->c_last == '\n' )
       toml_newline( toml );
     toml_col_inc( toml, 1 );
     toml->c_last = c;
   }
-
   return c;
 }
 
@@ -366,12 +366,11 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
   assert( toml != NULL );
   assert( pi != NULL );
 
+  int     base = 10;
   char    buf[ MAX_DEC_INT_DIGITS( long ) + 1/*'\0'*/ ];
   size_t  buf_len = 0;
-
-  int   base = 10;
-  int   c = toml_getc( toml );
-  char  prev_c;
+  int     c = toml_getc( toml );
+  char    c_prev;
 
   switch ( c ) {                        // can't be EOF
     case '+':
@@ -417,7 +416,7 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
   } // switch
 
   for (;;) {
-    prev_c = STATIC_CAST( char, c );
+    c_prev = STATIC_CAST( char, c );
     c = toml_getc( toml );
     switch ( c ) {
       case '#':
@@ -430,7 +429,7 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
         toml_ungetc( toml, c );
         FALLTHROUGH;
       case EOF:
-        if ( prev_c == '_' )
+        if ( c_prev == '_' )
           goto error;
         goto done;
       case '_':
@@ -517,7 +516,7 @@ static bool toml_key_parse( toml_file *toml, char **pkey, unsigned *pkey_col,
   } // switch
 
   strbuf_t  key_buf;
-  char      prev_c = '\0';
+  char      c_prev = '\0';
 
   strbuf_init( &key_buf );
 
@@ -525,7 +524,7 @@ static bool toml_key_parse( toml_file *toml, char **pkey, unsigned *pkey_col,
     if ( is_toml_space( c ) ) {
       PJL_DISCARD_RV( toml_space_skip( toml ) );
       c = toml_getc( toml );
-      if ( prev_c != '.' && c != '.' ) {
+      if ( c_prev != '.' && c != '.' ) {
         toml_ungetc( toml, c );
         break;
       }
@@ -536,8 +535,8 @@ static bool toml_key_parse( toml_file *toml, char **pkey, unsigned *pkey_col,
       break;
     }
 
-    prev_c = STATIC_CAST( char, c );
-    strbuf_putc( &key_buf, prev_c );
+    c_prev = STATIC_CAST( char, c );
+    strbuf_putc( &key_buf, c_prev );
     c = toml_getc( toml );
   } while ( c != EOF );
 
@@ -788,6 +787,7 @@ static bool toml_table_name_parse( toml_file *toml, char **pname,
  * @param c The character to unget.
  */
 static void toml_ungetc( toml_file *toml, int c ) {
+  assert( toml != NULL );
   ungetc( c, toml->file );
   if ( c == '\n' ) {
     assert( toml->loc.line > 0 );
@@ -799,21 +799,21 @@ static void toml_ungetc( toml_file *toml, int c ) {
 /**
  * Cleans-up a toml_value.
  *
- * @param v The toml_value to clean-up.  If NULL, does nothing.
+ * @param pv The toml_value to clean-up.  If NULL, does nothing.
  */
-static void toml_value_cleanup( toml_value *v ) {
-  if ( v == NULL )
+static void toml_value_cleanup( toml_value *pv ) {
+  if ( pv == NULL )
     return;
-  switch ( v->type ) {
+  switch ( pv->type ) {
     case TOML_ARRAY:
-      toml_array_cleanup( &v->a );
+      toml_array_cleanup( &pv->a );
       break;
     case TOML_BOOL:
     case TOML_INT:
       // nothing to do
       break;
     case TOML_STRING:
-      free( v->s );
+      free( pv->s );
       break;
   } // switch
 }
@@ -822,13 +822,13 @@ static void toml_value_cleanup( toml_value *v ) {
  * Parses a TOML value.
  *
  * @param toml The toml_file to use.
- * @param v The toml_value to receive into.
+ * @param pv The toml_value to receive into.
  * @return Returns `true` only if the value parsed successfully.
  */
 NODISCARD
-static bool toml_value_parse( toml_file *toml, toml_value *v ) {
+static bool toml_value_parse( toml_file *toml, toml_value *pv ) {
   assert( toml != NULL );
-  assert( v != NULL );
+  assert( pv != NULL );
 
   for (;;) {
     int const c = toml_getc( toml );
@@ -838,7 +838,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
         char *s;
         if ( !toml_string_parse( toml, &s, /*ps_len=*/NULL ) )
           return false;
-        *v = (toml_value){ .type = TOML_STRING, .loc = value_loc, .s = s };
+        *pv = (toml_value){ .type = TOML_STRING, .loc = value_loc, .s = s };
         return true;
 
       case '#':
@@ -861,7 +861,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
         long i;
         if ( !toml_int_parse( toml, &i ) )
           return false;
-        *v = (toml_value){ .type = TOML_INT, .loc = value_loc, .i = i };
+        *pv = (toml_value){ .type = TOML_INT, .loc = value_loc, .i = i };
         return true;
 
       case 'f':
@@ -870,14 +870,14 @@ static bool toml_value_parse( toml_file *toml, toml_value *v ) {
         bool b;
         if ( !toml_bool_parse( toml, &b ) )
           return false;
-        *v = (toml_value){ .type = TOML_BOOL, .loc = value_loc, .b = b };
+        *pv = (toml_value){ .type = TOML_BOOL, .loc = value_loc, .b = b };
         return true;
 
       case '[':;
         toml_array a;
         if ( !toml_array_parse( toml, &a ) )
           return false;
-        *v = (toml_value){ .type = TOML_ARRAY, .loc = value_loc, .a = a };
+        *pv = (toml_value){ .type = TOML_ARRAY, .loc = value_loc, .a = a };
         return true;
 
       default:
@@ -913,7 +913,12 @@ void toml_init( toml_file *toml, FILE *file ) {
 
   *toml = (toml_file){
     .file = file,
-    .loc = { .line = 1, .col = 0 }
+    .loc = {
+      .line = 1,
+      // Explicitly initialize col to 0 so it doesn't look like an omission.
+      // Upon reading the first character, this will be incremented to 1.
+      .col = 0
+    }
   };
 
   rb_tree_init(
