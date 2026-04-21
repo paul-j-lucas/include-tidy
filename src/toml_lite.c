@@ -966,8 +966,10 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   toml_space_comments_skip( toml );
   toml_loc const table_loc = toml->loc;
   int c = toml_getc( toml );
-  if ( c != '[' )
+  if ( c != '[' ) {
+    toml_ungetc( toml, c );
     return false;
+  }
 
   char     *table_name;
   unsigned  table_name_col;
