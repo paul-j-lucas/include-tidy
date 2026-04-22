@@ -792,6 +792,27 @@ of those files
 so including any
 .I one
 of them is sufficient.
+Note that:
+.RS 5
+.cS
+[\f2symbol\fP]
+includes = [ "\f2header.h\fP" ]
+.cE 0
+.RE
+.IP
+is equivalent to:
+.RS 5
+.cS
+[\f2header.h\fP]
+symbols = [ "\f2symbol\fP" ]
+.cE 0
+.RE
+.IP
+Use a header table to map one header to many symbols
+or a symbol table to map one symbol to many headers,
+whichever is preferred
+for a given set of headers
+and symbols.
 .SS Locations and Search Order
 One or more configuration files
 can be used to configure
