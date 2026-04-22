@@ -26,11 +26,15 @@ AUTOMAKE_OPTIONS = 1.12			# needed for TEST_LOG_DRIVER
 ###############################################################################
 
 # Command-line option tests
-TESTS=	tests/cli_error.test \
-	tests/cli_options.test \
-	tests/cli_options-error.test
+TESTS=	tests/cli-align-column.test \
+	tests/cli-comment-style.test \
+	tests/cli-error-always.test \
+	tests/cli-help.test \
+	tests/cli-options-error.test
 
-TESTS+=	tests/hello.test
+TESTS+=	tests/duplicate.test \
+	tests/hello.test \
+	tests/keep.test
 
 ###############################################################################
 
@@ -47,6 +51,7 @@ dist-hook:
 
 UPDATE_TEST = $(srcdir)/update_test.sh
 update:
-	@ls $(TESTS) | xargs -n255 -r $(UPDATE_TEST) -s $(ABS_TOP_BUILDDIR)/src
+	@ls $(TESTS) | xargs -n255 -r \
+	$(UPDATE_TEST) -B "$(ABS_TOP_BUILDDIR)" -s "$(TOP_SRCDIR)"
 
 # vim:set noet sw=8 ts=8:

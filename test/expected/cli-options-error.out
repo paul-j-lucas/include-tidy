@@ -1,65 +1,74 @@
 $ include-tidy -Xtidy --align-column
-include-tidy: "--align-column/-a" requires an argument
+include-tidy: error: "--align-column/-a" requires an argument
 
 $ include-tidy -Xtidy --align-column=
-include-tidy: "": invalid integer
+include-tidy: error: "--align-column/-a" requires an argument
 
 $ include-tidy -Xtidy --align-column=X
-include-tidy: "X": invalid integer
+include-tidy: error: "X": invalid integer
 
 $ include-tidy -Xtidy -a
-include-tidy: "-a" requires an argument
+include-tidy: error: "-a" requires an argument
 
 $ include-tidy -Xtidy -aX
-include-tidy: "X": invalid integer
+include-tidy: error: "X": invalid integer
 
 $ include-tidy -Xtidy --clang
-include-tidy: "--clang" requires an argument
+include-tidy: error: "--clang" requires an argument
 
 $ include-tidy -Xtidy --clang=
-include-tidy: "--clang" requires an argument
+include-tidy: error: "--clang" requires an argument
 
 $ include-tidy -Xtidy -C
-include-tidy: "-C" requires an argument
+include-tidy: error: "-C" requires an argument
 
 $ include-tidy -Xtidy --comment-style
-include-tidy: "--comment-style/-s" requires an argument
+include-tidy: error: "--comment-style/-s" requires an argument
 
 $ include-tidy -Xtidy --comment-style=
-include-tidy: "--comment-style/-s" requires an argument
+include-tidy: error: "--comment-style/-s" requires an argument
 
 $ include-tidy -Xtidy --comment-style=X
-include-tidy: "X": invalid value for --comment-style/-s; must be one of "//", "/*", or "none"
+include-tidy: error: "X": invalid value for --comment-style/-s; must be one of "//", "/*", or "none"
 
 $ include-tidy -Xtidy -s
-include-tidy: "-s" requires an argument
+include-tidy: error: "-s" requires an argument
 
 $ include-tidy -Xtidy -sX
-include-tidy: "X": invalid value for --comment-style/-s; must be one of "//", "/*", or "none"
+include-tidy: error: "X": invalid value for --comment-style/-s; must be one of "//", "/*", or "none"
 
 $ include-tidy -Xtidy --config
-include-tidy: "--config/-c" requires an argument
+include-tidy: error: "--config/-c" requires an argument
 
 $ include-tidy -Xtidy --config=
-include-tidy: "--config/-c" requires an argument
+include-tidy: error: "--config/-c" requires an argument
 
 $ include-tidy -Xtidy -c
-include-tidy: "-c" requires an argument
+include-tidy: error: "-c" requires an argument
+
+$ include-tidy -Xtidy --directory
+include-tidy: error: "--directory/-d" requires an argument
+
+$ include-tidy -Xtidy --directory=
+include-tidy: error: "--directory/-d" requires an argument
+
+$ include-tidy -Xtidy -d
+include-tidy: error: "-d" requires an argument
 
 $ include-tidy -Xtidy --line-length
-include-tidy: "--line-length/-l" requires an argument
+include-tidy: error: "--line-length/-l" requires an argument
 
 $ include-tidy -Xtidy --line-length=
-include-tidy: "": invalid integer
+include-tidy: error: "--line-length/-l" requires an argument
 
 $ include-tidy -Xtidy --line-length=X
-include-tidy: "X": invalid integer
+include-tidy: error: "X": invalid integer
 
 $ include-tidy -Xtidy -l
-include-tidy: "-l" requires an argument
+include-tidy: error: "-l" requires an argument
 
 $ include-tidy -Xtidy -lX
-include-tidy: "X": invalid integer
+include-tidy: error: "X": invalid integer
 
 $ include-tidy --help X
 usage: include-tidy [-Xtidy tidy-option]... [clang-option]... source-file
@@ -72,6 +81,7 @@ tidy options:
   --color=ARG         (-k) When to colorize output; default="not_file".
   --comment-style=ARG (-s) Comment style: "//", "/*", or "none".
   --config=ARG        (-c) Configuration file path.
+  --directory=ARG     (-d) Change directory before tidying.
   --error=ARG         (-e) When to exit with a non-zero status.
   --line-length=ARG   (-l) Line length; default=80.
   --no-config-layers  (-L) Don't do configuration file layering.
@@ -88,13 +98,13 @@ $ include-tidy --help=X
 include-tidy: "help=X": invalid option; use --help for help
 
 $ include-tidy --help --version
-include-tidy: --help/-h can be given only by itself
+include-tidy: error: --help/-h can be given only by itself
 
 $ include-tidy -x
-include-tidy: "-x" requires an argument
+include-tidy: error: "-x" requires an argument
 
 $ include-tidy -xX
-include-tidy: "X": invalid value for -x; must be either "c" or "c++"
+include-tidy: error: "X": invalid value for -x; must be either "c" or "c++"
 
 $ include-tidy --version X
 usage: include-tidy [-Xtidy tidy-option]... [clang-option]... source-file
@@ -107,6 +117,7 @@ tidy options:
   --color=ARG         (-k) When to colorize output; default="not_file".
   --comment-style=ARG (-s) Comment style: "//", "/*", or "none".
   --config=ARG        (-c) Configuration file path.
+  --directory=ARG     (-d) Change directory before tidying.
   --error=ARG         (-e) When to exit with a non-zero status.
   --line-length=ARG   (-l) Line length; default=80.
   --no-config-layers  (-L) Don't do configuration file layering.

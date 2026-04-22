@@ -71,7 +71,6 @@ void array_cleanup( array_t *array, array_free_fn_t free_fn );
  * Appends \a data onto the back of \a list.
  *
  * @param array The \ref array to push onto.
- * @param data The data to pushed.
  * @return Returns a pointer to the new element.
  */
 NODISCARD
@@ -172,6 +171,7 @@ inline void* array_front( array_t const *array ) {
  * Initializes \a array.
  *
  * @param array A pointer to the \ref array to initialize.
+ * @param esize The element size.
  *
  * @sa array_cleanup()
  */

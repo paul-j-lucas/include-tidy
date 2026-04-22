@@ -29,6 +29,9 @@
 // libclang
 #include <clang-c/Index.h>
 
+// standard
+#include <stdbool.h>
+
 /// @endcond
 
 /**

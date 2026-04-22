@@ -31,6 +31,7 @@
 #include "options.h"
 #include "print.h"
 #include "red_black.h"
+#include "strbuf.h"
 #include "toml_lite.h"
 #include "trans_unit.h"
 #include "util.h"
@@ -40,13 +41,11 @@
 // standard
 #include <assert.h>
 #include <errno.h>
-#include <limits.h>                     /* for PATH_MAX, SIZE_MAX */
 #include <fnmatch.h>
 #if HAVE_PWD_H
 # include <pwd.h>                       /* for getpwuid() */
 #endif /* HAVE_PWD_H */
 #include <stdbool.h>
-#include <stdint.h>                     /* for SIZE_MAX */
 #include <stdio.h>
 #include <stdlib.h>                     /* for getenv(), ... */
 #include <string.h>
@@ -69,9 +68,9 @@
  * Options for the config_open() function.
  */
 enum config_opts {
-  CONFIG_OPT_NONE              = 0,       ///< No options.
-  CONFIG_OPT_ERROR_IS_FATAL    = 1 << 0,  ///< An error is fatal.
-  CONFIG_OPT_IGNORE_NOT_FOUND  = 1 << 1   ///< Ignore file not found.
+  CONFIG_OPT_NONE           = 0,        ///< No options.
+  CONFIG_OPT_ERROR_IS_FATAL = 1 << 0,   ///< An error is fatal.
+  CONFIG_OPT_IGNORE_ENOENT  = 1 << 1    ///< Ignore file not found.
 };
 
 /**
@@ -405,27 +404,28 @@ static void comment_style_parse( char const *config_path,
  *
  * @remarks
  * @parblock
- * The path of the configuration file is determined as follows (in priority
- * order):
+ * Configuration files are opened (if they exist) in this order:
  *
- *  1. The value of either the `--config` or `-c` command-line option.
+ *  1. The value of either the `--config` or `-c` command-line option.  (If
+ *     specified, this _must_ exist.)
  *  2. `$PWD/include-tidy.toml`.
  *  3. `$XDG_CONFIG_HOME/include-tidy/config.toml`.  If `XDG_CONFIG_HOME` is
  *     empty or unset, then ``~/.config/` is used.
- *  4. `$XDG_CONFIG_DIRS/include-tidy/config.toml` for each path.  If
- *     `XDG_CONFIG_DIRS` is empty or unset, then `/etc/xdg` is used.
+ *  4. For each _path_ in `$XDG_CONFIG_DIRS`, the first of
+ *     <i>path</i><tt>/include-tidy/config.toml</tt> to exist and be readable.
+ *     If `XDG_CONFIG_DIRS` is empty or unset, then `/etc/xdg` is used.
  * @endparblock
  *
  * @param config_path The full path to a configuration file.  May be NULL.
- * @param path_buf A path buffer to use.  It _must_ be initialized to the empty
- * string.  Upon return, it contains the full path of the configuration file
- * that was found, if any.
+ * @param path_buf A path buffer to use.  Upon return, it contains the full
+ * path of the configuration file that was found, if any.
  * @return Returns the `FILE*` for the configuration file if found or NULL if
  * not.
  */
 NODISCARD
-static FILE* config_find( char const *config_path,
-                          char path_buf[static PATH_MAX] ) {
+static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
+  assert( path_buf != NULL );
+
   static unsigned case_num = 1;
 
   FILE *config_file = NULL;
@@ -437,7 +437,8 @@ static FILE* config_find( char const *config_path,
       ++case_num;
       config_file = config_open( config_path, CONFIG_OPT_ERROR_IS_FATAL );
       if ( config_file != NULL ) {
-        strcpy( path_buf, config_path );
+        strbuf_reset( path_buf );
+        strbuf_puts( path_buf, config_path );
         break;
       }
       FALLTHROUGH;
@@ -445,10 +446,10 @@ static FILE* config_find( char const *config_path,
     case 2:
       // Try $PWD/include-tidy.toml
       ++case_num;
-      size_t cwd_len;
-      strcpy( path_buf, get_cwd( &cwd_len ) );
-      path_append( path_buf, cwd_len, PACKAGE ".toml" );
-      config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
+      strbuf_reset( path_buf );
+      strbuf_puts( path_buf, get_cwd( /*cwd_len=*/NULL ) );
+      strbuf_paths( path_buf, PACKAGE ".toml" );
+      config_file = config_open( path_buf->str, CONFIG_OPT_IGNORE_ENOENT );
       if ( config_file != NULL )
         break;
       FALLTHROUGH;
@@ -458,21 +459,22 @@ static FILE* config_find( char const *config_path,
       // $HOME/.config/include-tidy/config.toml.
       ++case_num;
       if ( (home = home_dir()) != NULL ) {
+        strbuf_reset( path_buf );
         char const *const config_dir =
           null_if_empty( getenv( "XDG_CONFIG_HOME" ) );
         if ( config_dir != NULL ) {
-          strcpy( path_buf, config_dir );
+          strbuf_puts( path_buf, config_dir );
         }
         else if ( home != NULL ) {
           // LCOV_EXCL_START
-          strcpy( path_buf, home );
-          path_append( path_buf, SIZE_MAX, ".config" );
+          strbuf_puts( path_buf, home );
+          strbuf_paths( path_buf, ".config" );
           // LCOV_EXCL_STOP
         }
-        if ( path_buf[0] != '\0' ) {
-          path_append( path_buf, SIZE_MAX, PACKAGE );
-          path_append( path_buf, SIZE_MAX, "config.toml" );
-          config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
+        if ( path_buf->len > 0 ) {
+          strbuf_paths( path_buf, PACKAGE );
+          strbuf_paths( path_buf, "config.toml" );
+          config_file = config_open( path_buf->str, CONFIG_OPT_IGNORE_ENOENT );
           if ( config_file != NULL )
             break;
         }
@@ -486,18 +488,17 @@ static FILE* config_find( char const *config_path,
       char const *config_dirs = null_if_empty( getenv( "XDG_CONFIG_DIRS" ) );
       if ( config_dirs == NULL )
         config_dirs = "/etc/xdg";       // LCOV_EXCL_LINE
+      strbuf_reset( path_buf );
       for (;;) {
         char const *const next_sep = strchr( config_dirs, ':' );
-        size_t dir_len = next_sep != NULL ?
+        size_t const dir_len = next_sep != NULL ?
           STATIC_CAST( size_t, next_sep - config_dirs ) :
           strlen( config_dirs );
         if ( dir_len > 0 ) {
-          strncpy_0( path_buf, config_dirs, dir_len );
-          path_append( path_buf, dir_len, PACKAGE );
-          dir_len += STRLITLEN( PACKAGE );
-          path_append( path_buf, dir_len, "config.toml" );
-          config_file = config_open( path_buf, CONFIG_OPT_IGNORE_NOT_FOUND );
-          path_buf[0] = '\0';
+          strbuf_putsn( path_buf, config_dirs, dir_len );
+          strbuf_paths( path_buf, PACKAGE );
+          strbuf_paths( path_buf, "config.toml" );
+          config_file = config_open( path_buf->str, CONFIG_OPT_IGNORE_ENOENT );
           if ( config_file != NULL )
             break;
         }
@@ -553,7 +554,7 @@ static FILE* config_open( char const *path, config_opts opts ) {
   if ( !ok ) {
     switch ( errno ) {
       case ENOENT:
-        if ( (opts & CONFIG_OPT_IGNORE_NOT_FOUND) != 0 )
+        if ( (opts & CONFIG_OPT_IGNORE_ENOENT) != 0 )
           break;
         FALLTHROUGH;
       default:
@@ -854,7 +855,7 @@ static void keep_parse( char const *config_path, toml_table const *table,
 
   tidy_include *const include = include_find_by_rel_path( table->name );
   if ( include != NULL )
-    include->is_needed = true;
+    include->keep = true;
 }
 
 /**
@@ -1236,12 +1237,14 @@ void config_init( void ) {
 
   bool found_at_least_1 = false;
   do {
-    char path_buf[ PATH_MAX ];
-    FILE *const config_file = config_find( opt_config_path, path_buf );
+    strbuf_t path_buf;
+    strbuf_init( &path_buf );
+    FILE *const config_file = config_find( opt_config_path, &path_buf );
     if ( config_file == NULL )
       break;
-    config_parse( path_buf, config_file );
+    config_parse( path_buf.str, config_file );
     fclose( config_file );
+    strbuf_cleanup( &path_buf );
     found_at_least_1 = true;
   } while ( opt_config_layers || !found_at_least_1 );
 

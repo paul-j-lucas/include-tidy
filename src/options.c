@@ -50,7 +50,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define OPT_VERBOSE_ALL           "acfipPsS"
+#define OPT_VERBOSE_ALL           "acdfipPsS"
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -112,7 +112,7 @@ NODISCARD
 static unsigned long long parse_ull( char const *s ) {
   assert( s != NULL );
   SKIP_WS( s );
-  if ( likely( s[0] != '\0' || s[0] != '-' ) ) {
+  if ( likely( s[0] != '\0' && s[0] != '-' ) ) {
     char *end = NULL;
     errno = 0;
     unsigned long long const n = strtoull( s, &end, 0 );
@@ -215,7 +215,7 @@ bool opt_error_parse( char const *s ) {
   else if ( strcmp( s, "never" ) == 0 )
     opt_error = TIDY_ERROR_NEVER;
   else if ( strcmp( s, "violations" ) == 0 )
-    opt_error = TIDY_ERROR_VIOLATIONS;
+    opt_error = TIDY_ERROR_IF_VIOLATIONS;
   else
     return false;
 
@@ -307,6 +307,9 @@ bool opt_verbose_parse( char const *verbose_format ) {
         break;
       case 'c':
         verbose |= TIDY_VERBOSE_CONFIG_FILES;
+        break;
+      case 'd':
+        verbose |= TIDY_VERBOSE_DIRECTORY;
         break;
       case 'f':
         verbose |= TIDY_VERBOSE_SOURCE_FILE;

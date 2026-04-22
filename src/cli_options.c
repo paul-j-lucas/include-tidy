@@ -29,6 +29,7 @@
 #include "include-tidy.h"
 #include "options.h"
 #include "print.h"
+#include "strbuf.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -42,6 +43,7 @@
 #include <stdlib.h>                     /* for exit() */
 #include <string.h>                     /* for str...() */
 #include <sysexits.h>
+#include <unistd.h>                     /* for chdir(2) */
 
 /// @endcond
 
@@ -106,6 +108,7 @@ static struct option const OPTIONS[] = {
   { "color",            required_argument,  NULL, COPT(COLOR)             },
   { "comment-style",    required_argument,  NULL, COPT(COMMENT_STYLE)     },
   { "config",           required_argument,  NULL, COPT(CONFIG)            },
+  { "directory",        required_argument,  NULL, COPT(DIRECTORY)         },
   { "error",            required_argument,  NULL, COPT(ERROR)             },
   { "help",             no_argument,        NULL, COPT(HELP)              },
   { "line-length",      required_argument,  NULL, COPT(LINE_LENGTH)       },
@@ -130,6 +133,7 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(COLOR) ] = "When to colorize output; default=\"not_file\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
   [ COPT(CONFIG) ] = "Configuration file path",
+  [ COPT(DIRECTORY) ] = "Change directory before tidying",
   [ COPT(ERROR) ] = "When to exit with a non-zero status",
   [ COPT(HELP) ] = "Print this help and exit",
   [ COPT(LINE_LENGTH) ] = "Line length; default=" STRINGIFY(OPT_LINE_LENGTH_DEFAULT),
@@ -142,9 +146,12 @@ static char const *const OPTIONS_HELP[] = {
 
 NODISCARD
 static char const*  get_opt_format( int ),
-                 *  get_opt_long( char ),
                  *  is_long_opt( int, char const *const[], char const*, int* ),
                  *  is_short_opt( int, char const *const[], char, int* );
+
+NODISCARD
+static struct option const*
+                    get_option( int );
 
 static void         grow_argv( int*, char const**[], size_t );
 
@@ -260,7 +267,7 @@ error:
 static void check_opt_exclusive( int opt ) {
   if ( !opt_is_set( opt ) )
     return;
-  for ( int curr_opt = '0'; curr_opt < 256; ++curr_opt ) {
+  for ( int curr_opt = '0'; curr_opt < 128; ++curr_opt ) {
     if ( curr_opt == opt )
       continue;
     if ( opt_is_set( curr_opt ) ) {
@@ -335,11 +342,14 @@ static char const* get_ext_language( char const *ext ) {
  */
 NODISCARD
 static char const* get_opt_format( int short_opt ) {
-  static char opt_buf[32];              // big enough
+  assert( short_opt > 0 && short_opt <= 127 );
 
-  char const *const long_opt = get_opt_long( STATIC_CAST( char, short_opt ) );
-  check_snprintf( opt_buf, sizeof opt_buf, "--%s/-%c", long_opt, short_opt );
-  return opt_buf;
+  static strbuf_t sbuf;
+  strbuf_reset( &sbuf );
+  struct option const *const option = get_option( short_opt );
+  assert( option != NULL );
+  strbuf_printf( &sbuf, "--%s/-%c", option->name, short_opt );
+  return sbuf.str;
 }
 
 /**
@@ -358,28 +368,13 @@ static char const* get_opt_help( int opt ) {
 }
 
 /**
- * Gets the corresponding name of the long option for the given short option.
- *
- * @param short_opt The short option to get the corresponding long option for.
- * @return Returns the said name.
- */
-NODISCARD
-static char const* get_opt_long( char short_opt ) {
-  FOREACH_CLI_OPTION( opt, OPTIONS ) {
-    if ( opt->val == short_opt )
-      return opt->name;
-  } // for
-  assert( false && "option not found" );
-}
-
-/**
  * Gets the `option` corresponding to \a short_opt.
  *
  * @param short_opt The short option to get the option for.
  * @return Returns the corresponding `option` or NULL if not found.
  */
 NODISCARD
-static struct option const* get_option( char short_opt ) {
+static struct option const* get_option( int short_opt ) {
   FOREACH_CLI_OPTION( opt, OPTIONS ) {
     if ( opt->val == short_opt )
       return opt;
@@ -908,6 +903,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   opt_include_paths_add( "." );
 
   int               opt;
+  char const       *opt_directory = NULL;
   bool              opt_help = false;
   bool              opt_version = false;
   char const *const short_opts = make_short_opts( OPTIONS, SOPT(INCLUDE) ":" );
@@ -924,6 +920,15 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     );
     if ( opt == -1 )
       break;
+    struct option const *const option = get_option( opt );
+    if ( option != NULL && option->has_arg != no_argument ) {
+      if ( optarg != NULL )
+        SKIP_WS( optarg );
+      if ( option->has_arg == required_argument &&
+           empty_if_null( optarg )[0] == '\0' ) {
+        goto missing_arg;
+      }
+    }
     switch ( opt ) {
       case COPT(ALIGN_COLUMN):;
         if ( !opt_align_column_parse( optarg ) ) {
@@ -939,8 +944,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       case COPT(CLANG):                 // already handled
         break;
       case COPT(COLOR):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
         if ( !opt_color_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s\n",
@@ -949,8 +952,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         }
         break;
       case COPT(COMMENT_STYLE):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
         if ( !opt_comment_style_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s;"
@@ -961,13 +962,12 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         opt_mark_set( COPT(COMMENT_STYLE) );
         break;
       case COPT(CONFIG):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
         opt_config_path = optarg;
         break;
+      case COPT(DIRECTORY):
+        opt_directory = optarg;
+        break;
       case COPT(ERROR):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
         if ( !opt_error_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s;"
@@ -980,8 +980,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         opt_help = true;
         break;
       case COPT(INCLUDE):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
         opt_include_paths_add( optarg );
         break;
       case COPT(LINE_LENGTH):
@@ -996,8 +994,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         opt_config_layers = false;
         break;
       case COPT(VERBOSE):
-        if ( *SKIP_WS( optarg ) == '\0' )
-          goto missing_arg;
         if ( !opt_verbose_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s; must be [ais]\n",
@@ -1067,9 +1063,18 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     exit( EX_USAGE );
   }
 
+  if ( opt_directory != NULL ) {
+    if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )
+      verbose_printf( "change directory: \"%s\"\n", opt_directory );
+    if ( chdir( opt_directory ) != 0 )
+      fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
+    if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )
+      verbose_printf( "\n" );
+  }
+
   // We have do do this after --help and --version have been checked.
   char const *const CLANG_ARGS[] = {
-    "-D_include_tidy__",
+    "-D__include_tidy__",
     "-Qunused-arguments",
     "-Wno-unknown-warning-option",
   };
@@ -1095,7 +1100,7 @@ invalid_opt:;
 missing_arg:
   fatal_error( EX_USAGE,
     "\"%s\" requires an argument\n",
-    get_opt_format( STATIC_CAST( char, opt == ':' ? optopt : opt ) )
+    get_opt_format( opt == ':' ? optopt : opt )
   );
 }
 

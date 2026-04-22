@@ -36,7 +36,6 @@
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stdint.h>                     /* SIZE_MAX */
 #include <stdio.h>
 #include <stdlib.h>                     /* for malloc(), ... */
 #include <string.h>
@@ -60,18 +59,6 @@ char const WS_CHARS[] =           " \n\t\r\f\v";
 /// @endcond
 
 ////////// local functions ////////////////////////////////////////////////////
-
-/**
- * Rounds \a n up to a multiple of \a multiple.
- *
- * @param n The number to round up.  Must be &gt; 0.
- * @param multiple The multiple to round up to.  It _must_ be a power of 2.
- * @return Returns \a n rounded up to a multiple of \a multiple.
- */
-NODISCARD
-static inline size_t round_up_pow_2( size_t n, size_t multiple ) {
-  return (n + multiple - 1) & ~(multiple - 1);
-}
 
 /**
  * Checks whether \a s is any one of \a matches, case-insensitive.
@@ -145,7 +132,7 @@ char* check_strdup( char const *s ) {
 }
 
 void fatal_error( int status, char const *format, ... ) {
-  EPRINTF( "%s: ", prog_name );
+  EPRINTF( "%s: error: ", prog_name );
   va_list args;
   va_start( args, format );
   vfprintf( stderr, format, args );
@@ -171,47 +158,6 @@ char const* get_cwd( size_t *plen ) {
   if ( plen != NULL )
     *plen = cwd_path_len;
   return cwd_path_buf;
-}
-
-void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim,
-                     bool zero ) {
-  // ensure &elements[0] is suitably aligned
-  size_t const ptrs_size = round_up_pow_2( sizeof(void*) * idim, ealign );
-  size_t const rows_size = esize * jdim;
-  size_t const data_size = idim * rows_size;
-  // allocate the row pointers followed by the elements
-  void **const rows = MALLOC( char, ptrs_size + data_size );
-  char *const elements = POINTER_CAST( char*, rows ) + ptrs_size;
-  if ( zero )
-    memset( elements, 0, data_size );
-  for ( size_t i = 0; i < idim; ++i )
-    rows[i] = &elements[ i * rows_size ];
-  return rows;
-}
-
-void path_append( char path[static PATH_MAX], size_t path_len,
-                  char const *component ) {
-  assert( path != NULL );
-  assert( component != NULL );
-
-  if ( path_len == SIZE_MAX )
-    path_len = strlen( path );
-
-  if ( path_len > 0 ) {
-    path += path_len - 1;
-    if ( *path != '/' )
-      *++path = '/';
-    strcpy( ++path, component );
-  }
-}
-
-int path_base_name_cmp( char const *i_path, char const *j_path ) {
-  assert( i_path != NULL );
-  assert( j_path != NULL );
-
-  i_path = base_name( i_path );
-  j_path = base_name( j_path );
-  return strcmp( i_path, j_path );
 }
 
 char const* path_ext( char const *path ) {
@@ -286,9 +232,16 @@ char* str_trim( char *s ) {
 
 /// @cond DOXYGEN_IGNORE
 
-extern inline char const* empty_if_null( char const* );
+// See comment for NONCONST_OVERLOAD regarding ().
+extern inline char const* (empty_if_null)( char const* );
+
 extern inline bool false_set( bool* );
-extern inline char const* null_if_empty( char const* );
+extern inline char* nonconst_null_if_empty( char* );
+extern inline char* nonconst_empty_if_null( char* );
+
+// See comment for NONCONST_OVERLOAD regarding ().
+extern inline char const* (null_if_empty)( char const* );
+
 extern inline bool path_is_relative( char const* );
 extern inline char const* path_no_dot_slash( char const* );
 extern inline char* strncpy_0( char*, char const*, size_t );

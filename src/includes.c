@@ -43,7 +43,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>                     /* for PATH_MAX */
-#include <stdalign.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for atexit(3) */
@@ -62,7 +61,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define VERBOSE_INCLUDE_INDENT    2     /**< Spaces per include depth. */
+#define INCLUDE_VERBOSE_INDENT    2     /**< Spaces per include depth. */
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
@@ -104,13 +103,12 @@ static void           tidy_include_cleanup( tidy_include* );
 
 ////////// extern variables ///////////////////////////////////////////////////
 
-unsigned tidy_includes_missing;
-unsigned tidy_includes_unnecessary;
+unsigned tidy_includes_missing;         ///< Number of includes missing.
+unsigned tidy_includes_unnecessary;     ///< Number of includes unnecessary.
 
 ////////// local variables ////////////////////////////////////////////////////
 
 static rb_tree_t  include_set;          ///< Set of included files.
-static unsigned   tidy_include_count;   ///< Number of tidy_include objects.
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -132,54 +130,19 @@ static void get_include_delims( bool is_local, char delim[static 2] ) {
 }
 
 /**
- * Visits each include file in a translation unit to populate an include-
- * include matrix, i.e., `ii_matrix[i][j]` is true only if include-i includes
- * include-j.
- *
- * @param included_file The file that was included.
- * @param inclusion_stack The list of include files to get to included_file.
- * @param include_len The length of includsion_stack.
- * @param data A pointer to the include-include matrix to populate.
- */
-static void ii_visitor( CXFile included_file, CXSourceLocation *inclusion_stack,
-                        unsigned include_len, CXClientData data ) {
-  assert( included_file != NULL );
-  assert( inclusion_stack != NULL );
-  assert( data != NULL );
-  bool *const *const ii_matrix = data;
-
-  tidy_include const *const included = include_find_by_CXFile( included_file );
-  if ( included == NULL )               // when file is source file
-    return;
-  assert( included->seq_id < tidy_include_count );
-
-  for ( unsigned i = 0; i < include_len; ++i ) {
-    CXFile const includer_file =
-      tidy_getFileLocation_File( inclusion_stack[i] );
-    tidy_include const *const includer =
-      include_find_by_CXFile( includer_file );
-    if ( includer == NULL )             // when file is source file
-      continue;
-    assert( includer->seq_id < tidy_include_count );
-    ii_matrix[ includer->seq_id ][ included->seq_id ] = true;
-  } // for
-}
-
-/**
  * Visits each `#include` directive in a translation unit for initializing
  * implicit include proxies.
  *
  * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent Not used.
- * @param data A pointer to the include-include matrix to use.
+ * @param data Not used.
  * @return Always returns `CXChildVisit_Continue`.
  */
 static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
                                                          CXCursor parent,
                                                          CXClientData data ) {
   (void)parent;
-  assert( data != NULL );
-  bool const *const *const ii_matrix = data;
+  (void)data;
 
   if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
     goto done;
@@ -191,35 +154,39 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
 
   if ( included->proxy != NULL )
     goto done;
+  if ( included->depth == 0 )
+    goto done;
   if ( included->is_local )
     goto done;
 
-  tidy_include *includer = included->includer;
+  tidy_include *const includer = included->includer;
   if ( includer == NULL )
     goto done;
   if ( includer->is_local )
     goto done;
-  if ( !config_is_standard_include( included->rel_path ) ||
-       path_base_name_cmp( included->rel_path, includer->rel_path ) == 0 ) {
-    included->proxy = includer;
-    goto done;
-  }
 
-  if ( included->depth > 0 ) {
-    rb_iterator_t iter;
-    rb_iterator_init( &include_set, &iter );
-    while ( (includer = rb_iterator_next( &iter )) != NULL ) {
-      if ( includer == included )
-        continue;
-      if ( includer->depth > 0 || includer->is_local )
-        continue;
-      if ( !config_is_standard_include( includer->rel_path ) )
-        continue;
-      if ( ii_matrix[ includer->seq_id ][ included->seq_id ] ) {
-        included->proxy = includer;
-        goto done;
-      }
-    } // while
+  if (// This handles a case like:
+      //
+      //      </usr/include/stdlib.h>
+      //        </usr/include/_stdlib.h>
+      //
+      // That is, a standard header includes an implementation header that
+      // isn't a standard header.  The standard header should be a proxy for
+      // the implementation header.
+      !config_is_standard_include( included->rel_path ) ||
+
+      // This handles a case like:
+      //
+      //      <../lib/stdlib.h>
+      //        </usr/include/stdlib.h>
+      //
+      // That is, a local implementation of a standard header (as is done when
+      // using Gnulib) eventually does a (non-standard) #include_next to
+      // include the real standard one.  The local header should be a proxy
+      // for the real one.
+      strcmp( base_name( included->rel_path ),
+              base_name( includer->rel_path ) ) == 0 ) {
+    included->proxy = includer;
   }
 
 done:
@@ -297,8 +264,8 @@ static void include_print( tidy_include const *include ) {
   bool        reset_opt_comment_style = false;
   char const *sgr_color = NULL;
 
-  if ( include->is_needed ) {
-    if ( is_direct ) {
+  if ( include->is_needed || include->keep ) {
+    if ( is_direct || include->keep ) {
       print_include = opt_all_includes;
     }
     else {
@@ -417,24 +384,24 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     POINTER_CAST( includes_init_visitor_data*, data );
 
   unsigned          include_line, include_col;
-  CXSourceLocation  include_loc = clang_getCursorLocation( cursor );
+  CXSourceLocation  includer_loc = clang_getCursorLocation( cursor );
   CXFile const      included_file = clang_getIncludedFile( cursor );
-  CXFile            including_file;
-  bool const        is_direct = clang_Location_isFromMainFile( include_loc );
+  CXFile            includer_file;
+  bool const        is_direct = clang_Location_isFromMainFile( includer_loc );
 
   clang_getSpellingLocation(
-    include_loc, &including_file, &include_line, &include_col,
+    includer_loc, &includer_file, &include_line, &include_col,
     /*offset=*/NULL
   );
 
   if ( included_file == NULL ) {
     CXString const    included_name_cxs = clang_getCursorSpelling( cursor );
     char const *const included_name = clang_getCString( included_name_cxs );
-    CXString const    including_name_cxs = clang_getFileName( including_file );
-    char const *const including_name = clang_getCString( including_name_cxs );
+    CXString const    includer_name_cxs = clang_getFileName( includer_file );
+    char const *const includer_name = clang_getCString( includer_name_cxs );
 
     print_error(
-      path_no_dot_slash( including_name ), include_line, include_col,
+      path_no_dot_slash( includer_name ), include_line, include_col,
       "\"%s\": %s (missing -I option?)\n",
       included_name, strerror( ENOENT )
     );
@@ -446,34 +413,30 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &include_set, &new_include, sizeof new_include );
-  tidy_include *const include = RB_DINT( rv_rbi.node );
-
-  if ( !rv_rbi.inserted && !is_direct )
-    goto done;
+  tidy_include *const included = RB_DINT( rv_rbi.node );
 
   if ( rv_rbi.inserted ) {
     CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
 
-    include->abs_path = check_strdup( clang_getCString( abs_path_cxs ) );
-    include->seq_id   = tidy_include_count++;
-    include->file     = included_file;
-    include->is_local = is_local_include( include->abs_path );
-    include->rel_path = opt_include_paths_relativize( include->abs_path );
+    included->abs_path = check_strdup( clang_getCString( abs_path_cxs ) );
+    included->file     = included_file;
+    included->is_local = is_local_include( included->abs_path );
+    included->rel_path = opt_include_paths_relativize( included->abs_path );
 
     clang_disposeString( abs_path_cxs );
 
     if ( !is_direct ) {
-      include->includer = include_find_by_CXFile( including_file );
-      assert( include->includer != NULL );
-      include->depth = include->includer->depth + 1;
+      included->includer = include_find_by_CXFile( includer_file );
+      assert( included->includer != NULL );
+      included->depth = included->includer->depth + 1;
     }
-    array_init( &include->lines, sizeof(unsigned) );
+    array_init( &included->lines, sizeof(unsigned) );
 
-    char const *const include_ext = path_ext( include->rel_path );
+    char const *const include_ext = path_ext( included->rel_path );
     if ( include_ext != NULL && include_ext[0] == 'h' ) {
       char path_buf[ PATH_MAX ];
       char const *const include_no_ext =
-        path_no_ext( include->rel_path, path_buf );
+        path_no_ext( included->rel_path, path_buf );
       if ( strcmp( include_no_ext, iivd->source_file_no_ext ) == 0 ) {
         //
         // This include file's name matches the source file's (without
@@ -485,20 +448,64 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
         //      #include "a.h"
         //      #include "b.h"
         //
-        include->sort_rank = TIDY_SORT_CORRESPONDING;
+        included->sort_rank = TIDY_SORT_CORRESPONDING;
       }
     }
 
     rb_tree_init(
       // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
       // symbol_set in symbols.c
-      &include->symbol_set, RB_DPTR,
+      &included->symbol_set, RB_DPTR,
       POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
     );
   }
-  else {                                // is_direct must be true here
-    include->depth = 0;
-    include->includer = NULL;
+  else if ( is_direct ) {
+    //
+    // This handles a case like:
+    //
+    //      "util.h"
+    //        </usr/include/stdlib.h>
+    //      ...
+    //      </usr/include/stdlib.h>
+    //
+    // That is, a header was initially included indirectly, but then later
+    // included directly.
+    //
+    included->depth = 0;
+    included->includer = NULL;
+  }
+  else {
+    tidy_include *const old_includer = included->includer;
+    if ( old_includer != NULL ) {
+      //
+      // This handles a case like:
+      //
+      //      </usr/include/sys/wait.h>
+      //        </usr/include/sys/signal.h> // #define SIGSTOP 17
+      //      ...
+      //      </usr/include/signal.h>
+      //        </usr/include/sys/signal.h>
+      //
+      // That is, a standard header (e.g., sys/wait.h) includes a non-standard
+      // a header (e.g., sys/signal.h) so sys/signal.h's includer is set to
+      // sys/wait.h.
+      //
+      // Later, the standard header version of the non-standard header (e.g.,
+      // signal.h) is included that also includes the non-standard header
+      // (sys/signal.h), so sys/signal.h's includer should be reset to be
+      // signal.h because, later still, sys/signal's proxy will then be set to
+      // be signal.h, not sys/wait.h, so signal.h will be considered the header
+      // that defines SIGSTOP (which is correct) instead of sys/wait.h (which
+      // is incorrect).
+      //
+      tidy_include *const includer = include_find_by_CXFile( includer_file );
+      if ( includer != old_includer &&
+           strcmp( base_name( included->rel_path ),
+                   base_name( includer->rel_path ) ) == 0 ) {
+        included->includer = includer;
+      }
+    }
+    goto done;
   }
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
@@ -506,19 +513,19 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       verbose_printf( "includes:\n" );
 
     char inc_delim[2];
-    get_include_delims( include->is_local, inc_delim );
+    get_include_delims( included->is_local, inc_delim );
 
     verbose_printf(
       "  %2u%*s %c%s%c\n",
-      include->depth,
-      STATIC_CAST( int, include->depth * VERBOSE_INCLUDE_INDENT ), "",
-      inc_delim[0], include->abs_path, inc_delim[1]
+      included->depth,
+      STATIC_CAST( int, included->depth * INCLUDE_VERBOSE_INDENT ), "",
+      inc_delim[0], included->abs_path, inc_delim[1]
     );
   }
 
 done:
   if ( is_direct )
-    *(unsigned*)array_push_back( &include->lines ) = include_line;
+    *(unsigned*)array_push_back( &included->lines ) = include_line;
 
 skip:
   return CXChildVisit_Continue;
@@ -538,6 +545,8 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
   tidy_include const *const include = node_data;
   includes_print_visitor_data *const ipvd = visit_data;
 
+  if ( include->keep && !opt_all_includes )
+    goto skip;
   if ( ipvd->print_local != include->is_local )
     goto skip;
   if ( ipvd->print_standard != config_is_standard_include( include->rel_path ) )
@@ -752,17 +761,8 @@ void includes_init( CXTranslationUnit tu ) {
 void includes_init_implicit_proxies( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
 
-  // Create an include-include matrix, i.e., ii_matrix[i][j] is true only if
-  // include-i includes include-j.
-  void *const ii_matrix = matrix2d_new(
-    sizeof(bool), alignof(bool),
-    tidy_include_count, tidy_include_count, /*zero=*/true
-  );
-  clang_getInclusions( tu, ii_visitor, ii_matrix );
-
   CXCursor const cursor = clang_getTranslationUnitCursor( tu );
-  clang_visitChildren( cursor, &implicit_proxies_visitor, ii_matrix );
-  free( ii_matrix );
+  clang_visitChildren( cursor, &implicit_proxies_visitor, /*data=*/NULL );
 
   if ( (opt_verbose & TIDY_VERBOSE_PROXIES_EXPLICIT) != 0 )
     include_proxies_dump( /*want_explicit=*/true );
@@ -784,11 +784,14 @@ void includes_print( void ) {
         (include = rb_iterator_next( &iter )) != NULL; ) {
     bool const is_direct = include->depth == 0;
     if ( (include->is_needed ? (!is_direct || opt_all_includes) : is_direct) ||
+         (include->keep && opt_all_includes) ||
          include->lines.len > 1 ) {
-      if ( !include->is_needed || include->lines.len > 1 )
-        ++tidy_includes_unnecessary;
-      else if ( !is_direct )
-        ++tidy_includes_missing;
+      if ( !include->keep ) {
+        if ( !include->is_needed || include->lines.len > 1 )
+          ++tidy_includes_unnecessary;
+        else if ( !is_direct )
+          ++tidy_includes_missing;
+      }
       PJL_DISCARD_RV( rb_tree_insert( &include_set_by_rel_path, include, 0 ) );
     }
   } // for

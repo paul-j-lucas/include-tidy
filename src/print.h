@@ -139,6 +139,9 @@ void fl_print_warning( char const *tidy_file, int tidy_line,
 /**
  * Prints verbose output.
  *
+ * @remarks If \ref opt_verbose is #TIDY_VERBOSE_NONE, this function does
+ * nothing.
+ *
  * @param format The `printf()` format string literal to use.
  * @param ... The `printf()` arguments.
  * @return Returns the number of characters printed.

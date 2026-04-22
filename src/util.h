@@ -498,6 +498,73 @@
 #define NO_OP                     ((void)0)
 
 /**
+ * Overloads \a FN such that if \a PTR is a pointer to:
+ *  + `const`, \a FN is called; or:
+ *  + Non-`const`, `nonconst_`\a FN is called.
+ *
+ * @remarks
+ * @parblock
+ * Sometimes for a given function `f`, you want `f` to return:
+ *
+ *  + `R const*` when passed a `T const*`; or:
+ *  + `R*` when passed a `T*`.
+ *
+ * That is you want the `const`-ness of `R` to match that of `T`.  In C++,
+ * you'd simply overload `f`:
+ *
+ *      R const*  f( T const* );        // C++ only
+ *      inline R* f( T *t ) {
+ *        return const_cast<R*>( f( const_cast<T const*>( t ) ) );
+ *      }
+ *
+ * In C, you'd need two differently named functions:
+ *
+ *      R const*  f( T const* );        // C
+ *      inline R* nonconst_f( T *t ) {
+ *        return (R*)f( t );
+ *      }
+ *
+ * This macro allows `f` to be "overloaded" in C such that only `f` ever needs
+ * to be called explicitly and either `f` or `nonconst_f` is actually called
+ * depending on the `const`-ness of \a PTR.
+ *
+ * To use this macro:
+ *
+ *  1. Declare `f` as a function that takes a `T const*` and returns an `R
+ *     const*`.
+ *
+ *  2. Declare `nonconst_f` as an `inline` function that takes a `T*` and
+ *     returns an `R*` by calling `f` and casting the result to `R*`.
+ *
+ *  3. Define a macro also named `f` that expands into `NONCONST_OVERLOAD`
+ *     like:
+ *
+ *          #define f(P,A2,A3)    NONCONST_OVERLOAD( f, (P), (A2), (A3) )
+ *
+ *     where <code>A</code><i>n</i> are additional arguments for `f`.
+ *
+ *  4. Define the function `f` with an extra set of `()` to prevent the macro
+ *     `f` from expanding:
+ *
+ *          R const* (f)( T const *t, A2 a2, A3 a3 ) {
+ *            // ...
+ *          }
+ * @endparblock
+ *
+ * @param FN The name of the function to overload.
+ * @param PTR A pointer. If it's a pointer to:
+ *  + `const`, \a FN is called; or:
+ *  + Non-`const`, `nonconst_`\a FN is called.
+ *
+ * @param ... Additional arguments passed to \a FN.
+ */
+#define NONCONST_OVERLOAD(FN,PTR,...)       \
+  STATIC_IF( IS_PTR_TO_CONST_EXPR( (PTR) ), \
+    FN,                                     \
+    NAME2(nonconst_,FN)                     \
+  )( (PTR) VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__ )
+
+/**
  * If \a EXPR is `true`, prints an error message for `errno` to standard error
  * and exits with status \a STATUS.
  *
@@ -831,6 +898,15 @@ inline char const* empty_if_null( char const *s ) {
   return s == NULL ? "" : s;
 }
 
+/// @cond DOXYGEN_IGNORE
+NODISCARD
+inline char* nonconst_empty_if_null( char *s ) {
+  return CONST_CAST( char*, empty_if_null( s ) );
+}
+
+#define empty_if_null(S)          NONCONST_OVERLOAD( empty_if_null, (S) )
+/// @endcond
+
 /**
  * Checks \a flag: if `false`, sets it to `true`.
  *
@@ -871,24 +947,6 @@ NODISCARD
 char const* get_cwd( size_t *plen );
 
 /**
- * Dynamically allocates a two-dimensional matrix [\a idim][\a jdim] elements
- * of size \a esize.
- *
- * @param esize The size in bytes of a single element.
- * @param ealign The alignment of a single element.
- * @param idim The number of elements in the _i_ dimension.
- * @param jdim The number of elements in the _j_ dimension.
- * @param zero If `true`, elements are zeroed; if `false`, elements are left
- * uninitialized.
- * @return Returns a pointer to a new two-dimensional matrix that may be cast
- * to `T**` where `T` is the type of element.  The caller is responsible for
- * freeing it via **free**(3).
- */
-NODISCARD
-void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim,
-                     bool zero );
-
-/**
  * Checks whether \a s is null, an empty string, or consists only of
  * whitespace.
  *
@@ -901,31 +959,14 @@ inline char const* null_if_empty( char const *s ) {
   return s != NULL && *SKIP_CHARS( s, WS_CHARS ) == '\0' ? NULL : s;
 }
 
-/**
- * Appends a component to a path ensuring that exactly one `/ `separates them.
- *
- * @param path The path to append to.
- * @param path_len The length of \a path.  If `SIZE_MAX`,
- * <code>strlen(</code>\a path<code>)</code> is used instead; if zero, does
- * nothing.
- * @param component The component to append.
- */
-void path_append( char path[static PATH_MAX], size_t path_len,
-                  char const *component );
-
-/**
- * Compares two paths by their base names.
- *
- * @param i_path The first path.
- * @param j_path The second path.
- * @return Returns a number less than 0, 0, or greater than 0 if the base name
- * of \a i_path is less than, equal to, or greater than the base name of \a
- * j_path, respectively.
- *
- * @sa base_name()
- */
+/// @cond DOXYGEN_IGNORE
 NODISCARD
-int path_base_name_cmp( char const *i_path, char const *j_path );
+inline char* nonconst_null_if_empty( char *s ) {
+  return CONST_CAST( char*, null_if_empty( s ) );
+}
+
+#define null_if_empty(S)          NONCONST_OVERLOAD( null_if_empty, (S) )
+/// @endcond
 
 /**
  * Gets the filename extension of \a path, if any.

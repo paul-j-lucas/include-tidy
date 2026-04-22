@@ -40,6 +40,16 @@ but IWYU has a number of [issues](https://github.com/include-what-you-use/includ
 
 + The [Clang](https://clang.llvm.org) compiler.
 
+Although Clang and LLVM are often packaged seperately,
+their versions increment in lockstep,
+so you _should_ install the same version for both.
+
+**include-tidy** was written against version 21.x of Libclang.
+(Hopefully, **include-tidy** will continue to work with future versions.)
+**include-tidy** is known _not_ to work correctly
+with version 18.
+Nothing is known about either versions 19 or 20.
+
 ## Installation
 
 The git repository contains only the necessary source code.

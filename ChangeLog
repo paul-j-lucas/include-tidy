@@ -1,3 +1,62 @@
+2026-04-21  Paul J. Lucas <paul@lucasmail.org>
+
+   * etc/config.toml: Added optarg, opterr, etc.
+   * configure.ac: Now requiring Autconf 2.70.
+   * configure.ac: Poisoning cache since we don't want C23.
+   * toml_lite.c: Now calling toml_ungetc() in toml_table_next() if c != '['.
+   * toml_test.c: Eliminated GNU extension.
+   * cli_options.c, type_traits.h, util.c, util.h: Handline null optarg.
+   * cli_options.c: Reworked get_opt* functions.
+   * cli_options.c, cli-options-error.out: Better empty argument handling.
+   * options.c: s/||/&&/
+   * man/man1/include-tidy.1: Removed ...''.
+   * test/Makefile.am, keep.c, keep.h, keep.toml, keep.out, keep.test: Added
+     "keep" test.
+   * cli-align-column.out, cli-comment-style.out, cli-error-always.out,
+     duplicate.out, hello.out, run_test.sh, cli-align-column.test,
+     cli-comment-style.test, cli-error-always.test, duplicate.test, hello.test,
+     update_test.sh: Split out TIDY_TEST_CONFIG.
+   * cli-align-column.out, cli-comment-style.out, cli-error-always.out,
+     duplicate.out, hello.out, run_test.sh, cli-align-column.test,
+     cli-comment-style.test, cli-error-always.test, duplicate.test, hello.test,
+     update_test.sh: Now using --directory.
+   * test/Makefile.am, cli-align-column.out, cli-comment-style.out, hello.out,
+     cli-align-column.test, cli-comment-style.test, hello.test: More tests.
+   * test/Makefile.am, run_test.sh, update_test.sh: Made update_test.sh work
+     again; made things more consistens.
+
+2026-04-20  Paul J. Lucas <paul@lucasmail.org>
+
+   * util.c, cli_options-error.out: Added "error" to fatal_error().
+   * cli_options-error.out, cli_options.out: Updated tests.
+   * man/man1/include-tidy.1, cli_options.c, cli_options.h, options.c,
+     options.h: Added --directory/-d option.
+   * print.c, print.h: verbose_printf() now prints nothing if opt_verbose ==
+     TIDY_VERBOSE_NONE.
+   * cli_options.c: Fixed spelling of __include_tidy__.
+   * trans_unit.c: Removed #include "include-tidy.h".
+   * trans_unit.c: Added "const".
+   * trans_unit.c: Now checking for invalid code correctly.
+   * config_file.c: Fixed config file path handling with strbuf.
+   * config_file.c, includes.c, includes.h: Added separate flag for "keep".
+   * test/Makefile.am, hello-2-stdio.c, duplicate.out, duplicate.test: Added
+     test for duplicate includes.
+   * hello.out, hello.test: Added --no-config-layers.
+
+2026-04-19  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c, includes.h: Eliminated seq_id and tidy_include_count.
+   * includes.c, util.c, util.h: Eliminated include-include matrix by doing
+     retroactive include->includer resetting.
+
+2026-04-18  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c: Moved check included->depth == 0 earlier.
+   * etc/config.toml: Split C/POSIX.
+   * includes.c, util.c, util.h: Eliminated path_base_name_cmp().
+   * config_file.c: Added "const".
+   * config_file.c, util.c, util.h: Now using strbuf in config_file.c.
+
 2026-04-16  Paul J. Lucas <paul@lucasmail.org>
 
    * cli_options.c: Silence libclang unknown warnings.
