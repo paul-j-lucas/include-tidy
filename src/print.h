@@ -30,6 +30,13 @@
 #include "pjl_config.h"                 /* must go first */
 #include "util.h"
 
+/// @cond DOXYGEN_IGNORE
+
+// libclang
+#include <clang-c/Index.h>
+
+/// @endcond
+
 /**
  * @defgroup printing-errors-warnings-group Printing Errors & Warnings
  * Functions for printing errors and warning messages.
@@ -135,6 +142,13 @@ PJL_PRINTF_LIKE_FUNC(6)
 void fl_print_warning( char const *tidy_file, int tidy_line,
                        char const *source_path, unsigned source_line,
                        unsigned source_col, char const *format, ... );
+
+/**
+ * Prints a cursor's "spelling", kind, and source location.
+ *
+ * @param cursor The cursor to print.
+ */
+void verbose_print_cursor( CXCursor cursor );
 
 /**
  * Prints verbose output.

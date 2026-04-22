@@ -26,11 +26,15 @@
 // local
 #include "pjl_config.h"                 /* must go first */
 #include "print.h"
+#include "clang_util.h"
 #include "color.h"
 #include "options.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
+
+// libclang
+#include <clang-c/Index.h>
 
 // standard
 #include <assert.h>
@@ -143,6 +147,32 @@ void fl_print_warning( char const *tidy_file, int tidy_line,
     sgr_warning, format, args
   );
   va_end( args );
+}
+
+void verbose_print_cursor( CXCursor cursor ) {
+  CXSourceLocation const loc = clang_getCursorLocation( cursor );
+  CXFile file;
+  unsigned line, col;
+  clang_getSpellingLocation( loc, &file, &line, &col, /*offset=*/NULL );
+
+  CXString const          abs_path_cxs = tidy_File_getRealPathName( file );
+  char const *const       abs_path = clang_getCString( abs_path_cxs );
+
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  CXString const          kind_cxs = clang_getCursorKindSpelling( kind );
+  char const *const       kind_cstr = clang_getCString( kind_cxs );
+
+  CXString const          spelling_cxs = clang_getCursorSpelling( cursor );
+  char const *const       spelling = clang_getCString( spelling_cxs );
+
+  verbose_printf(
+    "  \"%s\" (%s, \"%s\":%u,%u)\n",
+    spelling, kind_cstr, abs_path, line, col
+  );
+
+  clang_disposeString( abs_path_cxs );
+  clang_disposeString( kind_cxs );
+  clang_disposeString( spelling_cxs );
 }
 
 int verbose_printf( char const *format, ... ) {

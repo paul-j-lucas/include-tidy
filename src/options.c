@@ -50,7 +50,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define OPT_VERBOSE_ALL           "acdfipPsS"
+#define OPT_VERBOSE_ALL           "acCdfipPsS"
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -307,6 +307,9 @@ bool opt_verbose_parse( char const *verbose_format ) {
         break;
       case 'c':
         verbose |= TIDY_VERBOSE_CONFIG_FILES;
+        break;
+      case 'C':
+        verbose |= TIDY_VERBOSE_CURSORS;
         break;
       case 'd':
         verbose |= TIDY_VERBOSE_DIRECTORY;

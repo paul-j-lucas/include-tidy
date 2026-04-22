@@ -60,12 +60,13 @@ enum tidy_verbose {
   TIDY_VERBOSE_ARGS             = 1 << 0, ///< Command-line arguments.
   TIDY_VERBOSE_CONFIG_FILES     = 1 << 1, ///< Configuration files.
   TIDY_VERBOSE_CONFIG_SYMBOLS   = 1 << 2, ///< Configuration symbols.
-  TIDY_VERBOSE_DIRECTORY        = 1 << 3, ///< Changing directory.
-  TIDY_VERBOSE_INCLUDES         = 1 << 4, ///< Files included.
-  TIDY_VERBOSE_PROXIES_EXPLICIT = 1 << 5, ///< Explicit include proxies.
-  TIDY_VERBOSE_PROXIES_IMPLICIT = 1 << 6, ///< Implicit include proxies.
-  TIDY_VERBOSE_SOURCE_FILE      = 1 << 7, ///< Source file.
-  TIDY_VERBOSE_SYMBOLS          = 1 << 8, ///< Symbols referenced.
+  TIDY_VERBOSE_CURSORS          = 1 << 3, ///< Libclang cursors.
+  TIDY_VERBOSE_DIRECTORY        = 1 << 4, ///< Changing directory.
+  TIDY_VERBOSE_INCLUDES         = 1 << 5, ///< Files included.
+  TIDY_VERBOSE_PROXIES_EXPLICIT = 1 << 6, ///< Explicit include proxies.
+  TIDY_VERBOSE_PROXIES_IMPLICIT = 1 << 7, ///< Implicit include proxies.
+  TIDY_VERBOSE_SOURCE_FILE      = 1 << 8, ///< Source file.
+  TIDY_VERBOSE_SYMBOLS          = 1 << 9, ///< Symbols referenced.
 };
 typedef enum tidy_verbose tidy_verbose;
 
