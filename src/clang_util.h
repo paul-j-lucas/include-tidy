@@ -23,7 +23,6 @@
 
 // local
 #include "pjl_config.h"
-#include "clang_util.h"
 
 /// @cond DOXYGEN_IGNORE
 
