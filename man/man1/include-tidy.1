@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "April 21, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "April 22, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -339,9 +339,12 @@ key having a value
 if any,
 is printed first.
 .IP \n+[step].
-The include corresponding to the current
+The include associated to the current
 \f(CW.c\fP or \f(CW.cpp\fP file being tidied
 is printed next.
+For example,
+if the source file being tidied is \f(CWfoo.c\fP,
+then its associated include is \f(CWfoo.h\fP.
 .RE
 .TP
 .BR \-\-clang \f1=\fPf "\f1 | \fP" "" \-C " f"
@@ -749,6 +752,23 @@ Specifies that the include file
 given for the name table
 is to be considered
 to declare the given symbols.
+.SS Source Tables
+This type of table specifies a source file,
+a \f(CW.c\fP or \f(CW.cpp\fP
+file.
+.TP 5
+.BI associated-header " \f1=\fP s"
+Specifies that the source file
+given for the table name
+has the given associated header.
+This can be used for a source file
+that has an associated header
+with a different name
+(not counting extensions),
+e.g.,
+\f(CWfoo.c\fP can have the associated header
+\f(CWfoo_api.h\fP
+instead of \f(CWfoo.h\fP.
 .SS Symbol Tables
 This type of table specifies a symbol name,
 e.g.,

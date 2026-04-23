@@ -84,8 +84,7 @@ struct includes_print_visitor_data {
  * Additional data passed to includes_init_visitor().
  */
 struct includes_init_visitor_data {
-  char const *source_file_no_ext;       ///< File being tidied without ext.
-  bool        verbose_printed;          ///< Printed any verbose output?
+  bool  verbose_printed;                ///< Printed any verbose output?
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -432,26 +431,6 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     }
     array_init( &included->lines, sizeof(unsigned) );
 
-    char const *const include_ext = path_ext( included->rel_path );
-    if ( include_ext != NULL && include_ext[0] == 'h' ) {
-      char path_buf[ PATH_MAX ];
-      char const *const include_no_ext =
-        path_no_ext( included->rel_path, path_buf );
-      if ( strcmp( include_no_ext, iivd->source_file_no_ext ) == 0 ) {
-        //
-        // This include file's name matches the source file's (without
-        // extensions), hence it's the .h corresponding to the .c so sort the
-        // this include file first, e.g.:
-        //
-        //      // foo.c
-        //      #include "foo.h"        // corresponding header sorted first
-        //      #include "a.h"
-        //      #include "b.h"
-        //
-        included->sort_rank = TIDY_SORT_CORRESPONDING;
-      }
-    }
-
     rb_tree_init(
       // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
       // symbol_set in symbols.c
@@ -562,6 +541,43 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
 
 skip:
   return false;
+}
+
+/**
+ * Gets whether \a include is the associated header for the file currently
+ * being tidied.
+ *
+ * @param include The include to check.
+ * @param iivd The includes_init_visitor_data to use.
+ * @return Returns `true` only if \a include is the associated header for the
+ * file currently being tidied.
+ */
+static bool is_assoc_header( tidy_include const *include,
+                             char const *assoc_file_name,
+                             char const *source_file_no_ext ) {
+  assert( include != NULL );
+  assert( source_file_no_ext != NULL );
+
+  if ( assoc_file_name != NULL )
+    return strcmp( include->rel_path, assoc_file_name ) == 0;
+
+  char const *const include_ext = path_ext( include->rel_path );
+  if ( include_ext == NULL || include_ext[0] != 'h' )
+    return false;
+
+  char path_buf[ PATH_MAX ];
+  char const *const include_no_ext = path_no_ext( include->rel_path, path_buf );
+  //
+  // If this include file's name matches the source file's (without
+  // extensions), it's the .h corresponding to the .c, so sort the this
+  // include file first, e.g.:
+  //
+  //      // foo.c
+  //      #include "foo.h"      // corresponding header sorted first
+  //      #include "a.h"
+  //      #include "b.h"
+  //
+  return strcmp( include_no_ext, source_file_no_ext ) == 0;
 }
 
 /**
@@ -748,10 +764,7 @@ void includes_init( CXTranslationUnit tu ) {
   );
   ATEXIT( &includes_cleanup );
 
-  char path_buf[ PATH_MAX ];
-  includes_init_visitor_data iivd = {
-    .source_file_no_ext = path_no_ext( base_name( arg_source_path ), path_buf )
-  };
+  includes_init_visitor_data iivd = { 0 };
   CXCursor cursor = clang_getTranslationUnitCursor( tu );
   clang_visitChildren( cursor, &includes_init_visitor, &iivd );
   if ( iivd.verbose_printed )
@@ -778,6 +791,14 @@ void includes_print( void ) {
     &include_set_by_rel_path, RB_DPTR,
     POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_for_print )
   );
+
+  char path_buf[ PATH_MAX ];
+  char const *const source_base_name = base_name( arg_source_path );
+  char const *const assoc_file_name =
+    config_get_assoc_header( source_base_name );
+  char const *const source_file_no_ext =
+    path_no_ext( source_base_name, path_buf );
+
   rb_iterator_t iter;
   rb_iterator_init( &include_set, &iter );
   for ( tidy_include *include;
@@ -786,13 +807,15 @@ void includes_print( void ) {
     if ( (include->is_needed ? (!is_direct || opt_all_includes) : is_direct) ||
          (include->keep && opt_all_includes) ||
          include->lines.len > 1 ) {
+      if ( is_assoc_header( include, assoc_file_name, source_file_no_ext ) )
+        include->sort_rank = TIDY_SORT_ASSOCIATED;
+      PJL_DISCARD_RV( rb_tree_insert( &include_set_by_rel_path, include, 0 ) );
       if ( !include->keep ) {
         if ( !include->is_needed || include->lines.len > 1 )
           ++tidy_includes_unnecessary;
         else if ( !is_direct )
           ++tidy_includes_missing;
       }
-      PJL_DISCARD_RV( rb_tree_insert( &include_set_by_rel_path, include, 0 ) );
     }
   } // for
 

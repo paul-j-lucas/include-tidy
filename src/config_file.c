@@ -86,6 +86,7 @@ enum config_table_kind {
 typedef enum    config_opts       config_opts;
 typedef struct  config_key        config_key;
 typedef enum    config_table_kind config_table_kind;
+typedef struct  source_header     source_header;
 typedef struct  symbol_includes   symbol_includes;
 
 /**
@@ -135,6 +136,14 @@ struct symbol_includes {
   rb_tree_t   to_includes;              ///< Include file(s).
 };
 
+/**
+ * Mapping of a source file to its associated header.
+ */
+struct source_header {
+  char const *source_rel_path;          ///< Source relative path.
+  char const *header_rel_path;          ///< Header relative path.
+};
+
 ////////// local functions ////////////////////////////////////////////////////
 
 static void         add_c_includes_parse( char const*, toml_table const*,
@@ -143,6 +152,8 @@ static void         align_column_parse( char const*, toml_table const*,
                                         toml_value* );
 static void         all_includes_parse( char const*, toml_table const*,
                                         toml_value* );
+static void         associated_header_parse( char const*, toml_table const*,
+                                             toml_value* );
 
 NODISCARD
 static bool         bool_value_parse( char const*, char const*, toml_value* );
@@ -173,6 +184,7 @@ static void         keep_parse( char const*, toml_table const*, toml_value* );
 static void         line_length_parse( char const*, toml_table const*,
                                        toml_value* );
 static void         proxy_parse( char const*, toml_table const*, toml_value* );
+static void         source_header_cleanup( source_header* );
 static void         std_c_includes_parse( char const*, toml_table const*,
                                           toml_value* );
 static void         std_cpp_includes_parse( char const*, toml_table const*,
@@ -200,19 +212,20 @@ static int          tidy_include_cmp_by_rel_path( tidy_include const*,
  * Configuration keys.
  */
 static config_key const CONFIG_KEYS[] = {
-  { "add-c-includes",   TABLE_INCLUDE_TIDY,     &add_c_includes_parse   },
-  { "align-column",     TABLE_INCLUDE_TIDY,     &align_column_parse     },
-  { "all-includes",     TABLE_INCLUDE_TIDY,     &all_includes_parse     },
-  { "color",            TABLE_INCLUDE_TIDY,     &color_parse            },
-  { "comment-style",    TABLE_INCLUDE_TIDY,     &comment_style_parse    },
-  { "first",            TABLE_NOT_INCLUDE_TIDY, &first_parse            },
-  { "includes",         TABLE_NOT_INCLUDE_TIDY, &includes_parse         },
-  { "keep",             TABLE_NOT_INCLUDE_TIDY, &keep_parse             },
-  { "line-length",      TABLE_INCLUDE_TIDY,     &line_length_parse      },
-  { "proxy",            TABLE_NOT_INCLUDE_TIDY, &proxy_parse            },
-  { "std-c-includes",   TABLE_INCLUDE_TIDY,     &std_c_includes_parse   },
-  { "std-cpp-includes", TABLE_INCLUDE_TIDY,     &std_cpp_includes_parse },
-  { "symbols",          TABLE_NOT_INCLUDE_TIDY, &symbols_parse          },
+  { "add-c-includes",     TABLE_INCLUDE_TIDY,     &add_c_includes_parse     },
+  { "align-column",       TABLE_INCLUDE_TIDY,     &align_column_parse       },
+  { "all-includes",       TABLE_INCLUDE_TIDY,     &all_includes_parse       },
+  { "associated-header",  TABLE_NOT_INCLUDE_TIDY, &associated_header_parse  },
+  { "color",              TABLE_INCLUDE_TIDY,     &color_parse              },
+  { "comment-style",      TABLE_INCLUDE_TIDY,     &comment_style_parse      },
+  { "first",              TABLE_NOT_INCLUDE_TIDY, &first_parse              },
+  { "includes",           TABLE_NOT_INCLUDE_TIDY, &includes_parse           },
+  { "keep",               TABLE_NOT_INCLUDE_TIDY, &keep_parse               },
+  { "line-length",        TABLE_INCLUDE_TIDY,     &line_length_parse        },
+  { "proxy",              TABLE_NOT_INCLUDE_TIDY, &proxy_parse              },
+  { "std-c-includes",     TABLE_INCLUDE_TIDY,     &std_c_includes_parse     },
+  { "std-cpp-includes",   TABLE_INCLUDE_TIDY,     &std_cpp_includes_parse   },
+  { "symbols",            TABLE_NOT_INCLUDE_TIDY, &symbols_parse            },
 };
 
 ////////// local variables ////////////////////////////////////////////////////
@@ -221,6 +234,11 @@ static char   **std_c_includes;         ///< Standard-ish C include files.
 static size_t   std_c_includes_size;    ///< Size of \ref std_c_includes.
 static char   **std_cpp_includes;       ///< Standard C++ include files.
 static bool     verbose_printed_any;    ///< Print any configuration files?
+
+/**
+ * Mapping from source files to their associated headers.
+ */
+static rb_tree_t source_header_map;
 
 /**
  * Mapping from symbols to the include file(s) they're declared in.
@@ -297,6 +315,33 @@ static void all_includes_parse( char const *config_path,
 }
 
 /**
+ * Parses the value of an `"associated-header"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param value The toml_value to parse.
+ */
+static void associated_header_parse( char const *config_path,
+                                     toml_table const *table,
+                                     toml_value *value ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( value != NULL );
+
+  char const *const string_value =
+    string_value_parse( config_path, "associated-header", value );
+
+  source_header new_sh = { .source_rel_path = table->name };
+  rb_insert_rv_t const rv_rbi =
+    rb_tree_insert( &source_header_map, &new_sh, sizeof new_sh );
+  source_header *const sh = RB_DINT( rv_rbi.node );
+  if ( rv_rbi.inserted ) {
+    sh->source_rel_path = check_strdup( table->name );
+    sh->header_rel_path = check_strdup( string_value );
+  }
+}
+
+/**
  * Cleans-up all configuration data.
  */
 static void config_cleanup( void ) {
@@ -310,6 +355,10 @@ static void config_cleanup( void ) {
       free( *ppattern );
     free( std_cpp_includes );
   }
+  rb_tree_cleanup(
+    &source_header_map,
+    POINTER_CAST( rb_free_fn_t, &source_header_cleanup )
+  );
   rb_tree_cleanup(
     &symbol_includes_map,
     POINTER_CAST( rb_free_fn_t, &symbol_includes_cleanup )
@@ -936,6 +985,36 @@ static void proxy_parse( char const *config_path, toml_table const *table,
 }
 
 /**
+ * Cleans-up a source_header.
+ *
+ * @param sh The source_header to clean up.  If NULL, does nothing.
+ */
+static void source_header_cleanup( source_header *sh ) {
+  if ( sh == NULL )
+    return;
+  FREE( sh->source_rel_path );
+  FREE( sh->header_rel_path );
+}
+
+/**
+ * Compares two \ref symbol_includes objects.
+ *
+ * @param i_sh The first source_header.
+ * @param j_sh The second source_header.
+ * @return Returns a number less than 0, 0, or greater than 0 if the \ref
+ * source_header::source_rel_path "source_rel_path" of \a i_si is less than,
+ * equal to, or greater than the \ref source_header::source_rel_path
+ * "source_rel_path" \a j_si, respectively.
+ */
+NODISCARD
+static int source_header_cmp( source_header const *i_sh,
+                              source_header const *j_sh ) {
+  assert( i_sh != NULL );
+  assert( j_sh != NULL );
+  return strcmp( i_sh->source_rel_path, j_sh->source_rel_path );
+}
+
+/**
  * Parses the value of an `"std-c-includes"` key.
  *
  * @param config_path The full path to the configurarion file.
@@ -1191,6 +1270,16 @@ static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
+char const* config_get_assoc_header( char const *source_rel_path ) {
+  assert( source_rel_path != NULL );
+  source_header find_sh = { .source_rel_path = source_rel_path };
+  rb_node_t *const found_rb = rb_tree_find( &source_header_map, &find_sh );
+  if ( found_rb == NULL )
+    return NULL;
+  source_header const *const found_sh = RB_DINT( found_rb );
+  return found_sh->header_rel_path;
+}
+
 CXFile config_get_symbol_include( char const *symbol_name ) {
   assert( symbol_name != NULL );
 
@@ -1229,6 +1318,10 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
 void config_init( void ) {
   ASSERT_RUN_ONCE();
 
+  rb_tree_init(
+    &source_header_map, RB_DINT,
+    POINTER_CAST( rb_cmp_fn_t, &source_header_cmp )
+  );
   rb_tree_init(
     &symbol_includes_map, RB_DINT,
     POINTER_CAST( rb_cmp_fn_t, &symbol_includes_cmp )

@@ -44,6 +44,16 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * Gets the associated header file for \a source_rel_path, if any.
+ *
+ * @param source_rel_path The relative path of the source file being tidied.
+ * @return Returns the relative path of the associated header file or NULL for
+ * none.
+ */
+NODISCARD
+char const* config_get_assoc_header( char const *source_rel_path );
+
+/**
  * Gets the header file that \a symbol_name maps to, if any.
  *
  * @param symbol_name The symbol name.

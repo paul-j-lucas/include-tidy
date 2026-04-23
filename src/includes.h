@@ -60,9 +60,9 @@
  * that, the other values must be negative to sort before the default.
  */
 enum tidy_include_sort_rank {
-  TIDY_SORT_FIRST         = -2,         ///< The very first `#include`.
-  TIDY_SORT_CORRESPONDING = -1,         ///< After first, but before default.
-  TIDY_SORT_DEFAULT       =  0          ///< Default sort rank.
+  TIDY_SORT_FIRST       = -2,           ///< The very first `#include`.
+  TIDY_SORT_ASSOCIATED  = -1,           ///< After first, but before default.
+  TIDY_SORT_DEFAULT     =  0            ///< Default sort rank.
 };
 
 ////////// typedefs ///////////////////////////////////////////////////////////
