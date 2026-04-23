@@ -30,6 +30,7 @@
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 // libclang
 #include <clang-c/Index.h>
@@ -114,15 +115,19 @@ static fnv1a_t fnv1a_s( char const *s ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-int tidy_CXFile_cmp( CXFile const *i_file, CXFile const *j_file ) {
-  assert(  i_file != NULL );
-  assert( *i_file != NULL );
-  assert(  j_file != NULL );
-  assert( *j_file != NULL );
+int tidy_CXFile_cmp_by_name( CXFile i_file, CXFile j_file ) {
+  assert( i_file != NULL );
+  assert( j_file != NULL );
 
-  CXFileUniqueID const i_id = tidy_getFileUniqueID( *i_file );
-  CXFileUniqueID const j_id = tidy_getFileUniqueID( *j_file );
-  return tidy_CXFileUniqueID_cmp( &i_id, &j_id );
+  CXString const    i_name_cxs = clang_getFileName( i_file );
+  CXString const    j_name_cxs = clang_getFileName( j_file );
+  char const *const i_name = clang_getCString( i_name_cxs );
+  char const *const j_name = clang_getCString( j_name_cxs );
+  int const         cmp = strcmp( i_name, j_name );
+
+  clang_disposeString( i_name_cxs );
+  clang_disposeString( j_name_cxs );
+  return cmp;
 }
 
 void tidy_CXFileUniqueID_fput( CXFileUniqueID const *id, FILE *out ) {

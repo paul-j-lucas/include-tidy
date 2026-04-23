@@ -503,8 +503,44 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   }
 
 done:
-  if ( is_direct )
-    *(unsigned*)array_push_back( &included->lines ) = include_line;
+  if ( !is_direct )
+    goto skip;
+
+  //
+  // The file was directly included, so we need to add the line number on which
+  // it was included to an array of such lines.  If the array ends up having
+  // more than one line in it, then all but the first are duplicate includes.
+  //
+  if ( (!rv_rbi.inserted &&
+       tidy_CXFile_cmp_by_name( included_file, included->file ) != 0 ) ) {
+    //
+    // However, if the file wasn't inserted (because it's a duplicate by file
+    // ID), but its original name is NOT the same, it means it was either a
+    // symbolic or hard link to a file that was already included.  This should
+    // NOT be considered a duplicate.
+    //
+    // For example, when using GNU Readline with history, one typically does:
+    //
+    //      #include <readline/readline.h>
+    //      #include <readline/history.h>
+    //
+    // However, on macOS, Readline is just a wrapper around Editline and has
+    // this:
+    //
+    //      /usr/include/readline/
+    //        history.h -> ../editline/readline.h
+    //        readline.h -> ../editline/readline.h
+    //
+    // Because they're symlink'd to the same file, they'll (of course) have the
+    // same unique file ID, so one will be considered a duplicate of the other.
+    // But the user used Readline correctly by including both readline.h and
+    // history.h, so the user's code should NOT have one considered a duplicate
+    // of the other.
+    //
+    goto skip;
+  }
+
+  *(unsigned*)array_push_back( &included->lines ) = include_line;
 
 skip:
   return CXChildVisit_Continue;
