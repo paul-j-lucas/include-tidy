@@ -1,5 +1,17 @@
+2026-04-22  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c: Added "const".
+   * config_file.c: Better key/table checking.
+   * man/man1/include-tidy.1, config_file.c, config_file.h, includes.c,
+     includes.h: Added associated-header.
+   * options.c, options.h, print.c, print.h: Added verbose_print_cursor().
+
 2026-04-21  Paul J. Lucas <paul@lucasmail.org>
 
+   * config_file.h: Added missing #include.
+   * clang_util.h: Removed unnecessary #include.
+   * man/man1/include-tidy.1: Added header/symbol table equivalence.
+   * etc/config.toml: Now using header tables for optarg, opterr, etc.
    * etc/config.toml: Added optarg, opterr, etc.
    * configure.ac: Now requiring Autconf 2.70.
    * configure.ac: Poisoning cache since we don't want C23.
