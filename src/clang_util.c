@@ -37,7 +37,7 @@
 /// @endcond
 
 /**
- * @addtogroup util-group
+ * @addtogroup clang-util-group
  * @{
  */
 
