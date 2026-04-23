@@ -44,6 +44,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#if HAVE_UNSIGNED_INT128
+
 /**
  * Creates a 128-bit `unsigned __int128` literal.
  *
@@ -56,6 +58,8 @@
  */
 #define UINT128LIT(UPPER,LOWER) \
   ((STATIC_CAST( unsigned __int128, (UPPER) ) << 64) | (LOWER))
+
+#endif /* HAVE_UNSIGNED_INT128 */
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
