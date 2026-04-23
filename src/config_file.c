@@ -77,8 +77,11 @@ enum config_opts {
  * Table kind.
  */
 enum config_table_kind {
-  TABLE_NOT_INCLUDE_TIDY,               ///< Not the `include-tidy` table.
-  TABLE_INCLUDE_TIDY                    ///< Only the `include-tidy` table.
+  TABLE_NONE,                           ///< No table.
+  TABLE_INCLUDE_TIDY,                   ///< The `include-tidy` table.
+  TABLE_HEADER,                         ///< Header table.
+  TABLE_SOURCE,                         ///< Source table.
+  TABLE_SYMBOL                          ///< Symbol table.
 };
 
 ////////// typedefs ///////////////////////////////////////////////////////////
@@ -212,20 +215,31 @@ static int          tidy_include_cmp_by_rel_path( tidy_include const*,
  * Configuration keys.
  */
 static config_key const CONFIG_KEYS[] = {
-  { "add-c-includes",     TABLE_INCLUDE_TIDY,     &add_c_includes_parse     },
-  { "align-column",       TABLE_INCLUDE_TIDY,     &align_column_parse       },
-  { "all-includes",       TABLE_INCLUDE_TIDY,     &all_includes_parse       },
-  { "associated-header",  TABLE_NOT_INCLUDE_TIDY, &associated_header_parse  },
-  { "color",              TABLE_INCLUDE_TIDY,     &color_parse              },
-  { "comment-style",      TABLE_INCLUDE_TIDY,     &comment_style_parse      },
-  { "first",              TABLE_NOT_INCLUDE_TIDY, &first_parse              },
-  { "includes",           TABLE_NOT_INCLUDE_TIDY, &includes_parse           },
-  { "keep",               TABLE_NOT_INCLUDE_TIDY, &keep_parse               },
-  { "line-length",        TABLE_INCLUDE_TIDY,     &line_length_parse        },
-  { "proxy",              TABLE_NOT_INCLUDE_TIDY, &proxy_parse              },
-  { "std-c-includes",     TABLE_INCLUDE_TIDY,     &std_c_includes_parse     },
-  { "std-cpp-includes",   TABLE_INCLUDE_TIDY,     &std_cpp_includes_parse   },
-  { "symbols",            TABLE_NOT_INCLUDE_TIDY, &symbols_parse            },
+  { "add-c-includes",     TABLE_INCLUDE_TIDY, &add_c_includes_parse     },
+  { "align-column",       TABLE_INCLUDE_TIDY, &align_column_parse       },
+  { "all-includes",       TABLE_INCLUDE_TIDY, &all_includes_parse       },
+  { "associated-header",  TABLE_SOURCE,       &associated_header_parse  },
+  { "color",              TABLE_INCLUDE_TIDY, &color_parse              },
+  { "comment-style",      TABLE_INCLUDE_TIDY, &comment_style_parse      },
+  { "first",              TABLE_HEADER,       &first_parse              },
+  { "includes",           TABLE_SYMBOL,       &includes_parse           },
+  { "keep",               TABLE_HEADER,       &keep_parse               },
+  { "line-length",        TABLE_INCLUDE_TIDY, &line_length_parse        },
+  { "proxy",              TABLE_HEADER,       &proxy_parse              },
+  { "std-c-includes",     TABLE_INCLUDE_TIDY, &std_c_includes_parse     },
+  { "std-cpp-includes",   TABLE_INCLUDE_TIDY, &std_cpp_includes_parse   },
+  { "symbols",            TABLE_HEADER,       &symbols_parse            },
+};
+
+/**
+ * Strings for table kinds.
+ */
+static char const *const TABLE_KINDS[] = {
+  "none",
+  "include-tidy",
+  "header",
+  "source",
+  "symbol"
 };
 
 ////////// local variables ////////////////////////////////////////////////////
@@ -651,11 +665,10 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       exit( EX_CONFIG );
     }
 
-    bool const is_include_tidy_table =
-      strcmp( table.name, "include-tidy" ) == 0;
+    config_table_kind table_kind = strcmp( table.name, "include-tidy" ) == 0 ?
+      TABLE_INCLUDE_TIDY : TABLE_NONE;
 
-    toml_iterator   iter;
-
+    toml_iterator iter;
     toml_iterator_init( &table, &iter );
     for ( toml_key_value *kv; (kv = toml_iterator_next( &iter )) != NULL; ) {
       config_key const *const key = config_key_parse( kv->key );
@@ -667,11 +680,15 @@ static void config_parse( char const *config_path, FILE *config_file ) {
         exit( EX_CONFIG );
       }
 
-      if ( key->table_kind != is_include_tidy_table ) {
+      if ( table_kind == TABLE_NONE ) {
+        table_kind = key->table_kind;
+      }
+      else if ( key->table_kind != table_kind ) {
+        assert( table_kind < ARRAY_SIZE( TABLE_KINDS ) );
         print_error(
           config_path, kv->key_loc.line, kv->key_loc.col,
-          "\"%s\": key %s in \"include-tidy\" table\n",
-          key->name, key->table_kind ? "only allowed" : "not allowed"
+          "\"%s\": key not allowed in %s table; allowed only in %s table\n",
+          key->name, TABLE_KINDS[ table_kind ], TABLE_KINDS[ key->table_kind ]
         );
         exit( EX_CONFIG );
       }
