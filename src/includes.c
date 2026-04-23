@@ -548,7 +548,10 @@ skip:
  * being tidied.
  *
  * @param include The include to check.
- * @param iivd The includes_init_visitor_data to use.
+ * @param assoc_file_name The file name associated with the file being tidied,
+ * if any.
+ * @param source_file_no_ext arg_source_path but without its filename
+ * extension.
  * @return Returns `true` only if \a include is the associated header for the
  * file currently being tidied.
  */
