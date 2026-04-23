@@ -186,7 +186,7 @@ NODISCARD
 static char const*  string_value_parse( char const*, char const*, toml_value* );
 
 static void         symbol_include_add( char const*, tidy_include* );
-static void         symbol_include_cleanup( symbol_includes* );
+static void         symbol_includes_cleanup( symbol_includes* );
 static void         symbols_parse( char const*, toml_table const*,
                                    toml_value* );
 
@@ -227,7 +227,7 @@ static bool     verbose_printed_any;    ///< Print any configuration files?
  *
  * @sa symbol_includes
  */
-static rb_tree_t symbol_include_map;
+static rb_tree_t symbol_includes_map;
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -311,8 +311,8 @@ static void config_cleanup( void ) {
     free( std_cpp_includes );
   }
   rb_tree_cleanup(
-    &symbol_include_map,
-    POINTER_CAST( rb_free_fn_t, &symbol_include_cleanup )
+    &symbol_includes_map,
+    POINTER_CAST( rb_free_fn_t, &symbol_includes_cleanup )
   );
 }
 
@@ -1050,7 +1050,7 @@ static char const* string_value_parse( char const *config_path,
  *
  * @param si The symbol_includes to clean up.  If NULL, does nothing.
  */
-static void symbol_include_cleanup( symbol_includes *si ) {
+static void symbol_includes_cleanup( symbol_includes *si ) {
   if ( si == NULL )
     return;
   FREE( si->from_symbol_name );
@@ -1067,8 +1067,8 @@ static void symbol_include_cleanup( symbol_includes *si ) {
  * respectively.
  */
 NODISCARD
-static int symbol_include_cmp( symbol_includes const *i_si,
-                               symbol_includes const *j_si ) {
+static int symbol_includes_cmp( symbol_includes const *i_si,
+                                symbol_includes const *j_si ) {
   assert( i_si != NULL );
   assert( j_si != NULL );
   return strcmp( i_si->from_symbol_name, j_si->from_symbol_name );
@@ -1088,7 +1088,7 @@ static void symbol_include_add( char const *from_symbol_name,
 
   symbol_includes new_si = { .from_symbol_name = from_symbol_name };
   rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &symbol_include_map, &new_si, sizeof new_si );
+    rb_tree_insert( &symbol_includes_map, &new_si, sizeof new_si );
   symbol_includes *const si = RB_DINT( rv_rbi.node );
   if ( rv_rbi.inserted ) {
     si->from_symbol_name = check_strdup( from_symbol_name );
@@ -1104,11 +1104,11 @@ static void symbol_include_add( char const *from_symbol_name,
  * Dumps all symbol includes.
  */
 static void symbol_includes_dump( void ) {
-  if ( rb_tree_empty( &symbol_include_map ) )
+  if ( rb_tree_empty( &symbol_includes_map ) )
     return;
   verbose_printf( "configuration symbols:\n" );
   rb_iterator_t si_iter;
-  rb_iterator_init( &symbol_include_map, &si_iter );
+  rb_iterator_init( &symbol_includes_map, &si_iter );
   for ( symbol_includes const *si;
         (si = rb_iterator_next( &si_iter )) != NULL; ) {
     verbose_printf( "  \"%s\" -> [ ", si->from_symbol_name );
@@ -1196,7 +1196,7 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
 
   symbol_includes find_si = { .from_symbol_name = symbol_name };
   rb_node_t const *const found_rb =
-    rb_tree_find( &symbol_include_map, &find_si );
+    rb_tree_find( &symbol_includes_map, &find_si );
   if ( found_rb == NULL )
     return NULL;
   symbol_includes const *const found_si = RB_DINT( found_rb );
@@ -1230,8 +1230,8 @@ void config_init( void ) {
   ASSERT_RUN_ONCE();
 
   rb_tree_init(
-    &symbol_include_map, RB_DINT,
-    POINTER_CAST( rb_cmp_fn_t, &symbol_include_cmp )
+    &symbol_includes_map, RB_DINT,
+    POINTER_CAST( rb_cmp_fn_t, &symbol_includes_cmp )
   );
   ATEXIT( &config_cleanup );
 
