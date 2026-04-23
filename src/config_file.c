@@ -101,7 +101,7 @@ typedef struct  symbol_includes   symbol_includes;
  */
 typedef void (*config_parse_fn)( char const *config_path,
                                  toml_table const *table,
-                                 toml_value *value );
+                                 toml_value const *value );
 
 ////////// structures /////////////////////////////////////////////////////////
 
@@ -150,20 +150,22 @@ struct source_header {
 ////////// local functions ////////////////////////////////////////////////////
 
 static void         add_c_includes_parse( char const*, toml_table const*,
-                                          toml_value* );
+                                          toml_value const* );
 static void         align_column_parse( char const*, toml_table const*,
-                                        toml_value* );
+                                        toml_value const* );
 static void         all_includes_parse( char const*, toml_table const*,
-                                        toml_value* );
+                                        toml_value const* );
 static void         associated_header_parse( char const*, toml_table const*,
-                                             toml_value* );
+                                             toml_value const* );
 
 NODISCARD
-static bool         bool_value_parse( char const*, char const*, toml_value* );
+static bool         bool_value_parse( char const*, char const*,
+                                      toml_value const* );
 
-static void         color_parse( char const*, toml_table const*, toml_value* );
+static void         color_parse( char const*, toml_table const*,
+                                 toml_value const* );
 static void         comment_style_parse( char const*, toml_table const*,
-                                         toml_value* );
+                                         toml_value const* );
 
 NODISCARD
 static config_key const*
@@ -175,35 +177,39 @@ static FILE*        config_open( char const*, config_opts );
 NODISCARD
 static char const*  home_dir( void );
 
-static void         first_parse( char const*, toml_table const*, toml_value* );
+static void         first_parse( char const*, toml_table const*,
+                                 toml_value const* );
 static void         includes_parse( char const*, toml_table const*,
-                                    toml_value* );
+                                    toml_value const* );
 
 NODISCARD
-static long         int_value_parse( char const*, char const*, toml_value*,
-                                     long, long );
+static long         int_value_parse( char const*, char const*,
+                                     toml_value const*, long, long );
 
-static void         keep_parse( char const*, toml_table const*, toml_value* );
+static void         keep_parse( char const*, toml_table const*,
+                                toml_value const* );
 static void         line_length_parse( char const*, toml_table const*,
-                                       toml_value* );
-static void         proxy_parse( char const*, toml_table const*, toml_value* );
+                                       toml_value const* );
+static void         proxy_parse( char const*, toml_table const*,
+                                 toml_value const* );
 static void         source_header_cleanup( source_header* );
 static void         std_c_includes_parse( char const*, toml_table const*,
-                                          toml_value* );
+                                          toml_value const* );
 static void         std_cpp_includes_parse( char const*, toml_table const*,
-                                            toml_value* );
+                                            toml_value const* );
 
 NODISCARD
 static char**       string_array_value_parse( char const*, char const*,
-                                              toml_value* );
+                                              toml_value const* );
 
 NODISCARD
-static char const*  string_value_parse( char const*, char const*, toml_value* );
+static char const*  string_value_parse( char const*, char const*,
+                                        toml_value const* );
 
 static void         symbol_include_add( char const*, tidy_include* );
 static void         symbol_includes_cleanup( symbol_includes* );
 static void         symbols_parse( char const*, toml_table const*,
-                                   toml_value* );
+                                   toml_value const* );
 
 NODISCARD
 static int          tidy_include_cmp_by_rel_path( tidy_include const*,
@@ -271,7 +277,8 @@ static rb_tree_t symbol_includes_map;
  * @param value The toml_value to parse.
  */
 static void add_c_includes_parse( char const *config_path,
-                                  toml_table const *table, toml_value *value ) {
+                                  toml_table const *table,
+                                  toml_value const *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
@@ -294,7 +301,8 @@ static void add_c_includes_parse( char const *config_path,
  * @param value The toml_value to parse.
  */
 static void align_column_parse( char const *config_path,
-                                toml_table const *table, toml_value *value ) {
+                                toml_table const *table,
+                                toml_value const *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
@@ -317,7 +325,8 @@ static void align_column_parse( char const *config_path,
  * @param value The toml_value to parse.
  */
 static void all_includes_parse( char const *config_path,
-                                toml_table const *table, toml_value *value ) {
+                                toml_table const *table,
+                                toml_value const *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
@@ -337,7 +346,7 @@ static void all_includes_parse( char const *config_path,
  */
 static void associated_header_parse( char const *config_path,
                                      toml_table const *table,
-                                     toml_value *value ) {
+                                     toml_value const *value ) {
   assert( config_path != NULL );
   assert( table != NULL );
   assert( value != NULL );
@@ -387,7 +396,7 @@ static void config_cleanup( void ) {
  * @param value The toml_value to parse.
  */
 static bool bool_value_parse( char const *config_path, char const *key_name,
-                              toml_value *value ) {
+                              toml_value const *value ) {
   assert( config_path != NULL );
   assert( key_name != NULL );
   assert( value != NULL );
@@ -411,7 +420,7 @@ static bool bool_value_parse( char const *config_path, char const *key_name,
  * @param value The toml_value to parse.
  */
 static void color_parse( char const *config_path, toml_table const *table,
-                         toml_value *value ) {
+                         toml_value const *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
@@ -440,7 +449,8 @@ static void color_parse( char const *config_path, toml_table const *table,
  * @param value The toml_value to parse.
  */
 static void comment_style_parse( char const *config_path,
-                                 toml_table const *table, toml_value *value ) {
+                                 toml_table const *table,
+                                 toml_value const *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
@@ -670,7 +680,8 @@ static void config_parse( char const *config_path, FILE *config_file ) {
 
     toml_iterator iter;
     toml_iterator_init( &table, &iter );
-    for ( toml_key_value *kv; (kv = toml_iterator_next( &iter )) != NULL; ) {
+    for ( toml_key_value const *kv;
+          (kv = toml_iterator_next( &iter )) != NULL; ) {
       config_key const *const key = config_key_parse( kv->key );
       if ( key == NULL ) {
         print_error(
@@ -741,7 +752,7 @@ static char const* home_dir( void ) {
  * @param value The toml_value to parse.
  */
 static void first_parse( char const *config_path, toml_table const *table,
-                         toml_value*value ) {
+                         toml_value const *value ) {
   assert( config_path != NULL );
   assert( table != NULL );
   assert( value != NULL );
@@ -799,7 +810,7 @@ static void include_add_explicit_proxy( char const *config_path,
  * @param value The toml_value to parse.
  */
 static void includes_parse( char const *config_path, toml_table const *table,
-                            toml_value *value ) {
+                            toml_value const *value ) {
   assert( config_path != NULL );
   assert( table != NULL );
   assert( value != NULL );
@@ -846,7 +857,7 @@ static void includes_parse( char const *config_path, toml_table const *table,
  * @param value_max The maximum allowed value.
  */
 static long int_value_parse( char const *config_path, char const *key_name,
-                             toml_value *value,
+                             toml_value const *value,
                              long value_min, long value_max ) {
   assert( config_path != NULL );
   assert( key_name != NULL );
@@ -910,7 +921,7 @@ static bool is_standard_include( char const *rel_path, char *includes[] ) {
  * @param value The toml_value to parse.
  */
 static void keep_parse( char const *config_path, toml_table const *table,
-                        toml_value *value ) {
+                        toml_value const *value ) {
   assert( config_path != NULL );
   assert( table != NULL );
   assert( value != NULL );
@@ -932,7 +943,8 @@ static void keep_parse( char const *config_path, toml_table const *table,
  * @param value The toml_value to parse.
  */
 static void line_length_parse( char const *config_path,
-                               toml_table const *table, toml_value *value ) {
+                               toml_table const *table,
+                               toml_value const *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
@@ -955,7 +967,7 @@ static void line_length_parse( char const *config_path,
  * @param value The toml_value to parse.
  */
 static void proxy_parse( char const *config_path, toml_table const *table,
-                         toml_value *value ) {
+                         toml_value const *value ) {
   assert( config_path != NULL );
   assert( table != NULL );
   assert( value != NULL );
@@ -1039,7 +1051,8 @@ static int source_header_cmp( source_header const *i_sh,
  * @param value The toml_value to parse.
  */
 static void std_c_includes_parse( char const *config_path,
-                                  toml_table const *table, toml_value *value ) {
+                                  toml_table const *table,
+                                  toml_value const *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
@@ -1060,7 +1073,7 @@ static void std_c_includes_parse( char const *config_path,
  */
 static void std_cpp_includes_parse( char const *config_path,
                                     toml_table const *table,
-                                    toml_value *value ) {
+                                    toml_value const *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
@@ -1082,7 +1095,7 @@ static void std_cpp_includes_parse( char const *config_path,
  */
 static char** string_array_value_parse( char const *config_path,
                                         char const *key_name,
-                                        toml_value *value ) {
+                                        toml_value const *value ) {
   assert( config_path != NULL );
   assert( key_name != NULL );
   assert( value != NULL );
@@ -1125,7 +1138,7 @@ static char** string_array_value_parse( char const *config_path,
  */
 static char const* string_value_parse( char const *config_path,
                                        char const *key_name,
-                                       toml_value *value ) {
+                                       toml_value const *value ) {
   assert( config_path != NULL );
   assert( key_name != NULL );
   assert( value != NULL );
@@ -1233,7 +1246,7 @@ static void symbol_includes_dump( void ) {
  * @param value The toml_value to parse.
  */
 static void symbols_parse( char const *config_path, toml_table const *table,
-                           toml_value *value ) {
+                           toml_value const *value ) {
   assert( config_path != NULL );
   assert( table != NULL );
   assert( value != NULL );
