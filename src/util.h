@@ -999,6 +999,16 @@ inline bool path_is_relative( char const *path ) {
 }
 
 /**
+ * Strips a leading dot-slash, if any, from \a path.
+ *
+ * @param path The path to strip `./` from.
+ * @return Returns \a path without a leading `./`.
+ */
+inline char const* path_no_dot_slash( char const *path ) {
+  return STRNCMPLIT( path, "./" ) == 0 ? path + STRLITLEN( "./" ) : path;
+}
+
+/**
  * Gets the pathname without the filename extension of \a path, if any.
  *
  * @param path The path.
@@ -1010,16 +1020,6 @@ inline bool path_is_relative( char const *path ) {
  */
 NODISCARD
 char const* path_no_ext( char const *path, char path_buf[static PATH_MAX] );
-
-/**
- * Strips a leading dot-slash, if any, from \a path.
- *
- * @param path The path to strip `./` from.
- * @return Returns \a path without a leading `./`.
- */
-inline char const* path_no_dot_slash( char const *path ) {
-  return STRNCMPLIT( path, "./" ) == 0 ? path + STRLITLEN( "./" ) : path;
-}
 
 /**
  * Prints an error message for `errno` to standard error and exits.
