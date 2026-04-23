@@ -1,5 +1,6 @@
 2026-04-22  Paul J. Lucas <paul@lucasmail.org>
 
+   * options.c, util.c, util.h: Now using array_t for opt_include_paths.
    * config_file.c: Added "const".
    * config_file.c: Better key/table checking.
    * man/man1/include-tidy.1, config_file.c, config_file.h, includes.c,
