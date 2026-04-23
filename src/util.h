@@ -938,6 +938,13 @@ PJL_PRINTF_LIKE_FUNC(2)
 _Noreturn void fatal_error( int status, char const *format, ... );
 
 /**
+ * Like **free**(3) except frees the pointer pointed to by pptr.
+ *
+ * @param pptr The pointer to pointer to free.
+ */
+void free_pptr( void *pptr );
+
+/**
  * Gets the absolute path of the current working directory.
  *
  * @param plen If not NULL, the length of the path is put here.

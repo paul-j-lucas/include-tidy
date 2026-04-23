@@ -140,6 +140,11 @@ void fatal_error( int status, char const *format, ... ) {
   _Exit( status );
 }
 
+void free_pptr( void *pptr ) {
+  if ( pptr != NULL )
+    free( *POINTER_CAST( void**, pptr ) );
+}
+
 char const* get_cwd( size_t *plen ) {
   static char   cwd_path_buf[ PATH_MAX ];
   static size_t cwd_path_len;

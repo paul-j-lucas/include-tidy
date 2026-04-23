@@ -26,6 +26,7 @@
 // local
 #include "pjl_config.h"                 /* must go first */
 #include "options.h"
+#include "array.h"
 #include "color.h"
 #include "util.h"
 
@@ -73,8 +74,8 @@ char const   *arg_source_path;
 
 ////////// local variables ////////////////////////////////////////////////////
 
-static char **opt_include_paths;        ///< Null-terminated list of `-I` paths.
-static bool   opt_is_set_impl[ 256 ];   ///< Was an option set?
+static array_t  opt_include_paths;      ///< Array of `-I` paths.
+static bool     opt_is_set_impl[ 256 ]; ///< Was an option set?
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -91,11 +92,7 @@ static void               set_all_or_none( char const**, char const* );
  * @sa options_init()
  */
 static void options_cleanup( void ) {
-  if ( opt_include_paths != NULL ) {
-    for ( char **ppath = opt_include_paths; *ppath != NULL; ++ppath )
-      free( *ppath );
-    free( opt_include_paths );
-  }
+  array_cleanup( &opt_include_paths, &free_pptr );
 }
 
 /**
@@ -229,35 +226,23 @@ void opt_include_paths_add( char const *include_path ) {
   if ( realpath( include_path, real_path ) != NULL )
     include_path = real_path;
 
-  static size_t opt_include_paths_cap = 1;
-  size_t i = 0;
-
-  if ( opt_include_paths == NULL ) {
-    opt_include_paths = MALLOC( char*, opt_include_paths_cap + 1/*NULL*/ );
-  }
-  else {
-    for ( ; opt_include_paths[i] != NULL; ++i ) {
-      if ( strcmp( include_path, opt_include_paths[i] ) == 0 )
-        return;
-    } // for
-    if ( i >= opt_include_paths_cap ) {
-      opt_include_paths_cap *= 2;
-      REALLOC( opt_include_paths, opt_include_paths_cap + 1/*NULL*/ );
-    }
-  }
-
-  opt_include_paths[  i] = check_strdup( include_path );
-  opt_include_paths[++i] = NULL;
+  for ( size_t i = 0; i < opt_include_paths.len; ++i ) {
+    char const *const *const ppath = array_at_nocheck( &opt_include_paths, i );
+    if ( strcmp( include_path, *ppath ) == 0 )
+      return;
+  } // for
+  char **const pback = array_push_back( &opt_include_paths );
+  *pback = check_strdup( include_path );
 }
 
 char const* opt_include_paths_relativize( char const *abs_path ) {
   assert( abs_path != NULL );
-  assert( opt_include_paths != NULL );
 
   size_t      longest_include_path_len = 0;
   char const *shortest_include_path = abs_path;
 
-  for ( char **ppath = opt_include_paths; *ppath != NULL; ++ppath ) {
+  for ( size_t i = 0; i < opt_include_paths.len; ++i ) {
+    char const *const *const ppath = array_at_nocheck( &opt_include_paths, i );
     char const *const include_path_i      = *ppath;
     size_t const      include_path_i_len  = strlen( include_path_i );
 
@@ -343,6 +328,7 @@ bool opt_verbose_parse( char const *verbose_format ) {
 
 void options_init( void ) {
   ASSERT_RUN_ONCE();
+  array_init( &opt_include_paths, sizeof(char*) );
   ATEXIT( &options_cleanup );
 }
 
