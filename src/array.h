@@ -63,7 +63,7 @@ struct array {
  * @param free_fn A pointer to a function used to free data associated with
  * each element or NULL if unnecessary.
  *
- * @sa rb_tree_init()
+ * @sa array_init()
  */
 void array_cleanup( array_t *array, array_free_fn_t free_fn );
 
