@@ -943,7 +943,7 @@ static void proxy_parse( char const *config_path, toml_table const *table,
  * @param value The toml_value to parse.
  */
 static void std_c_includes_parse( char const *config_path,
-                              toml_table const *table, toml_value *value ) {
+                                  toml_table const *table, toml_value *value ) {
   assert( config_path != NULL );
   (void)table;
   assert( value != NULL );
