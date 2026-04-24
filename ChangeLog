@@ -1,3 +1,8 @@
+2026-04-24  Paul J. Lucas <paul@lucasmail.org>
+
+   * configure.ac, ax_compare_version.m4, pjl_prog_llvm_config_version.m4: Now
+     checking for minimum llvm-config version.
+
 2026-04-23  Paul J. Lucas <paul@lucasmail.org>
 
    * includes.c, util.c, util.h: Now relativize the original CXFile's path and
