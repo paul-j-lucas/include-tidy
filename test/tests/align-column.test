@@ -1,0 +1,5 @@
+EXPECTED_EXIT=0
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    -Xtidy --config=align-column.toml \
+    hello.c
