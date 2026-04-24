@@ -999,14 +999,12 @@ inline bool path_is_relative( char const *path ) {
 }
 
 /**
- * Strips a leading dot-slash, if any, from \a path.
+ * Strips leading dot-slashes, if any, from \a path.
  *
  * @param path The path to strip `./` from.
- * @return Returns \a path without a leading `./`.
+ * @return Returns \a path without leading `./`.
  */
-inline char const* path_no_dot_slash( char const *path ) {
-  return STRNCMPLIT( path, "./" ) == 0 ? path + STRLITLEN( "./" ) : path;
-}
+char const* path_no_dot_slash( char const *path );
 
 /**
  * Gets the pathname without the filename extension of \a path, if any.

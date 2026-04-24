@@ -173,6 +173,13 @@ char const* path_ext( char const *path ) {
   return dot != NULL && dot[1] != '\0' ? dot + 1 : NULL;
 }
 
+char const* path_no_dot_slash( char const *path ) {
+  assert( path != NULL );
+  while ( STRNCMPLIT( path, "./" ) == 0 )
+    path += STRLITLEN( "./" );
+  return path;
+}
+
 char const* path_no_ext( char const *path, char path_buf[static PATH_MAX] ) {
   assert( path != NULL );
 
