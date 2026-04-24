@@ -1,0 +1,3 @@
+[include-tidy]
+all-includes = true
+comment-style = "/*"

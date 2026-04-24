@@ -1,0 +1,3 @@
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=comment-style.toml hello.c
+#include <stdio.h>                      /* printf */
+

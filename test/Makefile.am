@@ -36,7 +36,8 @@ TESTS+=	tests/cli-align-column.test \
 	tests/cli-options-error.test
 
 # Configuration file option tests
-TESTS+=	tests/align-column.test
+TESTS+=	tests/align-column.test \
+	tests/comment-style.test
 
 TESTS+=	tests/duplicate.test \
 	tests/keep.test
