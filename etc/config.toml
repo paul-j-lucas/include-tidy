@@ -111,10 +111,9 @@ std-c-includes = [
 
   # Other Unix
   "curses.h",
-  "linux/*",
+  "getopt.h",
   "ncurses.h",
   "term.h",
-  "X11/*",
 
   # Popular 3rd-party libraries
   "openssl/*",
@@ -281,6 +280,12 @@ includes = [
   "uchar.h",
   "wchar.h",
 ]
+
+# strcasecmp(3) is declared in <strings.h> (plural) according to POSIX, but
+# some platforms still have it in <string.h> (singular), so just pick the
+# former.
+[strcasecmp]
+includes = "strings.h"
 
 [time_t]
 includes = "time.h"

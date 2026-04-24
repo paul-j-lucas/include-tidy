@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <stdlib.h>                     /* for malloc(), ... */
 #include <string.h>
+#include <strings.h>                    /* for strcasecmp() */
 #include <sysexits.h>
 #include <unistd.h>                     /* for close(2), getpid(3) */
 
