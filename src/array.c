@@ -77,6 +77,7 @@ extern inline void* array_at_nocheck( array_t const*, size_t );
 extern inline void* array_back( array_t const* );
 extern inline void* array_front( array_t const* );
 extern inline void array_init( array_t*, size_t );
+extern inline void* array_pop_back( array_t* );
 
 /// @endcond
 

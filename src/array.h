@@ -179,6 +179,20 @@ inline void array_init( array_t *array, size_t esize ) {
   *array = (array_t){ .esize = esize };
 }
 
+/**
+ * Pops data from the back of \a array.
+ *
+ * @param array The pointer to the \ref array.
+ * @return Returns the element's data from the back of \a array.  The caller is
+ * responsible for freeing it if necessary.
+ *
+ * @note This is an O(1) operation.
+ */
+PJL_DISCARD
+inline void* array_pop_back( array_t *array ) {
+  return array->len > 0 ? array_at_nocheck( array, --array->len ) : NULL;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #endif /* pjl_array_H */
