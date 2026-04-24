@@ -557,8 +557,9 @@ and exits.
 Prints the version number
 and exits.
 .SH CONFIGURATION FILES
-A file named either
+A file named
 .B include-tidy.toml
+in the current working directory
 or
 .B config.toml
 in a subdirectory named
@@ -592,6 +593,11 @@ be quoted.
 .PP
 Neither the order of the tables in a file
 nor the keys in a table matters.
+The type of table is determined
+by the first key in it
+since no two table types
+share keys.
+.PP
 For the keys below,
 a value
 .I b
@@ -1053,7 +1059,7 @@ then that used as a configuration file.
 .SH FILES
 .PD 0
 .TP
-.B ~/include-tidy.toml
+.B ./include-tidy.toml
 .TP
 .B $XDG_CONFIG_HOME/include-tidy/config.toml
 .TP
