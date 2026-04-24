@@ -988,10 +988,25 @@ NODISCARD
 char const* path_ext( char const *path );
 
 /**
+ * Gets whether \a path is an absolute path.
+ *
+ * @param path the path to check.
+ * @return Returns `true` only if \a path is absolute.
+ *
+ * @sa path_is_relative()
+ */
+NODISCARD
+inline bool path_is_absolute( char const *path ) {
+  return path[0] == '/';
+}
+
+/**
  * Gets whether \a path is a relative path.
  *
  * @param path the path to check.
  * @return Returns `true` only if \a path is relative.
+ *
+ * @sa path_is_absolute()
  */
 NODISCARD
 inline bool path_is_relative( char const *path ) {
@@ -1018,6 +1033,18 @@ char const* path_no_dot_slash( char const *path );
  */
 NODISCARD
 char const* path_no_ext( char const *path, char path_buf[static PATH_MAX] );
+
+/**
+ * Normalizes a path by:
+ *
+ *  + Making a relative path absolute.
+ *  + Eliminating all occurrences of `./` or `../`.
+ *
+ * @param path The path to normalize.
+ * @return Returns a normalized path.  The caller is responsible for freeing
+ * it.
+ */
+char* path_normalize( char const *path );
 
 /**
  * Prints an error message for `errno` to standard error and exits.

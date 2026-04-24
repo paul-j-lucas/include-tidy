@@ -98,6 +98,9 @@ static bool           is_local_include( char const* );
 NODISCARD
 static char*          make_symbols_used_comment( tidy_include const* );
 
+NODISCARD
+char const*           tidy_File_getRelativePath( CXFile );
+
 static void           tidy_include_cleanup( tidy_include* );
 
 ////////// extern variables ///////////////////////////////////////////////////
@@ -416,13 +419,32 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
 
   if ( rv_rbi.inserted ) {
     CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
-
     included->abs_path = check_strdup( clang_getCString( abs_path_cxs ) );
+    clang_disposeString( abs_path_cxs );
+
     included->file     = included_file;
     included->is_local = is_local_include( included->abs_path );
-    included->rel_path = opt_include_paths_relativize( included->abs_path );
 
-    clang_disposeString( abs_path_cxs );
+    //
+    // We don't call opt_include_paths_relativize( included->abs_path ) because
+    // that would relativize the real path with symlinks, if any, resolved.
+    // That might be surprising to the user if the linked-to file has a
+    // different name.
+    //
+    // For example, on macOS, Readline is just a wrapper around Editline and
+    // has this:
+    //
+    //      /usr/include/readline/
+    //        readline.h -> ../editline/readline.h
+    //
+    // If the user includes it unnecessarily, it would print:
+    //
+    //      #include <editline/readline.h>  // DELETE line xxxx
+    //
+    // that the user didn't include with that name.  Therefore, relativize the
+    // original CXFile's path.
+    //
+    included->rel_path = tidy_File_getRelativePath( included_file );
 
     if ( !is_direct ) {
       included->includer = include_find_by_CXFile( includer_file );
@@ -430,10 +452,9 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       included->depth = included->includer->depth + 1;
     }
     array_init( &included->lines, sizeof(unsigned) );
-
     rb_tree_init(
       // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
-      // symbol_set in symbols.c
+      // symbol_set in symbols.c.
       &included->symbol_set, RB_DPTR,
       POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
     );
@@ -682,6 +703,40 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
 }
 
 /**
+ * Given a file having either an absolute or relative path, gets its normalized
+ * relative path.
+ *
+ * @param file The file to get the relative path for.
+ * @return Returns the normalized, relative path of \a file.  The caller is
+ * responsible for freeing it.
+ */
+NODISCARD
+char const* tidy_File_getRelativePath( CXFile file ) {
+  assert( file != NULL );
+
+  CXString const    path_cxs = clang_getFileName( file );
+  char const *const path = path_normalize( clang_getCString( path_cxs ) );
+
+  clang_disposeString( path_cxs );
+
+  // The string handling here is overly complicated:
+  //
+  //  + At this point, path is a string we're responsible for.
+  //
+  //  + opt_include_paths_relativize() returns a pointer within path.
+  //
+  //  + But at clean-up time, we would have to free the original path.
+  //
+  //  + Therefore, strdup the relativized path (the portion within path) and
+  //    free the original path now.
+
+  char const *const rel_path =
+    check_strdup( opt_include_paths_relativize( path ) );
+  FREE( path );
+  return rel_path;
+}
+
+/**
  * Cleans-up all memory associated with \a include but does _not_ free \a
  * include itself.
  *
@@ -692,8 +747,7 @@ static void tidy_include_cleanup( tidy_include *include ) {
     return;
 
   FREE( include->abs_path );
-  // rel_path points into abs_path, so it doesn't need to be freed.
-
+  FREE( include->rel_path );
   array_cleanup( &include->lines, /*free_fn=*/NULL );
 
   // Because the nodes point to existing tidy_symbol objects, use NULL.

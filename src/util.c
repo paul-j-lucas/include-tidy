@@ -26,7 +26,9 @@
 // local
 #include "pjl_config.h"
 #include "util.h"
+#include "array.h"
 #include "include-tidy.h"
+#include "strbuf.h"
 
 /// @cond DOXYGEN_IGNORE
 
@@ -207,6 +209,42 @@ char const* path_no_ext( char const *path, char path_buf[static PATH_MAX] ) {
   return strncpy_0( path_buf, path, len );
 }
 
+char* path_normalize( char const *path ) {
+  assert( path != NULL );
+
+  strbuf_t in_path;
+  strbuf_init( &in_path );
+
+  path = path_no_dot_slash( path );
+  if ( path_is_relative( path ) )
+    strbuf_puts( &in_path, get_cwd( /*cwd_len=*/NULL ) );
+  strbuf_paths( &in_path, path );
+
+  array_t stack;
+  array_init( &stack, sizeof(char*) );
+
+  for ( char const *component = strtok( in_path.str, "/" ); component != NULL;
+        component = strtok( NULL, "/" ) ) {
+    if ( strcmp( component, ".." ) == 0 )
+      array_pop_back( &stack );
+    else if ( strcmp( component, "." ) != 0 )
+      *(char const**)array_push_back( &stack ) = component;
+  } // for
+
+  strbuf_t out_path;
+  strbuf_init( &out_path );
+
+  strbuf_putc( &out_path, '/' );
+  for ( size_t i = 0; i < stack.len; ++i ) {
+    char const *const comp = *(char const**)array_at_nocheck( &stack, i );
+    strbuf_paths( &out_path, comp );
+  }
+
+  strbuf_cleanup( &in_path );
+  array_cleanup( &stack, /*free_fn=*/NULL );
+  return strbuf_take( &out_path );
+}
+
 void perror_exit( int status ) {
   perror( prog_name );
   exit( status );
@@ -254,6 +292,7 @@ extern inline char* nonconst_empty_if_null( char* );
 // See comment for NONCONST_OVERLOAD regarding ().
 extern inline char const* (null_if_empty)( char const* );
 
+extern inline bool path_is_absolute( char const* );
 extern inline bool path_is_relative( char const* );
 extern inline char* strncpy_0( char*, char const*, size_t );
 extern inline bool true_or_set( bool* );
