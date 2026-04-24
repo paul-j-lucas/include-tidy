@@ -74,6 +74,7 @@ typedef struct includes_print_visitor_data  includes_print_visitor_data;
  * Additional data for includes_print_visitor().
  */
 struct includes_print_visitor_data {
+  bool  print_blank_line;               ///< Print a blank line?
   bool  print_local;                    ///< Print local includes?
   bool  print_standard;                 ///< Print standard includes?
   bool  printed_any_includes;           ///< Print any includes?
@@ -593,6 +594,8 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
     verbose_printf( "%s\n", arg_source_path );
   }
 
+  if ( true_clear( &ipvd->print_blank_line ) )
+    PUTC( '\n' );
   include_print( include );
   ipvd->printed_any_includes = true;
 
@@ -915,13 +918,13 @@ void includes_print( void ) {
   includes_print_visitor_data ipvd = { .print_local = true };
   rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
 
-  if ( opt_all_includes && true_clear( &ipvd.printed_any_includes ) )
-    PUTC( '\n' );
+  ipvd.print_blank_line = opt_all_includes &&
+    true_clear( &ipvd.printed_any_includes );
   ipvd.print_local = !ipvd.print_local;
   rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
 
-  if ( opt_all_includes && true_clear( &ipvd.printed_any_includes ) )
-    PUTC( '\n' );
+  ipvd.print_blank_line = opt_all_includes &&
+    true_clear( &ipvd.printed_any_includes );
   ipvd.print_standard = true;
   rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
 
