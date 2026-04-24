@@ -51,6 +51,8 @@ include_tidy_SOURCES =	array.c array.h \
 			util.c util.h
 
 BASE_TEST_SOURCES =	pjl_config.h config.h \
+			array.c array.h \
+			strbuf.c strbuf.h \
 			type_traits.h \
 			util.c util.h \
 			unit_test.c unit_test.h
@@ -60,12 +62,10 @@ red_black_test_SOURCES=	$(BASE_TEST_SOURCES) \
 			red_black_test.c
 
 strbuf_test_SOURCES = 	$(BASE_TEST_SOURCES) \
-			strbuf.c strbuf.h \
 			strbuf_test.c
 
 toml_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 			red_black.c red_black.h \
-			strbuf.c strbuf.h \
 			toml_lite.c toml_lite.h \
 			toml_test.c
 
