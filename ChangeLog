@@ -1,5 +1,11 @@
 2026-04-23  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c, util.c, util.h: Now relativize the original CXFile's path and
+     not the real path to avoid different names via symlinks.
+   * src/Makefile.am: Added array.[ch] and strbuf.[ch] to BASE_TEST_SOURCES.
+   * util.c: Removed extern inline for path_no_dot_slash().
+   * array.c, array.h: Added array_pop_back().
+   * util.c, util.h: path_no_dot_slash() now removes all leading ./
    * clang_util.c, clang_util.h, includes.c: Now handling "duplicate" includes
      that are symlinks.
 
