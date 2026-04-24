@@ -49,6 +49,9 @@ AC_PATH_PROGS([LLVM_CONFIG], [llvm-config], [no])
 AS_IF([test x$LLVM_CONFIG = xno || test ! -x "$LLVM_CONFIG"], [
   AC_MSG_ERROR([llvm-config not found; install LLVM development packages])
 ])
+llvm_config_min_version="21.0.0"
+PJL_PROG_LLVM_CONFIG_VERSION([$llvm_config_min_version], [],
+    [AC_MSG_ERROR([llvm-config version $llvm_config_min_version or later required])])
 
 LIBCLANG_CPPFLAGS=`$LLVM_CONFIG --cppflags`
 LIBCLANG_LIBDIR=`$LLVM_CONFIG --libdir`
