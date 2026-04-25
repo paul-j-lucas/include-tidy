@@ -1,5 +1,20 @@
+2026-04-25  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c: Fixed print_blank_line.
+   * includes.c: Moved checking of print_blank_line.
+   * util.h: Eliminiated test/modify same variable in same expression.
+   * array.c: s/<=/</
+
 2026-04-24  Paul J. Lucas <paul@lucasmail.org>
 
+   * etc/config.toml, cli_options.c, options.c, util.c: Special case for
+     strcasecmp().
+   * test/Makefile.am, comment-style.toml, comment-style.out,
+     comment-style.test: Added "comment-style" test.
+   * includes.c, align-column.out: Fixed extraneous ending blank line.
+   * test/Makefile.am, align-column.toml, align-column.out, align-column.test:
+     align-column config test.
+   * man/man1/include-tidy.1: Fixes.
    * configure.ac, ax_compare_version.m4, pjl_prog_llvm_config_version.m4: Now
      checking for minimum llvm-config version.
 
