@@ -203,14 +203,20 @@ done:
  * @param inc_delim The include delimiters.
  * @param rel_path The include's relative path.
  * @param comment The comment, if any.
+ * @param ipvd The includes_print_visitor_data to use.
  *
  * @sa include_print()
  */
 static void include_directive_print( char const *sgr_color,
                                      char const inc_delim[static 2],
                                      char const *rel_path,
-                                     char const *comment ) {
+                                     char const *comment,
+                                     includes_print_visitor_data *ipvd ) {
   assert( rel_path != NULL );
+  assert( ipvd != NULL );
+
+  if ( true_clear( &ipvd->print_blank_line ) )
+    PUTC( '\n' );
 
   color_start( stdout, sgr_color );
   int const raw_len = printf(
@@ -230,6 +236,8 @@ static void include_directive_print( char const *sgr_color,
 
   color_end( stdout, sgr_color );
   PUTC( '\n' );
+
+  ipvd->printed_any_includes = true;
 }
 
 /**
@@ -254,11 +262,14 @@ static tidy_include* include_find_by_CXFile( CXFile file ) {
  * Prints a tidy_include.
  *
  * @param include The tidy_include to print.
+ * @param ipvd The includes_print_visitor_data to use.
  *
  * @sa include_directive_print()
  */
-static void include_print( tidy_include const *include ) {
+static void include_print( tidy_include const *include,
+                           includes_print_visitor_data *ipvd ) {
   assert( include != NULL );
+  assert( ipvd != NULL );
 
   char       *comment = NULL;
   char        inc_delim[2];
@@ -290,8 +301,11 @@ static void include_print( tidy_include const *include ) {
   }
 
   get_include_delims( include->is_local, inc_delim );
-  if ( print_include )
-    include_directive_print( sgr_color, inc_delim, include->rel_path, comment );
+  if ( print_include ) {
+    include_directive_print(
+      sgr_color, inc_delim, include->rel_path, comment, ipvd
+    );
+  }
 
   if ( include->lines.len > 1 ) {
     if ( opt_comment_style[0][0] == '\0' ) {
@@ -312,7 +326,7 @@ static void include_print( tidy_include const *include ) {
         check_asprintf( &comment, "DELETE line %u", line );
       }
       include_directive_print(
-        sgr_include_del, inc_delim, include->rel_path, comment
+        sgr_include_del, inc_delim, include->rel_path, comment, ipvd
       );
     } // for
   }
@@ -594,10 +608,7 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
     verbose_printf( "%s\n", arg_source_path );
   }
 
-  if ( true_clear( &ipvd->print_blank_line ) )
-    PUTC( '\n' );
-  include_print( include );
-  ipvd->printed_any_includes = true;
+  include_print( include, ipvd );
 
 skip:
   return false;
