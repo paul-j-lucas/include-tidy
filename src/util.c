@@ -216,33 +216,39 @@ char* path_normalize( char const *path ) {
   strbuf_t in_path;
   strbuf_init( &in_path );
 
-  path = path_no_dot_slash( path );
-  if ( path_is_relative( path ) )
-    strbuf_puts( &in_path, get_cwd( /*cwd_len=*/NULL ) );
+  if ( path_is_relative( path ) ) {
+    path = path_no_dot_slash( path );
+    if ( strstr( path, "../" ) != NULL ) {
+      size_t cwd_path_len;
+      char const *const cwd_path = get_cwd( &cwd_path_len );
+      strbuf_putsn( &in_path, cwd_path, cwd_path_len );
+    }
+  }
   strbuf_paths( &in_path, path );
 
-  array_t stack;
-  array_init( &stack, sizeof(char*) );
+  array_t comp_stack;
+  array_init( &comp_stack, sizeof(char*) );
 
-  for ( char const *component = strtok( in_path.str, "/" ); component != NULL;
-        component = strtok( NULL, "/" ) ) {
-    if ( strcmp( component, ".." ) == 0 )
-      array_pop_back( &stack );
-    else if ( strcmp( component, "." ) != 0 )
-      *(char const**)array_push_back( &stack ) = component;
+  for ( char const *comp = strtok( in_path.str, "/" ); comp != NULL;
+        comp = strtok( NULL, "/" ) ) {
+    if ( strcmp( comp, ".." ) == 0 )
+      array_pop_back( &comp_stack );
+    else if ( strcmp( comp, "." ) != 0 )
+      *(char const**)array_push_back( &comp_stack ) = comp;
   } // for
 
   strbuf_t out_path;
   strbuf_init( &out_path );
 
-  strbuf_putc( &out_path, '/' );
-  for ( size_t i = 0; i < stack.len; ++i ) {
-    char const *const comp = *(char const**)array_at_nocheck( &stack, i );
+  if ( path_is_absolute( in_path.str ) )
+    strbuf_putc( &out_path, '/' );
+  for ( size_t i = 0; i < comp_stack.len; ++i ) {
+    char const *const comp = *(char const**)array_at_nocheck( &comp_stack, i );
     strbuf_paths( &out_path, comp );
   }
 
   strbuf_cleanup( &in_path );
-  array_cleanup( &stack, /*free_fn=*/NULL );
+  array_cleanup( &comp_stack, /*free_fn=*/NULL );
   return strbuf_take( &out_path );
 }
 
