@@ -2,7 +2,7 @@
 **      PJL Library
 **      src/array.c
 **
-**      Copyright (C) 2017-2026  Paul J. Lucas, et al.
+**      Copyright (C) 2017-2026  Paul J. Lucas
 **
 **      This program is free software: you can redistribute it and/or modify
 **      it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ void array_cleanup( array_t *array, array_free_fn_t free_fn ) {
   assert( array != NULL );
 
   if ( free_fn != NULL ) {
-    char *element = (char*)array->elements;
+    char *element = POINTER_CAST( char*, array->elements );
     for ( size_t i = 0; i < array->len; ++i ) {
       (*free_fn)( element );
       element += array->esize;
@@ -63,8 +63,7 @@ bool array_reserve( array_t *array, size_t res_len ) {
   size_t const new_len = array->len + res_len;
   while ( array->cap <= new_len )
     array->cap <<= 1;
-  array->elements =
-    check_realloc( array->elements, array->cap * array->esize );
+  array->elements = check_realloc( array->elements, array->cap * array->esize );
   return true;
 }
 
