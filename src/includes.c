@@ -929,13 +929,13 @@ void includes_print( void ) {
   includes_print_visitor_data ipvd = { .print_local = true };
   rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
 
-  ipvd.print_blank_line = opt_all_includes &&
-    true_clear( &ipvd.printed_any_includes );
+  if ( opt_all_includes && true_clear( &ipvd.printed_any_includes ) )
+    ipvd.print_blank_line = true;
   ipvd.print_local = !ipvd.print_local;
   rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
 
-  ipvd.print_blank_line = opt_all_includes &&
-    true_clear( &ipvd.printed_any_includes );
+  if ( opt_all_includes && true_clear( &ipvd.printed_any_includes ) )
+    ipvd.print_blank_line = true;
   ipvd.print_standard = true;
   rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
 
