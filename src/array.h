@@ -33,12 +33,12 @@
 typedef struct array array_t;
 
 /**
- * The signature for a function passed to array_cleanup() used to free data
- * associated with element (if necessary).
+ * The signature for a function passed to array_cleanup() used to free an
+ * element (if necessary).
  *
- * @param data A pointer to the data to free.
+ * @param element A pointer to the element to free.
  */
-typedef void (*array_free_fn_t)( void *data );
+typedef void (*array_free_fn_t)( void *element );
 
 ////////// structures /////////////////////////////////////////////////////////
 
@@ -60,15 +60,15 @@ struct array {
  *
  * @param array The array tree to clean up.  If NULL, does nothing; otherwise,
  * reinitializes \a array upon completion.
- * @param free_fn A pointer to a function used to free data associated with
- * each element or NULL if unnecessary.
+ * @param free_fn A pointer to a function used to free each element or NULL if
+ * unnecessary.
  *
  * @sa array_init()
  */
 void array_cleanup( array_t *array, array_free_fn_t free_fn );
 
 /**
- * Appends \a data onto the back of \a list.
+ * Appends space for a new element onto the back of \a array.
  *
  * @param array The \ref array to push onto.
  * @return Returns a pointer to the new element.
@@ -91,16 +91,17 @@ bool array_reserve( array_t *array, size_t res_len );
 ////////// inline functions ///////////////////////////////////////////////////
 
 /**
- * Peeks at the element's data at \a offset of \a array.
+ * Gets a pointer to the element at \a offset of \a array.
  *
  * @param array A pointer to the \ref array.
- * @param index The index (starting at 0) of the element's data to get.
- * @return Returns the element's data at \a index.
+ * @param index The index (starting at 0) of the element to get.
+ * @return Returns a pointer to the element at \a index.
  *
  * @warning \a index is _not_ checked to ensure it's &lt; the array's length.
  * A value &ge; the array's length results in undefined behavior.
  *
- * @note This function isn't normally called directly; use array_at() instead.
+ * @note If the type of element is a pointer, then this returns a _pointer to
+ * that pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
  * @sa array_at()
@@ -113,13 +114,15 @@ inline void* array_at_nocheck( array_t const *array, size_t index ) {
 }
 
 /**
- * Peeks at the element's data at \a index of \a array.
+ * Gets a pointer to the element at \a offset of \a array.
  *
  * @param array A pointer to the \ref array.
- * @param index The index (starting at 0) of the element's data to get.
- * @return Returns the element's data at \a index or NULL if \a index &ge;
- * \ref array::len "len".
+ * @param index The index (starting at 0) of the element to get.
+ * @return Returns a pointer to the element at \a index or NULL if \a index
+ * &ge; \ref array::len "len".
  *
+ * @note If the type of element is a pointer, then this returns a _pointer to
+ * that pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
  * @sa array_at_nocheck()
@@ -132,12 +135,14 @@ inline void* array_at( array_t const *array, size_t index ) {
 }
 
 /**
- * Peeks at the element's data at the back of \a array.
+ * Gets a pointer to the element at the back of \a array.
  *
  * @param array A pointer to the \ref array.
- * @return Returns the element's data at the back of \a array or NULL if \a
- * array is empty.
+ * @return Returns a pointer to the element at the back of \a array or NULL if
+ * \a array is empty.
  *
+ * @note If the type of element is a pointer, then this returns a _pointer to
+ * that pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
  * @sa array_at_nocheck()
@@ -150,12 +155,14 @@ inline void* array_back( array_t const *array ) {
 }
 
 /**
- * Peeks at the element's data at the front of \a array.
+ * Gets a pointer to the element at the front of \a array.
  *
  * @param array A pointer to the \ref array.
- * @return Returns the element's data at the front of \a array or NULL if \a
- * array is empty.
+ * @return Returns a pointer to the element at the front of \a array or NULL if
+ * \a array is empty.
  *
+ * @note If the type of element is a pointer, then this returns a _pointer to
+ * that pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
  * @sa array_at_nocheck()
@@ -180,12 +187,14 @@ inline void array_init( array_t *array, size_t esize ) {
 }
 
 /**
- * Pops data from the back of \a array.
+ * Pops an element from the back of \a array.
  *
  * @param array The pointer to the \ref array.
- * @return Returns the element's data from the back of \a array.  The caller is
- * responsible for freeing it if necessary.
+ * @return Returns a pointer to the element at the back of \a array.  The
+ * caller is responsible for freeing it if necessary.
  *
+ * @note If the type of element is a pointer, then this returns a _pointer to
+ * that pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  */
 PJL_DISCARD
