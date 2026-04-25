@@ -61,7 +61,7 @@ bool array_reserve( array_t *array, size_t res_len ) {
   if ( array->cap == 0 )
     array->cap = 2;
   size_t const new_len = array->len + res_len;
-  while ( array->cap <= new_len )
+  while ( array->cap < new_len )
     array->cap <<= 1;
   array->elements = check_realloc( array->elements, array->cap * array->esize );
   return true;
