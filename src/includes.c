@@ -588,11 +588,11 @@ static bool is_assoc_header( tidy_include const *include,
   char const *const include_no_ext = path_no_ext( include->rel_path, path_buf );
   //
   // If this include file's name matches the source file's (without
-  // extensions), it's the .h corresponding to the .c, so sort the this
-  // include file first, e.g.:
+  // extensions), it's the .h associated with the .c, so sort the this include
+  // file first, e.g.:
   //
   //      // foo.c
-  //      #include "foo.h"      // corresponding header sorted first
+  //      #include "foo.h"      // associated header sorted first
   //      #include "a.h"
   //      #include "b.h"
   //
