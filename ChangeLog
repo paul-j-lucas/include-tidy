@@ -1,5 +1,7 @@
 2026-04-25  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c: Now counting duplicate includes as unnecessary even if keep is
+     true.
    * includes.h: Now using tidy_sort_rank rather than int8_t.
    * includes.c, print.c: Fixed #includes.
    * includes.c: Fixed print_blank_line.
