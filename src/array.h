@@ -21,12 +21,28 @@
 #ifndef pjl_array_H
 #define pjl_array_H
 
+/**
+ * @file
+ * Declares a type to represent a dynamic array as well as functions for
+ * manipulating said arrays.
+ */
+
 // local
 #include "pjl_config.h"                 /* must go first */
+
+/// @cond DOXYGEN_IGNORE
 
 // standard
 #include <stdbool.h>
 #include <stddef.h>                     /* for size_t */
+
+/// @endcond
+
+/**
+ * @defgroup array-group Dynamic Array
+ * A type for a dynamic array functions for manipulating said array.
+ * @{
+ */
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
@@ -203,6 +219,8 @@ inline void* array_pop_back( array_t *array ) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/** @} */
 
 #endif /* pjl_array_H */
 /* vim:set et sw=2 ts=2: */

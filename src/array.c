@@ -18,15 +18,29 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @file
+ * Defines functions for manipulating dynamic arrays.
+ */
+
 // local
 #include "pjl_config.h"                 /* must go first */
 #include "array.h"
 #include "util.h"
 
+/// @cond DOXYGEN_IGNORE
+
 // standard
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
+
+/// @endcond
+
+/**
+ * @addtogroup array-group
+ * @{
+ */
 
 ////////// extern functions ///////////////////////////////////////////////////
 
@@ -68,6 +82,8 @@ bool array_reserve( array_t *array, size_t res_len ) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/** @} */
 
 /// @cond DOXYGEN_IGNORE
 
