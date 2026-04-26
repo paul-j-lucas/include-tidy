@@ -1,3 +1,13 @@
+2026-04-26  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c: Now attempting to find associated header only if source file
+     is a .c/.cpp file.
+   * cli_options.c, tidy_util.c, tidy_util.h: Moved get_ext_language().
+   * src/Makefile.am, cli_options.c, tidy_util.c, tidy_util.h: Split out
+     EXT_LANG_MAP into tidy_util.[ch].
+   * include-tidy.c, includes.c, includes.h: Split code out into
+     associated_header_init().
+
 2026-04-25  Paul J. Lucas <paul@lucasmail.org>
 
    * includes.c: Now counting duplicate includes as unnecessary even if keep is
