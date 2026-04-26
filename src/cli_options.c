@@ -30,6 +30,7 @@
 #include "options.h"
 #include "print.h"
 #include "strbuf.h"
+#include "tidy_util.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -63,39 +64,7 @@
 #define FOREACH_CLI_OPTION(VAR, OPTIONS) \
   for ( struct option const *VAR = (OPTIONS); (VAR)->name != NULL; ++(VAR) )
 
-////////// typedefs ///////////////////////////////////////////////////////////
-
-typedef struct ext_lang_map ext_lang_map;
-
-////////// structures /////////////////////////////////////////////////////////
-
-/**
- * Mapping from source file extension to programming language, either C or C++.
- */
-struct ext_lang_map {
-  char const *ext;                      ///< Extension (without the `'.'`).
-  char const *lang;                     ///< Language: either `"c"` or `"c++"`.
-};
-
 ////////// local constants ////////////////////////////////////////////////////
-
-/**
- * Mapping of all common C and C++ filename extensions to programming language.
- */
-static ext_lang_map const EXT_LANG_MAP[] = {
-  { "c",   "c"   },
-  { "c++", "c++" },
-  { "cc",  "c++" },
-  { "cp",  "c++" },
-  { "cpp", "c++" },
-  { "cxx", "c++" },
-  { "h",   "c"   },
-  { "h++", "c++" },
-  { "hh",  "c++" },
-  { "hp",  "c++" },
-  { "hpp", "c++" },
-  { "hxx", "c++" },
-};
 
 /**
  * Command-line options.
@@ -322,7 +291,7 @@ NODISCARD
 static char const* get_ext_language( char const *ext ) {
   assert( ext != NULL );
 
-  FOREACH_ARRAY_ELEMENT( ext_lang_map, m, EXT_LANG_MAP ) {
+  for ( ext_lang_map const *m = EXT_LANG_MAP; m->ext != NULL; ++m ) {
     if ( strcasecmp( ext, m->ext ) == 0 )
       return m->lang;
   } // for
@@ -1058,7 +1027,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       EPRINTF( "\"%s\": unknown", ext );
     EPUTS( " extension; must be one of " );
     bool comma = false;
-    FOREACH_ARRAY_ELEMENT( ext_lang_map, m, EXT_LANG_MAP )
+    for ( ext_lang_map const *m = EXT_LANG_MAP; m->ext != NULL; ++m )
       EPRINTF( true_or_set( &comma ) ? ", %s" : "%s", m->ext );
     EPUTS( "; or use -xc[++]\n" );
     exit( EX_USAGE );
