@@ -751,6 +751,25 @@ static int tidy_include_cmp_for_print( tidy_include const *i_include,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
+void associated_header_init( void ) {
+  char path_buf[ PATH_MAX ];
+  char const *const source_base_name = base_name( arg_source_path );
+  char const *const assoc_file_name =
+    config_get_assoc_header( source_base_name );
+  char const *const source_file_no_ext =
+    path_no_ext( source_base_name, path_buf );
+
+  rb_iterator_t iter;
+  rb_iterator_init( &include_set, &iter );
+  for ( tidy_include *include;
+        (include = rb_iterator_next( &iter )) != NULL; ) {
+    if ( is_assoc_header( include, assoc_file_name, source_file_no_ext ) ) {
+      include->sort_rank = TIDY_SORT_ASSOCIATED;
+      break;
+    }
+  } // for
+}
+
 void implicit_proxies_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
 
@@ -842,13 +861,6 @@ void includes_print( void ) {
     POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_for_print )
   );
 
-  char path_buf[ PATH_MAX ];
-  char const *const source_base_name = base_name( arg_source_path );
-  char const *const assoc_file_name =
-    config_get_assoc_header( source_base_name );
-  char const *const source_file_no_ext =
-    path_no_ext( source_base_name, path_buf );
-
   rb_iterator_t iter;
   rb_iterator_init( &include_set, &iter );
   for ( tidy_include *include;
@@ -857,8 +869,6 @@ void includes_print( void ) {
     if ( (include->is_needed ? (!is_direct || opt_all_includes) : is_direct) ||
          (include->keep && opt_all_includes) ||
          include->lines.len > 1 ) {
-      if ( is_assoc_header( include, assoc_file_name, source_file_no_ext ) )
-        include->sort_rank = TIDY_SORT_ASSOCIATED;
       PJL_DISCARD_RV( rb_tree_insert( &include_set_by_rel_path, include, 0 ) );
       if ( !include->keep ) {
         if ( !include->is_needed )
