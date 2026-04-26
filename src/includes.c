@@ -35,6 +35,7 @@
 #include "red_black.h"
 #include "strbuf.h"
 #include "symbols.h"
+#include "tidy_util.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -44,6 +45,7 @@
 
 // standard
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdbool.h>
@@ -752,6 +754,15 @@ static int tidy_include_cmp_for_print( tidy_include const *i_include,
 ////////// extern functions ///////////////////////////////////////////////////
 
 void associated_header_init( void ) {
+  char const *const ext = path_ext( arg_source_path );
+  if ( ext == NULL )
+    return;
+  char const *const lang = get_ext_language( ext );
+  if ( lang == NULL )
+    return;
+  if ( tolower( ext[0] ) != 'c' )
+    return;
+
   char path_buf[ PATH_MAX ];
   char const *const source_base_name = base_name( arg_source_path );
   char const *const assoc_file_name =
