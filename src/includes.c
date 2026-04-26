@@ -99,9 +99,6 @@ static bool           is_local_include( char const* );
 NODISCARD
 static char*          make_symbols_used_comment( tidy_include const* );
 
-static void           print_include( char const*, char const[static 2],
-                                     char const*, char const* );
-
 NODISCARD
 char const*           tidy_File_getRelativePath( CXFile );
 
@@ -661,39 +658,6 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
   } // for
 
   return strbuf_take( &symbols_buf );
-}
-
-/**
- * Prints an `#include` preprocessor directive.
- *
- * @param sgr_color The SGR color to use, if any.
- * @param inc_delim The include delimiters.
- * @param rel_path The include's relative path.
- * @param comment The comment, if any.
- */
-static void print_include( char const *sgr_color,
-                           char const inc_delim[static 2], char const *rel_path,
-                           char const *comment ) {
-  assert( rel_path != NULL );
-
-  color_start( stdout, sgr_color );
-  int const raw_len = printf(
-    "#include %c%s%c", inc_delim[0], rel_path, inc_delim[1]
-  );
-  if ( unlikely( raw_len < 0 ) ) {
-    color_end( stdout, sgr_color );
-    perror_exit( EX_IOERR );
-  }
-
-  if ( comment != NULL ) {
-    unsigned const column = STATIC_CAST( unsigned, raw_len ) + 1;
-    if ( column < opt_align_column )
-      FPUTNSP( opt_align_column - column, stdout );
-    printf( "%s%s%s", opt_comment_style[0], comment, opt_comment_style[1] );
-  }
-
-  color_end( stdout, sgr_color );
-  PUTC( '\n' );
 }
 
 /**

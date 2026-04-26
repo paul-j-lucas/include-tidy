@@ -144,6 +144,17 @@ void fl_print_warning( char const *tidy_file, int tidy_line,
                        unsigned source_col, char const *format, ... );
 
 /**
+ * Prints an `#include` preprocessor directive.
+ *
+ * @param sgr_color The SGR color to use, if any.
+ * @param inc_delim The include delimiters.
+ * @param rel_path The include's relative path.
+ * @param comment The comment, if any.
+ */
+void print_include( char const *sgr_color, char const inc_delim[static 2],
+                    char const *rel_path, char const *comment );
+
+/**
  * Prints a cursor's "spelling", kind, and source location.
  *
  * @param cursor The cursor to print.
