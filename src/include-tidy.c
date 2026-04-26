@@ -30,11 +30,11 @@
 #include "trans_unit.h"
 #include "util.h"
 
-// system
-#include <sysexits.h>
-
 // libclang
 #include <clang-c/Index.h>
+
+// system
+#include <sysexits.h>
 
 ////////// enumerations ///////////////////////////////////////////////////////
 

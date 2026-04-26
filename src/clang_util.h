@@ -26,12 +26,12 @@
 
 /// @cond DOXYGEN_IGNORE
 
+// libclang
+#include <clang-c/Index.h>
+
 // standard
 #include <stdio.h>                      /* for FILE */
 #include <string.h>                     /* for memcmp(3) */
-
-// libclang
-#include <clang-c/Index.h>
 
 /// @endcond
 

@@ -39,6 +39,9 @@
 
 /// @cond DOXYGEN_IGNORE
 
+// libclang
+#include <clang-c/Index.h>
+
 // standard
 #include <assert.h>
 #include <errno.h>
@@ -47,9 +50,6 @@
 #include <stdlib.h>                     /* for atexit(3) */
 #include <string.h>
 #include <sysexits.h>
-
-// libclang
-#include <clang-c/Index.h>
 
 /// @endcond
 

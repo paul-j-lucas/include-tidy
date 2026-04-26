@@ -38,6 +38,9 @@
 
 /// @cond DOXYGEN_IGNORE
 
+// libclang
+#include <clang-c/Index.h>
+
 // standard
 #include <assert.h>
 #include <errno.h>
@@ -51,9 +54,6 @@
 #include <string.h>
 #include <sysexits.h>
 #include <unistd.h>                     /* for geteuid() */
-
-// libclang
-#include <clang-c/Index.h>
 
 /// @endcond
 

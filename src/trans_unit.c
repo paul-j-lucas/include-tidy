@@ -32,15 +32,15 @@
 
 /// @cond DOXYGEN_IGNORE
 
+// libclang
+#include <clang-c/Index.h>
+
 // standard
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sysexits.h>
-
-// libclang
-#include <clang-c/Index.h>
 
 /// @endcond
 

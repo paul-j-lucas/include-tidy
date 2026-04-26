@@ -50,7 +50,6 @@ enum tidy_error {
   TIDY_ERROR_ALWAYS,                    ///< Always exit with non-zero.
   TIDY_ERROR_NEVER                      ///< Always exit with zero.
 };
-typedef enum tidy_error tidy_error;
 
 /**
  * Verbose mode.
@@ -68,16 +67,14 @@ enum tidy_verbose {
   TIDY_VERBOSE_SOURCE_FILE      = 1 << 8, ///< Source file.
   TIDY_VERBOSE_SYMBOLS          = 1 << 9, ///< Symbols referenced.
 };
+
+////////// typedefs ///////////////////////////////////////////////////////////
+
+typedef enum tidy_error   tidy_error;
 typedef enum tidy_verbose tidy_verbose;
 
-/**
- * Shorthand for either #TIDY_VERBOSE_PROXIES_EXPLICIT or
- * #TIDY_VERBOSE_PROXIES_IMPLICIT.
- */
-#define TIDY_VERBOSE_PROXIES_EITHER \
-  ( TIDY_VERBOSE_PROXIES_EXPLICIT | TIDY_VERBOSE_PROXIES_IMPLICIT )
+////////// extern option variables ////////////////////////////////////////////
 
-// extern option variables
 extern unsigned     opt_align_column;     ///< Comment alignment column.
 extern bool         opt_all_includes;     ///< Print all includes?
 extern color_when   opt_color_when;       ///< When to colorize.
@@ -88,14 +85,15 @@ extern tidy_error   opt_error;            ///< When to exit with non-zero.
 extern unsigned     opt_line_length;      ///< Line length.
 extern tidy_verbose opt_verbose;          ///< Print verbose output?
 
-// extern argument variables
-extern char const  *arg_source_path;      ///< The file being tidied.
-
 #define OPT_ALIGN_COLUMN_DEFAULT  41      /**< Default column alignment. */
 #define OPT_ALIGN_COLUMN_MAX      256     /**< Maximum column alignment. */
 #define OPT_CLANG_DEFAULT         "clang" /**< Default `clang` path. */
 #define OPT_LINE_LENGTH_DEFAULT   80      /**< Default line length. */
 #define OPT_LINE_LENGTH_MAX       256     /**< Maximum line length. */
+
+////////// extern argument variables //////////////////////////////////////////
+
+extern char const  *arg_source_path;      ///< The file being tidied.
 
 ////////// extern functions ///////////////////////////////////////////////////
 

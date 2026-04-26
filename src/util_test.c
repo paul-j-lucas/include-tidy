@@ -23,12 +23,16 @@
 #include "util.h"
 #include "unit_test.h"
 
+/// @cond DOXYGEN_IGNORE
+
 // standard
 #include <limits.h>
 #include <stdbool.h>
 #include <string.h>
 
 #pragma GCC diagnostic ignored "-Wunused-value"
+
+/// @endcond
 
 ////////// test functions /////////////////////////////////////////////////////
 
