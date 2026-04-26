@@ -861,11 +861,13 @@ void includes_print( void ) {
         include->sort_rank = TIDY_SORT_ASSOCIATED;
       PJL_DISCARD_RV( rb_tree_insert( &include_set_by_rel_path, include, 0 ) );
       if ( !include->keep ) {
-        if ( !include->is_needed || include->lines.len > 1 )
+        if ( !include->is_needed )
           ++tidy_includes_unnecessary;
         else if ( !is_direct )
           ++tidy_includes_missing;
       }
+      if ( include->lines.len > 1 )
+        tidy_includes_unnecessary += include->lines.len - 1;
     }
   } // for
 
