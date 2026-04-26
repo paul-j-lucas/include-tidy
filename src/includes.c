@@ -157,15 +157,14 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
 
   if ( included->proxy != NULL )
     goto done;
-  if ( included->depth == 0 )
+  if ( included->depth == 0 )           // directly included: no proxy
     goto done;
-  if ( included->is_local )
+  if ( included->is_local )             // only non-local can have a proxy
     goto done;
 
   tidy_include *const includer = included->includer;
-  if ( includer == NULL )
-    goto done;
-  if ( includer->is_local )
+  assert( includer != NULL );           // since directly included
+  if ( includer->is_local )             // only non-local can be a proxy
     goto done;
 
   if (// This handles a case like:
@@ -176,6 +175,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       // That is, a standard header includes an implementation header that
       // isn't a standard header.  The standard header should be a proxy for
       // the implementation header.
+      //
       !config_is_standard_include( included->rel_path ) ||
 
       // This handles a case like:
@@ -187,6 +187,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       // using Gnulib) eventually does a (non-standard) #include_next to
       // include the real standard one.  The local header should be a proxy
       // for the real one.
+      //
       strcmp( base_name( included->rel_path ),
               base_name( includer->rel_path ) ) == 0 ) {
     included->proxy = includer;
@@ -203,20 +204,14 @@ done:
  * @param inc_delim The include delimiters.
  * @param rel_path The include's relative path.
  * @param comment The comment, if any.
- * @param ipvd The includes_print_visitor_data to use.
  *
  * @sa include_print()
  */
 static void include_directive_print( char const *sgr_color,
                                      char const inc_delim[static 2],
                                      char const *rel_path,
-                                     char const *comment,
-                                     includes_print_visitor_data *ipvd ) {
+                                     char const *comment ) {
   assert( rel_path != NULL );
-  assert( ipvd != NULL );
-
-  if ( true_clear( &ipvd->print_blank_line ) )
-    PUTC( '\n' );
 
   color_start( stdout, sgr_color );
   int const raw_len = printf(
@@ -236,8 +231,6 @@ static void include_directive_print( char const *sgr_color,
 
   color_end( stdout, sgr_color );
   PUTC( '\n' );
-
-  ipvd->printed_any_includes = true;
 }
 
 /**
@@ -259,7 +252,7 @@ static tidy_include* include_find_by_CXFile( CXFile file ) {
 }
 
 /**
- * Prints a tidy_include.
+ * Prints a tidy_include and possibly duplicates, if any.
  *
  * @param include The tidy_include to print.
  * @param ipvd The includes_print_visitor_data to use.
@@ -302,9 +295,10 @@ static void include_print( tidy_include const *include,
 
   get_include_delims( include->is_local, inc_delim );
   if ( print_include ) {
-    include_directive_print(
-      sgr_color, inc_delim, include->rel_path, comment, ipvd
-    );
+    if ( true_clear( &ipvd->print_blank_line ) )
+      PUTC( '\n' );
+    include_directive_print( sgr_color, inc_delim, include->rel_path, comment );
+    ipvd->printed_any_includes = true;
   }
 
   if ( include->lines.len > 1 ) {
@@ -312,11 +306,13 @@ static void include_print( tidy_include const *include,
       opt_comment_style[0] = "// ";
       reset_opt_comment_style = true;
     }
-    unsigned const line_first = *(unsigned*)array_at( &include->lines, 0 );
+    if ( true_clear( &ipvd->print_blank_line ) )
+      PUTC( '\n' );
 
+    unsigned const line_first = *(unsigned*)array_at( &include->lines, 0 );
     for ( unsigned i = 1; i < include->lines.len; ++i ) {
       free( comment );
-      unsigned const line = *(unsigned*)array_at( &include->lines, i );
+      unsigned const line = *(unsigned*)array_at_nocheck( &include->lines, i );
       if ( include->is_needed ) {
         check_asprintf( &comment,
           "DELETE line %u (same as line %u)", line, line_first
@@ -326,9 +322,11 @@ static void include_print( tidy_include const *include,
         check_asprintf( &comment, "DELETE line %u", line );
       }
       include_directive_print(
-        sgr_include_del, inc_delim, include->rel_path, comment, ipvd
+        sgr_include_del, inc_delim, include->rel_path, comment
       );
     } // for
+
+    ipvd->printed_any_includes = true;
   }
 
   free( comment );
