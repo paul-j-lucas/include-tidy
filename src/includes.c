@@ -99,6 +99,9 @@ static bool           is_local_include( char const* );
 NODISCARD
 static char*          make_symbols_used_comment( tidy_include const* );
 
+static void           print_include( char const*, char const[static 2],
+                                     char const*, char const* );
+
 NODISCARD
 char const*           tidy_File_getRelativePath( CXFile );
 
@@ -198,42 +201,6 @@ done:
 }
 
 /**
- * Prints an `#include` preprocessor directive.
- *
- * @param sgr_color The SGR color to use, if any.
- * @param inc_delim The include delimiters.
- * @param rel_path The include's relative path.
- * @param comment The comment, if any.
- *
- * @sa include_print()
- */
-static void include_directive_print( char const *sgr_color,
-                                     char const inc_delim[static 2],
-                                     char const *rel_path,
-                                     char const *comment ) {
-  assert( rel_path != NULL );
-
-  color_start( stdout, sgr_color );
-  int const raw_len = printf(
-    "#include %c%s%c", inc_delim[0], rel_path, inc_delim[1]
-  );
-  if ( unlikely( raw_len < 0 ) ) {
-    color_end( stdout, sgr_color );
-    perror_exit( EX_IOERR );
-  }
-
-  if ( comment != NULL ) {
-    unsigned const column = STATIC_CAST( unsigned, raw_len ) + 1;
-    if ( column < opt_align_column )
-      FPUTNSP( opt_align_column - column, stdout );
-    printf( "%s%s%s", opt_comment_style[0], comment, opt_comment_style[1] );
-  }
-
-  color_end( stdout, sgr_color );
-  PUTC( '\n' );
-}
-
-/**
  * Attempts to find \a file by its unique file ID among the set of files
  * included.
  *
@@ -249,89 +216,6 @@ static tidy_include* include_find_by_CXFile( CXFile file ) {
   };
   rb_node_t const *const found_rb = rb_tree_find( &include_set, &find_include );
   return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
-}
-
-/**
- * Prints a tidy_include and possibly duplicates, if any.
- *
- * @param include The tidy_include to print.
- * @param ipvd The includes_print_visitor_data to use.
- *
- * @sa include_directive_print()
- */
-static void include_print( tidy_include const *include,
-                           includes_print_visitor_data *ipvd ) {
-  assert( include != NULL );
-  assert( ipvd != NULL );
-
-  char       *comment = NULL;
-  char        inc_delim[2];
-  bool const  is_direct = include->depth == 0;
-  bool        print_include = false;
-  bool        reset_opt_comment_style = false;
-  char const *sgr_color = NULL;
-
-  if ( include->is_needed || include->keep ) {
-    if ( is_direct || include->keep ) {
-      print_include = opt_all_includes;
-    }
-    else {
-      sgr_color = sgr_include_add;
-      print_include = true;
-    }
-    if ( print_include && opt_comment_style[0][0] != '\0' )
-      comment = make_symbols_used_comment( include );
-  }
-  else if ( is_direct ) {
-    if ( opt_comment_style[0][0] == '\0' ) {
-      opt_comment_style[0] = "// ";
-      reset_opt_comment_style = true;
-    }
-    unsigned const line = *(unsigned*)array_at( &include->lines, 0 );
-    check_asprintf( &comment, "DELETE LINE %u", line );
-    sgr_color = sgr_include_del;
-    print_include = true;
-  }
-
-  get_include_delims( include->is_local, inc_delim );
-  if ( print_include ) {
-    if ( true_clear( &ipvd->print_blank_line ) )
-      PUTC( '\n' );
-    include_directive_print( sgr_color, inc_delim, include->rel_path, comment );
-    ipvd->printed_any_includes = true;
-  }
-
-  if ( include->lines.len > 1 ) {
-    if ( opt_comment_style[0][0] == '\0' ) {
-      opt_comment_style[0] = "// ";
-      reset_opt_comment_style = true;
-    }
-    if ( true_clear( &ipvd->print_blank_line ) )
-      PUTC( '\n' );
-
-    unsigned const line_first = *(unsigned*)array_at( &include->lines, 0 );
-    for ( unsigned i = 1; i < include->lines.len; ++i ) {
-      free( comment );
-      unsigned const line = *(unsigned*)array_at_nocheck( &include->lines, i );
-      if ( include->is_needed ) {
-        check_asprintf( &comment,
-          "DELETE line %u (same as line %u)", line, line_first
-        );
-      }
-      else {
-        check_asprintf( &comment, "DELETE line %u", line );
-      }
-      include_directive_print(
-        sgr_include_del, inc_delim, include->rel_path, comment
-      );
-    } // for
-
-    ipvd->printed_any_includes = true;
-  }
-
-  free( comment );
-  if ( reset_opt_comment_style )
-    opt_comment_style[0] = "";
 }
 
 /**
@@ -606,7 +490,72 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
     verbose_printf( "%s\n", arg_source_path );
   }
 
-  include_print( include, ipvd );
+  char       *comment = NULL;
+  bool        do_print_include = false;
+  char        inc_delim[2];
+  bool const  is_direct = include->depth == 0;
+  bool        reset_opt_comment_style = false;
+  char const *sgr_color = NULL;
+
+  if ( include->is_needed || include->keep ) {
+    if ( is_direct || include->keep ) {
+      do_print_include = opt_all_includes;
+    }
+    else {
+      sgr_color = sgr_include_add;
+      do_print_include = true;
+    }
+    if ( do_print_include && opt_comment_style[0][0] != '\0' )
+      comment = make_symbols_used_comment( include );
+  }
+  else if ( is_direct ) {
+    if ( opt_comment_style[0][0] == '\0' ) {
+      opt_comment_style[0] = "// ";
+      reset_opt_comment_style = true;
+    }
+    unsigned const line = *(unsigned*)array_at( &include->lines, 0 );
+    check_asprintf( &comment, "DELETE LINE %u", line );
+    sgr_color = sgr_include_del;
+    do_print_include = true;
+  }
+
+  get_include_delims( include->is_local, inc_delim );
+  if ( do_print_include ) {
+    if ( true_clear( &ipvd->print_blank_line ) )
+      PUTC( '\n' );
+    print_include( sgr_color, inc_delim, include->rel_path, comment );
+    ipvd->printed_any_includes = true;
+  }
+
+  if ( include->lines.len > 1 ) {
+    if ( opt_comment_style[0][0] == '\0' ) {
+      opt_comment_style[0] = "// ";
+      reset_opt_comment_style = true;
+    }
+    if ( true_clear( &ipvd->print_blank_line ) )
+      PUTC( '\n' );
+
+    unsigned const line_first = *(unsigned*)array_at( &include->lines, 0 );
+    for ( unsigned i = 1; i < include->lines.len; ++i ) {
+      free( comment );
+      unsigned const line = *(unsigned*)array_at_nocheck( &include->lines, i );
+      if ( include->is_needed ) {
+        check_asprintf( &comment,
+          "DELETE line %u (same as line %u)", line, line_first
+        );
+      }
+      else {
+        check_asprintf( &comment, "DELETE line %u", line );
+      }
+      print_include( sgr_include_del, inc_delim, include->rel_path, comment );
+    } // for
+
+    ipvd->printed_any_includes = true;
+  }
+
+  free( comment );
+  if ( reset_opt_comment_style )
+    opt_comment_style[0] = "";
 
 skip:
   return false;
@@ -712,6 +661,39 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
   } // for
 
   return strbuf_take( &symbols_buf );
+}
+
+/**
+ * Prints an `#include` preprocessor directive.
+ *
+ * @param sgr_color The SGR color to use, if any.
+ * @param inc_delim The include delimiters.
+ * @param rel_path The include's relative path.
+ * @param comment The comment, if any.
+ */
+static void print_include( char const *sgr_color,
+                           char const inc_delim[static 2], char const *rel_path,
+                           char const *comment ) {
+  assert( rel_path != NULL );
+
+  color_start( stdout, sgr_color );
+  int const raw_len = printf(
+    "#include %c%s%c", inc_delim[0], rel_path, inc_delim[1]
+  );
+  if ( unlikely( raw_len < 0 ) ) {
+    color_end( stdout, sgr_color );
+    perror_exit( EX_IOERR );
+  }
+
+  if ( comment != NULL ) {
+    unsigned const column = STATIC_CAST( unsigned, raw_len ) + 1;
+    if ( column < opt_align_column )
+      FPUTNSP( opt_align_column - column, stdout );
+    printf( "%s%s%s", opt_comment_style[0], comment, opt_comment_style[1] );
+  }
+
+  color_end( stdout, sgr_color );
+  PUTC( '\n' );
 }
 
 /**
