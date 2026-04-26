@@ -40,6 +40,7 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <sysexits.h>
 
 /// @endcond
 

@@ -44,7 +44,6 @@
 #include <errno.h>
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>                     /* for atexit(3) */
 #include <string.h>
 #include <sysexits.h>
