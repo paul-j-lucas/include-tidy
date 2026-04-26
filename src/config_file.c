@@ -357,11 +357,11 @@ static void associated_header_parse( char const *config_path,
   source_header new_sh = { .source_rel_path = table->name };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &source_header_map, &new_sh, sizeof new_sh );
+  if ( !rv_rbi.inserted )
+    return;
   source_header *const sh = RB_DINT( rv_rbi.node );
-  if ( rv_rbi.inserted ) {
-    sh->source_rel_path = check_strdup( table->name );
-    sh->header_rel_path = check_strdup( string_value );
-  }
+  sh->source_rel_path = check_strdup( table->name );
+  sh->header_rel_path = check_strdup( string_value );
 }
 
 /**
