@@ -20,7 +20,7 @@
 
 /**
  * @file
- * Defines miscellanous stuff.
+ * Defines miscellanous **include-tidy**-specific constants and functions.
  */
 
 // local
@@ -30,7 +30,9 @@
 /// @cond DOXYGEN_IGNORE
 
 // standard
+#include <assert.h>
 #include <stddef.h>
+#include <strings.h>
 
 /// @endcond
 
@@ -56,6 +58,19 @@ ext_lang_map const EXT_LANG_MAP[] = {
   { "hxx", "c++" },
   { NULL,  NULL  }
 };
+
+////////// extern functions ///////////////////////////////////////////////////
+
+char const* get_ext_language( char const *ext ) {
+  assert( ext != NULL );
+
+  for ( ext_lang_map const *m = EXT_LANG_MAP; m->ext != NULL; ++m ) {
+    if ( strcasecmp( ext, m->ext ) == 0 )
+      return m->lang;
+  } // for
+
+  return NULL;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

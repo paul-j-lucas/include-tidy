@@ -43,7 +43,6 @@
 #include <stdio.h>
 #include <stdlib.h>                     /* for exit() */
 #include <string.h>                     /* for str...() */
-#include <strings.h>                    /* for strcasecmp() */
 #include <sysexits.h>
 #include <unistd.h>                     /* for chdir(2) */
 
@@ -279,24 +278,6 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
   } // for
 
   return OPT_CLANG_DEFAULT;
-}
-
-/**
- * Gets the language from \a ext.
- *
- * @param ext A filename extension (without the dot).
- * @return Returns either `"c"` (for C) or `"c++"` (for C++).
- */
-NODISCARD
-static char const* get_ext_language( char const *ext ) {
-  assert( ext != NULL );
-
-  for ( ext_lang_map const *m = EXT_LANG_MAP; m->ext != NULL; ++m ) {
-    if ( strcasecmp( ext, m->ext ) == 0 )
-      return m->lang;
-  } // for
-
-  return NULL;
 }
 
 /**

@@ -31,7 +31,7 @@
 
 /**
  * @defgroup tidy-util-group Include Tidy Utility
- * Miscellanous **include-tidy**-specific stuff.
+ * Miscellanous **include-tidy**-specific types, constants, and functions.
  * @{
  */
 
@@ -49,7 +49,7 @@ struct ext_lang_map {
   char const *lang;                     ///< Language: either `"c"` or `"c++"`.
 };
 
-////////// local constants ////////////////////////////////////////////////////
+////////// extern constants ///////////////////////////////////////////////////
 
 /**
  * Mapping of all common C and C++ filename extensions to programming language.
@@ -57,6 +57,17 @@ struct ext_lang_map {
  * @remarks The last element has NULL values.
  */
 extern ext_lang_map const EXT_LANG_MAP[];
+
+////////// extern functions ///////////////////////////////////////////////////
+
+/**
+ * Gets the language from \a ext.
+ *
+ * @param ext A filename extension (without the dot).
+ * @return Returns either `"c"` (for C) or `"c++"` (for C++).
+ */
+NODISCARD
+char const* get_ext_language( char const *ext );
 
 ///////////////////////////////////////////////////////////////////////////////
 
