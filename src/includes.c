@@ -751,6 +751,18 @@ static int tidy_include_cmp_for_print( tidy_include const *i_include,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
+void implicit_proxies_init( CXTranslationUnit tu ) {
+  ASSERT_RUN_ONCE();
+
+  CXCursor const cursor = clang_getTranslationUnitCursor( tu );
+  clang_visitChildren( cursor, &implicit_proxies_visitor, /*data=*/NULL );
+
+  if ( (opt_verbose & TIDY_VERBOSE_PROXIES_EXPLICIT) != 0 )
+    include_proxies_dump( /*want_explicit=*/true );
+  if ( (opt_verbose & TIDY_VERBOSE_PROXIES_IMPLICIT) != 0 )
+    include_proxies_dump( /*want_explicit=*/false );
+}
+
 tidy_include const* include_add_symbol( CXFile include_file,
                                         tidy_symbol *sym ) {
   assert( include_file != NULL );
@@ -819,18 +831,6 @@ void includes_init( CXTranslationUnit tu ) {
   clang_visitChildren( cursor, &includes_init_visitor, &iivd );
   if ( iivd.verbose_printed )
     verbose_printf( "\n" );
-}
-
-void includes_init_implicit_proxies( CXTranslationUnit tu ) {
-  ASSERT_RUN_ONCE();
-
-  CXCursor const cursor = clang_getTranslationUnitCursor( tu );
-  clang_visitChildren( cursor, &implicit_proxies_visitor, /*data=*/NULL );
-
-  if ( (opt_verbose & TIDY_VERBOSE_PROXIES_EXPLICIT) != 0 )
-    include_proxies_dump( /*want_explicit=*/true );
-  if ( (opt_verbose & TIDY_VERBOSE_PROXIES_IMPLICIT) != 0 )
-    include_proxies_dump( /*want_explicit=*/false );
 }
 
 void includes_print( void ) {

@@ -110,6 +110,15 @@ extern unsigned tidy_includes_unnecessary;
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * Initializes the implicit include proxies for the given translation unit.
+ *
+ * @param tu The translation unit to use.
+ *
+ * @sa includes_init()
+ */
+void implicit_proxies_init( CXTranslationUnit tu );
+
+/**
  * Adds \a sym to the set of symbols that are used in the file being tidied and
  * declared in \a include_file.
  *
@@ -147,18 +156,9 @@ bool include_proxy_would_cycle( tidy_include const *from_include,
  *
  * @param tu The translation unit to use.
  *
- * @sa includes_init_implicit_proxies()
+ * @sa implicit_proxies_init()
  */
 void includes_init( CXTranslationUnit tu );
-
-/**
- * Initializes the implicit include proxies for the given translation unit.
- *
- * @param tu The translation unit to use.
- *
- * @sa includes_init()
- */
-void includes_init_implicit_proxies( CXTranslationUnit tu );
 
 /**
  * Prints include files.
