@@ -39,7 +39,6 @@
 
 // standard
 #include <stdbool.h>
-#include <stdint.h>
 
 /// @endcond
 
@@ -59,7 +58,7 @@
  * members whose designated initializers are omitted defaults to 0.  Given
  * that, the other values must be negative to sort before the default.
  */
-enum tidy_include_sort_rank {
+enum tidy_sort_rank {
   TIDY_SORT_FIRST       = -2,           ///< The very first `#include`.
   TIDY_SORT_ASSOCIATED  = -1,           ///< After first, but before default.
   TIDY_SORT_DEFAULT     =  0            ///< Default sort rank.
@@ -67,7 +66,8 @@ enum tidy_include_sort_rank {
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-typedef struct tidy_include tidy_include;
+typedef struct  tidy_include    tidy_include;
+typedef enum    tidy_sort_rank  tidy_sort_rank;
 
 ////////// structures /////////////////////////////////////////////////////////
 
@@ -83,11 +83,11 @@ struct tidy_include {
   tidy_include   *proxy;                ///< Proxy include, if any.
   unsigned        depth;                ///< Include depth.
   array_t         lines;                ///< Line number(s) included from.
+  tidy_sort_rank  sort_rank;            ///< Sorting rank.
   bool            keep;                 ///< Keep even if unnecessary?
   bool            is_local;             ///< Local include file?
   bool            is_needed;            ///< Include needed?
   bool            is_proxy_explicit;    ///< Was \ref proxy explicitly added?
-  int8_t          sort_rank;            ///< Sorting rank.
   rb_tree_t       symbol_set;           ///< Symbols referenced from this file.
 };
 
