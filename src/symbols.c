@@ -113,6 +113,29 @@ void get_fully_scoped_name( CXCursor sym_cursor, strbuf_t *name_buf ) {
 }
 
 /**
+ * Gets the file the given symbol is in, if any.
+ *
+ * @param sym_cursor The cursor for the symbol.
+ * @return Returns the file the symbol is in, if any.
+ */
+NODISCARD
+static CXFile get_symbol_file( CXCursor sym_cursor ) {
+  CXSourceLocation const  sym_loc = clang_getCursorLocation( sym_cursor );
+  CXFile                  sym_file = tidy_getSpellingLocation_File( sym_loc );
+
+  if ( sym_file == NULL ) {
+    //
+    // If tidy_getSpellingLocation_File() returns a NULL file, it can mean that
+    // the symbol was formed via preprocessor token pasting, e.g., foo_ ## bar.
+    // Fall back to tidy_getFileLocation_File().
+    //
+    sym_file = tidy_getFileLocation_File( sym_loc );
+  }
+
+  return sym_file;
+}
+
+/**
  * Gets the "underlying" cursor for \a cursor, if any.
  *
  * @remarks
@@ -177,9 +200,7 @@ NODISCARD
 static bool is_symbol_in_file( CXCursor sym_cursor, CXFile file ) {
   assert( file != NULL );
 
-  CXSourceLocation const  sym_loc = clang_getCursorLocation( sym_cursor );
-  CXFile const            sym_file = tidy_getSpellingLocation_File( sym_loc );
-
+  CXFile const sym_file = get_symbol_file( sym_cursor );
   return sym_file != NULL && clang_File_isEqual( sym_file, file );
 }
 
@@ -194,15 +215,7 @@ static void maybe_add_symbol( CXCursor sym_cursor,
                               symbols_init_visitor_data *sivd ) {
   assert( sivd != NULL );
 
-  CXSourceLocation const  sym_loc = clang_getCursorLocation( sym_cursor );
-  CXFile                  sym_file = tidy_getSpellingLocation_File( sym_loc );
-
-  if ( sym_file == NULL ) {
-    // If tidy_getSpellingLocation_File() returns a NULL file, it can mean that
-    // the symbol was formed via preprocessor token pasting, e.g., foo_ ## bar.
-    // Fall back to tidy_getFileLocation_File().
-    sym_file = tidy_getFileLocation_File( sym_loc );
-  }
+  CXFile const sym_file = get_symbol_file( sym_cursor );
   if ( sym_file == NULL )
     return;
 
