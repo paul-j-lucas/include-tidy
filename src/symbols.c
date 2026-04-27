@@ -113,7 +113,7 @@ void get_fully_scoped_name( CXCursor sym_cursor, strbuf_t *name_buf ) {
 }
 
 /**
- * Gets the "underlying" cursor for \a cursor, if any, and incomplete.
+ * Gets the "underlying" cursor for \a cursor, if any.
  *
  * @remarks
  * @parblock
@@ -125,13 +125,6 @@ void get_fully_scoped_name( CXCursor sym_cursor, strbuf_t *name_buf ) {
  *
  * where \a cursor is at a use of `foo_t`, we want to get the cursor for the
  * underlying type, in this case for `foo`.
- *
- * However, we care only when the underlying type is incomplete.  For the above
- * case, `foo` would be incomplete only if the compiler hasn't seen the its
- * definition.  If it is incomplete, then the source file needs to include the
- * file containing said definition; but if it's complete, then the source file
- * either included said file or defines the type itself, so we don't care about
- * the underlying type.
  *
  * Additionally, for a case like:
  *
@@ -166,16 +159,7 @@ static CXCursor get_underlying_cursor( CXCursor cursor ) {
       } // switch
     } while ( is_via_ptr_ref );
 
-    // In libclang, the way to know whether a type is incomplete is to try to
-    // get its size.
-    switch ( clang_Type_getSizeOf( type ) ) {
-      case CXTypeLayoutError_Dependent: // C++ template parameter
-      case CXTypeLayoutError_Invalid:   // e.g., void
-        break;
-      case CXTypeLayoutError_Incomplete:
-        underlying_cursor = clang_getTypeDeclaration( type );
-        break;
-    } // case
+    underlying_cursor = clang_getTypeDeclaration( type );
   }
 
   return underlying_cursor;
@@ -338,7 +322,9 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 
       maybe_add_symbol( first_cursor, sivd );
       CXCursor const underlying_cursor = get_underlying_cursor( cursor );
-      if ( !clang_Cursor_isNull( underlying_cursor ) )
+      if ( clang_Cursor_isNull( underlying_cursor ) )
+        break;
+      if ( is_symbol_in_file( underlying_cursor, sivd->source_file ) )
         maybe_add_symbol( underlying_cursor, sivd );
       break;
 
