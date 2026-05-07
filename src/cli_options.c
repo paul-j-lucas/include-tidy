@@ -807,8 +807,8 @@ static void print_usage( int status ) {
 static void print_version( void ) {
   PUTS(
     PACKAGE_STRING "\n"
-    "Copyright (C) " INCLUDE_TIDY_COPYRIGHT_YEAR " " INCLUDE_TIDY_AUTHOR "\n"
-    "License " INCLUDE_TIDY_LICENSE " <" INCLUDE_TIDY_LICENSE_URL ">.\n"
+    "Copyright (C) " TIDY_COPYRIGHT_YEAR " " TIDY_AUTHOR "\n"
+    "License " TIDY_LICENSE " <" TIDY_LICENSE_URL ">.\n"
     "This is free software: you are free to change and redistribute it.\n"
     "There is NO WARRANTY to the extent permitted by law.\n"
   );

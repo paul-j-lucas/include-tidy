@@ -38,33 +38,28 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Program name when composing or deciphering C.
- */
-#define INCLUDE_TIDY                    PACKAGE
-
-/**
  * **include-tidy** latest copyright year.
  */
-#define INCLUDE_TIDY_COPYRIGHT_YEAR     "2026"
+#define TIDY_COPYRIGHT_YEAR       "2026"
 
 /**
  * **include-tidy** license.
  *
- * @sa #INCLUDE_TIDY_LICENSE_URL
+ * @sa #TIDY_LICENSE_URL
  */
-#define INCLUDE_TIDY_LICENSE            "GPLv3+: GNU GPL version 3 or later"
+#define TIDY_LICENSE              "GPLv3+: GNU GPL version 3 or later"
 
 /**
  * **include-tidy** license URL.
  *
- * @sa #INCLUDE_TIDY_LICENSE
+ * @sa #TIDY_LICENSE
  */
-#define INCLUDE_TIDY_LICENSE_URL        "https://gnu.org/licenses/gpl.html"
+#define TIDY_LICENSE_URL          "https://gnu.org/licenses/gpl.html"
 
 /**
  * **include-tidy** primary author.
  */
-#define INCLUDE_TIDY_AUTHOR             "Paul J. Lucas"
+#define TIDY_AUTHOR               "Paul J. Lucas"
 
 ///////////////////////////////////////////////////////////////////////////////
 
