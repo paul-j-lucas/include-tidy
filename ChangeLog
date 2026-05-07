@@ -1,3 +1,12 @@
+2026-05-07  Paul J. Lucas <paul@lucasmail.org>
+
+   * man/man1/include-tidy.1: s/40/41/
+
+2026-04-27  Paul J. Lucas <paul@lucasmail.org>
+
+   * symbols.c: Added get_symbol_file().
+   * symbols.c: No longer care about underlying type.
+
 2026-04-26  Paul J. Lucas <paul@lucasmail.org>
 
    * includes.c: Now attempting to find associated header only if source file
