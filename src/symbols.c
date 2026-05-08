@@ -104,29 +104,21 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
  */
 NODISCARD
 static CXCursor get_underlying_cursor( CXCursor cursor ) {
-  enum CXCursorKind const kind = clang_getCursorKind( cursor );
-  CXCursor                underlying_cursor = clang_getNullCursor();
+  if ( clang_getCursorKind( cursor ) != CXCursor_TypeRef )
+    return clang_getNullCursor();
 
-  if ( kind == CXCursor_TypeRef ) {
-    bool    is_via_ptr_ref = true;
-    CXType  type = clang_getCanonicalType( clang_getCursorType( cursor ) );
-
-    do {
-      switch ( type.kind ) {
-        case CXType_Pointer:
-        case CXType_LValueReference:
-        case CXType_RValueReference:
-          type = clang_getPointeeType( type );
-          break;
-        default:
-          is_via_ptr_ref = false;
-      } // switch
-    } while ( is_via_ptr_ref );
-
-    underlying_cursor = clang_getTypeDeclaration( type );
-  }
-
-  return underlying_cursor;
+  CXType type = clang_getCanonicalType( clang_getCursorType( cursor ) );
+  for (;;) {
+    switch ( type.kind ) {
+      case CXType_Pointer:
+      case CXType_LValueReference:
+      case CXType_RValueReference:
+        type = clang_getPointeeType( type );
+        break;
+      default:
+        return clang_getTypeDeclaration( type );
+    } // switch
+  } // for
 }
 
 /**
