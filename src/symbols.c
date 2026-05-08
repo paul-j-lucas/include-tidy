@@ -90,25 +90,23 @@ void get_fully_scoped_name( CXCursor sym_cursor, strbuf_t *name_buf ) {
   CXCursor const    parent_cursor = clang_getCursorSemanticParent( sym_cursor );
   enum CXCursorKind parent_kind = clang_getCursorKind( parent_cursor );
   CXString          sym_name_cxs;
-  char const       *sym_name;
 
   if ( !clang_isInvalid( parent_kind ) &&
        parent_kind != CXCursor_TranslationUnit ) {
     sym_name_cxs = clang_getCursorSpelling( parent_cursor );
-    sym_name = clang_getCString( sym_name_cxs );
-    if ( sym_name != NULL ) {
+    bool const has_parent = clang_getCString( sym_name_cxs ) != NULL;
+    clang_disposeString( sym_name_cxs );
+    if ( has_parent ) {
       // Recurse all the way up to the outermost scope ...
       get_fully_scoped_name( parent_cursor, name_buf );
       // ... then on the way back down, add the "::" ...
       strbuf_putsn( name_buf, "::", STRLITLEN( "::" ) );
     }
-    clang_disposeString( sym_name_cxs );
   }
 
   // ... followed by the scope name.
   sym_name_cxs = clang_getCursorSpelling( sym_cursor );
-  sym_name = clang_getCString( sym_name_cxs );
-  strbuf_puts( name_buf, sym_name );
+  strbuf_puts( name_buf, clang_getCString( sym_name_cxs ) );
   clang_disposeString( sym_name_cxs );
 }
 
