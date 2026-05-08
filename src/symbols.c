@@ -77,51 +77,6 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Gets the "underlying" cursor for \a cursor, if any.
- *
- * @remarks
- * @parblock
- * For a case like:
- *
- *      typedef struct foo foo_t;
- *      // ...
- *      foo_t x;                        // cursor is at foo_t here
- *
- * where \a cursor is at a use of `foo_t`, we want to get the cursor for the
- * underlying type, in this case for `foo`.
- *
- * Additionally, for a case like:
- *
- *      typedef struct foo *foo_ptr_t;
- *
- * we have to traverse through all pointers (and references for C++) to get to
- * the cursor for the underlying type.
- * @endparblock
- *
- * @param cursor The original cursor to get the underlying cursor for.
- * @return Returns the underlying cursor for \a cursor, if necessary, or the
- * null cursor if not or none.
- */
-NODISCARD
-static CXCursor get_underlying_cursor( CXCursor cursor ) {
-  if ( clang_getCursorKind( cursor ) != CXCursor_TypeRef )
-    return clang_getNullCursor();
-
-  CXType type = clang_getCanonicalType( clang_getCursorType( cursor ) );
-  for (;;) {
-    switch ( type.kind ) {
-      case CXType_Pointer:
-      case CXType_LValueReference:
-      case CXType_RValueReference:
-        type = clang_getPointeeType( type );
-        break;
-      default:
-        return clang_getTypeDeclaration( type );
-    } // switch
-  } // for
-}
-
-/**
  * Helper function for symbols_init_visitor that maybe adds a symbol to the
  * global set.
  *
@@ -248,7 +203,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
         break;
 
       maybe_add_symbol( first_cursor, sivd );
-      CXCursor const underlying_cursor = get_underlying_cursor( cursor );
+      CXCursor const underlying_cursor = tidy_get_Cursor_underlying( cursor );
       if ( clang_Cursor_isNull( underlying_cursor ) )
         break;
       if ( tidy_is_Cursor_in_File( underlying_cursor, sivd->source_file ) )

@@ -124,6 +124,35 @@ NODISCARD
 char* tidy_getCursorSpelling( CXCursor cursor );
 
 /**
+ * Gets the "underlying" cursor for \a cursor, if any.
+ *
+ * @remarks
+ * @parblock
+ * For a case like:
+ *
+ *      typedef struct foo foo_t;
+ *      // ...
+ *      foo_t x;                        // cursor is at foo_t here
+ *
+ * where \a cursor is at a use of `foo_t`, we want to get the cursor for the
+ * underlying type, in this case for `foo`.
+ *
+ * Additionally, for a case like:
+ *
+ *      typedef struct foo *foo_ptr_t;
+ *
+ * we have to traverse through all pointers (and references for C++) to get to
+ * the cursor for the underlying type.
+ * @endparblock
+ *
+ * @param cursor The original cursor to get the underlying cursor for.
+ * @return Returns the underlying cursor for \a cursor, if necessary, or the
+ * null cursor if not or none.
+ */
+NODISCARD
+CXCursor tidy_get_Cursor_underlying( CXCursor cursor );
+
+/**
  * Calls `clang_getFileLocation()` and returns the `CXFile`.
  *
  * @param loc The `CXSourceLocation` to use.
