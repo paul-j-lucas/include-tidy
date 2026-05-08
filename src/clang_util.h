@@ -93,6 +93,15 @@ NODISCARD
 CXString tidy_File_getRealPathName( CXFile file );
 
 /**
+ * Gets the file the given cursor is in, if any.
+ *
+ * @param cursor The cursor to use.
+ * @return Returns the file \a cursor is in, if any.
+ */
+NODISCARD
+CXFile tidy_getCursorLocation_File( CXCursor cursor );
+
+/**
  * Calls `clang_getCursorSpelling()` and `clang_getCString()`.
  *
  * @param cursor The cursor to use.
@@ -127,8 +136,8 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file );
 /**
  * Calls `clang_getSpellingLocation()` and returns the `CXFile`.
  *
- * @param loc The `CXSourceLocation` to use.
- * @return Returns its `CXFile`.
+ * @param loc The location to use.
+ * @return Returns the file of \a loc.
  *
  * @sa tidy_getFileLocation_File()
  */

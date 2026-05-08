@@ -161,6 +161,22 @@ CXString tidy_File_getRealPathName( CXFile file ) {
   return abs_path_cxs;
 }
 
+CXFile tidy_getCursorLocation_File( CXCursor cursor ) {
+  CXSourceLocation const  loc = clang_getCursorLocation( cursor );
+  CXFile                  file = tidy_getSpellingLocation_File( loc );
+
+  if ( file == NULL ) {
+    //
+    // If tidy_getSpellingLocation_File() returns a NULL file, it can mean that
+    // the symbol was formed via preprocessor token pasting, e.g., foo_ ## bar.
+    // Fall back to tidy_getFileLocation_File().
+    //
+    file = tidy_getFileLocation_File( loc );
+  }
+
+  return file;
+}
+
 char* tidy_getCursorSpelling( CXCursor cursor ) {
   CXString cxs = clang_getCursorSpelling( cursor );
   char *const s = check_strdup( clang_getCString( cxs ) );
