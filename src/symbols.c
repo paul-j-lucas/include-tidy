@@ -32,7 +32,6 @@
 #include "options.h"
 #include "print.h"
 #include "red_black.h"
-#include "strbuf.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -76,39 +75,6 @@ static void visit_MacroDefinition( CXCursor, symbols_init_visitor_data* );
 static rb_tree_t symbol_set;            ///< Set of symbols.
 
 ////////// local functions ////////////////////////////////////////////////////
-
-/**
- * Given a cursor at a local name of an enumeration, class, class member, class
- * member function, structure, union, or namespace, gets the fully scoped name.
- *
- * @param sym_cursor The cursor at a symbol.
- * @param name_buf The strbuf to use.
- */
-void get_fully_scoped_name( CXCursor sym_cursor, strbuf_t *name_buf ) {
-  assert( name_buf != NULL );
-
-  CXCursor const    parent_cursor = clang_getCursorSemanticParent( sym_cursor );
-  enum CXCursorKind parent_kind = clang_getCursorKind( parent_cursor );
-  CXString          sym_name_cxs;
-
-  if ( !clang_isInvalid( parent_kind ) &&
-       parent_kind != CXCursor_TranslationUnit ) {
-    sym_name_cxs = clang_getCursorSpelling( parent_cursor );
-    bool const has_parent = clang_getCString( sym_name_cxs ) != NULL;
-    clang_disposeString( sym_name_cxs );
-    if ( has_parent ) {
-      // Recurse all the way up to the outermost scope ...
-      get_fully_scoped_name( parent_cursor, name_buf );
-      // ... then on the way back down, add the "::" ...
-      strbuf_putsn( name_buf, "::", STRLITLEN( "::" ) );
-    }
-  }
-
-  // ... followed by the scope name.
-  sym_name_cxs = clang_getCursorSpelling( sym_cursor );
-  strbuf_puts( name_buf, clang_getCString( sym_name_cxs ) );
-  clang_disposeString( sym_name_cxs );
-}
 
 /**
  * Gets the "underlying" cursor for \a cursor, if any.
@@ -194,11 +160,8 @@ static void maybe_add_symbol( CXCursor sym_cursor,
     case CXCursor_Namespace:
     case CXCursor_StructDecl:
     case CXCursor_UnionDecl:
-    case CXCursor_VarDecl:;             // static members of class or namespace
-      strbuf_t scoped_name_buf;
-      strbuf_init( &scoped_name_buf );
-      get_fully_scoped_name( sym_cursor, &scoped_name_buf );
-      sym_name = strbuf_take( &scoped_name_buf );
+    case CXCursor_VarDecl:              // static members of class or namespace
+      sym_name = tidy_get_Cursor_scoped_name( sym_cursor );
       break;
     default:
       sym_name = tidy_getCursorSpelling( sym_cursor );

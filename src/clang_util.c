@@ -21,6 +21,7 @@
 // local
 #include "pjl_config.h"
 #include "clang_util.h"
+#include "strbuf.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -115,6 +116,40 @@ static fnv1a_t fnv1a_s( char const *s ) {
   while ( *s != '\0' )
     hash = FNV1A_PRIME * (hash ^ STATIC_CAST( uint8_t, *s++ ));
   return hash;
+}
+
+/**
+ * Given a cursor at a local name of an enumeration, class, class data member,
+ * class member function, structure, union, or namespace, gets the fully scoped
+ * name.
+ *
+ * @param ursor The cursor at a symbol.
+ * @param sbuf The strbuf to use.
+ */
+static void get_scoped_name_impl( CXCursor cursor, strbuf_t *sbuf ) {
+  assert( sbuf != NULL );
+
+  CXCursor const    parent_cursor = clang_getCursorSemanticParent( cursor );
+  enum CXCursorKind parent_kind = clang_getCursorKind( parent_cursor );
+  CXString          name_cxs;
+
+  if ( !clang_isInvalid( parent_kind ) &&
+       parent_kind != CXCursor_TranslationUnit ) {
+    name_cxs = clang_getCursorSpelling( parent_cursor );
+    bool const has_parent = clang_getCString( name_cxs ) != NULL;
+    clang_disposeString( name_cxs );
+    if ( has_parent ) {
+      // Recurse all the way up to the outermost scope ...
+      get_scoped_name_impl( parent_cursor, sbuf );
+      // ... then on the way back down, add the "::" ...
+      strbuf_putsn( sbuf, "::", STRLITLEN( "::" ) );
+    }
+  }
+
+  // ... followed by the scope name.
+  name_cxs = clang_getCursorSpelling( cursor );
+  strbuf_puts( sbuf, clang_getCString( name_cxs ) );
+  clang_disposeString( name_cxs );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -214,6 +249,13 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
     };
   }
   return id;
+}
+
+char const* tidy_get_Cursor_scoped_name( CXCursor cursor ) {
+  strbuf_t sbuf;
+  strbuf_init( &sbuf );
+  get_scoped_name_impl( cursor, &sbuf );
+  return strbuf_take( &sbuf );
 }
 
 CXFile tidy_getSpellingLocation_File( CXSourceLocation loc ) {
