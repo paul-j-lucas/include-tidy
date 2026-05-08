@@ -218,16 +218,16 @@ static void maybe_add_symbol( CXCursor sym_cursor,
 
   if ( include_file == NULL )
     include_file = sym_file;
-  tidy_include const *const added_include =
+  tidy_include const *const include_added_to =
     include_add_symbol( include_file, symbol );
 
   if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
     if ( false_set( &sivd->verbose_printed ) )
       verbose_printf( "symbols:\n" );
 
-    if ( added_include != NULL ) {
+    if ( include_added_to != NULL ) {
       verbose_printf(
-        "  %s -> %s (added)\n", symbol->name, added_include->abs_path
+        "  %s -> %s\n", symbol->name, include_added_to->abs_path
       );
     }
     else {
