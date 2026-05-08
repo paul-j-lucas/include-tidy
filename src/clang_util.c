@@ -251,14 +251,14 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
   return id;
 }
 
-char const* tidy_get_Cursor_scoped_name( CXCursor cursor ) {
+char const* tidy_getCursorScopedName( CXCursor cursor ) {
   strbuf_t sbuf;
   strbuf_init( &sbuf );
   get_scoped_name_impl( cursor, &sbuf );
   return strbuf_take( &sbuf );
 }
 
-CXCursor tidy_get_Cursor_underlying( CXCursor cursor ) {
+CXCursor tidy_getCursorUnderlying( CXCursor cursor ) {
   if ( clang_getCursorKind( cursor ) != CXCursor_TypeRef )
     return clang_getNullCursor();
 

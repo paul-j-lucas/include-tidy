@@ -111,7 +111,7 @@ CXFile tidy_getCursorLocation_File( CXCursor cursor );
  * freeing it.
  */
 NODISCARD
-char const* tidy_get_Cursor_scoped_name( CXCursor cursor );
+char const* tidy_getCursorScopedName( CXCursor cursor );
 
 /**
  * Calls `clang_getCursorSpelling()` and `clang_getCString()`.
@@ -150,7 +150,7 @@ char* tidy_getCursorSpelling( CXCursor cursor );
  * null cursor if not or none.
  */
 NODISCARD
-CXCursor tidy_get_Cursor_underlying( CXCursor cursor );
+CXCursor tidy_getCursorUnderlying( CXCursor cursor );
 
 /**
  * Calls `clang_getFileLocation()` and returns the `CXFile`.

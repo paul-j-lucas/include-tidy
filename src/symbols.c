@@ -108,7 +108,7 @@ static void maybe_add_symbol( CXCursor sym_cursor,
     case CXCursor_StructDecl:
     case CXCursor_UnionDecl:
     case CXCursor_VarDecl:              // static members of class or namespace
-      sym_name = tidy_get_Cursor_scoped_name( sym_cursor );
+      sym_name = tidy_getCursorScopedName( sym_cursor );
       break;
     default:
       sym_name = tidy_getCursorSpelling( sym_cursor );
@@ -203,7 +203,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
         break;
 
       maybe_add_symbol( first_cursor, sivd );
-      CXCursor const underlying_cursor = tidy_get_Cursor_underlying( cursor );
+      CXCursor const underlying_cursor = tidy_getCursorUnderlying( cursor );
       if ( clang_Cursor_isNull( underlying_cursor ) )
         break;
       if ( tidy_is_Cursor_in_File( underlying_cursor, sivd->source_file ) )
