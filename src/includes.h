@@ -110,9 +110,12 @@ extern unsigned tidy_includes_unnecessary;
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * For the source file being tidied, initialize its associated header, if any.
+ * For the source file being tidied, gets its associated header, if any.
+ *
+ * @return Returns the associated header or NULL for none.
  */
-void associated_header_init( void );
+NODISCARD
+tidy_include* get_associated_header( void );
 
 /**
  * Initializes the implicit include proxies for the given translation unit.

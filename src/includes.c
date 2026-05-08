@@ -753,32 +753,39 @@ static int tidy_include_cmp_for_print( tidy_include const *i_include,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void associated_header_init( void ) {
-  char const *const ext = path_ext( arg_source_path );
-  if ( ext == NULL )
-    return;
-  char const *const lang = get_ext_language( ext );
-  if ( lang == NULL )
-    return;
-  if ( tolower( ext[0] ) != 'c' )
-    return;
+tidy_include* get_associated_header( void ) {
+  static tidy_include *assoc_include;
 
-  char path_buf[ PATH_MAX ];
-  char const *const source_base_name = base_name( arg_source_path );
-  char const *const assoc_file_name =
-    config_get_assoc_header( source_base_name );
-  char const *const source_file_no_ext =
-    path_no_ext( source_base_name, path_buf );
+  RUN_ONCE {
+    char const *const ext = path_ext( arg_source_path );
+    if ( ext == NULL )
+      goto done;
+    char const *const lang = get_ext_language( ext );
+    if ( lang == NULL )
+      goto done;
+    if ( tolower( ext[0] ) != 'c' )
+      goto done;
 
-  rb_iterator_t iter;
-  rb_iterator_init( &include_set, &iter );
-  for ( tidy_include *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( is_assoc_header( include, assoc_file_name, source_file_no_ext ) ) {
-      include->sort_rank = TIDY_SORT_ASSOCIATED;
-      break;
-    }
-  } // for
+    char path_buf[ PATH_MAX ];
+    char const *const source_base_name = base_name( arg_source_path );
+    char const *const assoc_file_name =
+      config_get_assoc_header( source_base_name );
+    char const *const source_file_no_ext =
+      path_no_ext( source_base_name, path_buf );
+
+    rb_iterator_t iter;
+    rb_iterator_init( &include_set, &iter );
+    for ( tidy_include *include;
+          (include = rb_iterator_next( &iter )) != NULL; ) {
+      if ( is_assoc_header( include, assoc_file_name, source_file_no_ext ) ) {
+        assoc_include = include;
+        break;
+      }
+    } // for
+  }
+
+done:
+  return assoc_include;
 }
 
 void implicit_proxies_init( CXTranslationUnit tu ) {
@@ -864,6 +871,10 @@ void includes_init( CXTranslationUnit tu ) {
 }
 
 void includes_print( void ) {
+  tidy_include *include = get_associated_header();
+  if ( include != NULL )
+    include->sort_rank = TIDY_SORT_ASSOCIATED;
+
   rb_tree_t include_set_by_rel_path;
   rb_tree_init(
     // Use RB_DPTR to make nodes point to existing tidy_include objects in
@@ -874,8 +885,7 @@ void includes_print( void ) {
 
   rb_iterator_t iter;
   rb_iterator_init( &include_set, &iter );
-  for ( tidy_include *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
+  while ( (include = rb_iterator_next( &iter )) != NULL ) {
     bool const is_direct = include->depth == 0;
     if ( (include->is_needed ? (!is_direct || opt_all_includes) : is_direct) ||
          (include->keep && opt_all_includes) ||
@@ -890,7 +900,7 @@ void includes_print( void ) {
       if ( include->lines.len > 1 )
         tidy_includes_unnecessary += include->lines.len - 1;
     }
-  } // for
+  } // while
 
   includes_print_visitor_data ipvd = { .print_local = true };
   rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );

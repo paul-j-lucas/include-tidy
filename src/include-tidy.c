@@ -92,7 +92,6 @@ int main( int argc, char const *argv[] ) {
   CXTranslationUnit tu = trans_unit_init( argc, argv );
   includes_init( tu );
   config_init();
-  associated_header_init();
   implicit_proxies_init( tu );
   symbols_init( tu );
 
