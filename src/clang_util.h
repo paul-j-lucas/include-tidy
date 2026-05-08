@@ -144,6 +144,16 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file );
 NODISCARD
 CXFile tidy_getSpellingLocation_File( CXSourceLocation loc );
 
+/**
+ * Gets whether \a cursor is referenced from \a file.
+ *
+ * @param cursor The cursor to use.
+ * @param file The file of interest.
+ * @return Returns `true` only if the \a cursor is referenced from \a file.
+ */
+NODISCARD
+bool tidy_is_Cursor_in_File( CXCursor cursor, CXFile file );
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */

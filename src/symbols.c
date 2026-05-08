@@ -164,22 +164,6 @@ static CXCursor get_underlying_cursor( CXCursor cursor ) {
 }
 
 /**
- * Helper function for symbols_init_visitor that gets whether the symbol at \a
- * sym_cursor is referenced from \a file.
- *
- * @param sym_cursor The cursor for the symbol.
- * @param file The file of interest.
- * @return Returns `true` only if the symbol is referenced from \a file.
- */
-NODISCARD
-static bool is_symbol_in_file( CXCursor sym_cursor, CXFile file ) {
-  assert( file != NULL );
-
-  CXFile const sym_file = tidy_getCursorLocation_File( sym_cursor );
-  return sym_file != NULL && clang_File_isEqual( sym_file, file );
-}
-
-/**
  * Helper function for symbols_init_visitor that maybe adds a symbol to the
  * global set.
  *
@@ -282,7 +266,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   symbols_init_visitor_data *const sivd =
     POINTER_CAST( symbols_init_visitor_data*, data );
 
-  if ( !is_symbol_in_file( cursor, sivd->source_file ) )
+  if ( !tidy_is_Cursor_in_File( cursor, sivd->source_file ) )
     goto skip;
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
@@ -312,7 +296,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       CXCursor const underlying_cursor = get_underlying_cursor( cursor );
       if ( clang_Cursor_isNull( underlying_cursor ) )
         break;
-      if ( is_symbol_in_file( underlying_cursor, sivd->source_file ) )
+      if ( tidy_is_Cursor_in_File( underlying_cursor, sivd->source_file ) )
         maybe_add_symbol( underlying_cursor, sivd );
       break;
 

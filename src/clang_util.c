@@ -224,6 +224,13 @@ CXFile tidy_getSpellingLocation_File( CXSourceLocation loc ) {
   return file;
 }
 
+bool tidy_is_Cursor_in_File( CXCursor cursor, CXFile file ) {
+  assert( file != NULL );
+
+  CXFile const cursor_file = tidy_getCursorLocation_File( cursor );
+  return cursor_file != NULL && clang_File_isEqual( cursor_file, file );
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */
