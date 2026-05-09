@@ -817,6 +817,19 @@
   /// @endcond
 #endif /* HAVE___VA_OPT__ */
 
+////////// typedefs ///////////////////////////////////////////////////////////
+
+/**
+ * Result type for Fowler-Noll-Vo hash function.
+ *
+ * @sa fnv1a_s()
+ */
+#if HAVE_UNSIGNED_INT128
+typedef unsigned __int128 fnv1a_t;
+#else
+typedef uint64_t fnv1a_t;
+#endif /* HAVE_UNSIGNED_INT128 */
+
 ////////// extern variables ///////////////////////////////////////////////////
 
 /**
@@ -939,6 +952,16 @@ inline bool false_set( bool *flag ) {
  */
 PJL_PRINTF_LIKE_FUNC(2)
 _Noreturn void fatal_error( int status, char const *format, ... );
+
+/**
+ * Fowler-Noll-Vo hash function for a string.
+ *
+ * @param s The null-terminated string to calculate the hash of.
+ * @return Returns said hash.
+ *
+ * @sa [The FNV Non-Cryptographic Hash Algorithm](https://datatracker.ietf.org/doc/html/draft-eastlake-fnv-17.html)
+ */
+fnv1a_t fnv1a_s( char const *s );
 
 /**
  * Like **free**(3) except frees the pointer pointed to by pptr.

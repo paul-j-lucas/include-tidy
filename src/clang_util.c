@@ -31,8 +31,6 @@
 
 // standard
 #include <assert.h>
-#include <limits.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -43,80 +41,7 @@
  * @{
  */
 
-///////////////////////////////////////////////////////////////////////////////
-
-#if HAVE_UNSIGNED_INT128
-
-/**
- * Creates a 128-bit `unsigned __int128` literal.
- *
- * @param UPPER The upper 64 bits.
- * @param LOWER The lower 64 bits.
- * @return Returns a 128-bit `unsigned __int128` literal.
- *
- * @note If \a UPPER or \a LOWER are integer literals, they _must_ have either
- * the `ULL` or `ull` suffix.
- */
-#define UINT128LIT(UPPER,LOWER) \
-  ((STATIC_CAST( unsigned __int128, (UPPER) ) << 64) | (LOWER))
-
-#endif /* HAVE_UNSIGNED_INT128 */
-
-////////// typedefs ///////////////////////////////////////////////////////////
-
-/**
- * Result type for Fowler-Noll-Vo hash function.
- *
- * @sa fnv1a_s()
- */
-#if HAVE_UNSIGNED_INT128
-typedef unsigned __int128 fnv1a_t;
-#else
-typedef uint64_t fnv1a_t;
-#endif /* HAVE_UNSIGNED_INT128 */
-
-////////// local constants ////////////////////////////////////////////////////
-
-#if HAVE_UNSIGNED_INT128
-/**
- * Initialization value for Fowler-Noll-Vo hash function.
- *
- * @sa fnv1a_s()
- */
-static fnv1a_t FNV1A_INIT =
-  UINT128LIT( 0x6C62272E07BB0142ull, 0x62B821756295C58Dull );
-
-/**
- * Prime value for Fowler-Noll-Vo hash function.
- *
- * @sa fnv1a_s()
- */
-static fnv1a_t FNV1A_PRIME =
-  UINT128LIT( 0x0000000001000000ull, 0x000000000000013Bull );
-
-#else
-static fnv1a_t FNV1A_INIT  = 14695981039346656037UL;
-static fnv1a_t FNV1A_PRIME = 1099511628211UL;
-#endif /* HAVE_UNSIGNED_INT128 */
-
 ////////// local functions ////////////////////////////////////////////////////
-
-/**
- * Fowler-Noll-Vo hash function for a string.
- *
- * @param s The null-terminated string to calculate the hash of.
- * @return Returns said hash.
- *
- * @sa [The FNV Non-Cryptographic Hash Algorithm](https://datatracker.ietf.org/doc/html/draft-eastlake-fnv-17.html)
- */
-static fnv1a_t fnv1a_s( char const *s ) {
-  assert( s != NULL );
-
-  fnv1a_t hash = FNV1A_INIT;
-  while ( *s != '\0' )
-    hash = FNV1A_PRIME * (hash ^ STATIC_CAST( uint8_t, *s++ ));
-  return hash;
-}
 
 /**
  * Given a cursor at a local name of an enumeration, class, class data member,

@@ -52,6 +52,48 @@
  * @{
  */
 
+///////////////////////////////////////////////////////////////////////////////
+
+#if HAVE_UNSIGNED_INT128
+
+/**
+ * Creates a 128-bit `unsigned __int128` literal.
+ *
+ * @param UPPER The upper 64 bits.
+ * @param LOWER The lower 64 bits.
+ * @return Returns a 128-bit `unsigned __int128` literal.
+ *
+ * @note If \a UPPER or \a LOWER are integer literals, they _must_ have either
+ * the `ULL` or `ull` suffix.
+ */
+#define UINT128LIT(UPPER,LOWER) \
+  ((STATIC_CAST( unsigned __int128, (UPPER) ) << 64) | (LOWER))
+
+#endif /* HAVE_UNSIGNED_INT128 */
+
+////////// local constants ////////////////////////////////////////////////////
+
+#if HAVE_UNSIGNED_INT128
+/**
+ * Initialization value for Fowler-Noll-Vo hash function.
+ *
+ * @sa fnv1a_s()
+ */
+static fnv1a_t const FNV1A_INIT =
+  UINT128LIT( 0x6C62272E07BB0142ull, 0x62B821756295C58Dull );
+
+/**
+ * Prime value for Fowler-Noll-Vo hash function.
+ *
+ * @sa fnv1a_s()
+ */
+static fnv1a_t const FNV1A_PRIME =
+  UINT128LIT( 0x0000000001000000ull, 0x000000000000013Bull );
+#else
+static fnv1a_t const FNV1A_INIT  = 14695981039346656037UL;
+static fnv1a_t const FNV1A_PRIME = 1099511628211UL;
+#endif /* HAVE_UNSIGNED_INT128 */
+
 ////////// extern variables ///////////////////////////////////////////////////
 
 /// @cond DOXYGEN_IGNORE
@@ -141,6 +183,15 @@ void fatal_error( int status, char const *format, ... ) {
   vfprintf( stderr, format, args );
   va_end( args );
   _Exit( status );
+}
+
+fnv1a_t fnv1a_s( char const *s ) {
+  assert( s != NULL );
+
+  fnv1a_t hash = FNV1A_INIT;
+  for ( ; *s != '\0'; ++s )
+    hash = FNV1A_PRIME * (hash ^ STATIC_CAST( uint8_t, *s ));
+  return hash;
 }
 
 void free_pptr( void *pptr ) {
