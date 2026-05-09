@@ -94,19 +94,6 @@ int tidy_CXFile_cmp_by_name( CXFile i_file, CXFile j_file ) {
   return cmp;
 }
 
-void tidy_CXFileUniqueID_fput( CXFileUniqueID const *id, FILE *out ) {
-  assert( id != NULL );
-  assert( out != NULL );
-
-  static int const ID_HEX_WIDTH = (int)sizeof( id->data[0] ) * CHAR_BIT / 4;
-
-  fprintf( out, "%0*llX-%0*llX-%0*llX",
-    ID_HEX_WIDTH, id->data[0],
-    ID_HEX_WIDTH, id->data[1],
-    ID_HEX_WIDTH, id->data[2]
-  );
-}
-
 CXString tidy_File_getRealPathName( CXFile file ) {
   assert( file != NULL );
 

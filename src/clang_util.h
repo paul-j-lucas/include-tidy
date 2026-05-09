@@ -74,14 +74,6 @@ inline int tidy_CXFileUniqueID_cmp( CXFileUniqueID const *i_id,
 }
 
 /**
- * Prints \a id as a hexadecimal ineger.
- *
- * @param id The CXFileUniqueID to print.
- * @param out The `FILE` to print to.
- */
-void tidy_CXFileUniqueID_fput( CXFileUniqueID const *id, FILE *out );
-
-/**
  * Gets the real path of \a file.
  *
  * @param file The file to get the real path of.

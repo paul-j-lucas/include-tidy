@@ -210,7 +210,8 @@ char const* get_cwd( size_t *plen ) {
       );
     }
     cwd_path_len = strlen( cwd_path_buf );
-    if ( cwd_path_len > 0 && cwd_path_buf[ cwd_path_len - 1 ] != '/' )
+    assert( cwd_path_len > 0 );
+    if ( cwd_path_buf[ cwd_path_len - 1 ] != '/' )
       strcpy( cwd_path_buf + cwd_path_len++, "/" );
   }
 
