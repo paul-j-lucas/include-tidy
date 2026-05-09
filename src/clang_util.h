@@ -185,7 +185,7 @@ CXFile tidy_getSpellingLocation_File( CXSourceLocation loc );
  * @return Returns `true` only if the \a cursor is referenced from \a file.
  */
 NODISCARD
-bool tidy_is_Cursor_in_File( CXCursor cursor, CXFile file );
+bool tidy_isCursorInFile( CXCursor cursor, CXFile file );
 
 ///////////////////////////////////////////////////////////////////////////////
 
