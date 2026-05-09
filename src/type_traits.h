@@ -29,6 +29,13 @@
 // local
 #include "pjl_config.h"
 
+/// @cond DOXYGEN_IGNORE
+
+// standard
+#include <assert.h>                     /* for static_assert */
+
+/// @endcond
+
 /**
  * @defgroup type-traits-group Type Traits
  * Macros for type traits.
