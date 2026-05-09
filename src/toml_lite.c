@@ -477,6 +477,17 @@ error:
 }
 
 /**
+ * Cleans-up a toml_key.
+ *
+ * @param key The toml_key to clean-up. If NULL, does nothing.
+ */
+static void toml_key_cleanup( toml_key *key ) {
+  if ( key == NULL )
+    return;
+  FREE( key->name );
+}
+
+/**
  * Parses a TOML key.
  *
  * @param toml The toml_file to use.
@@ -576,7 +587,7 @@ error:
 static void toml_key_value_cleanup( toml_key_value *kv ) {
   if ( kv == NULL )
     return;
-  FREE( kv->key );
+  toml_key_cleanup( &kv->key );
   toml_value_cleanup( &kv->value );
 }
 
@@ -593,7 +604,7 @@ NODISCARD
 static int toml_key_value_cmp( toml_key_value *i_kv, toml_key_value *j_kv ) {
   assert( i_kv != NULL );
   assert( j_kv != NULL );
-  return strcmp( i_kv->key, j_kv->key );
+  return strcmp( i_kv->key.name, j_kv->key.name );
 }
 
 /**
@@ -609,12 +620,14 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *kv ) {
   assert( toml != NULL );
   assert( kv != NULL );
 
-  char       *key = NULL;
+  char       *key_name = NULL;
   toml_loc    key_loc = toml->loc;
   toml_value  value = { 0 };
 
-  if ( !toml_key_parse( toml, &key, /*pkey_col=*/NULL, /*pkey_len=*/NULL ) )
+  if ( !toml_key_parse( toml, &key_name, /*pkey_col=*/NULL,
+                        /*pkey_len=*/NULL ) ) {
     return false;
+  }
 
   assert( !toml->in_key_value );
   toml->in_key_value = true;
@@ -627,10 +640,15 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *kv ) {
 
   toml->in_key_value = false;
 
-  if ( ok )
-    *kv = (toml_key_value){ .key = key, .key_loc = key_loc, .value = value };
-  else
-    free( key );
+  if ( ok ) {
+    *kv = (toml_key_value){
+      .key = { .name = key_name, .loc = key_loc },
+      .value = value
+    };
+  }
+  else {
+    free( key_name );
+  }
 
   return ok;
 }
@@ -942,7 +960,7 @@ toml_value const* toml_table_find( toml_table const *table, char const *key ) {
   assert( table != NULL );
   assert( key != NULL );
 
-  toml_key_value const kv = { .key = key };
+  toml_key_value const kv = { .key = { .name = key } };
   rb_node_t const *const found_rb = rb_tree_find( &table->keys_values, &kv );
   if ( found_rb == NULL )
     return NULL;

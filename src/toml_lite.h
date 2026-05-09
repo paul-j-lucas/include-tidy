@@ -121,6 +121,7 @@ typedef struct  toml_array      toml_array;
 typedef enum    toml_error      toml_error;
 typedef struct  toml_file       toml_file;
 typedef rb_iterator_t           toml_iterator;
+typedef struct  toml_key        toml_key;
 typedef struct  toml_key_value  toml_key_value;
 typedef struct  toml_loc        toml_loc;
 typedef struct  toml_table      toml_table;
@@ -161,10 +162,18 @@ struct toml_file {
 };
 
 /**
+ * TOML key.
+ */
+struct toml_key {
+  char const *name;                     ///< Name.
+  toml_loc    loc;                      ///< Source file location.
+};
+
+/**
  * TOML value.
  */
 struct toml_value {
-  toml_type     type;                   ///< The type of value.
+  toml_type     type;                   ///< Type of value.
   toml_loc      loc;                    ///< Source file location.
   union {
     bool        b;                      ///< The Boolean value.
@@ -178,8 +187,7 @@ struct toml_value {
  * TOML key/value pair.
  */
 struct toml_key_value {
-  char const *key;                      ///< Key.
-  toml_loc    key_loc;                  ///< Key's source location.
+  toml_key    key;                      ///< Key.
   toml_value  value;                    ///< Value.
 };
 

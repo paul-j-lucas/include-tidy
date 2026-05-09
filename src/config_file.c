@@ -20,7 +20,8 @@
 
 /**
  * @file
- * Defines functions to read an **include-tidy**(1) configuration file.
+ * Defines functions for reading and querying an **include-tidy**(1)
+ * configuration file.
  */
 
 // local
@@ -684,10 +685,10 @@ static void config_parse( char const *config_path, FILE *config_file ) {
     toml_iterator_init( &table, &iter );
     for ( toml_key_value const *kv;
           (kv = toml_iterator_next( &iter )) != NULL; ) {
-      config_key const *const key = config_key_parse( kv->key );
+      config_key const *const key = config_key_parse( kv->key.name );
       if ( key == NULL ) {
         print_error(
-          config_path, kv->key_loc.line, kv->key_loc.col,
+          config_path, kv->key.loc.line, kv->key.loc.col,
           "\"%s\": unknown key\n", table.name
         );
         exit( EX_CONFIG );
@@ -699,7 +700,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       else if ( key->table_kind != table_kind ) {
         assert( table_kind < ARRAY_SIZE( TABLE_KINDS ) );
         print_error(
-          config_path, kv->key_loc.line, kv->key_loc.col,
+          config_path, kv->key.loc.line, kv->key.loc.col,
           "\"%s\": key not allowed in %s table; allowed only in %s table\n",
           key->name, TABLE_KINDS[ table_kind ], TABLE_KINDS[ key->table_kind ]
         );
