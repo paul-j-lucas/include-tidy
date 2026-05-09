@@ -1,5 +1,29 @@
+2026-05-09  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c, toml_lite.c, toml_lite.h: Added toml_key struct.
+   * clang_util.c, clang_util.h, util.c: Eliminated tidy_CXFileUniqueID_fput().
+   * clang_util.c, util.c, util.h: Moved fnv1a_s() to util.[ch].
+
+2026-05-08  Paul J. Lucas <paul@lucasmail.org>
+
+   * array.c, array.h, includes.c, red_black.c, red_black.h: Now using array_t
+     for sorted includes.
+   * include-tidy.c, includes.c, includes.h: Reworked initialization of
+     associated header.
+   * clang_util.c, clang_util.h, symbols.c:
+     s/get_underlying_cursor/tidy_get_Cursor_underlying/
+   * symbols.c: Simplified get_underlying_cursor().
+   * clang_util.c, clang_util.h, symbols.c:
+     s/get_fully_scoped_name/tidy_get_Cursor_scoped_name/
+   * clang_util.c, clang_util.h, symbols.c:
+     s/is_symbol_in_file/tidy_is_Cursor_in_File/
+   * clang_util.c, clang_util.h, symbols.c:
+     s/get_symbol_file/tidy_getCursorLocation_File/
+
 2026-05-07  Paul J. Lucas <paul@lucasmail.org>
 
+   * man/man1/include-tidy.1: s/This variable specifies/Specifies/
+   * man/man1/include-tidy.1: Inserted "a".
    * man/man1/include-tidy.1: s/40/41/
 
 2026-04-27  Paul J. Lucas <paul@lucasmail.org>
