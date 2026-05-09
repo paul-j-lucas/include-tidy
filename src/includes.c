@@ -465,23 +465,20 @@ skip:
 /**
  * Visits each include file that was included.
  *
- * @param node_data The tidy_include to visit.
- * @param visit_data Contains a `bool` specifying whether to print only local
- * includes.
- * @return Always returns `false` (keep visiting).
+ * @param include The tidy_include to visit.
+ * @param ipvd The includes_print_visitor_data to use.
  */
-NODISCARD
-static bool includes_print_visitor( void *node_data, void *visit_data ) {
-  assert( node_data != NULL );
-  tidy_include const *const include = node_data;
-  includes_print_visitor_data *const ipvd = visit_data;
+static void includes_print_visitor( tidy_include const *include,
+                                    includes_print_visitor_data *ipvd ) {
+  assert( include != NULL );
+  assert( ipvd != NULL );
 
   if ( include->keep && !opt_all_includes )
-    goto skip;
+    return;
   if ( ipvd->print_local != include->is_local )
-    goto skip;
+    return;
   if ( ipvd->print_standard != config_is_standard_include( include->rel_path ) )
-    goto skip;
+    return;
 
   if ( (opt_verbose & TIDY_VERBOSE_SOURCE_FILE) != 0 &&
        false_set( &ipvd->printed_source_file ) ) {
@@ -554,9 +551,6 @@ static bool includes_print_visitor( void *node_data, void *visit_data ) {
   free( comment );
   if ( reset_opt_comment_style )
     opt_comment_style[0] = "";
-
-skip:
-  return false;
 }
 
 /**
@@ -733,17 +727,21 @@ static int tidy_include_cmp_by_id( tidy_include const *i_include,
 /**
  * Compares two \ref tidy_include objects by their relative paths for printing.
  *
- * @param i_include The first tidy_include.
- * @param j_include The second tidy_include.
+ * @param pi_data A pointer to the the first tidy_include pointer.
+ * @param pj_data A pointer to the second tidy_include pointer.
  * @return Returns a number less than 0, 0, or greater than 0 if the relative
- * path of \a i_include is less than, equal to, or greater than the relative
- * path of \a j_include, respectively.
+ * path of \a *pi_data is less than, equal to, or greater than the relative
+ * path of \a *pj_data, respectively.
  */
 NODISCARD
-static int tidy_include_cmp_for_print( tidy_include const *i_include,
-                                       tidy_include const *j_include ) {
-  assert( i_include != NULL );
-  assert( j_include != NULL );
+static int tidy_include_cmp_for_print( void const *pi_data,
+                                       void const *pj_data ) {
+  assert( pi_data != NULL );
+  assert( pj_data != NULL );
+
+  tidy_include const *const i_include = *(tidy_include const**)pi_data;
+  tidy_include const *const j_include = *(tidy_include const**)pj_data;
+
   if ( i_include->sort_rank < j_include->sort_rank )
     return -1;
   if ( i_include->sort_rank > j_include->sort_rank )
@@ -871,18 +869,11 @@ void includes_init( CXTranslationUnit tu ) {
 }
 
 void includes_print( void ) {
-  tidy_include *include = get_associated_header();
-  if ( include != NULL )
-    include->sort_rank = TIDY_SORT_ASSOCIATED;
+  array_t include_array;
+  array_init( &include_array, sizeof(tidy_include*) );
+  array_reserve( &include_array, include_set.size );
 
-  rb_tree_t include_set_by_rel_path;
-  rb_tree_init(
-    // Use RB_DPTR to make nodes point to existing tidy_include objects in
-    // include_set.
-    &include_set_by_rel_path, RB_DPTR,
-    POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_for_print )
-  );
-
+  tidy_include *include;
   rb_iterator_t iter;
   rb_iterator_init( &include_set, &iter );
   while ( (include = rb_iterator_next( &iter )) != NULL ) {
@@ -890,7 +881,7 @@ void includes_print( void ) {
     if ( (include->is_needed ? (!is_direct || opt_all_includes) : is_direct) ||
          (include->keep && opt_all_includes) ||
          include->lines.len > 1 ) {
-      PJL_DISCARD_RV( rb_tree_insert( &include_set_by_rel_path, include, 0 ) );
+      *(tidy_include const**)array_push_back( &include_array ) = include;
       if ( !include->keep ) {
         if ( !include->is_needed )
           ++tidy_includes_unnecessary;
@@ -902,21 +893,40 @@ void includes_print( void ) {
     }
   } // while
 
-  includes_print_visitor_data ipvd = { .print_local = true };
-  rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
+  include = get_associated_header();
+  if ( include != NULL )
+    include->sort_rank = TIDY_SORT_ASSOCIATED;
+  array_sort( &include_array, &tidy_include_cmp_for_print );
 
+  // Print local includes.
+  includes_print_visitor_data ipvd = { .print_local = true };
+  for ( size_t i = 0; i < include_array.len; ++i ) {
+    includes_print_visitor(
+      *(tidy_include const**)array_at_nocheck( &include_array, i ), &ipvd
+    );
+  } // for
+
+  // Print non-local, non-standard includes.
   if ( opt_all_includes && true_clear( &ipvd.printed_any_includes ) )
     ipvd.print_blank_line = true;
   ipvd.print_local = !ipvd.print_local;
-  rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
+  for ( size_t i = 0; i < include_array.len; ++i ) {
+    includes_print_visitor(
+      *(tidy_include const**)array_at_nocheck( &include_array, i ), &ipvd
+    );
+  } // for
 
+  // Print standard includes.
   if ( opt_all_includes && true_clear( &ipvd.printed_any_includes ) )
     ipvd.print_blank_line = true;
   ipvd.print_standard = true;
-  rb_tree_visit( &include_set_by_rel_path, &includes_print_visitor, &ipvd );
+  for ( size_t i = 0; i < include_array.len; ++i ) {
+    includes_print_visitor(
+      *(tidy_include const**)array_at_nocheck( &include_array, i ), &ipvd
+    );
+  } // for
 
-  // Because the nodes point to existing tidy_include objects, use NULL.
-  rb_tree_cleanup( &include_set_by_rel_path, /*free_fn=*/NULL );
+  array_cleanup( &include_array, /*free_fn=*/NULL );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

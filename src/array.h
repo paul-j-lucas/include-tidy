@@ -35,6 +35,7 @@
 // standard
 #include <stdbool.h>
 #include <stddef.h>                     /* for size_t */
+#include <stdlib.h>                     /* for qsort */
 
 /// @endcond
 
@@ -216,6 +217,17 @@ inline void array_init( array_t *array, size_t esize ) {
 PJL_DISCARD
 inline void* array_pop_back( array_t *array ) {
   return array->len > 0 ? array_at_nocheck( array, --array->len ) : NULL;
+}
+
+/**
+ * Calls **qsort**(3) on \a array.
+ *
+ * @param array The array to sort.
+ * @param cmp_fn The comparison functiomn to use.
+ */
+inline void array_sort( array_t *array,
+                        int (*cmp_fn)( void const*, void const* ) ) {
+  qsort( array->elements, array->len, array->esize, cmp_fn );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

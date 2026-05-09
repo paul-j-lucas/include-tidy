@@ -463,6 +463,7 @@ static void rb_tree_reset( rb_tree_t *tree ) {
 
   tree->root = &tree->nil;
   tree->cmp_fn = NULL;
+  tree->size = 0;
   tree->nil = (rb_node_t){
     .child = { &tree->nil, &tree->nil },
     .parent = &tree->nil,
@@ -546,6 +547,7 @@ void rb_tree_delete( rb_tree_t *tree, rb_node_t *z_delete ) {
   rb_tree_check( tree );
 
   free( z_delete );
+  --tree->size;
 }
 
 rb_node_t* rb_tree_find( rb_tree_t const *tree, void const *data ) {
@@ -614,6 +616,7 @@ rb_insert_rv_t rb_tree_insert( rb_tree_t *tree, void *data, size_t data_size ) {
     y_parent->child[dir] = z_new_node;
   }
 
+  ++tree->size;
   rb_insert_fixup( tree, z_new_node );
   rb_tree_check( tree );
 
