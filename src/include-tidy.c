@@ -18,6 +18,11 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @file
+ * Defines `main()`, a function for exit status, and global variables.
+ */
+
 // local
 #include "pjl_config.h"
 #include "include-tidy.h"

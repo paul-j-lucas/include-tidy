@@ -18,6 +18,11 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @file
+ * Defines utility functions for libclang.
+ */
+
 // local
 #include "pjl_config.h"
 #include "clang_util.h"

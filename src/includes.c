@@ -20,7 +20,7 @@
 
 /**
  * @file
- * Defines functions for keeping track of files included.
+ * Defines structures and functions for keeping track of files included.
  */
 
 // local

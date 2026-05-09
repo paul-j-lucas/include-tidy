@@ -21,6 +21,12 @@
 #ifndef include_tidy_config_file_H
 #define include_tidy_config_file_H
 
+/**
+ * @file
+ * Declares functions for reading and querying an **include-tidy**(1)
+ * configuration file.
+ */
+
 // local
 #include "pjl_config.h"
 

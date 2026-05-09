@@ -23,7 +23,7 @@
 
 /**
  * @file
- * Declares miscellaneous macros, global variables, and functions.
+ * Declares miscellaneous macros and global variables.
  */
 
 // local
@@ -31,7 +31,7 @@
 
 /**
  * @defgroup misc-globals Miscellaneous Globals
- * Miscellaneous global macros, variables, and functions.
+ * Miscellaneous global macros and variables.
  * @{
  */
 

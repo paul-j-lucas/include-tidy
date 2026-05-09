@@ -21,6 +21,11 @@
 #ifndef include_tidy_clang_util_H
 #define include_tidy_clang_util_H
 
+/**
+ * @file
+ * Declares utility functions for libclang.
+ */
+
 // local
 #include "pjl_config.h"
 
