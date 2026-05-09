@@ -55,7 +55,7 @@
  * @sa tidy_CXFileUniqueID_cmp()
  */
 NODISCARD
-int tidy_CXFile_cmp_by_name( CXFile i_file, CXFile j_file );
+int tidy_File_cmp_by_name( CXFile i_file, CXFile j_file );
 
 /**
  * Compares two CXFileUniqueID objects.
@@ -65,7 +65,7 @@ int tidy_CXFile_cmp_by_name( CXFile i_file, CXFile j_file );
  * @return Returns a number less than 0, 0, or greater than 0 if \a i_id is
  * less than, equal to, or greater than \a j_id, respectively.
  *
- * @sa tidy_CXFile_cmp_by_name()
+ * @sa tidy_File_cmp_by_name()
  */
 NODISCARD
 inline int tidy_CXFileUniqueID_cmp( CXFileUniqueID const *i_id,

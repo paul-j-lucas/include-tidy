@@ -79,7 +79,7 @@ static void get_scoped_name_impl( CXCursor cursor, strbuf_t *sbuf ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-int tidy_CXFile_cmp_by_name( CXFile i_file, CXFile j_file ) {
+int tidy_File_cmp_by_name( CXFile i_file, CXFile j_file ) {
   assert( i_file != NULL );
   assert( j_file != NULL );
 

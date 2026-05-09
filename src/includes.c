@@ -428,7 +428,7 @@ done:
   // more than one line in it, then all but the first are duplicate includes.
   //
   if ( (!rv_rbi.inserted &&
-       tidy_CXFile_cmp_by_name( included_file, included->file ) != 0 ) ) {
+       tidy_File_cmp_by_name( included_file, included->file ) != 0 ) ) {
     //
     // However, if the file wasn't inserted (because it's a duplicate by file
     // ID), but its original name is NOT the same, it means it was either a
