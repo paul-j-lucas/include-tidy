@@ -35,7 +35,7 @@
 #include <clang-c/Index.h>
 
 // standard
-#include <stdio.h>                      /* for FILE */
+#include <stdbool.h>
 #include <string.h>                     /* for memcmp(3) */
 
 /// @endcond
