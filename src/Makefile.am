@@ -30,7 +30,8 @@ AM_LDFLAGS =		$(LIBCLANG_LDFLAGS) -Wl,-rpath,$(LIBCLANG_LIBDIR)
 LDADD =			$(LIBCLANG_LIBS) $(top_builddir)/lib/libgnu.a
 TESTS =         	$(check_PROGRAMS)
 
-INCLUDE_TIDY_FLAGS =	-Xtidy --verbose=f -Xtidy --error=never
+INVOKE_TIDY_FLAGS =	-Xtidy --verbose=f -Xtidy --error=never
+INVOKE_TIDY_CFLAGS =	$(CFLAGS) $(AM_CFLAGS) $(CPPFLAGS) $(AM_CPPFLAGS)
 
 include_tidy_SOURCES =	array.c array.h \
 			clang_util.c clang_util.h \
@@ -74,7 +75,8 @@ util_test_SOURCES =	$(BASE_TEST_SOURCES) \
 			util_test.c
 
 tidy:
-	@touch *.c
-	@$(MAKE) -s CC="include-tidy" CFLAGS="$(INCLUDE_TIDY_FLAGS)"
+	@for file in *.h; \
+	do include-tidy $(INVOKE_TIDY_FLAGS) $(INVOKE_TIDY_CFLAGS) $$file; \
+	done
 
 # vim:set noet sw=8 ts=8:
