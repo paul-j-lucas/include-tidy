@@ -1,5 +1,15 @@
+2026-05-10  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c, clang_util.h, symbols.c: Iterates through macro definition
+     tokens looking for symbols.
+
 2026-05-09  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c, clang_util.h, symbols.c:
+     s/tidy_isCursorInFile/tidy_Cursor_isInFile/
+   * type_traits.h: Added #include <assert.h>.
+   * src/Makefile.am: Now using "@for file in *.h" to invoke include-tidy.
+   * clang_util.h: Fixed includes.
    * config_file.c, toml_lite.c, toml_lite.h: Added toml_key struct.
    * clang_util.c, clang_util.h, util.c: Eliminated tidy_CXFileUniqueID_fput().
    * clang_util.c, util.c, util.h: Moved fnv1a_s() to util.[ch].
