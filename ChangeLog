@@ -1,5 +1,11 @@
 2026-05-10  Paul J. Lucas <paul@lucasmail.org>
 
+   * man/man1/include-tidy.1, config_file.c, config_file.h, include-tidy.c,
+     include-tidy.toml: Added ignore-as-argument.
+   * src/Makefile.am: Now using *.h *.c
+   * man/man1/include-tidy.1: Added "General use" section; other improvements.
+   * src/Makefile.am: Now iterating through *.c files.
+   * clang_util.c, symbols.c, util.c: #include fixes.
    * clang_util.c, clang_util.h, symbols.c: Iterates through macro definition
      tokens looking for symbols.
 
