@@ -760,8 +760,7 @@ static void first_parse( char const *config_path, toml_table const *table,
   assert( table != NULL );
   assert( value != NULL );
 
-  bool const first = bool_value_parse( config_path, "first", value );
-  if ( !first )
+  if ( !bool_value_parse( config_path, "first", value ) )
     return;
 
   tidy_include *const include = include_find_by_rel_path( table->name );
