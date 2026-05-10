@@ -49,6 +49,16 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * Gets whether \a cursor is referenced from \a file.
+ *
+ * @param cursor The cursor to use.
+ * @param file The file of interest.
+ * @return Returns `true` only if the \a cursor is referenced from \a file.
+ */
+NODISCARD
+bool tidy_Cursor_isInFile( CXCursor cursor, CXFile file );
+
+/**
  * Compares two CXFile objects by name.
  *
  * @param i_file The first CXFile.
@@ -181,16 +191,6 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file );
  */
 NODISCARD
 CXFile tidy_getSpellingLocation_File( CXSourceLocation loc );
-
-/**
- * Gets whether \a cursor is referenced from \a file.
- *
- * @param cursor The cursor to use.
- * @param file The file of interest.
- * @return Returns `true` only if the \a cursor is referenced from \a file.
- */
-NODISCARD
-bool tidy_isCursorInFile( CXCursor cursor, CXFile file );
 
 ///////////////////////////////////////////////////////////////////////////////
 

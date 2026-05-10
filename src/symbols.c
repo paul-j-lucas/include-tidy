@@ -176,7 +176,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   symbols_init_visitor_data *const sivd =
     POINTER_CAST( symbols_init_visitor_data*, data );
 
-  if ( !tidy_isCursorInFile( cursor, sivd->source_file ) )
+  if ( !tidy_Cursor_isInFile( cursor, sivd->source_file ) )
     goto skip;
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
@@ -206,7 +206,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       CXCursor const underlying_cursor = tidy_getCursorUnderlying( cursor );
       if ( clang_Cursor_isNull( underlying_cursor ) )
         break;
-      if ( tidy_isCursorInFile( underlying_cursor, sivd->source_file ) )
+      if ( tidy_Cursor_isInFile( underlying_cursor, sivd->source_file ) )
         maybe_add_symbol( underlying_cursor, sivd );
       break;
 

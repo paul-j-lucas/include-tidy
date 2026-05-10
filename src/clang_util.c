@@ -84,6 +84,13 @@ static void get_scoped_name_impl( CXCursor cursor, strbuf_t *sbuf ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
+bool tidy_Cursor_isInFile( CXCursor cursor, CXFile file ) {
+  assert( file != NULL );
+
+  CXFile const cursor_file = tidy_getCursorLocation_File( cursor );
+  return cursor_file != NULL && clang_File_isEqual( cursor_file, file );
+}
+
 int tidy_File_cmp_by_name( CXFile i_file, CXFile j_file ) {
   assert( i_file != NULL );
   assert( j_file != NULL );
@@ -199,13 +206,6 @@ CXFile tidy_getSpellingLocation_File( CXSourceLocation loc ) {
     loc, &file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
   );
   return file;
-}
-
-bool tidy_isCursorInFile( CXCursor cursor, CXFile file ) {
-  assert( file != NULL );
-
-  CXFile const cursor_file = tidy_getCursorLocation_File( cursor );
-  return cursor_file != NULL && clang_File_isEqual( cursor_file, file );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
