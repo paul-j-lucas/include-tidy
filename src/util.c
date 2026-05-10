@@ -38,6 +38,7 @@
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdint.h>                     /* for uint8_t */
 #include <stdio.h>
 #include <stdlib.h>                     /* for malloc(), ... */
 #include <string.h>

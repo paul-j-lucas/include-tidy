@@ -41,7 +41,6 @@
 
 // standard
 #include <assert.h>
-#include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>                     /* for unreachable(3) */
 #include <string.h>
