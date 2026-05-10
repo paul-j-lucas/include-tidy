@@ -78,5 +78,8 @@ tidy:
 	@for file in *.h; \
 	do include-tidy $(INVOKE_TIDY_FLAGS) $(INVOKE_TIDY_CFLAGS) $$file; \
 	done
+	@for file in *.c; \
+	do include-tidy $(INVOKE_TIDY_FLAGS) $(INVOKE_TIDY_CFLAGS) $$file; \
+	done
 
 # vim:set noet sw=8 ts=8:
