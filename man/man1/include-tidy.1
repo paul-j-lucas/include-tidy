@@ -729,6 +729,33 @@ This is useful when
 .B all-includes
 is \f(CWtrue\fP.
 .TP
+.BI ignore-as-argument " \f1=\fP b"
+If true,
+the include file given for the table name
+is not checked for violations
+when given as the source file argument
+on the command line.
+.IP
+This allows there to be include files
+you don't control
+(third-party or generated)
+present and not check them for violations
+yet still use \f(CW*.h\fP with a shell
+.B for
+loop.
+(See
+.B Use with Make
+above.)
+For example,
+the Autotools generated \f(CWconfig.h\fP
+should be ignored:
+.RS 5
+.cS
+[config.h]
+ignore-as-argument = true
+.cE 0
+.RE
+.TP
 .BI keep " \f1=\fP b"
 If true,
 the include file given for the table name
@@ -792,6 +819,11 @@ e.g.,
 \f(CWfoo.c\fP can have the associated header
 \f(CWfoo_api.h\fP
 instead of \f(CWfoo.h\fP.
+.TP
+.BI ignore-as-argument " \f1=\fP b"
+Same as in
+.BR "Header Tables" ,
+but for a source file.
 .SS Symbol Tables
 This type of table specifies a symbol name,
 e.g.,

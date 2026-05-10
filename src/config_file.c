@@ -49,7 +49,8 @@
 #if HAVE_PWD_H
 # include <pwd.h>                       /* for getpwuid() */
 #endif /* HAVE_PWD_H */
-#include <stdbool.h>
+#include <stdbool.h>                    /* for uint64_t */
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for getenv(), ... */
 #include <string.h>
@@ -78,11 +79,11 @@ enum config_opts {
  * Table kind.
  */
 enum config_table_kind {
-  TABLE_NONE,                           ///< No table.
-  TABLE_INCLUDE_TIDY,                   ///< The `include-tidy` table.
-  TABLE_HEADER,                         ///< Header table.
-  TABLE_SOURCE,                         ///< Source table.
-  TABLE_SYMBOL                          ///< Symbol table.
+  TABLE_NONE          = 0,              ///< No table.
+  TABLE_INCLUDE_TIDY  = 1 << 0,         ///< The `include-tidy` table.
+  TABLE_HEADER        = 1 << 1,         ///< Header table.
+  TABLE_SOURCE        = 1 << 2,         ///< Source table.
+  TABLE_SYMBOL        = 1 << 3          ///< Symbol table.
 };
 
 ////////// typedefs ///////////////////////////////////////////////////////////
@@ -111,7 +112,7 @@ typedef void (*config_parse_fn)( char const *config_path,
  */
 struct config_key {
   char const       *name;               ///< Key name.
-  config_table_kind table_kind;         ///< Table kind allowed in.
+  config_table_kind table_kinds;        ///< Table kind(s) allowed in.
   config_parse_fn   parse_fn;           ///< Value parsing function.
 };
 
@@ -180,6 +181,8 @@ static char const*  home_dir( void );
 
 static void         first_parse( char const*, toml_table const*,
                                  toml_value const* );
+static void         ignore_as_argument_parse( char const*, toml_table const*,
+                                              toml_value const* );
 static void         includes_parse( char const*, toml_table const*,
                                     toml_value const* );
 
@@ -216,6 +219,33 @@ NODISCARD
 static int          tidy_include_cmp_by_rel_path( tidy_include const*,
                                                   tidy_include const* );
 
+////////// inline functions ///////////////////////////////////////////////////
+
+/**
+ * Checks whether \a n has either 0 or 1 bits set.
+ *
+ * @param n The number to check.
+ * @return Returns `true` only if \a n has either 0 or 1 bits set.
+ */
+NODISCARD
+static inline bool is_01_bit( uint64_t n ) {
+  return (n & (n - 1)) == 0;
+}
+
+/**
+ * Checks whether there are 0 or more bits set in \a n that are only among the
+ * bits set in \a set.
+ *
+ * @param n The bits to check.
+ * @param set The bits to check against.
+ * @return Returns `true` only if there are 0 or more bits set in \a n that are
+ * only among the bits set in \a set.
+ */
+NODISCARD
+inline bool is_0n_bit_only_in_set( uint64_t n, uint64_t set ) {
+  return (n & set) == n;
+}
+
 ////////// local constants ////////////////////////////////////////////////////
 
 /**
@@ -231,6 +261,8 @@ static config_key const CONFIG_KEYS[] = {
   { "first",              TABLE_HEADER,       &first_parse              },
   { "includes",           TABLE_SYMBOL,       &includes_parse           },
   { "keep",               TABLE_HEADER,       &keep_parse               },
+  { "ignore-as-argument", TABLE_HEADER | TABLE_SOURCE,
+                                              &ignore_as_argument_parse },
   { "line-length",        TABLE_INCLUDE_TIDY, &line_length_parse        },
   { "proxy",              TABLE_HEADER,       &proxy_parse              },
   { "std-c-includes",     TABLE_INCLUDE_TIDY, &std_c_includes_parse     },
@@ -242,19 +274,21 @@ static config_key const CONFIG_KEYS[] = {
  * Strings for table kinds.
  */
 static char const *const TABLE_KINDS[] = {
-  "none",
-  "include-tidy",
-  "header",
-  "source",
-  "symbol"
+  [ TABLE_NONE ] = "none",
+  [ TABLE_INCLUDE_TIDY ] = "include-tidy",
+  [ TABLE_HEADER ] = "header",
+  [ TABLE_SOURCE ] = "source",
+  [ TABLE_SOURCE | TABLE_HEADER ] = "source or header",
+  [ TABLE_SYMBOL ] = "symbol"
 };
 
 ////////// local variables ////////////////////////////////////////////////////
 
-static char   **std_c_includes;         ///< Standard-ish C include files.
-static size_t   std_c_includes_size;    ///< Size of \ref std_c_includes.
-static char   **std_cpp_includes;       ///< Standard C++ include files.
-static bool     verbose_printed_any;    ///< Print any configuration files?
+static rb_tree_t  ignore_set;           ///< Set of files to ignore.
+static char     **std_c_includes;       ///< Standard-ish C include files.
+static size_t     std_c_includes_size;  ///< Size of \ref std_c_includes.
+static char     **std_cpp_includes;     ///< Standard C++ include files.
+static bool       verbose_printed_any;  ///< Print any configuration files?
 
 /**
  * Mapping from source files to their associated headers.
@@ -379,6 +413,7 @@ static void config_cleanup( void ) {
       free( *ppattern );
     free( std_cpp_includes );
   }
+  rb_tree_cleanup( &ignore_set, /*free_fn=*/NULL );
   rb_tree_cleanup(
     &source_header_map,
     POINTER_CAST( rb_free_fn_t, &source_header_cleanup )
@@ -678,7 +713,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       exit( EX_CONFIG );
     }
 
-    config_table_kind table_kind = strcmp( table.name, "include-tidy" ) == 0 ?
+    config_table_kind table_kinds = strcmp( table.name, "include-tidy" ) == 0 ?
       TABLE_INCLUDE_TIDY : TABLE_NONE;
 
     toml_iterator iter;
@@ -694,15 +729,18 @@ static void config_parse( char const *config_path, FILE *config_file ) {
         exit( EX_CONFIG );
       }
 
-      if ( table_kind == TABLE_NONE ) {
-        table_kind = key->table_kind;
+      if ( table_kinds == TABLE_NONE ||
+           is_0n_bit_only_in_set( key->table_kinds, table_kinds ) ) {
+        table_kinds = key->table_kinds;
       }
-      else if ( key->table_kind != table_kind ) {
-        assert( table_kind < ARRAY_SIZE( TABLE_KINDS ) );
+      else if ( (key->table_kinds & table_kinds) == 0 ) {
+        assert( table_kinds < ARRAY_SIZE( TABLE_KINDS ) );
         print_error(
           config_path, kv->key.loc.line, kv->key.loc.col,
-          "\"%s\": key not allowed in %s table; allowed only in %s table\n",
-          key->name, TABLE_KINDS[ table_kind ], TABLE_KINDS[ key->table_kind ]
+          "\"%s\": key not allowed in %s table; allowed only in %s table%s\n",
+          key->name, TABLE_KINDS[ table_kinds ],
+          TABLE_KINDS[ key->table_kinds ],
+          is_01_bit( key->table_kinds ) ? "" : "s"
         );
         exit( EX_CONFIG );
       }
@@ -767,6 +805,31 @@ static void first_parse( char const *config_path, toml_table const *table,
   if ( include != NULL )
     include->sort_rank = TIDY_SORT_FIRST;
 }
+
+/**
+ * Parses the value of an `"ignore-as-argument"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param value The toml_value to parse.
+ */
+static void ignore_as_argument_parse( char const *config_path,
+                                      toml_table const *table,
+                                      toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( value != NULL );
+
+  if ( !bool_value_parse( config_path, "ignore-as-argument", value ) )
+    return;
+
+  PJL_DISCARD_RV(
+    rb_tree_insert(
+      &ignore_set, CONST_CAST( char*, table->name ),
+      strlen( table->name ) + 1/*\0*/
+    )
+  );
+};
 
 /**
  * Adds a proxy from \a from_include_file to \a to_include_file.
@@ -1350,6 +1413,7 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
 void config_init( void ) {
   ASSERT_RUN_ONCE();
 
+  rb_tree_init( &ignore_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &strcmp ) );
   rb_tree_init(
     &source_header_map, RB_DINT,
     POINTER_CAST( rb_cmp_fn_t, &source_header_cmp )
@@ -1383,6 +1447,10 @@ void config_init( void ) {
 
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_SYMBOLS) != 0 )
     symbol_includes_dump();
+}
+
+bool config_is_ignore( char const *rel_path ) {
+  return rb_tree_find( &ignore_set, rel_path ) != NULL;
 }
 
 bool config_is_standard_include( char const *rel_path ) {

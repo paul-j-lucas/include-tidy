@@ -18,6 +18,9 @@
 #       along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
+[config.h]
+ignore-as-argument = true
+
 [pjl_config.h]
 first = true
 keep = true

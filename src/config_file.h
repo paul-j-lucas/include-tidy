@@ -76,6 +76,16 @@ CXFile config_get_symbol_include( char const *symbol_name );
 void config_init( void );
 
 /**
+ * Gets whether \a rel_path should not be checked for violations when given as
+ * the command-line argument.
+ *
+ * @param rel_path The relative path to check.
+ * @return Returns `true` only if \a rel_path should be ignored.
+ */
+NODISCARD
+bool config_is_ignore( char const *rel_path );
+
+/**
  * Gets whether \a rel_path refers to a standard C, C++, POSIX, BSD, or Linux
  * include file.
  *
