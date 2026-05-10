@@ -46,14 +46,60 @@
  * @{
  */
 
+////////// typedefs ///////////////////////////////////////////////////////////
+
+typedef struct tidy_getCursorByName_data tidy_getCursorByName_data;
+
+////////// structures /////////////////////////////////////////////////////////
+
+/**
+ * Additional data passed to getCursorByName_visitor.
+ */
+struct tidy_getCursorByName_data {
+  char const *find_name;                ///< The name to find.
+  CXCursor    found_cursor;             ///< The name's cursor, if found.
+};
+
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Visits each symbol within a scope attempting to find one having \ref
+ * tidy_getCursorByName_data::find_name "find_name".
+ *
+ * @param cursor The cursor being visited.
+ * @param parent Not used.
+ * @param data The tidy_getCursorByName_data to use.
+ * @return Returns either `CXChildVisit_Break` or `CXChildVisit_Recurse`.
+ */
+static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
+                                                        CXCursor parent,
+                                                        CXClientData data ) {
+  (void)parent;
+  assert( data != NULL );
+  tidy_getCursorByName_data *const tgcbnd = data;
+
+  enum CXChildVisitResult rv;
+  CXString const          name_cxs = clang_getCursorSpelling( cursor );
+  char const *const       name = clang_getCString( name_cxs );
+
+  if ( name != NULL && strcmp( name, tgcbnd->find_name ) == 0 ) {
+    tgcbnd->found_cursor = cursor;
+    rv = CXChildVisit_Break;
+  }
+  else {
+    rv = CXChildVisit_Recurse;
+  }
+
+  clang_disposeString( name_cxs );
+  return rv;
+}
 
 /**
  * Given a cursor at a local name of an enumeration, class, class data member,
  * class member function, structure, union, or namespace, gets the fully scoped
  * name.
  *
- * @param ursor The cursor at a symbol.
+ * @param cursor The cursor at a symbol.
  * @param sbuf The strbuf to use.
  */
 static void getCursorScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
@@ -118,6 +164,17 @@ CXString tidy_File_getRealPathName( CXFile file ) {
   }
 
   return abs_path_cxs;
+}
+
+CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor ) {
+  assert( name != NULL );
+
+  tidy_getCursorByName_data tgcbnd = {
+    .find_name = name,
+    .found_cursor = clang_getNullCursor()
+  };
+  clang_visitChildren( scope_cursor, &getCursorByName_visitor, &tgcbnd );
+  return tgcbnd.found_cursor;
 }
 
 CXFile tidy_getCursorLocation_File( CXCursor cursor ) {
@@ -206,6 +263,18 @@ CXFile tidy_getSpellingLocation_File( CXSourceLocation loc ) {
     loc, &file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
   );
   return file;
+}
+
+bool tidy_Token_isEqual( CXTranslationUnit tu, CXToken token,
+                         char const *value ) {
+  assert( value != NULL );
+
+  CXString const    token_cxs = clang_getTokenSpelling( tu, token );
+  char const *const token_cstr = clang_getCString( token_cxs );
+  int const         cmp = strcmp( token_cstr, value );
+
+  clang_disposeString( token_cxs );
+  return cmp == 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

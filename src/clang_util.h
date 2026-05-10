@@ -100,6 +100,18 @@ NODISCARD
 CXString tidy_File_getRealPathName( CXFile file );
 
 /**
+ * Attempts to find a symbol having \a name within the scope of \a
+ * scope_cursor.
+ *
+ * @param name The name of the symbol to find.
+ * @param scope_cursor The scope to look in.
+ * @return Returns the cursor correponding to \a name or the null cursor if not
+ * found.
+ */
+NODISCARD
+CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor );
+
+/**
  * Gets the file the given cursor is in, if any.
  *
  * @param cursor The cursor to use.
@@ -191,6 +203,18 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file );
  */
 NODISCARD
 CXFile tidy_getSpellingLocation_File( CXSourceLocation loc );
+
+/**
+ * Gets whether the spelling of \a token equals \a value.
+ *
+ * @param tu The CXTranslationUnit to use.
+ * @param token The token to compare.
+ * @param value The value to compare against.
+ * @return Returns `true` only if the spelling of \a token equals \a value.
+ */
+NODISCARD
+bool tidy_Token_isEqual( CXTranslationUnit tu, CXToken token,
+                         char const *value );
 
 ///////////////////////////////////////////////////////////////////////////////
 

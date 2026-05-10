@@ -41,7 +41,9 @@
 
 // standard
 #include <assert.h>
+#include <limits.h>
 #include <stdbool.h>
+#include <stddef.h>                     /* for unreachable(3) */
 #include <string.h>
 
 /// @endcond
@@ -53,7 +55,7 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-typedef struct symbols_init_visitor_data symbols_init_visitor_data;
+typedef struct symbols_init_visitor_data  symbols_init_visitor_data;
 
 ////////// structures /////////////////////////////////////////////////////////
 
@@ -67,14 +69,176 @@ struct symbols_init_visitor_data {
 
 ////////// local functions ////////////////////////////////////////////////////
 
-static void tidy_symbol_cleanup( tidy_symbol* );
-static void visit_MacroDefinition( CXCursor, symbols_init_visitor_data* );
+NODISCARD
+static unsigned get_next_token_index( CXToken const[], unsigned, unsigned );
+
+static void     tidy_symbol_cleanup( tidy_symbol* );
+static void     visit_MacroDefinition( CXCursor, symbols_init_visitor_data* );
+
 
 ////////// local variables ////////////////////////////////////////////////////
 
 static rb_tree_t symbol_set;            ///< Set of symbols.
 
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Gets the index of the next token that is not a comment.
+ *
+ * @param tokens The array of tokens.
+ * @param token_count The length of \a tokens.
+ * @param token_idx The current token index.
+ * @return Returns the index of the next non-comment token or an integer &ge;
+ * \a token_count for none.
+ */
+NODISCARD
+static unsigned get_next_token_index( CXToken const tokens[],
+                                      unsigned token_count,
+                                      unsigned token_idx ) {
+  unsigned i;
+  for ( i = token_idx + 1; i < token_count; ++i ) {
+    if ( clang_getTokenKind( tokens[i] ) != CXToken_Comment )
+      break;
+  } // for
+  return i;
+}
+
+/**
+ * Gets the cursor for the identifier given by \a token within \a scope_cursor,
+ * but only if \a token actually is an identifier, neither `__VA_ARGS__` nor
+ * `__VA_OPT__`, nor one of the current macro's parameters.
+ *
+ * @param token The token to get the cursor for.
+ * @param scope_cursor The cursor of the scope to search within.
+ * @param param_set The set of macro parameter names.
+ * @return Returns said cursor or the null cursor if \a token is:
+ *  + Not an identifier; or:
+ *  + Either `__VA_ARGS__` nor `__VA_OPT__`; or:
+ *  + In \a param_set.
+ */
+NODISCARD
+static CXCursor macro_get_cursor_by_name( CXToken token, CXCursor scope_cursor,
+                                          rb_tree_t const *param_set ) {
+  assert( param_set != NULL );
+
+  CXCursor rv_cursor = clang_getNullCursor();
+
+  if ( clang_getTokenKind( token ) != CXToken_Identifier )
+    return rv_cursor;
+
+  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( scope_cursor );
+  CXString const          token_cxs = clang_getTokenSpelling( tu, token );
+  char const *const       token_cstr = clang_getCString( token_cxs );
+
+  if ( strcmp( token_cstr, "__VA_ARGS__" ) != 0 &&
+       strcmp( token_cstr, "__VA_OPT__" ) != 0 &&
+       rb_tree_find( param_set, token_cstr ) == NULL ) {
+    rv_cursor = tidy_getCursorByName( token_cstr, scope_cursor );
+  }
+
+  clang_disposeString( token_cxs );
+  return rv_cursor;
+}
+
+/**
+ * Gets the names of all of a macro's parameters.
+ *
+ * @param tu The translation unit to use.
+ * @param tokens The array of macro tokens.
+ * @param token_count The length of \a tokens.
+ * @param param_set The set to add the parameter names to.
+ * @return Returns the index of the token one past the `)`.
+ */
+static unsigned macro_get_params( CXTranslationUnit tu, CXToken const tokens[],
+                                  unsigned token_count, rb_tree_t *param_set ) {
+  assert( param_set != NULL );
+
+  unsigned rv_idx = 1;
+
+  // Start at index 2 since tokens[0] is the macro name, tokens[1] is the '('.
+  for ( unsigned i = 2; i < token_count; ++i ) {
+    CXTokenKind const kind = clang_getTokenKind( tokens[i] );
+    switch ( kind ) {
+      case CXToken_Identifier:
+      case CXToken_Punctuation:
+        break;
+      default:
+        continue;
+    } // switch
+
+    CXString const    token_cxs = clang_getTokenSpelling( tu, tokens[i] );
+    char const *const token_cstr = clang_getCString( token_cxs );
+
+    switch ( kind ) {
+      case CXToken_Identifier:
+        PJL_DISCARD_RV(
+          rb_tree_insert(
+            param_set, CONST_CAST( char*, token_cstr ),
+            strlen( token_cstr ) + 1/*\0*/
+          )
+        );
+        break;
+      case CXToken_Punctuation:
+        if ( strcmp( token_cstr, ")" ) == 0 ) {
+          rv_idx = i + 1;
+          i = token_count;              // will cause loop to exit
+        }
+        break;
+      default:
+        unreachable();
+    } // switch
+
+    clang_disposeString( token_cxs );
+  } // for
+
+  return rv_idx;
+}
+
+/**
+ * Gets the cursor for the fully qualified symbol from \a tokens.
+ *
+ * @param tu The translation to use.
+ * @param tokens The array of macro tokens.
+ * @param token_count The length of \a tokens.
+ * @param ptoken_idx A pointer to the current index within \a tokens.
+ * @param param_set The set of macro parameter names.
+ * @return Returns said cursor or the null cursor for none.
+ */
+static CXCursor macro_get_symbol_cursor( CXTranslationUnit tu,
+                                         CXToken const tokens[],
+                                         unsigned token_count,
+                                         unsigned *ptoken_idx,
+                                         rb_tree_t const *param_set ) {
+  assert( ptoken_idx != NULL );
+  assert( param_set != NULL );
+
+  CXCursor const tu_cursor = clang_getTranslationUnitCursor( tu );
+
+  CXCursor rv_cursor =
+    macro_get_cursor_by_name( tokens[ *ptoken_idx ], tu_cursor, param_set );
+
+  CXCursor loop_cursor = rv_cursor;
+  unsigned i = *ptoken_idx;
+
+  while ( !clang_isInvalid( loop_cursor.kind ) ) {
+    rv_cursor = loop_cursor;
+    *ptoken_idx = i;
+
+    i = get_next_token_index( tokens, token_count, *ptoken_idx );
+    if ( i >= token_count )
+      break;
+    if ( clang_getTokenKind( tokens[i] ) != CXToken_Punctuation )
+      break;                            // can't be "::"
+    if ( !tidy_Token_isEqual( tu, tokens[i], "::" ) )
+      break;
+    i = get_next_token_index( tokens, token_count, i );
+    if ( i >= token_count )
+      break;
+    loop_cursor = macro_get_cursor_by_name( tokens[i], rv_cursor, param_set );
+  } // while
+
+  return rv_cursor;
+}
 
 /**
  * Helper function for symbols_init_visitor that maybe adds a symbol to the
@@ -236,29 +400,53 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
 /**
  * Visits a `CXCursor_MacroDefinition` kind of cursor.
  *
+ * @remarks
+ * @parblock
+ * We have to iterate over all tokens of the macro's definition looking for
+ * identifiers to see whether the file being tidied includes the headers
+ * defining those identifiers.  For example, if a header contains:
+ *
+ *      #define POINTER_CAST(T,EXPR)    ((T)(uintptr_t)(EXPR))
+ *
+ * it should also `#include <stdint.h>` because `uintptr_t` is used.  The user
+ * of the macro shouldn't have to know or care about the definition, nor be
+ * forced to `#include <stdint.h>` explicitly.
+ * @endparblock
+ *
  * @param macro_cursor The macro definition's cursor.
  * @param sivd The symbols_init_visitor_data to use.
  */
 static void visit_MacroDefinition( CXCursor macro_cursor,
                                    symbols_init_visitor_data *sivd ) {
+  CXSourceRange const     macro_range = clang_getCursorExtent( macro_cursor );
   CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( macro_cursor );
-  CXSourceRange const macro_range = clang_getCursorExtent( macro_cursor );
 
-  CXToken *macro_tokens;
+  CXToken *tokens;
   unsigned token_count;
-  clang_tokenize( tu, macro_range, &macro_tokens, &token_count );
+  clang_tokenize( tu, macro_range, &tokens, &token_count );
 
-  for ( unsigned i = 0; i < token_count; ++i ) {
-    if ( clang_getTokenKind( macro_tokens[i] ) != CXToken_Identifier )
-      continue;
-    CXSourceLocation const loc = clang_getTokenLocation( tu, macro_tokens[i] );
-    CXCursor const ident_cursor = clang_getCursor( tu, loc );
-    CXCursor const ref_cursor = clang_getCursorReferenced( ident_cursor );
-    if ( !clang_isInvalid( ref_cursor.kind ) )
-      maybe_add_symbol( ref_cursor, sivd );
+  //
+  // While iterating over all tokens of the macro, we have to skip identifers
+  // of macro parameters for function-like macros because those are obviously
+  // defined by the macro itself.  To skip them, we first have to collect the
+  // set of them.
+  //
+  rb_tree_t param_set;
+  rb_tree_init( &param_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &strcmp ) );
+
+  unsigned i = clang_Cursor_isMacroFunctionLike( macro_cursor ) ?
+    macro_get_params( tu, tokens, token_count, &param_set ) :
+    1;                                  // tokens[0] = macro name; start at 1
+
+  for ( ; i < token_count; ++i ) {
+    CXCursor const sym_cursor =
+      macro_get_symbol_cursor( tu, tokens, token_count, &i, &param_set );
+    if ( !clang_isInvalid( sym_cursor.kind ) )
+      maybe_add_symbol( sym_cursor, sivd );
   } // for
 
-  clang_disposeTokens( tu, macro_tokens, token_count );
+  rb_tree_cleanup( &param_set, /*free_fn=*/NULL );
+  clang_disposeTokens( tu, tokens, token_count );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
