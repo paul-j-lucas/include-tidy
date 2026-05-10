@@ -56,7 +56,7 @@
  * @param ursor The cursor at a symbol.
  * @param sbuf The strbuf to use.
  */
-static void get_scoped_name_impl( CXCursor cursor, strbuf_t *sbuf ) {
+static void getCursorScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
   assert( sbuf != NULL );
 
   CXCursor const    parent_cursor = clang_getCursorSemanticParent( cursor );
@@ -70,7 +70,7 @@ static void get_scoped_name_impl( CXCursor cursor, strbuf_t *sbuf ) {
     clang_disposeString( name_cxs );
     if ( has_parent ) {
       // Recurse all the way up to the outermost scope ...
-      get_scoped_name_impl( parent_cursor, sbuf );
+      getCursorScopedName_impl( parent_cursor, sbuf );
       // ... then on the way back down, add the "::" ...
       strbuf_putsn( sbuf, "::", STRLITLEN( "::" ) );
     }
@@ -178,7 +178,7 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
 char const* tidy_getCursorScopedName( CXCursor cursor ) {
   strbuf_t sbuf;
   strbuf_init( &sbuf );
-  get_scoped_name_impl( cursor, &sbuf );
+  getCursorScopedName_impl( cursor, &sbuf );
   return strbuf_take( &sbuf );
 }
 
