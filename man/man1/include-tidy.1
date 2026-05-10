@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "May 7, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "May 10, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -101,6 +101,25 @@ An unnecessary \f(CW#include\fP is printed
 followed by a comment
 containing a recommendation
 to delete the line number.
+.SS General Use
+.B include-tidy
+should be run
+only on valid C or C++ files,
+i.e., files should compile successfully
+with a C or C++ compiler first.
+.PP
+.B include-tidy
+should be used on both header (\f(CW.h\fP)
+and source (\f(CW.c\fP or \f(CW.cpp)
+files
+since both should include what they use.
+.PP
+If a source file has an associated header,
+e.g., \f(CWfoo.c\fP has \f(CWfoo.h\fP,
+then the header should have any violations fixed
+before running
+.B include-tidy
+on the source file.
 .SS Use with Make
 While
 .B include-tidy
@@ -115,25 +134,32 @@ In your
 have:
 .cS
 TIDY_FLAGS = -Xtidy --verbose=f -Xtidy --error=never
+TIDY_CFLAGS = $(CFLAGS) $(AM_CFLAGS) $(CPPFLAGS) $(AM_CPPFLAGS)
 
 tidy:
-        @touch *.c
-        @$(MAKE) -s CC="include-tidy" CFLAGS="$(TIDY_FLAGS)"
+        @for file in *.h *.c; do \\
+          include-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) $$file; \\
+        done
 .cE
 then simply
 .B make tidy
-to tidy all your source files
+to analyze all your source files
 at once.
 (For C++,
 substitute
 \f(CW.cpp\fP for \f(CW.c\fP,
-.B CXX
-for
-.BR CC ,
-and
 .B CXXFLAGS
 for
-.BR CFLAGS .)
+.BR CFLAGS ,
+and
+.B AM_CXXFLAGS
+for
+.BR AM_CFLAGS .
+The
+.BR AM_
+variables are needed
+only when using
+.BR automake .)
 .PP
 The advantage of doing this
 is that
@@ -152,28 +178,19 @@ options
 that affect compilation.
 .PP
 The
-.B \-\-verbose=f
-says to print each source file's name;
-.B \-\-error=never
-says always to exit with a zero status
-even for violations so
-.B make
-doesn't think anything went wrong;
 .B @
 suppresses echoing of commands;
-.B touch
-is needed so
-.B make
-will run
+.B \-\-verbose=f
+prints each source file's name
+(so you know which file
+any printed violations are for);
+.B \-\-error=never
+causes
 .B include-tidy
-on all \f(CW.c\fP files;
-and
-.B \-s
-(or
-.BR \-\-silent )
-suppresses
-.BR make 's
-output.
+always to exit with a zero status
+even for violations so
+.B make
+doesn't think anything went wrong.
 (See the
 .B \-\-error
 and
@@ -1152,6 +1169,7 @@ Unicode.
 Paul J. Lucas
 .RI < paul@lucasmail.org >
 .SH SEE ALSO
+.BR automake (1),
 .BR clang (1),
 .BR gcc (1),
 .BR make (1),
