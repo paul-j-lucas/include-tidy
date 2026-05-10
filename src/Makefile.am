@@ -75,10 +75,7 @@ util_test_SOURCES =	$(BASE_TEST_SOURCES) \
 			util_test.c
 
 tidy:
-	@for file in *.h; \
-	do include-tidy $(INVOKE_TIDY_FLAGS) $(INVOKE_TIDY_CFLAGS) $$file; \
-	done
-	@for file in *.c; \
+	@for file in *.h *.c; \
 	do include-tidy $(INVOKE_TIDY_FLAGS) $(INVOKE_TIDY_CFLAGS) $$file; \
 	done
 
