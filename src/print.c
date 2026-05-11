@@ -201,8 +201,6 @@ void verbose_print_cursor( CXCursor cursor ) {
 }
 
 int verbose_printf( char const *format, ... ) {
-  if ( opt_verbose == TIDY_VERBOSE_NONE )
-    return 0;
   fputs( "// tidy | ", stdout );
   va_list args;
   va_start( args, format );
