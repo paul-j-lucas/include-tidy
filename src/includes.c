@@ -637,7 +637,7 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
     size_t        add_len = (comma ? STRLITLEN( ", " ) : 0) + sym_name_len;
     size_t        new_line_len = fixed_len + symbols_buf.len + add_len;
 
-    if ( new_line_len > opt_line_length ) {
+    if ( symbols_buf.len > 0 && new_line_len > opt_line_length ) {
       // The next symbol doesn't fit: try adding ", ..." instead.
       add_len = STRLITLEN( ", ..." );
       new_line_len = fixed_len + symbols_buf.len + add_len;
