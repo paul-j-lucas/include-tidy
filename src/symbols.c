@@ -258,26 +258,7 @@ static void maybe_add_symbol( CXCursor sym_cursor,
   if ( clang_File_isEqual( sym_file, sivd->source_file ) )
     return;
 
-  enum CXCursorKind const   sym_kind = clang_getCursorKind( sym_cursor );
-  char const               *sym_name;
-
-  switch ( sym_kind ) {
-    case CXCursor_ClassDecl:
-    case CXCursor_CXXMethod:            // C++ member functions
-    case CXCursor_EnumConstantDecl:
-    case CXCursor_EnumDecl:
-    case CXCursor_FieldDecl:
-    case CXCursor_Namespace:
-    case CXCursor_StructDecl:
-    case CXCursor_UnionDecl:
-    case CXCursor_VarDecl:              // static members of class or namespace
-      sym_name = tidy_getCursorScopedName( sym_cursor );
-      break;
-    default:
-      sym_name = tidy_getCursorSpelling( sym_cursor );
-      break;
-  } // switch
-
+  char const *const sym_name = tidy_getCursorScopedName( sym_cursor );
   tidy_symbol new_symbol = { .name = sym_name };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_set, &new_symbol, sizeof new_symbol );
