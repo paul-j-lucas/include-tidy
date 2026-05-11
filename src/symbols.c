@@ -73,7 +73,7 @@ static unsigned get_next_token_index( CXToken const[], unsigned, unsigned );
 
 static void     tidy_symbol_cleanup( tidy_symbol* );
 static void     visit_MacroDefinition( CXCursor, symbols_init_visitor_data* );
-
+static void     visit_most_kinds( CXCursor, symbols_init_visitor_data* );
 
 ////////// local variables ////////////////////////////////////////////////////
 
@@ -320,50 +320,32 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   symbols_init_visitor_data *const sivd =
     POINTER_CAST( symbols_init_visitor_data*, data );
 
-  if ( !tidy_Cursor_isInFile( cursor, sivd->source_file ) )
-    goto skip;
-
-  enum CXCursorKind const kind = clang_getCursorKind( cursor );
-  switch ( kind ) {
-    case CXCursor_CallExpr:
-    case CXCursor_Constructor:
-    case CXCursor_DeclRefExpr:
-    case CXCursor_Destructor:
-    case CXCursor_FunctionDecl:
-    case CXCursor_MacroExpansion:
-    case CXCursor_MemberRefExpr:
-    case CXCursor_NamespaceRef:
-    case CXCursor_TemplateRef:
-    case CXCursor_TypedefDecl:
-    case CXCursor_TypeRef:;
-
-      // Gets the cursor for _a_ declaration of the symbol.
-      CXCursor const decl_cursor = clang_getCursorReferenced( cursor );
-      if ( clang_isInvalid( decl_cursor.kind ) )
+  if ( tidy_Cursor_isInFile( cursor, sivd->source_file ) ) {
+    enum CXCursorKind const kind = clang_getCursorKind( cursor );
+    switch ( kind ) {
+      case CXCursor_CallExpr:
+      case CXCursor_Constructor:
+      case CXCursor_DeclRefExpr:
+      case CXCursor_Destructor:
+      case CXCursor_FunctionDecl:
+      case CXCursor_MacroExpansion:
+      case CXCursor_MemberRefExpr:
+      case CXCursor_NamespaceRef:
+      case CXCursor_TemplateRef:
+      case CXCursor_TypedefDecl:
+      case CXCursor_TypeRef:
+        visit_most_kinds( cursor, sivd );
         break;
 
-      // Gets the cursor for the _first_ declaration of the symbol.
-      CXCursor const first_cursor = clang_getCanonicalCursor( decl_cursor );
-      if ( clang_isInvalid( first_cursor.kind ) )
+      case CXCursor_MacroDefinition:
+        visit_MacroDefinition( cursor, sivd );
         break;
 
-      maybe_add_symbol( first_cursor, sivd );
-      CXCursor const underlying_cursor = tidy_getCursorUnderlying( cursor );
-      if ( clang_Cursor_isNull( underlying_cursor ) )
-        break;
-      if ( tidy_Cursor_isInFile( underlying_cursor, sivd->source_file ) )
-        maybe_add_symbol( underlying_cursor, sivd );
-      break;
+      default:
+        /* suppress warning */;
+    } // switch
+  }
 
-    case CXCursor_MacroDefinition:
-      visit_MacroDefinition( cursor, sivd );
-      break;
-
-    default:
-      /* suppress warning */;
-  } // switch
-
-skip:
   return CXChildVisit_Recurse;
 }
 
@@ -394,7 +376,7 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
  * forced to `#include <stdint.h>` explicitly.
  * @endparblock
  *
- * @param macro_cursor The macro definition's cursor.
+ * @param macro_cursor The macro definition's cursor to visit.
  * @param sivd The symbols_init_visitor_data to use.
  */
 static void visit_MacroDefinition( CXCursor macro_cursor,
@@ -428,6 +410,34 @@ static void visit_MacroDefinition( CXCursor macro_cursor,
 
   rb_tree_cleanup( &param_set, /*free_fn=*/NULL );
   clang_disposeTokens( tu, tokens, token_count );
+}
+
+/**
+ * Visit most kinds of cursor.
+ *
+ * @param cursor The cursor to visit.
+ * @param sivd The symbols_init_visitor_data to use.
+ */
+static void visit_most_kinds( CXCursor cursor,
+                              symbols_init_visitor_data *sivd ) {
+  assert( sivd != NULL );
+
+  // Gets the cursor for _a_ declaration of the symbol.
+  CXCursor const decl_cursor = clang_getCursorReferenced( cursor );
+  if ( clang_isInvalid( decl_cursor.kind ) )
+    return;
+
+  // Gets the cursor for the _first_ declaration of the symbol.
+  CXCursor const first_cursor = clang_getCanonicalCursor( decl_cursor );
+  if ( clang_isInvalid( first_cursor.kind ) )
+    return;
+
+  maybe_add_symbol( first_cursor, sivd );
+  CXCursor const underlying_cursor = tidy_getCursorUnderlying( cursor );
+  if ( clang_Cursor_isNull( underlying_cursor ) )
+    return;
+  if ( tidy_Cursor_isInFile( underlying_cursor, sivd->source_file ) )
+    maybe_add_symbol( underlying_cursor, sivd );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
