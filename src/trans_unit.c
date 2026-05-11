@@ -79,11 +79,35 @@ static inline char const* plural_s( unsigned long long n ) {
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Prints translation unit errors, if any.
- *
- * @param tu The CXTranslationUnit to use.
+ * Checks that arg_source_path actually exists; if not, prints an error message
+ * and exits.
  */
-static void print_diagnostics( CXTranslationUnit tu ) {
+static void check_arg_source_path_exists( void ) {
+  if ( tidy_tu == NULL ) {
+    // libclang isn't specific enough about a failure, so see if the reason is
+    // because the source file doesn't exist or isn't readable.
+    FILE *const file = fopen( arg_source_path, "r" );
+    if ( file == NULL ) {
+      print_error( arg_source_path, 0, 0, "%s\n", STRERROR() );
+      exit( EX_DATAERR );
+    }
+    fclose( file );
+  }
+}
+
+/**
+ * Cleans-up the translation unit.
+ */
+static void trans_unit_cleanup( void ) {
+  if ( tidy_tu != NULL )
+    clang_disposeTranslationUnit( tidy_tu );
+  if ( tidy_index != NULL )
+    clang_disposeIndex( tidy_index );
+}
+
+////////// extern functions ///////////////////////////////////////////////////
+
+void trans_unit_check_for_errors( CXTranslationUnit tu ) {
   assert( tu != NULL );
 
   unsigned const diag_count = clang_getNumDiagnostics( tu );
@@ -123,41 +147,6 @@ static void print_diagnostics( CXTranslationUnit tu ) {
   }
 }
 
-/**
- * Checks for and handles a translation unit failures.
- *
- * @param tu The CXTranslationUnit to use.  May be NULL.
- */
-static void trans_unit_check_for_errors( CXTranslationUnit tu ) {
-  if ( tu == NULL ) {
-    // libclang isn't specific enough about a failure, so see if the reason is
-    // because the source file doesn't exist or isn't readable.
-    FILE *const file = fopen( arg_source_path, "r" );
-    if ( file == NULL ) {
-      print_error( arg_source_path, 0, 0, "%s\n", STRERROR() );
-    }
-    else {
-      fclose( file );
-      print_error( arg_source_path, 0, 0, "failed to parse\n" );
-    }
-    exit( EX_DATAERR );
-  }
-
-  print_diagnostics( tu );
-}
-
-/**
- * Cleans-up the translation unit.
- */
-static void trans_unit_cleanup( void ) {
-  if ( tidy_tu != NULL )
-    clang_disposeTranslationUnit( tidy_tu );
-  if ( tidy_index != NULL )
-    clang_disposeIndex( tidy_index );
-}
-
-////////// extern functions ///////////////////////////////////////////////////
-
 CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
   ASSERT_RUN_ONCE();
   assert( argc > 0 );
@@ -187,15 +176,15 @@ CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
       fatal_error( EX_UNAVAILABLE, "libclang crashed\n" );
     case CXError_InvalidArguments:
       fatal_error( EX_SOFTWARE, "invalid arguments given to libclang\n" );
-
+    case CXError_Failure:
+      check_arg_source_path_exists();
+      break;
     case CXError_Success:
       //
       // All a CXError_Success means is that clang's parser didn't crash; it
-      // doesn't mean the code is valid, so we have to check for errors
-      // explicitly.
+      // doesn't mean the code is valid, so we have to check for errors later
+      // via trans_unit_check_for_errors().
       //
-    case CXError_Failure:
-      trans_unit_check_for_errors( tidy_tu );
       break;
   } // switch
 

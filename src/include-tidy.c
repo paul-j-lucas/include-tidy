@@ -98,6 +98,7 @@ int main( int argc, char const *argv[] ) {
   includes_init( tu );
   config_init();
   if ( !config_is_ignore( arg_source_path ) ) {
+    trans_unit_check_for_errors( tu );
     implicit_proxies_init( tu );
     symbols_init( tu );
     includes_print();
