@@ -326,9 +326,9 @@ static char const* get_opt_help( int opt ) {
  */
 NODISCARD
 static struct option const* get_option( int short_opt ) {
-  FOREACH_CLI_OPTION( opt, OPTIONS ) {
-    if ( opt->val == short_opt )
-      return opt;
+  FOREACH_CLI_OPTION( option, OPTIONS ) {
+    if ( option->val == short_opt )
+      return option;
   } // for
   return NULL;                          // LCOV_EXCL_LINE
 }
@@ -553,26 +553,26 @@ static bool is_Xtidy_opt( int argc, char const *const argv[], int *pargi ) {
  * The caller is responsible for freeing it.
  */
 NODISCARD
-static char const* make_short_opts( struct option const opts[static const 2],
+static char const* make_short_opts( struct option const options[static const 2],
                                     char const *extra_opts ) {
   extra_opts = empty_if_null( extra_opts );
   size_t const extra_opts_len = strlen( extra_opts );
 
   // pre-flight to calculate string length
   size_t len = 1 /* for leading ':' */ + extra_opts_len;
-  FOREACH_CLI_OPTION( opt, opts ) {
-    assert( opt->has_arg >= 0 && opt->has_arg <= 2 );
-    len += 1 + STATIC_CAST( unsigned, opt->has_arg );
+  FOREACH_CLI_OPTION( option, options ) {
+    assert( option->has_arg >= 0 && option->has_arg <= 2 );
+    len += 1 + STATIC_CAST( unsigned, option->has_arg );
   } // for
 
   char *const short_opts = MALLOC( char, len + 1/*\0*/ );
   char *s = short_opts;
 
   *s++ = ':';                           // return missing argument as ':'
-  FOREACH_CLI_OPTION( opt, opts ) {
-    assert( opt->val > 0 && opt->val < 128 );
-    *s++ = STATIC_CAST( char, opt->val );
-    switch ( opt->has_arg ) {
+  FOREACH_CLI_OPTION( option, options ) {
+    assert( option->val > 0 && option->val < 128 );
+    *s++ = STATIC_CAST( char, option->val );
+    switch ( option->has_arg ) {
       case optional_argument:
         *s++ = ':';
         FALLTHROUGH;
@@ -661,13 +661,13 @@ static void move_tidy_args( int *pargc, char const *argv[],
         if ( argv[i][2] != '\0' )
           continue;
         char const short_opt = argv[i][1];
-        struct option const *const opt = get_option( short_opt );
-        if ( opt == NULL ) {
+        struct option const *const option = get_option( short_opt );
+        if ( option == NULL ) {
           fatal_error( EX_USAGE,
             "'%c': invalid option; use --help for help\n", short_opt
           );
         }
-        if ( opt->has_arg == no_argument )
+        if ( option->has_arg == no_argument )
           continue;
         if ( ++i >= argc )
           fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", short_opt );
@@ -724,9 +724,9 @@ _Noreturn
 static void print_usage( int status ) {
   // pre-flight to calculate longest long option length
   size_t longest_opt_len = 0;
-  FOREACH_CLI_OPTION( opt, OPTIONS ) {
-    size_t opt_len = strlen( opt->name );
-    switch ( opt->has_arg ) {
+  FOREACH_CLI_OPTION( option, OPTIONS ) {
+    size_t opt_len = strlen( option->name );
+    switch ( option->has_arg ) {
       case no_argument:
         break;
       case optional_argument:
@@ -750,8 +750,8 @@ static void print_usage( int status ) {
     , prog_name, prog_name
   );
 
-  FOREACH_CLI_OPTION( opt, OPTIONS ) {
-    switch ( opt->val ) {
+  FOREACH_CLI_OPTION( option, OPTIONS ) {
+    switch ( option->val ) {
       case COPT(HELP):
       case COPT(VERSION):
         // These are special in that they are allowed directly rather than
@@ -759,9 +759,9 @@ static void print_usage( int status ) {
         // also must be printed seperately (below).
         continue;
     } // switch
-    fprintf( fout, "  --%s", opt->name );
-    size_t opt_len = strlen( opt->name );
-    switch ( opt->has_arg ) {
+    fprintf( fout, "  --%s", option->name );
+    size_t opt_len = strlen( option->name );
+    switch ( option->has_arg ) {
       case no_argument:
         break;
       case optional_argument:
@@ -773,21 +773,21 @@ static void print_usage( int status ) {
     } // switch
     assert( opt_len <= longest_opt_len );
     FPUTNSP( longest_opt_len - opt_len, fout );
-    fprintf( fout, " (-%c) %s.\n", opt->val, get_opt_help( opt->val ) );
+    fprintf( fout, " (-%c) %s.\n", option->val, get_opt_help( option->val ) );
   } // for
 
   fputs( "\nother options:\n", fout );
 
-  FOREACH_CLI_OPTION( opt, OPTIONS ) {
-    switch ( opt->val ) {
+  FOREACH_CLI_OPTION( option, OPTIONS ) {
+    switch ( option->val ) {
       case COPT(HELP):
       case COPT(VERSION):
-        assert( opt->has_arg == no_argument );
-        fprintf( fout, "  --%s", opt->name );
-        size_t const opt_len = strlen( opt->name );
+        assert( option->has_arg == no_argument );
+        fprintf( fout, "  --%s", option->name );
+        size_t const opt_len = strlen( option->name );
         assert( opt_len <= longest_opt_len );
         FPUTNSP( longest_opt_len - opt_len + STRLITLEN( " (-?) " ), fout );
-        fprintf( fout, "%s.\n", get_opt_help( opt->val ) );
+        fprintf( fout, "%s.\n", get_opt_help( option->val ) );
     } // switch
   } // for
 
