@@ -334,6 +334,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     case CXCursor_MemberRefExpr:
     case CXCursor_NamespaceRef:
     case CXCursor_TemplateRef:
+    case CXCursor_TypedefDecl:
     case CXCursor_TypeRef:;
 
       // Gets the cursor for _a_ declaration of the symbol.
