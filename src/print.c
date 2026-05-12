@@ -175,12 +175,17 @@ void print_include( char const *sgr_color, char const inc_delim[static 2],
 }
 
 void verbose_print_cursor( CXCursor cursor ) {
+  if ( clang_Cursor_isNull( cursor ) || clang_isInvalid( cursor.kind ) )
+    return;
+
   CXSourceLocation const loc = clang_getCursorLocation( cursor );
   CXFile file;
   unsigned line, col;
   clang_getSpellingLocation( loc, &file, &line, &col, /*offset=*/NULL );
 
-  CXString const          abs_path_cxs = tidy_File_getRealPathName( file );
+  CXString const abs_path_cxs = file != NULL ?
+    tidy_File_getRealPathName( file ) : (CXString){ 0 };
+
   char const *const       abs_path = clang_getCString( abs_path_cxs );
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
