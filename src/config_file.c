@@ -242,7 +242,7 @@ static inline bool is_01_bit( uint64_t n ) {
  * only among the bits set in \a set.
  */
 NODISCARD
-inline bool is_0n_bit_only_in_set( uint64_t n, uint64_t set ) {
+static inline bool is_0n_bit_only_in_set( uint64_t n, uint64_t set ) {
   return (n & set) == n;
 }
 
