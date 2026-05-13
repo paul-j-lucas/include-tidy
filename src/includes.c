@@ -117,23 +117,6 @@ static rb_tree_t  include_set;          ///< Set of included files.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Gets the include delimiters, either local or system, to use.
- *
- * @param is_local `true` only if the include file is local.
- * @param delim The 2-element array to receive the delimiters.
- */
-static void get_include_delims( bool is_local, char delim[static 2] ) {
-  if ( is_local ) {
-    delim[0] = '"';
-    delim[1] = '"';
-  }
-  else {
-    delim[0] = '<';
-    delim[1] = '>';
-  }
-}
-
-/**
  * Visits each `#include` directive in a translation unit for initializing
  * implicit include proxies.
  *
@@ -240,9 +223,13 @@ static void include_proxies_dump( bool want_explicit ) {
         want_explicit ? "explicit" : "implicit"
       );
     }
+    char delims[2], proxy_delims[2];
+    include_get_delims( include, delims );
+    include_get_delims( include->proxy, proxy_delims );
     verbose_printf(
-      "  \"%s\" -> \"%s\"\n",
-      include->abs_path, include->proxy->abs_path
+      "  %c%s%c -> %c%s%c\n",
+      delims[0], include->abs_path, delims[1],
+      proxy_delims[0], include->proxy->abs_path, proxy_delims[1]
     );
   } // for
 
@@ -407,14 +394,14 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     if ( false_set( &iivd->verbose_printed ) )
       verbose_printf( "includes:\n" );
 
-    char inc_delim[2];
-    get_include_delims( included->is_local, inc_delim );
+    char delims[2];
+    include_get_delims( included, delims );
 
     verbose_printf(
       "  %2u%*s %c%s%c\n",
       included->depth,
       STATIC_CAST( int, included->depth * INCLUDE_VERBOSE_INDENT ), "",
-      inc_delim[0], included->abs_path, inc_delim[1]
+      delims[0], included->abs_path, delims[1]
     );
   }
 
@@ -486,8 +473,8 @@ static void includes_print_visitor( tidy_include const *include,
   }
 
   char       *comment = NULL;
+  char        delims[2];
   bool        do_print_include = false;
-  char        inc_delim[2];
   bool const  is_direct = include->depth == 0;
   bool        reset_opt_comment_style = false;
   char const *sgr_color = NULL;
@@ -514,11 +501,11 @@ static void includes_print_visitor( tidy_include const *include,
     do_print_include = true;
   }
 
-  get_include_delims( include->is_local, inc_delim );
+  include_get_delims( include, delims );
   if ( do_print_include ) {
     if ( true_clear( &ipvd->print_blank_line ) )
       PUTC( '\n' );
-    print_include( sgr_color, inc_delim, include->rel_path, comment );
+    print_include( sgr_color, delims, include->rel_path, comment );
     ipvd->printed_any_includes = true;
   }
 
@@ -542,7 +529,7 @@ static void includes_print_visitor( tidy_include const *include,
       else {
         check_asprintf( &comment, "DELETE line %u", line );
       }
-      print_include( sgr_include_del, inc_delim, include->rel_path, comment );
+      print_include( sgr_include_del, delims, include->rel_path, comment );
     } // for
 
     ipvd->printed_any_includes = true;
@@ -838,6 +825,19 @@ tidy_include* include_find_by_rel_path( char const *rel_path ) {
   } // for
 
   return NULL;
+}
+
+void include_get_delims( tidy_include const *include, char delim[static 2] ) {
+  assert( include != NULL );
+
+  if ( include->is_local ) {
+    delim[0] = '"';
+    delim[1] = '"';
+  }
+  else {
+    delim[0] = '<';
+    delim[1] = '>';
+  }
 }
 
 bool include_proxy_would_cycle( tidy_include const *from_include,

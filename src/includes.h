@@ -148,6 +148,14 @@ NODISCARD
 tidy_include* include_find_by_rel_path( char const *rel_path );
 
 /**
+ * Gets the delimiters for \a include, either local or system, to use.
+ *
+ * @param include The include file to get the delimiters for.
+ * @param delim The 2-element array to receive the delimiters.
+ */
+void include_get_delims( tidy_include const *include, char delims[static 2] );
+
+/**
  * Checks whether adding a proxy from \a from_include to \a to_include would
  * cause a cycle.
  *

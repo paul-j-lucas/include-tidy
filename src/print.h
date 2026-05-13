@@ -147,11 +147,11 @@ void fl_print_warning( char const *tidy_file, int tidy_line,
  * Prints an `#include` preprocessor directive.
  *
  * @param sgr_color The SGR color to use, if any.
- * @param inc_delim The include delimiters.
+ * @param delims The include delimiters.
  * @param rel_path The include's relative path.
  * @param comment The comment, if any.
  */
-void print_include( char const *sgr_color, char const inc_delim[static 2],
+void print_include( char const *sgr_color, char const delims[static 2],
                     char const *rel_path, char const *comment );
 
 /**

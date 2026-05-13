@@ -150,13 +150,13 @@ void fl_print_warning( char const *tidy_file, int tidy_line,
   va_end( args );
 }
 
-void print_include( char const *sgr_color, char const inc_delim[static 2],
+void print_include( char const *sgr_color, char const delims[static 2],
                     char const *rel_path, char const *comment ) {
   assert( rel_path != NULL );
 
   color_start( stdout, sgr_color );
   int const raw_len = printf(
-    "#include %c%s%c", inc_delim[0], rel_path, inc_delim[1]
+    "#include %c%s%c", delims[0], rel_path, delims[1]
   );
   if ( unlikely( raw_len < 0 ) ) {
     color_end( stdout, sgr_color );
