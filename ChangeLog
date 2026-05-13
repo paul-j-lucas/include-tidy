@@ -1,3 +1,26 @@
+2026-05-13  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c, duplicate.out: Now "DELETE LINE" (all caps) in all cases.
+   * includes.c, includes.h, print.c, print.h, symbols.c: Now always enclosing
+     include paths in delimeters.
+
+2026-05-12  Paul J. Lucas <paul@lucasmail.org>
+
+   * print.c: Made verbose_print_cursor() more robust.
+   * config_file.c: Added "static".
+
+2026-05-11  Paul J. Lucas <paul@lucasmail.org>
+
+   * include-tidy.c, trans_unit.c, trans_unit.h: Split out
+     trans_unit_check_for_errors().
+   * symbols.c: Added visit_most_kinds().
+   * symbols.c: Added CXCursor_TypedefDecl.
+   * symbols.c: Now always calling tidy_getCursorScopedName().
+   * includes.c: Ensure we always print at least one symbol even if it's longer
+     than the line length.
+   * print.c: Removed check for opt_verbose == TIDY_VERBOSE_NONE.
+   * cli_options.c: s/opt/option/
+
 2026-05-10  Paul J. Lucas <paul@lucasmail.org>
 
    * man/man1/include-tidy.1, config_file.c, config_file.h, include-tidy.c,
