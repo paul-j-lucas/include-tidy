@@ -72,6 +72,8 @@ NODISCARD
 static unsigned get_next_token_index( CXToken const[], unsigned, unsigned );
 
 static void     tidy_symbol_cleanup( tidy_symbol* );
+static void     visit_AlignedAttr( CXCursor, CXCursor,
+                                   symbols_init_visitor_data* );
 static void     visit_MacroDefinition( CXCursor, symbols_init_visitor_data* );
 static void     visit_most_kinds( CXCursor, symbols_init_visitor_data* );
 
@@ -80,6 +82,32 @@ static void     visit_most_kinds( CXCursor, symbols_init_visitor_data* );
 static rb_tree_t symbol_set;            ///< Set of symbols.
 
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Gets the cursor for the identifier given by \a token within \a scope_cursor,
+ * but only if \a token actually is an identifier.
+ *
+ * @param token The token to get the cursor for.
+ * @param scope_cursor The cursor of the scope to search within.
+ * @return Returns said cursor or the null cursor if \a token is not an
+ * identifier.
+ */
+NODISCARD
+CXCursor attr_get_cursor_by_name( CXToken token, CXCursor scope_cursor ) {
+  CXCursor rv_cursor = clang_getNullCursor();
+
+  if ( clang_getTokenKind( token ) != CXToken_Identifier )
+    return rv_cursor;
+
+  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( scope_cursor );
+  CXString const          token_cxs = clang_getTokenSpelling( tu, token );
+  char const *const       token_cstr = clang_getCString( token_cxs );
+
+  rv_cursor = tidy_getCursorByName( token_cstr, scope_cursor );
+
+  clang_disposeString( token_cxs );
+  return rv_cursor;
+}
 
 /**
  * Gets the index of the next token that is not a comment.
@@ -326,6 +354,11 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   if ( tidy_Cursor_isInFile( cursor, sivd->source_file ) ) {
     enum CXCursorKind const kind = clang_getCursorKind( cursor );
     switch ( kind ) {
+      case CXCursor_AlignedAttr:
+      case CXCursor_UnexposedAttr:
+        visit_AlignedAttr( cursor, parent, sivd );
+        break;
+
       case CXCursor_CallExpr:
       case CXCursor_Constructor:
       case CXCursor_DeclRefExpr:
@@ -361,6 +394,31 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
   if ( sym == NULL )
     return;
   FREE( sym->name );
+}
+
+/**
+ * Visits a `CXCursor_AlignedAttr` kind of cursor
+ *
+ * @param attr_cursor The attribute definition's cursor to visit.
+ * @param sivd The symbols_init_visitor_data to use.
+ */
+static void visit_AlignedAttr( CXCursor attr_cursor, CXCursor parent,
+                               symbols_init_visitor_data *sivd ) {
+  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( attr_cursor );
+  CXCursor const tu_cursor = clang_getTranslationUnitCursor( tu );
+  CXSourceRange range = clang_getCursorExtent( parent );
+
+  CXToken *tokens;
+  unsigned token_count;
+  clang_tokenize( tu, range, &tokens, &token_count );
+
+  for ( unsigned i = 0; i < token_count; ++i ) {
+    CXCursor const rv_cursor = attr_get_cursor_by_name( tokens[i], tu_cursor );
+    if ( !clang_isInvalid( rv_cursor.kind ) )
+      maybe_add_symbol( rv_cursor, sivd );
+  } // for
+
+  clang_disposeTokens( tu, tokens, token_count );
 }
 
 /**
