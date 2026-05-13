@@ -523,11 +523,11 @@ static void includes_print_visitor( tidy_include const *include,
       unsigned const line = *(unsigned*)array_at_nocheck( &include->lines, i );
       if ( include->is_needed ) {
         check_asprintf( &comment,
-          "DELETE line %u (same as line %u)", line, line_first
+          "DELETE LINE %u (same as line %u)", line, line_first
         );
       }
       else {
-        check_asprintf( &comment, "DELETE line %u", line );
+        check_asprintf( &comment, "DELETE LINE %u", line );
       }
       print_include( sgr_include_del, delims, include->rel_path, comment );
     } // for
