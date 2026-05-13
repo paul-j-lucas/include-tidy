@@ -123,16 +123,19 @@ void trans_unit_check_for_errors( CXTranslationUnit tu ) {
       case CXDiagnostic_Fatal:
         ++error_count;
         CXSourceLocation const diag_loc = clang_getDiagnosticLocation( diag );
-        unsigned diag_line, diag_column;
+        CXFile diag_file;
+        unsigned diag_line, diag_col;
         clang_getSpellingLocation(
-          diag_loc, /*file=*/NULL, &diag_line, &diag_column, /*offset=*/NULL
+          diag_loc, &diag_file, &diag_line, &diag_col, /*offset=*/NULL
         );
+        CXString const diag_file_cxs = clang_getFileName( diag_file );
         CXString const diag_msg_cxs = clang_getDiagnosticSpelling( diag );
         print_error(
-          arg_source_path, diag_line, diag_column,
+          clang_getCString( diag_file_cxs ), diag_line, diag_col,
           "%s\n", clang_getCString( diag_msg_cxs )
         );
         clang_disposeString( diag_msg_cxs );
+        clang_disposeString( diag_file_cxs );
         break;
       default:
         /* suppress warning */;
