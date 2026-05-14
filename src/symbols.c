@@ -535,6 +535,8 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   // Now we have to determine whether the definition of a symbol is also
   // necessary in addition to its declaration.
 
+  CXCursor def_cursor;
+
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   if ( kind == CXCursor_TypeRef ) {
     CXType type = clang_getCursorType( parent );
