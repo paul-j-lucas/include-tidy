@@ -400,6 +400,7 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
  * Visits a `CXCursor_AlignedAttr` kind of cursor
  *
  * @param attr_cursor The attribute definition's cursor to visit.
+ * @param parent The parent cursor of \a attr_cursor.
  * @param sivd The symbols_init_visitor_data to use.
  */
 static void visit_AlignedAttr( CXCursor attr_cursor, CXCursor parent,

@@ -546,8 +546,8 @@ static bool is_Xtidy_opt( int argc, char const *const argv[], int *pargi ) {
  * Makes the `optstring` (short option) equivalent of \a opts for the third
  * argument of `getopt_long()`.
  *
- * @param opts An array of options to make the short option string from.  Its
- * last element must be all zeros.
+ * @param options An array of options to make the short option string from.
+ * Its last element must be all zeros.
  * @param extra_opts Extra options to add.  May be NULL.
  * @return Returns the `optstring` for the third argument of `getopt_long()`.
  * The caller is responsible for freeing it.
