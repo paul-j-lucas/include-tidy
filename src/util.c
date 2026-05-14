@@ -221,6 +221,18 @@ char const* get_cwd( size_t *plen ) {
   return cwd_path_buf;
 }
 
+void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim ) {
+  // ensure &elements[0] is suitably aligned
+  size_t const ptrs_size = round_up_pow_2( sizeof(void*) * idim, ealign );
+  size_t const row_size = esize * jdim;
+  // allocate the row pointers followed by the elements
+  void **const rows = MALLOC( char, ptrs_size + idim * row_size );
+  char *const elements = POINTER_CAST( char*, rows ) + ptrs_size;
+  for ( size_t i = 0; i < idim; ++i )
+    rows[i] = &elements[ i * row_size ];
+  return rows;
+}
+
 char const* path_ext( char const *path ) {
   assert( path != NULL );
   // Do base_name() first for a case like "a.b/c".
@@ -354,6 +366,7 @@ extern inline char const* (null_if_empty)( char const* );
 
 extern inline bool path_is_absolute( char const* );
 extern inline bool path_is_relative( char const* );
+extern inline size_t round_up_pow_2( size_t, size_t );
 extern inline char* strncpy_0( char*, char const*, size_t );
 extern inline bool true_or_set( bool* );
 extern inline bool true_clear( bool* );

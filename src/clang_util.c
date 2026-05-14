@@ -130,11 +130,26 @@ static void getCursorScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
+bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_cursor,
+                                            CXCursor j_cursor ) {
+  if ( tidy_Cursor_isInvalid( i_cursor ) || tidy_Cursor_isInvalid( j_cursor ) )
+    return false;
+  CXSourceLocation const i_loc = clang_getCursorLocation( i_cursor );
+  CXSourceLocation const j_loc = clang_getCursorLocation( j_cursor );
+  return clang_isBeforeInTranslationUnit( i_loc, j_loc );
+}
+
 bool tidy_Cursor_isInFile( CXCursor cursor, CXFile file ) {
   assert( file != NULL );
 
+  if ( tidy_Cursor_isInvalid( cursor ) )
+    return false;
   CXFile const cursor_file = tidy_getCursorLocation_File( cursor );
   return cursor_file != NULL && clang_File_isEqual( cursor_file, file );
+}
+
+bool tidy_Cursor_isInvalid( CXCursor cursor ) {
+  return clang_Cursor_isNull( cursor ) || clang_isInvalid( cursor.kind );
 }
 
 int tidy_File_cmp_by_name( CXFile i_file, CXFile j_file ) {

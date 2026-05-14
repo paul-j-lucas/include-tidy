@@ -980,6 +980,21 @@ NODISCARD
 char const* get_cwd( size_t *plen );
 
 /**
+ * Dynamically allocates a two-dimensional matrix [\a idim][\a jdim] elements
+ * of size \a esize.
+ *
+ * @param esize The size in bytes of a single element.
+ * @param ealign The alignment of a single element.
+ * @param idim The number of elements in the _i_ dimension.
+ * @param jdim The number of elements in the _j_ dimension.
+ * @return Returns a pointer to a new two-dimensional matrix that may be cast
+ * to `T**` where `T` is the type of element.  The caller is responsible for
+ * freeing it via **free**(3).
+ */
+NODISCARD
+void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim );
+
+/**
  * Checks whether \a s is null, an empty string, or consists only of
  * whitespace.
  *
@@ -1083,6 +1098,18 @@ char* path_normalize( char const *path );
  * @sa #UNEXPECTED_INT_VALUE()
  */
 _Noreturn void perror_exit( int status );
+
+/**
+ * Rounds \a n up to a multiple of \a multiple.
+ *
+ * @param n The number to round up.  Must be &gt; 0.
+ * @param multiple The multiple to round up to.  It _must_ be a power of 2.
+ * @return Returns \a n rounded up to a multiple of \a multiple.
+ */
+NODISCARD
+inline size_t round_up_pow_2( size_t n, size_t multiple ) {
+  return (n + multiple - 1) & ~(multiple - 1);
+}
 
 #ifndef NDEBUG
 /**

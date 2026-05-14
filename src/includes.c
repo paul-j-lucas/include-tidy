@@ -48,6 +48,9 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>                     /* for PATH_MAX */
+#ifdef NEED_II_MATRIX
+#include <stdalign.h>
+#endif /* NEED_II_MATRIX */
 #include <stdbool.h>
 #include <stdlib.h>                     /* for atexit(3) */
 #include <string.h>
@@ -65,6 +68,10 @@
 #define INCLUDE_VERBOSE_INDENT    2     /**< Spaces per include depth. */
 
 ////////// typedefs ///////////////////////////////////////////////////////////
+
+#ifdef NEED_II_MATRIX
+typedef unsigned char ii_matrix_t;      ///< Element type for ii_matrix.
+#endif /* NEED_II_MATRIX */
 
 typedef struct includes_init_visitor_data   includes_init_visitor_data;
 typedef struct includes_print_visitor_data  includes_print_visitor_data;
@@ -91,8 +98,10 @@ struct includes_init_visitor_data {
 
 ////////// local functions ////////////////////////////////////////////////////
 
-NODISCARD
-static tidy_include*  include_find_by_CXFile( CXFile );
+#ifdef NEED_II_MATRIX
+static void           ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
+                                         CXClientData );
+#endif /* NEED_II_MATRIX */
 
 NODISCARD
 static bool           is_local_include( char const* );
@@ -105,6 +114,7 @@ char const*           tidy_File_getRelativePath( CXFile );
 
 static void           tidy_include_cleanup( tidy_include* );
 
+
 ////////// extern variables ///////////////////////////////////////////////////
 
 unsigned tidy_includes_missing;         ///< Number of includes missing.
@@ -112,9 +122,110 @@ unsigned tidy_includes_unnecessary;     ///< Number of includes unnecessary.
 
 ////////// local variables ////////////////////////////////////////////////////
 
-static rb_tree_t  include_set;          ///< Set of included files.
+#ifdef NEED_II_MATRIX
+/**
+ * Include-include matrix.
+ *
+ * @remarks
+ * @parblock
+ * <code>ii_matrix[</code>\e i<code>][</code>\e j<code>]</code> is
+ * &gt; 0 only if include file \e i includes include file \e j.  The value
+ * indicates the number of includes between them, i.e., 1 means \e i includes
+ * \e j directly, 2 means \e i includes \e k that includes \e j, and so on.
+ * Indicies are values of \ref tidy_include::seq_id "seq_id".
+ *
+ * The zeroth column is special in that if <code>ii_matrix[0][</code>\e
+ * j<code>]</code> is &gt; 0, it means that the souce file includes include
+ * file \e j.
+ * @endparblock
+ */
+static ii_matrix_t  **ii_matrix;
+#endif /* NEED_II_MATRIX */
+
+static rb_tree_t      include_set;      ///< Set of included files.
 
 ////////// local functions ////////////////////////////////////////////////////
+
+#ifdef NEED_II_MATRIX
+/**
+ * Initializes the \ref ii_matrix.
+ *
+ * @param tu The translation unit to use.
+ * @param N The size of the matrix, i.e., <code>[</code>\e N<code>][</code>\e
+ * N<code>]</code>.
+ *
+ * @sa [Floyd-Warshall algorithm](https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm)
+ */
+static void ii_matrix_init( CXTranslationUnit tu, unsigned N ) {
+  ii_matrix = POINTER_CAST( ii_matrix_t**,
+    matrix2d_new( sizeof(ii_matrix_t), alignof(ii_matrix_t), N, N )
+  );
+  for ( unsigned i = 0; i < N; ++i ) {
+    for ( unsigned j = 0; j < N; ++j )
+      ii_matrix[i][j] = 0;
+  } // for
+
+  CXFile const source_file = clang_getFile( tu, arg_source_path );
+  clang_getInclusions( tu, ii_matrix_visitor, source_file );
+
+  for ( unsigned k = 0; k < N; ++k ) {
+    for ( unsigned i = 0; i < N; ++i ) {
+      if ( ii_matrix[i][k] > 0 ) {
+        for ( unsigned j = 0; j < N; ++j ) {
+          if ( ii_matrix[k][j] > 0 ) {
+            ii_matrix_t const new_dist = ii_matrix[i][k] + ii_matrix[k][j];
+            if ( ii_matrix[i][j] == 0 || new_dist < ii_matrix[i][j] )
+              ii_matrix[i][j] = new_dist;
+          }
+        } // for j
+      }
+    } // for i
+  } // for k
+}
+
+/**
+ * Visits each file included.
+ *
+ * @param included_file The file being included.
+ * @param inclusion_stack The source locations of includes that lead up to \a
+ * included_file being included.
+ * @param inclusion_len The length of \a inclusion_stack.
+ * @param data The `CXFile` for arg_source_path.
+ */
+static void ii_matrix_visitor( CXFile included_file,
+                               CXSourceLocation *inclusion_stack,
+                               unsigned inclusion_len, CXClientData data ) {
+  assert( data != NULL );
+  CXFile const source_file = POINTER_CAST( CXFile, data );
+
+  if ( included_file == NULL || inclusion_len == 0 )
+    return;
+  tidy_include *const included = include_find_by_File( included_file );
+  if ( included == NULL )
+    return;
+
+  CXFile includer_file;
+  clang_getFileLocation(
+    inclusion_stack[0],
+    &includer_file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
+  );
+  if ( includer_file == NULL )
+    return;
+
+  unsigned i;
+  if ( clang_File_isEqual( includer_file, source_file ) ) {
+    i = 0;
+  }
+  else {
+    tidy_include *const includer = include_find_by_File( includer_file );
+    if ( includer == NULL )
+      return;
+    i = includer->seq_id;
+  }
+
+  ii_matrix[ i ][ included->seq_id ] = 1;
+}
+#endif /* NEED_II_MATRIX */
 
 /**
  * Visits each `#include` directive in a translation unit for initializing
@@ -136,7 +247,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
 
   CXFile const included_file = clang_getIncludedFile( cursor );
   assert( included_file != NULL );
-  tidy_include *const included = include_find_by_CXFile( included_file );
+  tidy_include *const included = include_find_by_File( included_file );
   assert( included != NULL );
 
   if ( included->proxy != NULL )
@@ -182,24 +293,6 @@ done:
 }
 
 /**
- * Attempts to find \a file by its unique file ID among the set of files
- * included.
- *
- * @param file The file to find.
- * @return Returns the corresponding tidy_include if found or NULL if not.
- */
-NODISCARD
-static tidy_include* include_find_by_CXFile( CXFile file ) {
-  assert( file != NULL );
-
-  tidy_include find_include = {
-    .file_id = tidy_getFileUniqueID( file )
-  };
-  rb_node_t const *const found_rb = rb_tree_find( &include_set, &find_include );
-  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
-}
-
-/**
  * Dumps include proxies.
  *
  * @param want_explicit If `true`, dump explicit proxies only; if `false`, dump
@@ -241,6 +334,9 @@ static void include_proxies_dump( bool want_explicit ) {
  * Cleans-up set of included files.
  */
 static void includes_cleanup( void ) {
+#ifdef NEED_II_MATRIX
+  free( ii_matrix );
+#endif /* NEED_II_MATRIX */
   rb_tree_cleanup(
     &include_set, POINTER_CAST( rb_free_fn_t, &tidy_include_cleanup )
   );
@@ -328,8 +424,10 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     //
     included->rel_path = tidy_File_getRelativePath( included_file );
 
+    included->seq_id = include_set.size;
+
     if ( !is_direct ) {
-      included->includer = include_find_by_CXFile( includer_file );
+      included->includer = include_find_by_File( includer_file );
       assert( included->includer != NULL );
       included->depth = included->includer->depth + 1;
     }
@@ -380,7 +478,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       // that defines SIGSTOP (which is correct) instead of sys/wait.h (which
       // is incorrect).
       //
-      tidy_include *const includer = include_find_by_CXFile( includer_file );
+      tidy_include *const includer = include_find_by_File( includer_file );
       if ( includer != old_includer &&
            strcmp( base_name( included->rel_path ),
                    base_name( includer->rel_path ) ) == 0 ) {
@@ -790,7 +888,7 @@ tidy_include const* include_add_symbol( CXFile include_file,
   assert( include_file != NULL );
   assert( sym != NULL );
 
-  tidy_include *include = include_find_by_CXFile( include_file );
+  tidy_include *include = include_find_by_File( include_file );
   if ( include == NULL )
     return NULL;
   while ( include->proxy != NULL )
@@ -798,6 +896,16 @@ tidy_include const* include_add_symbol( CXFile include_file,
   include->is_needed = true;
   PJL_DISCARD_RV( rb_tree_insert( &include->symbol_set, sym, sizeof *sym ) );
   return include;
+}
+
+tidy_include* include_find_by_File( CXFile file ) {
+  assert( file != NULL );
+
+  tidy_include find_include = {
+    .file_id = tidy_getFileUniqueID( file )
+  };
+  rb_node_t const *const found_rb = rb_tree_find( &include_set, &find_include );
+  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }
 
 tidy_include* include_find_by_rel_path( char const *rel_path ) {
@@ -854,6 +962,15 @@ bool include_proxy_would_cycle( tidy_include const *from_include,
   return false;
 }
 
+#ifdef NEED_II_MATRIX
+unsigned includes_include( tidy_include const *i_include,
+                           tidy_include const *j_include ) {
+  assert( j_include != NULL );
+  unsigned const i = i_include != NULL ? i_include->seq_id : 0;
+  return ii_matrix[ i ][ j_include->seq_id ];
+}
+#endif /* NEED_II_MATRIX */
+
 void includes_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
   rb_tree_init(
@@ -866,6 +983,9 @@ void includes_init( CXTranslationUnit tu ) {
   clang_visitChildren( cursor, &includes_init_visitor, &iivd );
   if ( iivd.verbose_printed )
     verbose_printf( "\n" );
+#ifdef NEED_II_MATRIX
+  ii_matrix_init( tu, include_set.size + 1 );
+#endif /* NEED_II_MATRIX */
 }
 
 void includes_print( void ) {

@@ -175,7 +175,7 @@ void print_include( char const *sgr_color, char const delims[static 2],
 }
 
 void verbose_print_cursor( CXCursor cursor ) {
-  if ( clang_Cursor_isNull( cursor ) || clang_isInvalid( cursor.kind ) )
+  if ( tidy_Cursor_isInvalid( cursor ) )
     return;
 
   CXSourceLocation const loc = clang_getCursorLocation( cursor );

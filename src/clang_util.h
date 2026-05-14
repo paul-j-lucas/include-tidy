@@ -49,6 +49,18 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * Gets whether \a i_cursor is before \a j_cursor in the translation unit.
+ *
+ * @param i_cursor The first cursor.
+ * @param j_cursor The second cursor.
+ * @return Returns `true` only if \a i_cursor is before \a j_cursor in the
+ * translation unit.
+ */
+NODISCARD
+bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_cursor,
+                                            CXCursor j_cursor );
+
+/**
  * Gets whether \a cursor is referenced from \a file.
  *
  * @param cursor The cursor to use.
@@ -57,6 +69,15 @@
  */
 NODISCARD
 bool tidy_Cursor_isInFile( CXCursor cursor, CXFile file );
+
+/**
+ * Gets whether \a cursor is either null or invalid.
+ *
+ * @param cursor The cursor to check.
+ * @return Returns `true` only if \a cursor is either null or invalid.
+ */
+NODISCARD
+bool tidy_Cursor_isInvalid( CXCursor cursor );
 
 /**
  * Compares two CXFile objects by name.

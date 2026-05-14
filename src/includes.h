@@ -82,6 +82,7 @@ struct tidy_include {
   tidy_include   *includer;             ///< Include including this, if any.
   tidy_include   *proxy;                ///< Proxy include, if any.
   unsigned        depth;                ///< Include depth.
+  unsigned        seq_id;               ///< TODO.
   array_t         lines;                ///< Line number(s) included from.
   tidy_sort_rank  sort_rank;            ///< Sorting rank.
   bool            keep;                 ///< Keep even if unnecessary?
@@ -138,11 +139,25 @@ NODISCARD
 tidy_include const* include_add_symbol( CXFile include_file, tidy_symbol *sym );
 
 /**
+ * Attempts to find \a file by its unique file ID among the set of files
+ * included.
+ *
+ * @param file The file to find.
+ * @return Returns the corresponding tidy_include if found or NULL if not.
+ *
+ * @sa include_find_by_rel_path()
+ */
+NODISCARD
+tidy_include* include_find_by_File( CXFile file );
+
+/**
  * Given a relative path to an include file, e.g.: `clang-c/Index.h`, gets its
  * corresponding include.
  *
  * @param rel_path The relative path of the include file to find.
  * @return Returns its corresponding tidy_include or NULL if not found.
+ *
+ * @sa include_find_by_File()
  */
 NODISCARD
 tidy_include* include_find_by_rel_path( char const *rel_path );
@@ -166,6 +181,23 @@ void include_get_delims( tidy_include const *include, char delims[static 2] );
 NODISCARD
 bool include_proxy_would_cycle( tidy_include const *from_include,
                                 tidy_include const *to_include );
+
+#ifdef NEED_II_MATRIX
+/**
+ * Gets whether \a i_include includes \a j_include, and whether directly or
+ * indirectly.
+ *
+ * @param i_include The first include file.
+ * @param j_include The second include file.
+ * @return Returns a value &gt; 0 only if \a i_include includes \a j_include.
+ * The value indicates the number of includes between them, i.e., 1 means \e i
+ * includes \e j directly, 2 means \e i includes \e k that includes \e j, and
+ * so on.
+ */
+NODISCARD
+unsigned includes_include( tidy_include const *i_include,
+                           tidy_include const *j_include );
+#endif /* NEED_II_MATRIX */
 
 /**
  * Initializes the set of files included in the given translation unit.
