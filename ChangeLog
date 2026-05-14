@@ -1,5 +1,14 @@
+2026-05-14  Paul J. Lucas <paul@lucasmail.org>
+
+   * symbols.c: Put back def_cursor declaration.
+   * clang_util.c, clang_util.h, includes.c, includes.h, print.c, symbols.c,
+     util.c, util.h: Now additionally adding the symbol for a definition in
+     addition to its declaration, if necessary.
+
 2026-05-13  Paul J. Lucas <paul@lucasmail.org>
 
+   * symbols.c: Added visit_AlignedAttr().
+   * trans_unit.c: Now using correct file in trans_unit_check_for_errors().
    * includes.c, duplicate.out: Now "DELETE LINE" (all caps) in all cases.
    * includes.c, includes.h, print.c, print.h, symbols.c: Now always enclosing
      include paths in delimeters.
