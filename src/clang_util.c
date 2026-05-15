@@ -311,8 +311,8 @@ bool tidy_Token_isEqual( CXTranslationUnit tu, CXToken token,
   assert( value != NULL );
 
   CXString const    token_cxs = clang_getTokenSpelling( tu, token );
-  char const *const token_cstr = clang_getCString( token_cxs );
-  int const         cmp = strcmp( token_cstr, value );
+  char const *const token_cs = clang_getCString( token_cxs );
+  int const         cmp = strcmp( token_cs, value );
 
   clang_disposeString( token_cxs );
   return cmp == 0;

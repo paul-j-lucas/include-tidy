@@ -101,15 +101,15 @@ CXCursor attr_get_cursor_by_name( CXToken token, CXCursor scope_cursor ) {
 
   CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( scope_cursor );
   CXString const          token_cxs = clang_getTokenSpelling( tu, token );
-  char const *const       token_cstr = clang_getCString( token_cxs );
+  char const *const       token_cs = clang_getCString( token_cxs );
 
-  rv_cursor = tidy_getCursorByName( token_cstr, scope_cursor );
+  rv_cursor = tidy_getCursorByName( token_cs, scope_cursor );
 
   while ( clang_Cursor_isNull( rv_cursor ) ) {
     scope_cursor = clang_getCursorSemanticParent( scope_cursor );
     if ( tidy_Cursor_isInvalid( scope_cursor ) )
       break;
-    rv_cursor = tidy_getCursorByName( token_cstr, scope_cursor );
+    rv_cursor = tidy_getCursorByName( token_cs, scope_cursor );
   } // while
 
   clang_disposeString( token_cxs );
@@ -196,12 +196,12 @@ static CXCursor macro_get_cursor_by_name( CXToken token, CXCursor scope_cursor,
 
   CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( scope_cursor );
   CXString const          token_cxs = clang_getTokenSpelling( tu, token );
-  char const *const       token_cstr = clang_getCString( token_cxs );
+  char const *const       token_cs = clang_getCString( token_cxs );
 
-  if ( strcmp( token_cstr, "__VA_ARGS__" ) != 0 &&
-       strcmp( token_cstr, "__VA_OPT__" ) != 0 &&
-       rb_tree_find( param_set, token_cstr ) == NULL ) {
-    rv_cursor = tidy_getCursorByName( token_cstr, scope_cursor );
+  if ( strcmp( token_cs, "__VA_ARGS__" ) != 0 &&
+       strcmp( token_cs, "__VA_OPT__" ) != 0 &&
+       rb_tree_find( param_set, token_cs ) == NULL ) {
+    rv_cursor = tidy_getCursorByName( token_cs, scope_cursor );
   }
 
   clang_disposeString( token_cxs );
@@ -235,19 +235,19 @@ static unsigned macro_get_params( CXTranslationUnit tu, CXToken const tokens[],
     } // switch
 
     CXString const    token_cxs = clang_getTokenSpelling( tu, tokens[i] );
-    char const *const token_cstr = clang_getCString( token_cxs );
+    char const *const token_cs = clang_getCString( token_cxs );
 
     switch ( kind ) {
       case CXToken_Identifier:
         PJL_DISCARD_RV(
           rb_tree_insert(
-            param_set, CONST_CAST( char*, token_cstr ),
-            strlen( token_cstr ) + 1/*\0*/
+            param_set, CONST_CAST( char*, token_cs ),
+            strlen( token_cs ) + 1/*\0*/
           )
         );
         break;
       case CXToken_Punctuation:
-        if ( strcmp( token_cstr, ")" ) == 0 ) {
+        if ( strcmp( token_cs, ")" ) == 0 ) {
           rv_idx = i + 1;
           i = token_count;              // will cause loop to exit
         }
