@@ -1096,9 +1096,9 @@ static void source_header_cleanup( source_header *sh ) {
  * @param i_sh The first source_header.
  * @param j_sh The second source_header.
  * @return Returns a number less than 0, 0, or greater than 0 if the \ref
- * source_header::source_rel_path "source_rel_path" of \a i_si is less than,
+ * source_header::source_rel_path "source_rel_path" of \a i_sh is less than,
  * equal to, or greater than the \ref source_header::source_rel_path
- * "source_rel_path" \a j_si, respectively.
+ * "source_rel_path" \a j_sh, respectively.
  */
 NODISCARD
 static int source_header_cmp( source_header const *i_sh,
