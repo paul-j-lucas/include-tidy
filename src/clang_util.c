@@ -77,26 +77,23 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
                                                         CXClientData data ) {
   (void)parent;
   assert( data != NULL );
-  tidy_getCursorByName_data *const tgcbnd = data;
 
-  if ( !clang_Cursor_isNull( tgcbnd->skip_cursor ) &&
-       clang_equalCursors( cursor, tgcbnd->skip_cursor ) ) {
-    return CXChildVisit_Continue;
+  enum CXChildVisitResult           rv = CXChildVisit_Continue;
+  tidy_getCursorByName_data *const  tgcbnd = data;
+
+  if ( clang_Cursor_isNull( tgcbnd->skip_cursor ) ||
+       !clang_equalCursors( cursor, tgcbnd->skip_cursor ) ) {
+    CXString const    name_cxs = clang_getCursorSpelling( cursor );
+    char const *const name = clang_getCString( name_cxs );
+
+    if ( name != NULL && strcmp( name, tgcbnd->find_name ) == 0 ) {
+      tgcbnd->found_cursor = cursor;
+      rv = CXChildVisit_Break;
+    }
+
+    clang_disposeString( name_cxs );
   }
 
-  enum CXChildVisitResult rv;
-  CXString const          name_cxs = clang_getCursorSpelling( cursor );
-  char const *const       name = clang_getCString( name_cxs );
-
-  if ( name != NULL && strcmp( name, tgcbnd->find_name ) == 0 ) {
-    tgcbnd->found_cursor = cursor;
-    rv = CXChildVisit_Break;
-  }
-  else {
-    rv = CXChildVisit_Recurse;
-  }
-
-  clang_disposeString( name_cxs );
   return rv;
 }
 
