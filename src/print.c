@@ -208,7 +208,7 @@ void verbose_print_cursor( CXCursor cursor ) {
 void verbose_print_token( CXTranslationUnit tu, CXToken token ) {
   CXString const    token_cxs = clang_getTokenSpelling( tu, token );
   char const *const token_cs = clang_getCString( token_cxs );
-  verbose_printf( "  token: \"%s\"\n", token_cs );
+  verbose_printf( "  \"%s\"\n", token_cs );
   clang_disposeString( token_cxs );
 }
 
