@@ -105,6 +105,13 @@ CXCursor attr_get_cursor_by_name( CXToken token, CXCursor scope_cursor ) {
 
   rv_cursor = tidy_getCursorByName( token_cstr, scope_cursor );
 
+  while ( clang_Cursor_isNull( rv_cursor ) ) {
+    scope_cursor = clang_getCursorSemanticParent( scope_cursor );
+    if ( tidy_Cursor_isInvalid( scope_cursor ) )
+      break;
+    rv_cursor = tidy_getCursorByName( token_cstr, scope_cursor );
+  } // while
+
   clang_disposeString( token_cxs );
   return rv_cursor;
 }
@@ -437,16 +444,15 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
  */
 static void visit_FieldDecl( CXCursor field_cursor,
                              symbols_init_visitor_data *sivd ) {
+  CXSourceRange const     range = tidy_getCursorExtent( field_cursor );
   CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( field_cursor );
-  CXCursor const tu_cursor = clang_getTranslationUnitCursor( tu );
-  CXSourceRange const range = tidy_getCursorExtent( field_cursor );
 
   CXToken *tokens;
   unsigned token_count;
   clang_tokenize( tu, range, &tokens, &token_count );
 
   for ( unsigned i = 0; i < token_count; ++i ) {
-    CXCursor const rv_cursor = attr_get_cursor_by_name( tokens[i], tu_cursor );
+    CXCursor const rv_cursor = attr_get_cursor_by_name( tokens[i], field_cursor );
     if ( !tidy_Cursor_isInvalid( rv_cursor ) )
       maybe_add_symbol( rv_cursor, sivd );
   } // for
