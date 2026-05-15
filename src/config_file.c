@@ -1448,13 +1448,16 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   rb_iterator_t iter;
   rb_iterator_init( &found_si->to_includes, &iter );
 
+  tidy_include const *best_include = NULL;
   for ( tidy_include const *to_include;
         (to_include = rb_iterator_next( &iter )) != NULL; ) {
     tidy_include const *include = to_include;
     while ( include->proxy != NULL )
       include = include->proxy;
-    if ( include->depth == 0 )
-      return include->file;
+    if ( best_include == NULL || include->depth < best_include->depth )
+      best_include = include;
+    if ( best_include->depth == 0 )
+      break;
   } // for
 
 #if 0
@@ -1464,7 +1467,7 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   assert( to_include != NULL );
   return to_include->file;
 #else
-  return NULL;
+  return best_include != NULL ? best_include->file : NULL;
 #endif
 }
 
