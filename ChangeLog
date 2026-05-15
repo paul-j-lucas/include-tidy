@@ -1,5 +1,7 @@
 2026-05-15  Paul J. Lucas <paul@lucasmail.org>
 
+   * man/man1/include-tidy.1, config_file.c: Added keep-includes.
+   * clang_util.c, clang_util.h, symbols.c: Added tidy_getCursorByToken().
    * clang_util.c: No longer need CXChildVisit_Recurse.
    * clang_util.c, symbols.c: tidy_getCursorByName() now recurses to enclosing
      scopes.
