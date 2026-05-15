@@ -205,11 +205,26 @@ void verbose_print_cursor( CXCursor cursor ) {
   clang_disposeString( spelling_cxs );
 }
 
-void verbose_print_token( CXTranslationUnit tu, CXToken token ) {
-  CXString const    token_cxs = clang_getTokenSpelling( tu, token );
-  char const *const token_cs = clang_getCString( token_cxs );
-  verbose_printf( "  \"%s\"\n", token_cs );
-  clang_disposeString( token_cxs );
+void verbose_print_tokens( CXCursor cursor ) {
+  CXSourceRange const     range = tidy_getCursorExtent( cursor );
+  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( cursor );
+
+  CXToken *tokens;
+  unsigned tokens_len;
+  clang_tokenize( tu, range, &tokens, &tokens_len );
+
+  verbose_printf( "tokens: [\n" );
+  verbose_printf( "  " );
+  for ( unsigned i = 0; i < tokens_len; ++i ) {
+    CXString const    token_cxs = clang_getTokenSpelling( tu, tokens[i] );
+    char const *const token_cs = clang_getCString( token_cxs );
+    printf( "%s\"%s\"", i > 0 ? ", " : "", token_cs );
+    clang_disposeString( token_cxs );
+  }
+  puts( "" );
+  verbose_printf( "]\n" );
+
+  clang_disposeTokens( tu, tokens, tokens_len );
 }
 
 int verbose_printf( char const *format, ... ) {

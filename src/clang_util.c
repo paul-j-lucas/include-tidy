@@ -192,6 +192,32 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor ) {
   return tgcbnd.found_cursor;
 }
 
+CXSourceRange tidy_getCursorExtent( CXCursor cursor ) {
+  CXSourceRange const range = clang_getCursorExtent( cursor );
+  CXSourceLocation    start_loc = clang_getRangeStart( range );
+  CXSourceLocation    end_loc = clang_getRangeEnd( range );
+
+  CXFile start_file, end_file;
+  unsigned start_offset, end_offset;
+
+  clang_getFileLocation(
+    start_loc, &start_file, /*line=*/NULL, /*column=*/NULL, &start_offset
+  );
+  clang_getFileLocation(
+    end_loc, &end_file, /*line=*/NULL, /*column=*/NULL, &end_offset
+  );
+
+  if ( start_file == NULL || start_file != end_file )
+    return range;
+
+  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( cursor );
+
+  start_loc = clang_getLocationForOffset( tu, start_file, start_offset );
+  end_loc   = clang_getLocationForOffset( tu, end_file, end_offset );
+
+  return clang_getRange( start_loc, end_loc );
+}
+
 CXFile tidy_getCursorLocation_File( CXCursor cursor ) {
   CXSourceLocation const  loc = clang_getCursorLocation( cursor );
   CXFile                  file = tidy_getSpellingLocation_File( loc );

@@ -162,12 +162,11 @@ void print_include( char const *sgr_color, char const delims[static 2],
 void verbose_print_cursor( CXCursor cursor );
 
 /**
- * Prints a token's string representation.
+ * Prints the tokens for \a cursor.
  *
- * @param tu The translation unit to use.
- * @param token The token to print.
+ * @param cursor The cursor to print the tokens for.
  */
-void verbose_print_token( CXTranslationUnit tu, CXToken token );
+void verbose_print_tokens( CXCursor cursor );
 
 /**
  * Prints verbose output.

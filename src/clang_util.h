@@ -133,6 +133,37 @@ NODISCARD
 CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor );
 
 /**
+ * Similar to `clang_getCursorExtent()` except that it works better when macros
+ * are involved.
+ *
+ * @remarks
+ * @parblock
+ * For example, given this code to tidy:
+ *
+ *      #include <stdalign.h>           // alignas
+ *      #include <stddef.h>             // max_align_t
+ *
+ *      struct rb_node {
+ *        // ...
+ *        alignas( max_align_t ) char data[];
+ *      };
+ *
+ * where `alignas` is a macro defined in `stdalign.h`, libclang never visits
+ * the macro.  Furthermore, attempting to tokenize the extent of the FieldDecl
+ * using clang_getCursorExtent() does _not_ return any tokens because libclang
+ * can't tokenize a contiguous range across file boundaries (`alignas` is in
+ * `stdalign.h` and the rest is in the file being tidied).
+ *
+ * However, _this_ function can do such a tokenization.
+ * @endparblock
+ *
+ * @param cursor The cursor to get the source range for.
+ * @return Returns said source range.
+ */
+NODISCARD
+CXSourceRange tidy_getCursorExtent( CXCursor cursor );
+
+/**
  * Gets the file the given cursor is in, if any.
  *
  * @param cursor The cursor to use.

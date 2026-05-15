@@ -72,8 +72,7 @@ NODISCARD
 static unsigned get_next_token_index( CXToken const[], unsigned, unsigned );
 
 static void     tidy_symbol_cleanup( tidy_symbol* );
-static void     visit_AlignedAttr( CXCursor, CXCursor,
-                                   symbols_init_visitor_data* );
+static void     visit_FieldDecl( CXCursor, symbols_init_visitor_data* );
 static void     visit_MacroDefinition( CXCursor, symbols_init_visitor_data* );
 static void     visit_most_kinds( CXCursor, CXCursor,
                                   symbols_init_visitor_data* );
@@ -389,11 +388,6 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   if ( tidy_Cursor_isInFile( cursor, sivd->source_file ) ) {
     enum CXCursorKind const kind = clang_getCursorKind( cursor );
     switch ( kind ) {
-      case CXCursor_AlignedAttr:
-      case CXCursor_UnexposedAttr:
-        visit_AlignedAttr( cursor, parent, sivd );
-        break;
-
       case CXCursor_CallExpr:
       case CXCursor_Constructor:
       case CXCursor_DeclRefExpr:
@@ -406,6 +400,10 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       case CXCursor_TypedefDecl:
       case CXCursor_TypeRef:
         visit_most_kinds( cursor, parent, sivd );
+        break;
+
+      case CXCursor_FieldDecl:
+        visit_FieldDecl( cursor, sivd );
         break;
 
       case CXCursor_MacroDefinition:
@@ -432,17 +430,16 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
 }
 
 /**
- * Visits a `CXCursor_AlignedAttr` kind of cursor
+ * Visits a `CXCursor_FieldDecl` kind of cursor
  *
- * @param attr_cursor The attribute definition's cursor to visit.
- * @param parent The parent cursor of \a attr_cursor.
+ * @param field_cursor The attribute definition's cursor to visit.
  * @param sivd The symbols_init_visitor_data to use.
  */
-static void visit_AlignedAttr( CXCursor attr_cursor, CXCursor parent,
-                               symbols_init_visitor_data *sivd ) {
-  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( attr_cursor );
+static void visit_FieldDecl( CXCursor field_cursor,
+                             symbols_init_visitor_data *sivd ) {
+  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( field_cursor );
   CXCursor const tu_cursor = clang_getTranslationUnitCursor( tu );
-  CXSourceRange range = clang_getCursorExtent( parent );
+  CXSourceRange const range = tidy_getCursorExtent( field_cursor );
 
   CXToken *tokens;
   unsigned token_count;
