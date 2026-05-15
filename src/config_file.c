@@ -1348,10 +1348,12 @@ static void symbol_includes_dump( void ) {
     rb_iterator_init( &si->to_includes, &ti_iter );
     for ( tidy_include *to_include;
           (to_include = rb_iterator_next( &ti_iter )) != NULL; ) {
+      char delims[2];
+      include_get_delims( to_include, delims );
       printf(
-        "%s\"%s\"",
+        "%s%c%s%c",
         true_or_set( &comma ) ? ", " : "",
-        to_include->abs_path
+        delims[0], to_include->abs_path, delims[1]
       );
     } // for
     puts( " ]" );
