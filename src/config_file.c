@@ -1448,7 +1448,7 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   rb_iterator_t iter;
   rb_iterator_init( &found_si->to_includes, &iter );
 
-  for ( tidy_include *to_include;
+  for ( tidy_include const *to_include;
         (to_include = rb_iterator_next( &iter )) != NULL; ) {
     tidy_include const *include = to_include;
     while ( include->proxy != NULL )
