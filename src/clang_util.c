@@ -213,6 +213,22 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor ) {
   return clang_getNullCursor();
 }
 
+CXCursor tidy_getCursorByToken( CXToken token, CXCursor scope_cursor ) {
+  CXCursor rv_cursor = clang_getNullCursor();
+
+  if ( clang_getTokenKind( token ) != CXToken_Identifier )
+    return rv_cursor;
+
+  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( scope_cursor );
+  CXString const          token_cxs = clang_getTokenSpelling( tu, token );
+  char const *const       token_cs = clang_getCString( token_cxs );
+
+  rv_cursor = tidy_getCursorByName( token_cs, scope_cursor );
+
+  clang_disposeString( token_cxs );
+  return rv_cursor;
+}
+
 CXSourceRange tidy_getCursorExtent( CXCursor cursor ) {
   CXSourceRange const range = clang_getCursorExtent( cursor );
   CXSourceLocation    start_loc = clang_getRangeStart( range );

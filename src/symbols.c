@@ -84,32 +84,6 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Gets the cursor for the identifier given by \a token within \a scope_cursor,
- * but only if \a token actually is an identifier.
- *
- * @param token The token to get the cursor for.
- * @param scope_cursor The cursor of the scope to search within.
- * @return Returns said cursor or the null cursor if \a token is not an
- * identifier.
- */
-NODISCARD
-CXCursor attr_get_cursor_by_name( CXToken token, CXCursor scope_cursor ) {
-  CXCursor rv_cursor = clang_getNullCursor();
-
-  if ( clang_getTokenKind( token ) != CXToken_Identifier )
-    return rv_cursor;
-
-  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( scope_cursor );
-  CXString const          token_cxs = clang_getTokenSpelling( tu, token );
-  char const *const       token_cs = clang_getCString( token_cxs );
-
-  rv_cursor = tidy_getCursorByName( token_cs, scope_cursor );
-
-  clang_disposeString( token_cxs );
-  return rv_cursor;
-}
-
-/**
  * Gets the index of the next token that is not a comment.
  *
  * @param tokens The array of tokens.
@@ -445,7 +419,7 @@ static void visit_FieldDecl( CXCursor field_cursor,
   clang_tokenize( tu, range, &tokens, &token_count );
 
   for ( unsigned i = 0; i < token_count; ++i ) {
-    CXCursor const rv_cursor = attr_get_cursor_by_name( tokens[i], field_cursor );
+    CXCursor const rv_cursor = tidy_getCursorByToken( tokens[i], field_cursor );
     if ( !tidy_Cursor_isInvalid( rv_cursor ) )
       maybe_add_symbol( rv_cursor, sivd );
   } // for
