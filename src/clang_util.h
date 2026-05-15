@@ -228,7 +228,7 @@ CXFile tidy_getSpellingLocation_File( CXSourceLocation loc );
 /**
  * Gets whether the spelling of \a token equals \a value.
  *
- * @param tu The CXTranslationUnit to use.
+ * @param tu The translation unit to use.
  * @param token The token to compare.
  * @param value The value to compare against.
  * @return Returns `true` only if the spelling of \a token equals \a value.

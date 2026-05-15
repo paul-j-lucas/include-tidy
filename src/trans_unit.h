@@ -49,7 +49,7 @@ extern enum CXLanguageKind tidy_lang;   ///< Source file language.
  *
  * @note If there are errors, this function does not return.
  *
- * @param tu The CXTranslationUnit to use.
+ * @param tu The translation unit to use.
  */
 void trans_unit_check_for_errors( CXTranslationUnit tu );
 
