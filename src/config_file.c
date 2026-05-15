@@ -190,6 +190,9 @@ NODISCARD
 static long         int_value_parse( char const*, char const*,
                                      toml_value const*, long, long );
 
+static void         keep_include( char const* );
+static void         keep_includes_parse( char const*, toml_table const*,
+                                         toml_value const* );
 static void         keep_parse( char const*, toml_table const*,
                                 toml_value const* );
 static void         line_length_parse( char const*, toml_table const*,
@@ -263,6 +266,8 @@ static config_key const CONFIG_KEYS[] = {
   { "keep",               TABLE_HEADER,       &keep_parse               },
   { "ignore-as-argument", TABLE_HEADER | TABLE_SOURCE,
                                               &ignore_as_argument_parse },
+  { "keep-includes",      TABLE_HEADER | TABLE_SOURCE,
+                                              &keep_includes_parse      },
   { "line-length",        TABLE_INCLUDE_TIDY, &line_length_parse        },
   { "proxy",              TABLE_HEADER,       &proxy_parse              },
   { "std-c-includes",     TABLE_INCLUDE_TIDY, &std_c_includes_parse     },
@@ -979,6 +984,62 @@ static bool is_standard_include( char const *rel_path, char *includes[] ) {
 }
 
 /**
+ * Marks the include file having \a rel_path as ``kept.''
+ *
+ * @param rel_path The relative path of the include file to mark.
+ */
+static void keep_include( char const *rel_path ) {
+  assert( rel_path != NULL );
+
+  tidy_include *const include = include_find_by_rel_path( rel_path );
+  if ( include != NULL )
+    include->keep = true;
+}
+
+/**
+ * Parses the value of an `"keep-includes"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param value The toml_value to parse.
+ */
+static void keep_includes_parse( char const *config_path,
+                                 toml_table const *table,
+                                 toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( value != NULL );
+
+  if ( strcmp( table->name, arg_source_path ) != 0 )
+    return;
+
+  switch ( value->type ) {
+    case TOML_STRING:
+      keep_include( value->s );
+      break;
+    case TOML_ARRAY:
+      for ( unsigned i = 0; i < value->a.size; ++i ) {
+        toml_value const *const a_value = &value->a.values[i];
+        if ( a_value->type != TOML_STRING ) {
+          print_error(
+            config_path, a_value->loc.line, a_value->loc.col,
+            "invalid value for \"keep-includes\" key array; expected string\n"
+          );
+          exit( EX_CONFIG );
+        }
+        keep_include( a_value->s );
+      } // for
+      break;
+    default:
+      print_error(
+        config_path, value->loc.line, value->loc.col,
+        "invalid value for \"keep-includes\" key; expected string or array\n"
+      );
+      exit( EX_CONFIG );
+  } // switch
+}
+
+/**
  * Parses the value of a `"keep"` key.
  *
  * @param config_path The full path to the configurarion file.
@@ -991,13 +1052,8 @@ static void keep_parse( char const *config_path, toml_table const *table,
   assert( table != NULL );
   assert( value != NULL );
 
-  bool const keep = bool_value_parse( config_path, "keep", value );
-  if ( !keep )
-    return;
-
-  tidy_include *const include = include_find_by_rel_path( table->name );
-  if ( include != NULL )
-    include->keep = true;
+  if ( bool_value_parse( config_path, "keep", value ) )
+    keep_include( table->name );
 }
 
 /**

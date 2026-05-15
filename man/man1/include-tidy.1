@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "May 10, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "May 15, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -763,7 +763,22 @@ is to be ``kept,''
 that is,
 even if no symbols from it are referenced
 and so is apparently unnecessary,
-it will not be reported as a violation.
+it will not be reported as a violation
+when included into other files.
+.TP
+.BI keep-includes " \f1=\fP s" "\f1 | \fP[" s " \f1[,\fP " s "\f1]*\fP ]"
+When included by the file given for the table name,
+the one other include file
+(that can be specified as a single string)
+or one or more other include files
+(that are specified as a bracket-enclosed,
+comma-separated
+array of strings)
+are to be ``kept,''
+that is,
+even if no symbols from them are referenced
+and so are apparently unnecessary,
+they will not be reported as a violation.
 .TP
 .BI proxy " \f1=\fP s" "\f1 | \fP[" s " \f1[,\fP " s "\f1]*\fP ]"
 Specifies that the include file
@@ -772,9 +787,9 @@ is a proxy
 for one other include file
 (that can be specified as a single string)
 or one or more other include files
-that are specified as a bracket-enclosed,
+(that are specified as a bracket-enclosed,
 comma-separated
-array of strings.
+array of strings).
 For example,
 this:
 .RS 5
@@ -821,6 +836,11 @@ e.g.,
 instead of \f(CWfoo.h\fP.
 .TP
 .BI ignore-as-argument " \f1=\fP b"
+Same as in
+.BR "Header Tables" ,
+but for a source file.
+.TP
+.BI keep-includes " \f1=\fP s" "\f1 | \fP[" s " \f1[,\fP " s "\f1]*\fP ]"
 Same as in
 .BR "Header Tables" ,
 but for a source file.
