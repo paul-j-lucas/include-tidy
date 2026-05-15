@@ -1,5 +1,23 @@
+2026-05-15  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c: No longer need CXChildVisit_Recurse.
+   * clang_util.c, symbols.c: tidy_getCursorByName() now recurses to enclosing
+     scopes.
+   * symbols.c: attr_get_cursor_by_name() now broadens scope upward.
+   * test/Makefile.am, c_ast.h, c_type.h, c_typedef.h, cdecl_dym.c, dump.h,
+     english.h, p_macro.h, red_black.h, show.c, slist.h, types.h, c_ast.out,
+     c_type.out, c_typedef.out, cdecl_dym.out, dump.out, english.out,
+     p_macro.out, red_black.out, show.out, slist.out, types.out, c_ast.test,
+     c_type.test, c_typedef.test, cdecl_dym.test, dump.test, english.test,
+     p_macro.test, red_black.test, show.test, slist.test, types.test: More
+     tests.
+   * clang_util.c, clang_util.h, print.c, print.h, symbols.c: Now handling
+     alignas().
+
 2026-05-14  Paul J. Lucas <paul@lucasmail.org>
 
+   * print.c: Removed "token: ".
+   * print.c, print.h: Added verbose_print_token().
    * symbols.c: Put back def_cursor declaration.
    * clang_util.c, clang_util.h, includes.c, includes.h, print.c, symbols.c,
      util.c, util.h: Now additionally adding the symbol for a definition in
