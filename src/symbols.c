@@ -105,13 +105,6 @@ CXCursor attr_get_cursor_by_name( CXToken token, CXCursor scope_cursor ) {
 
   rv_cursor = tidy_getCursorByName( token_cs, scope_cursor );
 
-  while ( clang_Cursor_isNull( rv_cursor ) ) {
-    scope_cursor = clang_getCursorSemanticParent( scope_cursor );
-    if ( tidy_Cursor_isInvalid( scope_cursor ) )
-      break;
-    rv_cursor = tidy_getCursorByName( token_cs, scope_cursor );
-  } // while
-
   clang_disposeString( token_cxs );
   return rv_cursor;
 }

@@ -58,6 +58,7 @@ typedef struct tidy_getCursorByName_data tidy_getCursorByName_data;
 struct tidy_getCursorByName_data {
   char const *find_name;                ///< The name to find.
   CXCursor    found_cursor;             ///< The name's cursor, if found.
+  CXCursor    skip_cursor;              ///< Skip this cursor.
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -77,6 +78,11 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
   (void)parent;
   assert( data != NULL );
   tidy_getCursorByName_data *const tgcbnd = data;
+
+  if ( !clang_Cursor_isNull( tgcbnd->skip_cursor ) &&
+       clang_equalCursors( cursor, tgcbnd->skip_cursor ) ) {
+    return CXChildVisit_Continue;
+  }
 
   enum CXChildVisitResult rv;
   CXString const          name_cxs = clang_getCursorSpelling( cursor );
@@ -186,10 +192,28 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor ) {
 
   tidy_getCursorByName_data tgcbnd = {
     .find_name = name,
-    .found_cursor = clang_getNullCursor()
+    .found_cursor = clang_getNullCursor(),
+    .skip_cursor = clang_getNullCursor()
   };
-  clang_visitChildren( scope_cursor, &getCursorByName_visitor, &tgcbnd );
-  return tgcbnd.found_cursor;
+
+  while ( !clang_Cursor_isNull( scope_cursor ) ) {
+    clang_visitChildren( scope_cursor, &getCursorByName_visitor, &tgcbnd );
+    if ( !clang_Cursor_isNull( tgcbnd.found_cursor ) )
+      return tgcbnd.found_cursor;
+    if ( clang_getCursorKind( scope_cursor ) == CXCursor_TranslationUnit )
+      break;
+
+    CXCursor const parent = clang_getCursorSemanticParent( scope_cursor );
+    if ( tidy_Cursor_isInvalid( parent ) ||
+         clang_equalCursors( parent, scope_cursor ) ) {
+      break;
+    }
+
+    tgcbnd.skip_cursor = scope_cursor;
+    scope_cursor = parent;
+  } // while
+
+  return clang_getNullCursor();
 }
 
 CXSourceRange tidy_getCursorExtent( CXCursor cursor ) {
