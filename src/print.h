@@ -162,6 +162,14 @@ void print_include( char const *sgr_color, char const delims[static 2],
 void verbose_print_cursor( CXCursor cursor );
 
 /**
+ * Prints a token's string representation.
+ *
+ * @param tu The translation unit to use.
+ * @param token The token to print.
+ */
+void verbose_print_token( CXTranslationUnit tu, CXToken token );
+
+/**
  * Prints verbose output.
  *
  * @remarks If \ref opt_verbose is #TIDY_VERBOSE_NONE, this function does
