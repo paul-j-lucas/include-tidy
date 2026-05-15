@@ -1460,15 +1460,7 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
       break;
   } // for
 
-#if 0
-  // Keep this code for now since we might want to return one of the includes.
-  rb_iterator_init( &found_si->to_includes, &iter );
-  include_tidy *const to_include = rb_iterator_next( &iter );
-  assert( to_include != NULL );
-  return to_include->file;
-#else
   return best_include != NULL ? best_include->file : NULL;
-#endif
 }
 
 void config_init( void ) {
