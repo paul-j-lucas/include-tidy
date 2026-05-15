@@ -39,8 +39,22 @@ TESTS+=	tests/cli-align-column.test \
 TESTS+=	tests/align-column.test \
 	tests/comment-style.test
 
+# Other tests
 TESTS+=	tests/duplicate.test \
 	tests/keep.test
+
+# Real-world tests.
+TESTS+=	tests/c_ast.test \
+	tests/c_type.test \
+	tests/c_typedef.test \
+	tests/cdecl_dym.test \
+	tests/dump.test \
+	tests/english.test \
+	tests/p_macro.test \
+	tests/red_black.test \
+	tests/show.test \
+	tests/slist.test \
+	tests/types.test
 
 ###############################################################################
 
