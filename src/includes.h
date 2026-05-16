@@ -87,6 +87,7 @@ struct tidy_include {
 #endif /* NEED_II_MATRIX */
   array_t         lines;                ///< Line number(s) included from.
   tidy_sort_rank  sort_rank;            ///< Sorting rank.
+  bool            elide;                ///< Elide even if necessary?
   bool            keep;                 ///< Keep even if unnecessary?
   bool            is_local;             ///< Local include file?
   bool            is_needed;            ///< Include needed?

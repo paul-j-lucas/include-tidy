@@ -995,6 +995,8 @@ void includes_print( void ) {
   rb_iterator_t iter;
   rb_iterator_init( &tidy_include_set, &iter );
   while ( (include = rb_iterator_next( &iter )) != NULL ) {
+    if ( include->elide )
+      continue;
     bool const is_direct = include->depth == 0;
     if ( (include->is_needed ? (!is_direct || opt_all_includes) : is_direct) ||
          (include->keep && opt_all_includes) ||

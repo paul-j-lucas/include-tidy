@@ -179,6 +179,9 @@ static FILE*        config_open( char const*, config_opts );
 NODISCARD
 static char const*  home_dir( void );
 
+static void         elide_include( char const* );
+static void         elide_includes_parse( char const*, toml_table const*,
+                                          toml_value const* );
 static void         first_parse( char const*, toml_table const*,
                                  toml_value const* );
 static void         ignore_as_argument_parse( char const*, toml_table const*,
@@ -261,6 +264,8 @@ static config_key const CONFIG_KEYS[] = {
   { "associated-header",  TABLE_SOURCE,       &associated_header_parse  },
   { "color",              TABLE_INCLUDE_TIDY, &color_parse              },
   { "comment-style",      TABLE_INCLUDE_TIDY, &comment_style_parse      },
+  { "elide-includes",     TABLE_HEADER | TABLE_SOURCE,
+                                              &elide_includes_parse     },
   { "first",              TABLE_HEADER,       &first_parse              },
   { "includes",           TABLE_SYMBOL,       &includes_parse           },
   { "keep",               TABLE_HEADER,       &keep_parse               },
@@ -765,6 +770,68 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   }
 
   toml_cleanup( &toml );
+}
+
+/**
+ * Marks the include file having \a rel_path as ``elide.''
+ *
+ * @param rel_path The relative path of the include file to mark.
+ */
+static void elide_include( char const *rel_path ) {
+  assert( rel_path != NULL );
+
+  rb_iterator_t iter;
+  size_t const  rel_path_len = strlen( rel_path );
+
+  rb_iterator_init( &tidy_include_set, &iter );
+  for ( tidy_include *include;
+        (include = rb_iterator_next( &iter )) != NULL; ) {
+    if ( path_ends_with( include->abs_path, rel_path, rel_path_len ) )
+      include->elide = true;
+  } // for
+}
+
+/**
+ * Parses the value of an `"elide-includes"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param value The toml_value to parse.
+ */
+static void elide_includes_parse( char const *config_path,
+                                  toml_table const *table,
+                                  toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( value != NULL );
+
+  if ( strcmp( table->name, arg_source_path ) != 0 )
+    return;
+
+  switch ( value->type ) {
+    case TOML_STRING:
+      elide_include( value->s );
+      break;
+    case TOML_ARRAY:
+      for ( unsigned i = 0; i < value->a.size; ++i ) {
+        toml_value const *const a_value = &value->a.values[i];
+        if ( a_value->type != TOML_STRING ) {
+          print_error(
+            config_path, a_value->loc.line, a_value->loc.col,
+            "invalid value for \"elide-includes\" key array; expected string\n"
+          );
+          exit( EX_CONFIG );
+        }
+        elide_include( a_value->s );
+      } // for
+      break;
+    default:
+      print_error(
+        config_path, value->loc.line, value->loc.col,
+        "invalid value for \"elide-includes\" key; expected string or array\n"
+      );
+      exit( EX_CONFIG );
+  } // switch
 }
 
 /**
