@@ -873,9 +873,15 @@ static void first_parse( char const *config_path, toml_table const *table,
   if ( !bool_value_parse( config_path, "first", value ) )
     return;
 
-  tidy_include *const include = include_find_by_rel_path( table->name );
-  if ( include != NULL )
-    include->sort_rank = TIDY_SORT_FIRST;
+  rb_iterator_t iter;
+  size_t const  rel_path_len = strlen( table->name );
+
+  rb_iterator_init( &tidy_include_set, &iter );
+  for ( tidy_include *include;
+        (include = rb_iterator_next( &iter )) != NULL; ) {
+    if ( path_ends_with( include->abs_path, table->name, rel_path_len ) )
+      include->sort_rank = TIDY_SORT_FIRST;
+  } // for
 }
 
 /**
