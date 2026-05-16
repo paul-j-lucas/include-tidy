@@ -233,6 +233,19 @@ void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim ) {
   return rows;
 }
 
+bool path_ends_with( char const *abs_path, char const *rel_path,
+                     size_t rel_path_len ) {
+  assert( rel_path != NULL );
+  assert( abs_path != NULL );
+
+  size_t const abs_path_len = strlen( abs_path );
+  if ( rel_path_len > abs_path_len )
+    return false;
+  char const *const suffix = abs_path + (abs_path_len - rel_path_len);
+  return  strcmp( rel_path, suffix ) == 0 &&
+          (suffix == abs_path || suffix[-1] == '/');
+}
+
 char const* path_ext( char const *path ) {
   assert( path != NULL );
   // Do base_name() first for a case like "a.b/c".

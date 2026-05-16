@@ -1017,6 +1017,18 @@ inline char* nonconst_null_if_empty( char *s ) {
 /// @endcond
 
 /**
+ * Gets whether \a abs_path ends with \a rel_path.
+ *
+ * @param abs_path The absolute path to check against.
+ * @param rel_path The relative path to check.
+ * @param rel_path_len The length of \a rel_path.
+ * @return Returns `true` only if \a abs_path ends with \a rel_path.
+ */
+NODISCARD
+bool path_ends_with( char const *abs_path, char const *rel_path,
+                     size_t rel_path_len );
+
+/**
  * Gets the filename extension of \a path, if any.
  *
  * @param path The path to get the filename extension of.

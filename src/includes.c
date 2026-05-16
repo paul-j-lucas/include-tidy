@@ -912,23 +912,13 @@ tidy_include* include_find_by_rel_path( char const *rel_path ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
-  bool          found = false;
   rb_iterator_t iter;
   size_t const  rel_path_len = strlen( rel_path );
 
   rb_iterator_init( &include_set, &iter );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    size_t const abs_path_len = strlen( include->abs_path );
-
-    if ( rel_path_len <= abs_path_len ) {
-      char const *const suffix =
-        include->abs_path + (abs_path_len - rel_path_len);
-      found = strcmp( rel_path, suffix ) == 0 &&
-              (suffix == include->abs_path || suffix[-1] == '/');
-    }
-
-    if ( found )
+    if ( path_ends_with( include->abs_path, rel_path, rel_path_len ) )
       return include;
   } // for
 
