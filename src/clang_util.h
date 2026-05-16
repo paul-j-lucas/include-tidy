@@ -88,7 +88,7 @@ bool tidy_Cursor_isInvalid( CXCursor cursor );
  * i_file is less than, equal to, or greater than the name of \a j_file,
  * respectively.
  *
- * @sa tidy_CXFileUniqueID_cmp()
+ * @sa tidy_FileUniqueID_cmp()
  */
 NODISCARD
 int tidy_File_cmp_by_name( CXFile i_file, CXFile j_file );
@@ -104,8 +104,8 @@ int tidy_File_cmp_by_name( CXFile i_file, CXFile j_file );
  * @sa tidy_File_cmp_by_name()
  */
 NODISCARD
-inline int tidy_CXFileUniqueID_cmp( CXFileUniqueID const *i_id,
-                                    CXFileUniqueID const *j_id ) {
+inline int tidy_FileUniqueID_cmp( CXFileUniqueID const *i_id,
+                                  CXFileUniqueID const *j_id ) {
   return memcmp( i_id, j_id, sizeof *i_id );
 }
 

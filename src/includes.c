@@ -810,7 +810,7 @@ static int tidy_include_cmp_by_id( tidy_include const *i_include,
                                    tidy_include const *j_include ) {
   assert( i_include != NULL );
   assert( j_include != NULL );
-  return tidy_CXFileUniqueID_cmp( &i_include->file_id, &j_include->file_id );
+  return tidy_FileUniqueID_cmp( &i_include->file_id, &j_include->file_id );
 }
 
 /**
