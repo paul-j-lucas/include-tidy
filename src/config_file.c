@@ -991,9 +991,15 @@ static bool is_standard_include( char const *rel_path, char *includes[] ) {
 static void keep_include( char const *rel_path ) {
   assert( rel_path != NULL );
 
-  tidy_include *const include = include_find_by_rel_path( rel_path );
-  if ( include != NULL )
-    include->keep = true;
+  rb_iterator_t iter;
+  size_t const  rel_path_len = strlen( rel_path );
+
+  rb_iterator_init( &tidy_include_set, &iter );
+  for ( tidy_include *include;
+        (include = rb_iterator_next( &iter )) != NULL; ) {
+    if ( path_ends_with( include->abs_path, rel_path, rel_path_len ) )
+      include->keep = true;
+  } // for
 }
 
 /**

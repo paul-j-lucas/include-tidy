@@ -120,8 +120,9 @@ static void           tidy_include_cleanup( tidy_include* );
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-unsigned tidy_includes_missing;
-unsigned tidy_includes_unnecessary;
+rb_tree_t tidy_include_set;
+unsigned  tidy_includes_missing;
+unsigned  tidy_includes_unnecessary;
 
 /// @endcond
 
@@ -146,8 +147,6 @@ unsigned tidy_includes_unnecessary;
  */
 static ii_matrix_t  **ii_matrix;
 #endif /* NEED_II_MATRIX */
-
-static rb_tree_t      include_set;      ///< Set of included files.
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -307,7 +306,7 @@ static void include_proxies_dump( bool want_explicit ) {
   bool printed_any = false;
 
   rb_iterator_t iter;
-  rb_iterator_init( &include_set, &iter );
+  rb_iterator_init( &tidy_include_set, &iter );
 
   for ( tidy_include const *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
@@ -343,13 +342,13 @@ static void includes_cleanup( void ) {
   free( ii_matrix );
 #endif /* NEED_II_MATRIX */
   rb_tree_cleanup(
-    &include_set, POINTER_CAST( rb_free_fn_t, &tidy_include_cleanup )
+    &tidy_include_set, POINTER_CAST( rb_free_fn_t, &tidy_include_cleanup )
   );
 }
 
 /**
  * Visits each `#include` directive in a translation unit to initialize \ref
- * include_set.
+ * tidy_include_set.
  *
  * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent Not used.
@@ -397,7 +396,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     .file_id = tidy_getFileUniqueID( included_file )
   };
   rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &include_set, &new_include, sizeof new_include );
+    rb_tree_insert( &tidy_include_set, &new_include, sizeof new_include );
   tidy_include *const included = RB_DINT( rv_rbi.node );
 
   if ( rv_rbi.inserted ) {
@@ -429,7 +428,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     //
     included->rel_path = tidy_File_getRelativePath( included_file );
 
-    included->seq_id = include_set.size;
+    included->seq_id = tidy_include_set.size;
 
     if ( !is_direct ) {
       included->includer = include_find_by_File( includer_file );
@@ -862,7 +861,7 @@ tidy_include* get_associated_header( void ) {
       path_no_ext( source_base_name, path_buf );
 
     rb_iterator_t iter;
-    rb_iterator_init( &include_set, &iter );
+    rb_iterator_init( &tidy_include_set, &iter );
     for ( tidy_include *include;
           (include = rb_iterator_next( &iter )) != NULL; ) {
       if ( is_assoc_header( include, assoc_file_name, source_file_no_ext ) ) {
@@ -909,7 +908,8 @@ tidy_include* include_find_by_File( CXFile file ) {
   tidy_include find_include = {
     .file_id = tidy_getFileUniqueID( file )
   };
-  rb_node_t const *const found_rb = rb_tree_find( &include_set, &find_include );
+  rb_node_t const *const found_rb =
+    rb_tree_find( &tidy_include_set, &find_include );
   return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }
 
@@ -920,7 +920,7 @@ tidy_include* include_find_by_rel_path( char const *rel_path ) {
   rb_iterator_t iter;
   size_t const  rel_path_len = strlen( rel_path );
 
-  rb_iterator_init( &include_set, &iter );
+  rb_iterator_init( &tidy_include_set, &iter );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
     if ( path_ends_with( include->abs_path, rel_path, rel_path_len ) )
@@ -969,7 +969,8 @@ unsigned includes_include( tidy_include const *i_include,
 void includes_init( CXTranslationUnit tu ) {
   ASSERT_RUN_ONCE();
   rb_tree_init(
-    &include_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_id )
+    &tidy_include_set, RB_DINT,
+    POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_id )
   );
   ATEXIT( &includes_cleanup );
 
@@ -979,18 +980,18 @@ void includes_init( CXTranslationUnit tu ) {
   if ( iivd.verbose_printed )
     verbose_printf( "\n" );
 #ifdef NEED_II_MATRIX
-  ii_matrix_init( tu, include_set.size + 1 );
+  ii_matrix_init( tu, tidy_include_set.size + 1 );
 #endif /* NEED_II_MATRIX */
 }
 
 void includes_print( void ) {
   array_t include_array;
   array_init( &include_array, sizeof(tidy_include*) );
-  array_reserve( &include_array, include_set.size );
+  array_reserve( &include_array, tidy_include_set.size );
 
   tidy_include *include;
   rb_iterator_t iter;
-  rb_iterator_init( &include_set, &iter );
+  rb_iterator_init( &tidy_include_set, &iter );
   while ( (include = rb_iterator_next( &iter )) != NULL ) {
     bool const is_direct = include->depth == 0;
     if ( (include->is_needed ? (!is_direct || opt_all_includes) : is_direct) ||

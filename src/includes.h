@@ -94,6 +94,8 @@ struct tidy_include {
 
 ////////// extern variables ///////////////////////////////////////////////////
 
+extern rb_tree_t tidy_include_set;      ///< Set of included files.
+
 /**
  * Number of missing include files.
  *
