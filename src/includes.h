@@ -82,7 +82,9 @@ struct tidy_include {
   tidy_include   *includer;             ///< Include including this, if any.
   tidy_include   *proxy;                ///< Proxy include, if any.
   unsigned        depth;                ///< Include depth.
-  unsigned        seq_id;               ///< TODO.
+#ifdef NEED_II_MATRIX
+  unsigned        instance_id;          ///< Instance ID.
+#endif /* NEED_II_MATRIX */
   array_t         lines;                ///< Line number(s) included from.
   tidy_sort_rank  sort_rank;            ///< Sorting rank.
   bool            keep;                 ///< Keep even if unnecessary?

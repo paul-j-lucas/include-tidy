@@ -138,7 +138,7 @@ unsigned  tidy_includes_unnecessary;
  * &gt; 0 only if include file \e i includes include file \e j.  The value
  * indicates the number of includes between them, i.e., 1 means \e i includes
  * \e j directly, 2 means \e i includes \e k that includes \e j, and so on.
- * Indicies are values of \ref tidy_include::seq_id "seq_id".
+ * Indicies are values of \ref tidy_include::instance_id "instance_id".
  *
  * The zeroth column is special in that if <code>ii_matrix[0][</code>\e
  * j<code>]</code> is &gt; 0, it means that the souce file includes include
@@ -224,10 +224,10 @@ static void ii_matrix_visitor( CXFile included_file,
     tidy_include *const includer = include_find_by_File( includer_file );
     if ( includer == NULL )
       return;
-    i = includer->seq_id;
+    i = includer->instance_id;
   }
 
-  ii_matrix[ i ][ included->seq_id ] = 1;
+  ii_matrix[ i ][ included->instance_id ] = 1;
 }
 #endif /* NEED_II_MATRIX */
 
@@ -428,7 +428,9 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     //
     included->rel_path = tidy_File_getRelativePath( included_file );
 
-    included->seq_id = tidy_include_set.size;
+#ifdef NEED_II_MATRIX
+    included->instance_id = tidy_include_set.size;
+#endif /* NEED_II_MATRIX */
 
     if ( !is_direct ) {
       included->includer = include_find_by_File( includer_file );
@@ -961,8 +963,8 @@ bool include_proxy_would_cycle( tidy_include const *from_include,
 unsigned includes_include( tidy_include const *i_include,
                            tidy_include const *j_include ) {
   assert( j_include != NULL );
-  unsigned const i = i_include != NULL ? i_include->seq_id : 0;
-  return ii_matrix[ i ][ j_include->seq_id ];
+  unsigned const i = i_include != NULL ? i_include->instance_id : 0;
+  return ii_matrix[ i ][ j_include->instance_id ];
 }
 #endif /* NEED_II_MATRIX */
 
