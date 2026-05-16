@@ -410,31 +410,6 @@ static void associated_header_parse( char const *config_path,
 }
 
 /**
- * Cleans-up all configuration data.
- */
-static void config_cleanup( void ) {
-  if ( std_c_includes != NULL ) {
-    for ( char **ppattern = std_c_includes; *ppattern != NULL; ++ppattern )
-      free( *ppattern );
-    free( std_c_includes );
-  }
-  if ( std_cpp_includes != NULL ) {
-    for ( char **ppattern = std_cpp_includes; *ppattern != NULL; ++ppattern )
-      free( *ppattern );
-    free( std_cpp_includes );
-  }
-  rb_tree_cleanup( &ignore_set, /*free_fn=*/NULL );
-  rb_tree_cleanup(
-    &source_header_map,
-    POINTER_CAST( rb_free_fn_t, &source_header_cleanup )
-  );
-  rb_tree_cleanup(
-    &symbol_includes_map,
-    POINTER_CAST( rb_free_fn_t, &symbol_includes_cleanup )
-  );
-}
-
-/**
  * Parses a bool value.
  *
  * @param config_path The full path to the configurarion file.
@@ -485,6 +460,31 @@ static void color_parse( char const *config_path, toml_table const *table,
     exit( EX_CONFIG );
   }
   opt_mark_set( COPT(COLOR) );
+}
+
+/**
+ * Cleans-up all configuration data.
+ */
+static void config_cleanup( void ) {
+  if ( std_c_includes != NULL ) {
+    for ( char **ppattern = std_c_includes; *ppattern != NULL; ++ppattern )
+      free( *ppattern );
+    free( std_c_includes );
+  }
+  if ( std_cpp_includes != NULL ) {
+    for ( char **ppattern = std_cpp_includes; *ppattern != NULL; ++ppattern )
+      free( *ppattern );
+    free( std_cpp_includes );
+  }
+  rb_tree_cleanup( &ignore_set, /*free_fn=*/NULL );
+  rb_tree_cleanup(
+    &source_header_map,
+    POINTER_CAST( rb_free_fn_t, &source_header_cleanup )
+  );
+  rb_tree_cleanup(
+    &symbol_includes_map,
+    POINTER_CAST( rb_free_fn_t, &symbol_includes_cleanup )
+  );
 }
 
 /**
