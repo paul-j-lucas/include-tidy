@@ -157,19 +157,6 @@ void* check_realloc( void *p, size_t size ) {
   return p;
 }
 
-void check_snprintf( char *buf, size_t buf_size, char const *format, ... ) {
-  assert( buf != NULL );
-  assert( format != NULL );
-
-  va_list args;
-  va_start( args, format );
-  int const raw_len = vsnprintf( buf, buf_size, format, args );
-  va_end( args );
-
-  PERROR_EXIT_IF( raw_len < 0, EX_OSERR );
-  PERROR_EXIT_IF( STATIC_CAST( size_t, raw_len ) >= buf_size, EX_SOFTWARE );
-}
-
 char* check_strdup( char const *s ) {
   assert( s != NULL );
   char *const dup = strdup( s );
@@ -221,6 +208,7 @@ char const* get_cwd( size_t *plen ) {
   return cwd_path_buf;
 }
 
+#ifdef NEED_II_MATRIX
 void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim ) {
   // ensure &elements[0] is suitably aligned
   size_t const ptrs_size = round_up_pow_2( sizeof(void*) * idim, ealign );
@@ -232,6 +220,7 @@ void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim ) {
     rows[i] = &elements[ i * row_size ];
   return rows;
 }
+#endif /* NEED_II_MATRIX */
 
 bool path_ends_with( char const *abs_path, char const *rel_path,
                      size_t rel_path_len ) {
@@ -349,10 +338,6 @@ bool str_is_affirmative( char const *s ) {
 }
 #endif /* NDEBUG */
 
-int str_ptr_cmp( char const **i_ps, char const **j_ps ) {
-  return strcmp( *i_ps, *j_ps );
-}
-
 char* str_trim( char *s ) {
   assert( s != NULL );
   SKIP_WS( s );
@@ -379,7 +364,9 @@ extern inline char const* (null_if_empty)( char const* );
 
 extern inline bool path_is_absolute( char const* );
 extern inline bool path_is_relative( char const* );
+#ifdef NEED_II_MATRIX
 extern inline size_t round_up_pow_2( size_t, size_t );
+#endif /* NEED_II_MATRIX */
 extern inline char* strncpy_0( char*, char const*, size_t );
 extern inline bool true_or_set( bool* );
 extern inline bool true_clear( bool* );

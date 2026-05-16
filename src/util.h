@@ -466,17 +466,6 @@
                           #TYPE " must be an integral type" ) \
     + IS_SIGNED_TYPE(TYPE))
 
-/**
- * Zeros the memory pointed to by \a PTR.  The number of bytes to zero is given
- * by `sizeof *(PTR)`.
- *
- * @param PTR The pointer to the start of memory to zero.  \a PTR must be a
- * pointer.  If it's an array, it'll generate a compile-time error.
- */
-#define MEM_ZERO(PTR) BLOCK(                                        \
-  static_assert( IS_POINTER_EXPR(PTR), #PTR " must be a pointer" ); \
-  memset( (PTR), 0, sizeof *(PTR) ); )
-
 /// @cond DOXYGEN_IGNORE
 #define NAME2_HELPER(A,B)         A##B
 /// @endcond
@@ -878,17 +867,6 @@ NODISCARD
 void* check_realloc( void *p, size_t size );
 
 /**
- * Calls **snprintf**(3) and checks for failure.
- *
- * @param buf The destination buffer to print into.
- * @param buf_size The size of \a buf.
- * @param format The `printf()` style format string.
- * @param ... The `printf()` arguments.
- */
-PJL_PRINTF_LIKE_FUNC(3)
-void check_snprintf( char *buf, size_t buf_size, char const *format, ... );
-
-/**
  * Calls **strdup**(3) and checks for failure.
  * If memory allocation fails, prints an error message and exits.
  *
@@ -979,6 +957,7 @@ void free_pptr( void *pptr );
 NODISCARD
 char const* get_cwd( size_t *plen );
 
+#ifdef NEED_II_MATRIX
 /**
  * Dynamically allocates a two-dimensional matrix [\a idim][\a jdim] elements
  * of size \a esize.
@@ -993,6 +972,7 @@ char const* get_cwd( size_t *plen );
  */
 NODISCARD
 void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim );
+#endif /* NEED_II_MATRIX */
 
 /**
  * Checks whether \a s is null, an empty string, or consists only of
@@ -1125,6 +1105,7 @@ char* path_normalize( char const *path );
  */
 _Noreturn void perror_exit( int status );
 
+#ifdef NEED_II_MATRIX
 /**
  * Rounds \a n up to a multiple of \a multiple.
  *
@@ -1136,6 +1117,7 @@ NODISCARD
 inline size_t round_up_pow_2( size_t n, size_t multiple ) {
   return (n + multiple - 1) & ~(multiple - 1);
 }
+#endif /* NEED_II_MATRIX */
 
 #ifndef NDEBUG
 /**
@@ -1164,17 +1146,6 @@ inline char* strncpy_0( char *restrict dst, char const *restrict src,
   snprintf( dst, n + 1, "%s", src );
   return dst;
 }
-
-/**
- * Compares two string pointers by comparing the string pointed to.
- *
- * @param i_ps The first string pointer to compare.
- * @param j_ps The first string pointer to compare.
- * @return Returns a number less than 0, 0, or greater than 0 if \a *i_ps is
- * less than, equal to, or greater than \a *j_ps, respectively.
- */
-NODISCARD
-int str_ptr_cmp( char const **i_ps, char const **j_ps );
 
 /**
  * Trims both leading and trailing whitespace from a string.
