@@ -747,8 +747,10 @@ static void config_parse( char const *config_path, FILE *config_file ) {
         assert( table_kinds < ARRAY_SIZE( TABLE_KINDS ) );
         print_error(
           config_path, kv->key.loc.line, kv->key.loc.col,
-          "\"%s\": key not allowed in %s table; allowed only in %s table%s\n",
-          key->name, TABLE_KINDS[ table_kinds ],
+          "\"%s\": key not allowed in %s table%s; allowed only in %s table%s\n",
+          key->name,
+          TABLE_KINDS[ table_kinds ],
+          is_01_bit( table_kinds ) ? "" : "s",
           TABLE_KINDS[ key->table_kinds ],
           is_01_bit( key->table_kinds ) ? "" : "s"
         );
