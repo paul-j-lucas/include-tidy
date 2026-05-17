@@ -270,7 +270,6 @@
  * @sa #EPUTC()
  * @sa #EPUTS()
  * @sa #FPRINTF()
- * @sa #PRINTF()
  */
 #define EPRINTF(...)              fprintf( stderr, __VA_ARGS__ )
 
@@ -585,25 +584,12 @@
 #define POINTER_CAST(T,EXPR)      ((T)(uintptr_t)(EXPR))
 
 /**
- * Calls #FPRINTF() with `stdout`.
- *
- * @param ... The `fprintf()` arguments.
- *
- * @sa #EPRINTF()
- * @sa #FPRINTF()
- * @sa #PUTC()
- * @sa #PUTS()
- */
-#define PRINTF(...)               FPRINTF( stdout, __VA_ARGS__ )
-
-/**
  * Calls #FPUTC() with `stdout`.
  *
  * @param C The character to print.
  *
  * @sa #EPUTC()
  * @sa #FPUTC()
- * @sa #PRINTF()
  * @sa #PUTS()
  */
 #define PUTC(C)                   FPUTC( (C), stdout )
@@ -616,7 +602,6 @@
  * @note Unlike **puts**(3), does _not_ print a newline.
  *
  * @sa #FPUTS()
- * @sa #PRINTF()
  * @sa #PUTC()
  */
 #define PUTS(S)                   FPUTS( (S), stdout )
