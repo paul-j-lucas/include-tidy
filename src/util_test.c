@@ -32,9 +32,20 @@
 
 #pragma GCC diagnostic ignored "-Wunused-value"
 
+#define STR_STRLEN(LIT)           (LIT), STRLITLEN(LIT)
+
 /// @endcond
 
 ////////// test functions /////////////////////////////////////////////////////
+
+static bool test_path_ends_with( void ) {
+  TEST_FUNC_BEGIN();
+
+  TEST(  path_ends_with( "/var/bar/x.log", STR_STRLEN( "bar/x.log" ) ) );
+  TEST( !path_ends_with( "/var/bar/x.log", STR_STRLEN( "foobar/x.log" ) ) );
+
+  TEST_FUNC_END();
+}
 
 static bool test_path_ext( void ) {
   TEST_FUNC_BEGIN();
@@ -78,6 +89,7 @@ static bool test_path_no_ext( void ) {
 int main( int argc, char const *const argv[] ) {
   test_prog_init( argc, argv );
 
+  test_path_ends_with();
   test_path_ext();
   test_path_no_ext();
 }
