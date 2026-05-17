@@ -1008,8 +1008,10 @@ void includes_print( void ) {
         else if ( !is_direct )
           ++tidy_includes_missing;
       }
-      if ( include->lines.len > 1 )
-        tidy_includes_unnecessary += include->lines.len - 1;
+      if ( include->lines.len > 1 ) {
+        tidy_includes_unnecessary +=
+          STATIC_CAST( unsigned, include->lines.len ) - 1;
+      }
     }
   } // while
 
