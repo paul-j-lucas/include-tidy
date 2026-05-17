@@ -237,14 +237,6 @@ std-cpp-includes = [
 [free]
 includes = "stdlib.h"
 
-# These extern variables are used both by getopt(3), which is declared in
-# unistd.h, and getopt_long(3), which is declared in getopt.h.  Therefore,
-# including either one is sufficient.
-[getopt.h]
-symbols = [ "optarg", "opterr", "optind", "optopt", "optreset" ]
-[unistd.h]
-symbols = [ "optarg", "opterr", "optind", "optopt", "optreset" ]
-
 # NULL is declared in all of these, so any one is sufficient.
 [NULL]
 includes = [
