@@ -86,6 +86,10 @@ enum config_table_kind {
   TABLE_SYMBOL        = 1 << 3          ///< Symbol table.
 };
 
+/// @cond DOXYGEN_IGNORE
+#define TABLE_HEADER_SOURCE       (TABLE_HEADER | TABLE_SOURCE)
+/// @endcond
+
 ////////// typedefs ///////////////////////////////////////////////////////////
 
 typedef enum    config_opts       config_opts;
@@ -95,15 +99,30 @@ typedef struct  source_header     source_header;
 typedef struct  symbol_includes   symbol_includes;
 
 /**
- * Signature for function to parse the value of a configuration key.
+ * Signature for a function that parses the value of a configuration key.
  *
  * @param config_path The full path to the configurarion file.
  * @param table The current toml_table.
  * @param value The toml_value to parse.
  */
-typedef void (*config_parse_fn)( char const *config_path,
-                                 toml_table const *table,
-                                 toml_value const *value );
+typedef void (*config_parse_fn_t)( char const *config_path,
+                                   toml_table const *table,
+                                   toml_value const *value );
+
+/**
+ * Signature for a function that parses a string value of a key used by
+ * string_or_string_array_parse().
+ *
+ * @note Other functions ending in `_svpf` are functions that adapt calls from
+ * functions having this signature to others.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table_name The table name.
+ * @param value The string toml_value to parse.
+ */
+typedef void (*string_value_parse_fn_t)( char const *config_path,
+                                         char const *table_name,
+                                         toml_value const *value );
 
 ////////// structures /////////////////////////////////////////////////////////
 
@@ -113,7 +132,7 @@ typedef void (*config_parse_fn)( char const *config_path,
 struct config_key {
   char const       *name;               ///< Key name.
   config_table_kind table_kinds;        ///< Table kind(s) allowed in.
-  config_parse_fn   parse_fn;           ///< Value parsing function.
+  config_parse_fn_t parse_fn;           ///< Value parsing function.
 };
 
 /**
@@ -188,12 +207,15 @@ static void         ignore_as_argument_parse( char const*, toml_table const*,
                                               toml_value const* );
 static void         includes_parse( char const*, toml_table const*,
                                     toml_value const* );
+static void         includes_parse_svpf( char const*, char const*,
+                                         toml_value const* );
 
 NODISCARD
 static long         int_value_parse( char const*, char const*,
                                      toml_value const*, long, long );
 
-static void         keep_include( char const* );
+static void         keep_include_svpf( char const*, char const*,
+                                       toml_value const* );
 static void         keep_includes_parse( char const*, toml_table const*,
                                          toml_value const* );
 static void         keep_parse( char const*, toml_table const*,
@@ -212,6 +234,12 @@ NODISCARD
 static char**       string_array_value_parse( char const*, char const*,
                                               toml_value const* );
 
+static void         string_or_string_array_parse( char const*,
+                                                  toml_table const*,
+                                                  char const*,
+                                                  toml_value const*,
+                                                  string_value_parse_fn_t );
+
 NODISCARD
 static char const*  string_value_parse( char const*, char const*,
                                         toml_value const* );
@@ -220,6 +248,8 @@ static void         symbol_include_add( char const*, tidy_include* );
 static void         symbol_includes_cleanup( symbol_includes* );
 static void         symbols_parse( char const*, toml_table const*,
                                    toml_value const* );
+static void         symbols_parse_svpf( char const*, char const*,
+                                        toml_value const* );
 
 NODISCARD
 static int          tidy_include_cmp_by_rel_path( tidy_include const*,
@@ -258,26 +288,23 @@ static inline bool is_0n_bit_only_in_set( uint64_t n, uint64_t set ) {
  * Configuration keys.
  */
 static config_key const CONFIG_KEYS[] = {
-  { "add-c-includes",     TABLE_INCLUDE_TIDY, &add_c_includes_parse     },
-  { "align-column",       TABLE_INCLUDE_TIDY, &align_column_parse       },
-  { "all-includes",       TABLE_INCLUDE_TIDY, &all_includes_parse       },
-  { "associated-header",  TABLE_SOURCE,       &associated_header_parse  },
-  { "color",              TABLE_INCLUDE_TIDY, &color_parse              },
-  { "comment-style",      TABLE_INCLUDE_TIDY, &comment_style_parse      },
-  { "elide-includes",     TABLE_HEADER | TABLE_SOURCE,
-                                              &elide_includes_parse     },
-  { "first",              TABLE_HEADER,       &first_parse              },
-  { "includes",           TABLE_SYMBOL,       &includes_parse           },
-  { "keep",               TABLE_HEADER,       &keep_parse               },
-  { "ignore-as-argument", TABLE_HEADER | TABLE_SOURCE,
-                                              &ignore_as_argument_parse },
-  { "keep-includes",      TABLE_HEADER | TABLE_SOURCE,
-                                              &keep_includes_parse      },
-  { "line-length",        TABLE_INCLUDE_TIDY, &line_length_parse        },
-  { "proxy",              TABLE_HEADER,       &proxy_parse              },
-  { "std-c-includes",     TABLE_INCLUDE_TIDY, &std_c_includes_parse     },
-  { "std-cpp-includes",   TABLE_INCLUDE_TIDY, &std_cpp_includes_parse   },
-  { "symbols",            TABLE_HEADER,       &symbols_parse            },
+  { "add-c-includes",     TABLE_INCLUDE_TIDY,   &add_c_includes_parse     },
+  { "align-column",       TABLE_INCLUDE_TIDY,   &align_column_parse       },
+  { "all-includes",       TABLE_INCLUDE_TIDY,   &all_includes_parse       },
+  { "associated-header",  TABLE_SOURCE,         &associated_header_parse  },
+  { "color",              TABLE_INCLUDE_TIDY,   &color_parse              },
+  { "comment-style",      TABLE_INCLUDE_TIDY,   &comment_style_parse      },
+  { "elide-includes",     TABLE_HEADER_SOURCE,  &elide_includes_parse     },
+  { "first",              TABLE_HEADER,         &first_parse              },
+  { "includes",           TABLE_SYMBOL,         &includes_parse           },
+  { "keep",               TABLE_HEADER,         &keep_parse               },
+  { "ignore-as-argument", TABLE_HEADER_SOURCE,  &ignore_as_argument_parse },
+  { "keep-includes",      TABLE_HEADER_SOURCE,  &keep_includes_parse      },
+  { "line-length",        TABLE_INCLUDE_TIDY,   &line_length_parse        },
+  { "proxy",              TABLE_HEADER,         &proxy_parse              },
+  { "std-c-includes",     TABLE_INCLUDE_TIDY,   &std_c_includes_parse     },
+  { "std-cpp-includes",   TABLE_INCLUDE_TIDY,   &std_cpp_includes_parse   },
+  { "symbols",            TABLE_HEADER,         &symbols_parse            },
 };
 
 /**
@@ -775,7 +802,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
 }
 
 /**
- * Marks the include file having \a rel_path as ``elide.''
+ * Marks the include file(s) having \a rel_path as ``elide.''
  *
  * @param rel_path The relative path of the include file to mark.
  */
@@ -794,6 +821,25 @@ static void elide_include( char const *rel_path ) {
 }
 
 /**
+ * Adapter for a string_value_parse_fn_t function for the `"elide-includes"`
+ * key.
+ *
+ * @param config_path Not used.
+ * @param table_name Not used.
+ * @param value The string toml_value.
+ */
+static void elide_include_svpf( char const *config_path,
+                                char const *table_name,
+                                toml_value const *value ) {
+  (void)config_path;
+  (void)table_name;
+  assert( value != NULL );
+  assert( value->type == TOML_STRING );
+
+  elide_include( value->s );
+}
+
+/**
  * Parses the value of an `"elide-includes"` key.
  *
  * @param config_path The full path to the configurarion file.
@@ -809,31 +855,9 @@ static void elide_includes_parse( char const *config_path,
 
   if ( strcmp( table->name, arg_source_path ) != 0 )
     return;
-
-  switch ( value->type ) {
-    case TOML_STRING:
-      elide_include( value->s );
-      break;
-    case TOML_ARRAY:
-      for ( unsigned i = 0; i < value->a.size; ++i ) {
-        toml_value const *const a_value = &value->a.values[i];
-        if ( a_value->type != TOML_STRING ) {
-          print_error(
-            config_path, a_value->loc.line, a_value->loc.col,
-            "invalid value for \"elide-includes\" key array; expected string\n"
-          );
-          exit( EX_CONFIG );
-        }
-        elide_include( a_value->s );
-      } // for
-      break;
-    default:
-      print_error(
-        config_path, value->loc.line, value->loc.col,
-        "invalid value for \"elide-includes\" key; expected string or array\n"
-      );
-      exit( EX_CONFIG );
-  } // switch
+  string_or_string_array_parse(
+    config_path, table, "elide-includes", value, &elide_include_svpf
+  );
 }
 
 /**
@@ -902,7 +926,6 @@ static void ignore_as_argument_parse( char const *config_path,
 
   if ( !bool_value_parse( config_path, "ignore-as-argument", value ) )
     return;
-
   PJL_DISCARD_RV(
     rb_tree_insert(
       &ignore_set, CONST_CAST( char*, table->name ),
@@ -912,32 +935,36 @@ static void ignore_as_argument_parse( char const *config_path,
 };
 
 /**
- * Adds a proxy from \a from_include_file to \a to_include_file.
+ * Adds an explicit proxy from \a from_include_file to \a to_include_file.
  *
  * @param config_path The full path to the configurarion file.
- * @param from_include The include to add the proxy from.
- * @param from_loc The configuration file source location of \a from_include.
- * @param to_include The include to add the proxy to.
+ * @param table_name The table name.
+ * @param value The string toml_value.
  */
 static void include_add_explicit_proxy( char const *config_path,
-                                        tidy_include *from_include,
-                                        toml_loc const *from_loc,
-                                        tidy_include *to_include ) {
+                                        char const *table_name,
+                                        toml_value const *value ) {
   assert( config_path != NULL );
-  assert( from_include != NULL );
-  assert( from_loc != NULL );
-  assert( to_include != NULL );
+  assert( table_name != NULL );
+  assert( value != NULL );
+
+  tidy_include *const from_include = include_find_by_rel_path( value->s );
+  if ( from_include == NULL )
+    return;
+  tidy_include *const to_include = include_find_by_rel_path( table_name );
+  if ( to_include == NULL )
+    return;
 
   if ( from_include->proxy != NULL ) {
     print_warning(
-      config_path, from_loc->line, from_loc->col,
+      config_path, value->loc.line, value->loc.col,
       "\"%s\" already has proxy \"%s\"\n",
       from_include->rel_path, from_include->proxy->rel_path
     );
   }
   else if ( include_proxy_would_cycle( from_include, to_include ) ) {
     print_warning(
-      config_path, from_loc->line, from_loc->col,
+      config_path, value->loc.line, value->loc.col,
       "\"%s\": proxy cycle detected\n", from_include->rel_path
     );
   }
@@ -960,36 +987,31 @@ static void includes_parse( char const *config_path, toml_table const *table,
   assert( table != NULL );
   assert( value != NULL );
 
-  tidy_include *to_include;
+  string_or_string_array_parse(
+    config_path, table, "includes", value, &includes_parse_svpf
+  );
+}
 
-  switch ( value->type ) {
-    case TOML_STRING:
-      to_include = include_find_by_rel_path( value->s );
-      if ( to_include != NULL )
-        symbol_include_add( table->name, to_include );
-      break;
-    case TOML_ARRAY:
-      for ( unsigned i = 0; i < value->a.size; ++i ) {
-        toml_value const *const a_value = &value->a.values[i];
-        if ( a_value->type != TOML_STRING ) {
-          print_error(
-            config_path, a_value->loc.line, a_value->loc.col,
-            "invalid value for \"includes\"; expected string\n",
-          );
-          exit( EX_CONFIG );
-        }
-        to_include = include_find_by_rel_path( a_value->s );
-        if ( to_include != NULL )
-          symbol_include_add( table->name, to_include );
-      } // for
-      break;
-    default:
-      print_error(
-        config_path, value->loc.line, value->loc.col,
-        "invalid value for \"includes\"; expected string or array\n"
-      );
-      exit( EX_CONFIG );
-  } // switch
+/**
+ * Adapter for a string_value_parse_fn_t function for the `"includes"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table_name The table name.
+ * @param value The string toml_value to parse.
+ *
+ * @sa symbols_parse_svpf()
+ */
+static void includes_parse_svpf( char const *config_path,
+                                 char const *table_name,
+                                 toml_value const *value ) {
+  (void)config_path;
+  assert( table_name != NULL );
+  assert( value != NULL );
+  assert( value->type == TOML_STRING );
+
+  tidy_include *const to_include = include_find_by_rel_path( value->s );
+  if ( to_include != NULL )
+    symbol_include_add( table_name, to_include );
 }
 
 /**
@@ -1059,7 +1081,7 @@ static bool is_standard_include( char const *rel_path, char *includes[] ) {
 }
 
 /**
- * Marks the include file having \a rel_path as ``kept.''
+ * Marks the include file(s) having \a rel_path as ``kept.''
  *
  * @param rel_path The relative path of the include file to mark.
  */
@@ -1078,6 +1100,24 @@ static void keep_include( char const *rel_path ) {
 }
 
 /**
+ * Adapter for a string_value_parse_fn_t function for the `"keep-includes"`
+ * key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table_name The table name.
+ * @param value The string toml_value to parse.
+ */
+static void keep_include_svpf( char const *config_path, char const *table_name,
+                               toml_value const *value ) {
+  (void)config_path;
+  assert( table_name != NULL );
+  assert( value != NULL );
+  assert( value->type == TOML_STRING );
+
+  keep_include( value->s );
+}
+
+/**
  * Parses the value of an `"keep-includes"` key.
  *
  * @param config_path The full path to the configurarion file.
@@ -1093,31 +1133,9 @@ static void keep_includes_parse( char const *config_path,
 
   if ( strcmp( table->name, arg_source_path ) != 0 )
     return;
-
-  switch ( value->type ) {
-    case TOML_STRING:
-      keep_include( value->s );
-      break;
-    case TOML_ARRAY:
-      for ( unsigned i = 0; i < value->a.size; ++i ) {
-        toml_value const *const a_value = &value->a.values[i];
-        if ( a_value->type != TOML_STRING ) {
-          print_error(
-            config_path, a_value->loc.line, a_value->loc.col,
-            "invalid value for \"keep-includes\" key array; expected string\n"
-          );
-          exit( EX_CONFIG );
-        }
-        keep_include( a_value->s );
-      } // for
-      break;
-    default:
-      print_error(
-        config_path, value->loc.line, value->loc.col,
-        "invalid value for \"keep-includes\" key; expected string or array\n"
-      );
-      exit( EX_CONFIG );
-  } // switch
+  string_or_string_array_parse(
+    config_path, table, "keep-includes", value, &keep_include_svpf
+  );
 }
 
 /**
@@ -1174,45 +1192,9 @@ static void proxy_parse( char const *config_path, toml_table const *table,
   assert( table != NULL );
   assert( value != NULL );
 
-  tidy_include *const to_include = include_find_by_rel_path( table->name );
-  if ( to_include == NULL )
-    return;
-  tidy_include *from_include;
-
-  switch ( value->type ) {
-    case TOML_STRING:
-      from_include = include_find_by_rel_path( value->s );
-      if ( from_include != NULL ) {
-        include_add_explicit_proxy(
-          config_path, from_include, &value->loc, to_include
-        );
-      }
-      break;
-    case TOML_ARRAY:
-      for ( unsigned i = 0; i < value->a.size; ++i ) {
-        toml_value const *const a_value = &value->a.values[i];
-        if ( a_value->type != TOML_STRING ) {
-          print_error(
-            config_path, a_value->loc.line, a_value->loc.col,
-            "invalid value for \"proxy\" key array; expected string\n"
-          );
-          exit( EX_CONFIG );
-        }
-        from_include = include_find_by_rel_path( a_value->s );
-        if ( from_include != NULL ) {
-          include_add_explicit_proxy(
-            config_path, from_include, &a_value->loc, to_include
-          );
-        }
-      } // for
-      break;
-    default:
-      print_error(
-        config_path, value->loc.line, value->loc.col,
-        "invalid value for \"proxy\" key; expected string or array\n"
-      );
-      exit( EX_CONFIG );
-  } // switch
+  string_or_string_array_parse(
+    config_path, table, "proxy", value, &include_add_explicit_proxy
+  );
 }
 
 /**
@@ -1294,6 +1276,9 @@ static void std_cpp_includes_parse( char const *config_path,
  * @param value The toml_value to parse.
  * @return Returns a pointer to the first element of a null-terminated string
  * array or NULL if the array is empty.
+ *
+ * @sa string_or_string_array_parse()
+ * @sa string_value_parse()
  */
 static char** string_array_value_parse( char const *config_path,
                                         char const *key_name,
@@ -1332,11 +1317,63 @@ static char** string_array_value_parse( char const *config_path,
 }
 
 /**
+ * Parses either a string value or an array of string values.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param key_name The key name.
+ * @param value The toml_value to parse.
+ * @param parse_fn The parse function to use.
+ *
+ * @sa string_array_value_parse()
+ * @sa string_value_parse()
+ */
+static void string_or_string_array_parse( char const *config_path,
+                                          toml_table const *table,
+                                          char const *key_name,
+                                          toml_value const *value,
+                                          string_value_parse_fn_t parse_fn ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( value != NULL );
+  assert( key_name != NULL );
+  assert( parse_fn != NULL );
+
+  switch ( value->type ) {
+    case TOML_STRING:
+      (*parse_fn)( config_path, table->name, value );
+      break;
+    case TOML_ARRAY:
+      for ( unsigned i = 0; i < value->a.size; ++i ) {
+        toml_value const *const a_value = &value->a.values[i];
+        if ( a_value->type != TOML_STRING ) {
+          print_error(
+            config_path, a_value->loc.line, a_value->loc.col,
+            "invalid value for \"%s\" key array; expected string\n", key_name
+          );
+          exit( EX_CONFIG );
+        }
+        (*parse_fn)( config_path, table->name, a_value );
+      } // for
+      break;
+    default:
+      print_error(
+        config_path, value->loc.line, value->loc.col,
+        "invalid value for \"%s\" key; expected string or array\n", key_name
+      );
+      exit( EX_CONFIG );
+  } // switch
+}
+
+/**
  * Parses a string value.
  *
  * @param config_path The full path to the configurarion file.
  * @param key_name The key name.
  * @param value The toml_value to parse.
+ *
+ * @sa string_array_value_parse()
+ * @sa string_or_string_array_parse()
  */
 static char const* string_value_parse( char const *config_path,
                                        char const *key_name,
@@ -1455,34 +1492,31 @@ static void symbols_parse( char const *config_path, toml_table const *table,
   assert( table != NULL );
   assert( value != NULL );
 
-  tidy_include *const to_include = include_find_by_rel_path( table->name );
-  if ( to_include == NULL )
-    return;
+  string_or_string_array_parse(
+    config_path, table, "symbols", value, &symbols_parse_svpf
+  );
+}
 
-  switch ( value->type ) {
-    case TOML_STRING:
-      symbol_include_add( value->s, to_include );
-      break;
-    case TOML_ARRAY:
-      for ( unsigned i = 0; i < value->a.size; ++i ) {
-        toml_value const *const a_value = &value->a.values[i];
-        if ( a_value->type != TOML_STRING ) {
-          print_error(
-            config_path, a_value->loc.line, a_value->loc.col,
-            "invalid value for \"symbols\" key array; expected string\n"
-          );
-          exit( EX_CONFIG );
-        }
-        symbol_include_add( a_value->s, to_include );
-      } // for
-      break;
-    default:
-      print_error(
-        config_path, value->loc.line, value->loc.col,
-        "invalid value for \"symbols\" key; expected string or array\n"
-      );
-      exit( EX_CONFIG );
-  } // switch
+/**
+ * Adapter for a string_value_parse_fn_t function for the `"includes"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table_name The table name.
+ * @param value The strint toml_value to parse.
+ *
+ * @sa includes_parse_svpf()
+ */
+static void symbols_parse_svpf( char const *config_path,
+                                     char const *table_name,
+                                     toml_value const *value ) {
+  (void)config_path;
+  assert( table_name != NULL );
+  assert( value != NULL );
+  assert( value->type == TOML_STRING );
+
+  tidy_include *const to_include = include_find_by_rel_path( table_name );
+  if ( to_include != NULL )
+    symbol_include_add( value->s, to_include );
 }
 
 /**
