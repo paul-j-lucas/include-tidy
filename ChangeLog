@@ -1,5 +1,12 @@
 2026-05-16  Paul J. Lucas <paul@lucasmail.org>
 
+   * symbols.c: Put symbol names in quotes.
+   * etc/config.toml: Added stdint.h.
+   * util.h: Removed PRINTF.
+   * util_test.c: Added test_path_ends_with().
+   * includes.c: Eliminated warning.
+   * src/Makefile.am, bit_util.c, bit_util.h, config_file.c: Added
+     bit_util.[ch].
    * config_file.c: Added string_or_string_array_parse().
    * config_file.c: Sorted.
    * config_file.c: Added conditional plural "s".
