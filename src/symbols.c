@@ -319,7 +319,7 @@ static void maybe_add_symbol( CXCursor sym_cursor,
       char delims[2];
       include_get_delims( include_added_to, delims );
       verbose_printf(
-        "  %s -> %c%s%c\n",
+        "  \"%s\" -> %c%s%c\n",
         symbol->name, delims[0], include_added_to->abs_path, delims[1]
       );
     }
@@ -327,7 +327,7 @@ static void maybe_add_symbol( CXCursor sym_cursor,
       CXString const abs_path_cxs = tidy_File_getRealPathName( include_file );
       char const *const abs_path = clang_getCString( abs_path_cxs );
       verbose_printf(
-        "  %s -> \"%s\" (NOT added)\n", symbol->name, abs_path
+        "  \"%s\" -> \"%s\" (NOT added)\n", symbol->name, abs_path
       );
       clang_disposeString( abs_path_cxs );
     }
