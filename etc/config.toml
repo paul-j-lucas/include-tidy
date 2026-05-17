@@ -281,6 +281,10 @@ includes = [
   "wchar.h",
 ]
 
+# Some systems have these in sys/types.h, but POSIX says they're in stdint.h.
+[stdint.h]
+symbols = [ "int8_t", "int16_t", "int32_t", "int64_t" ]
+
 # strcasecmp(3) is declared in <strings.h> (plural) according to POSIX, but
 # some platforms still have it in <string.h> (singular), so just pick the
 # former.
