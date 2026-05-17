@@ -34,6 +34,7 @@ INVOKE_TIDY_FLAGS =	-Xtidy --verbose=f -Xtidy --error=never
 INVOKE_TIDY_CFLAGS =	$(CFLAGS) $(AM_CFLAGS) $(CPPFLAGS) $(AM_CPPFLAGS)
 
 include_tidy_SOURCES =	array.c array.h \
+			bit_util.c bit_util.h \
 			clang_util.c clang_util.h \
 			cli_options.c cli_options.h \
 			color.c color.h \

@@ -27,6 +27,7 @@
 // local
 #include "pjl_config.h"
 #include "config_file.h"
+#include "bit_util.h"
 #include "cli_options.h"
 #include "includes.h"
 #include "options.h"
@@ -254,33 +255,6 @@ static void         symbols_parse_svpf( char const*, char const*,
 NODISCARD
 static int          tidy_include_cmp_by_rel_path( tidy_include const*,
                                                   tidy_include const* );
-
-////////// inline functions ///////////////////////////////////////////////////
-
-/**
- * Checks whether \a n has either 0 or 1 bits set.
- *
- * @param n The number to check.
- * @return Returns `true` only if \a n has either 0 or 1 bits set.
- */
-NODISCARD
-static inline bool is_01_bit( uint64_t n ) {
-  return (n & (n - 1)) == 0;
-}
-
-/**
- * Checks whether there are 0 or more bits set in \a n that are only among the
- * bits set in \a set.
- *
- * @param n The bits to check.
- * @param set The bits to check against.
- * @return Returns `true` only if there are 0 or more bits set in \a n that are
- * only among the bits set in \a set.
- */
-NODISCARD
-static inline bool is_0n_bit_only_in_set( uint64_t n, uint64_t set ) {
-  return (n & set) == n;
-}
 
 ////////// local constants ////////////////////////////////////////////////////
 
@@ -777,9 +751,9 @@ static void config_parse( char const *config_path, FILE *config_file ) {
           "\"%s\": key not allowed in %s table%s; allowed only in %s table%s\n",
           key->name,
           TABLE_KINDS[ table_kinds ],
-          is_01_bit( table_kinds ) ? "" : "s",
+          is_1_bit( table_kinds ) ? "" : "s",
           TABLE_KINDS[ key->table_kinds ],
-          is_01_bit( key->table_kinds ) ? "" : "s"
+          is_1_bit( key->table_kinds ) ? "" : "s"
         );
         exit( EX_CONFIG );
       }
