@@ -51,7 +51,6 @@
 # include <pwd.h>                       /* for getpwuid() */
 #endif /* HAVE_PWD_H */
 #include <stdbool.h>                    /* for uint64_t */
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for getenv(), ... */
 #include <string.h>
