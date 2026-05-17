@@ -1,5 +1,24 @@
+2026-05-16  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c: Added string_or_string_array_parse().
+   * config_file.c: Sorted.
+   * config_file.c: Added conditional plural "s".
+   * config_file.c: first_parse() now iterates over all matching rel_path.
+   * man/man1/include-tidy.1, config_file.c, includes.c, includes.h: Added
+     elide-includes.
+   * includes.c, includes.h: s/seq_id/instance_id/
+   * config_file.c, includes.c, includes.h: keep-includes now keeps _all_
+     includes having the same rel_path.
+
 2026-05-15  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c, util.c, util.h: Factored out path_ends_with().
+   * config_file.c: Removed unused code.
+   * config_file.c: Now returning best include, not just one having depth == 0.
+   * config_file.c: Added const.
+   * config_file.c: Now using <> or "" include delimiters when dymping
+     configuration symbols.
+   * etc/config.toml: Sorted.
    * man/man1/include-tidy.1, config_file.c: Added keep-includes.
    * clang_util.c, clang_util.h, symbols.c: Added tidy_getCursorByToken().
    * clang_util.c: No longer need CXChildVisit_Recurse.
