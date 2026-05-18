@@ -167,10 +167,6 @@ static void         all_includes_parse( char const*, toml_table const*,
 static void         associated_header_parse( char const*, toml_table const*,
                                              toml_value const* );
 
-NODISCARD
-static bool         bool_value_parse( char const*, char const*,
-                                      toml_value const* );
-
 static void         color_parse( char const*, toml_table const*,
                                  toml_value const* );
 static void         comment_style_parse( char const*, toml_table const*,
@@ -203,10 +199,6 @@ static void         includes_parse( char const*, toml_table const*,
 static void         includes_parse_string( char const*, toml_table const*,
                                            toml_value const* );
 
-NODISCARD
-static long         int_value_parse( char const*, char const*,
-                                     toml_value const*, long, long );
-
 static void         keep_include_parse_string( char const*, toml_table const*,
                                                toml_value const* );
 static void         keep_includes_parse( char const*, toml_table const*,
@@ -222,20 +214,6 @@ static void         std_c_includes_parse( char const*, toml_table const*,
                                           toml_value const* );
 static void         std_cpp_includes_parse( char const*, toml_table const*,
                                             toml_value const* );
-
-NODISCARD
-static char**       string_array_value_parse( char const*, char const*,
-                                              toml_value const* );
-
-static void         string_or_string_array_parse( char const*,
-                                                  toml_table const*,
-                                                  char const*,
-                                                  toml_value const*,
-                                                  config_parse_fn_t );
-
-NODISCARD
-static char const*  string_value_parse( char const*, char const*,
-                                        toml_value const* );
 
 static void         symbol_include_add( char const*, tidy_include* );
 static void         symbol_includes_cleanup( symbol_includes* );
@@ -307,6 +285,198 @@ static rb_tree_t source_header_map;
  * @sa symbol_includes
  */
 static rb_tree_t symbol_includes_map;
+
+////////// local TOML type parsing functions //////////////////////////////////
+
+/**
+ * Parses a bool value.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param key_name The key name.
+ * @param value The toml_value to parse.
+ */
+NODISCARD
+static bool bool_value_parse( char const *config_path, char const *key_name,
+                              toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( key_name != NULL );
+  assert( value != NULL );
+
+  if ( value->type != TOML_BOOL ) {
+    print_error(
+      config_path, value->loc.line, value->loc.col,
+      "invalid value for \"%s\"; expected boolean\n", key_name
+    );
+    exit( EX_CONFIG );
+  }
+
+  return value->b;
+}
+
+/**
+ * Parses an integer value.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param key_name The key name.
+ * @param value The toml_value to parse.
+ * @param value_min The minimum allowed value.
+ * @param value_max The maximum allowed value.
+ */
+NODISCARD
+static long int_value_parse( char const *config_path, char const *key_name,
+                             toml_value const *value,
+                             long value_min, long value_max ) {
+  assert( config_path != NULL );
+  assert( key_name != NULL );
+  assert( value != NULL );
+
+  if ( value->type != TOML_INT ) {
+    print_error(
+      config_path, value->loc.line, value->loc.col,
+      "invalid value for \"%s\"; expected integer\n", key_name
+    );
+    exit( EX_CONFIG );
+  }
+
+  if ( value->i < value_min || value->i > value_max ) {
+    print_error(
+      config_path, value->loc.line, value->loc.col,
+      "\"%ld\": invalid value for \"%s\"; must be %ld-%ld\n",
+      value->i, key_name, value_min, value_max
+    );
+    exit( EX_CONFIG );
+  }
+
+  return value->i;
+}
+
+/**
+ * Parses an array of strings values.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param key_name The key name.
+ * @param value The toml_value to parse.
+ * @return Returns a pointer to the first element of a null-terminated string
+ * array or NULL if the array is empty.
+ *
+ * @sa string_or_string_array_parse()
+ * @sa string_value_parse()
+ */
+NODISCARD
+static char** string_array_value_parse( char const *config_path,
+                                        char const *key_name,
+                                        toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( key_name != NULL );
+  assert( value != NULL );
+
+  if ( value->type != TOML_ARRAY ) {
+    print_error(
+      config_path, value->loc.line, value->loc.col,
+      "invalid value for \"%s\"; expected array\n", key_name
+    );
+    exit( EX_CONFIG );
+  }
+
+  if ( value->a.size == 0 )
+    return NULL;
+  char **const array = MALLOC( char*, value->a.size + 1/*NULL*/ );
+
+  for ( unsigned i = 0; i < value->a.size; ++i ) {
+    toml_value *const a_value = &value->a.values[i];
+    if ( a_value->type != TOML_STRING ) {
+      print_error(
+        config_path, a_value->loc.line, a_value->loc.col,
+        "invalid value for \"%s\"; expected string\n", key_name
+      );
+      exit( EX_CONFIG );
+    }
+    array[i] = a_value->s;
+    a_value->s = NULL;                  // steal value's string
+  } // for
+
+  array[ value->a.size ] = NULL;
+  return array;
+}
+
+/**
+ * Parses either a string value or an array of string values.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param key_name The key name.
+ * @param value The toml_value to parse.
+ * @param parse_fn The parse function to use.
+ *
+ * @sa string_array_value_parse()
+ * @sa string_value_parse()
+ */
+static void string_or_string_array_parse( char const *config_path,
+                                          toml_table const *table,
+                                          char const *key_name,
+                                          toml_value const *value,
+                                          config_parse_fn_t parse_fn ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( value != NULL );
+  assert( key_name != NULL );
+  assert( parse_fn != NULL );
+
+  switch ( value->type ) {
+    case TOML_STRING:
+      (*parse_fn)( config_path, table, value );
+      break;
+    case TOML_ARRAY:
+      for ( unsigned i = 0; i < value->a.size; ++i ) {
+        toml_value const *const a_value = &value->a.values[i];
+        if ( a_value->type != TOML_STRING ) {
+          print_error(
+            config_path, a_value->loc.line, a_value->loc.col,
+            "invalid value for \"%s\" key array; expected string\n", key_name
+          );
+          exit( EX_CONFIG );
+        }
+        (*parse_fn)( config_path, table, a_value );
+      } // for
+      break;
+    default:
+      print_error(
+        config_path, value->loc.line, value->loc.col,
+        "invalid value for \"%s\" key; expected string or array\n", key_name
+      );
+      exit( EX_CONFIG );
+  } // switch
+}
+
+/**
+ * Parses a string value.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param key_name The key name.
+ * @param value The toml_value to parse.
+ *
+ * @sa string_array_value_parse()
+ * @sa string_or_string_array_parse()
+ */
+NODISCARD
+static char const* string_value_parse( char const *config_path,
+                                       char const *key_name,
+                                       toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( key_name != NULL );
+  assert( value != NULL );
+
+  if ( value->type != TOML_STRING ) {
+    print_error(
+      config_path, value->loc.line, value->loc.col,
+      "invalid value for \"%s\"; expected string\n", key_name
+    );
+    exit( EX_CONFIG );
+  }
+
+  return value->s;
+}
+
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -403,30 +573,6 @@ static void associated_header_parse( char const *config_path,
   source_header *const sh = RB_DINT( rv_rbi.node );
   sh->source_rel_path = check_strdup( table->name );
   sh->header_rel_path = check_strdup( string_value );
-}
-
-/**
- * Parses a bool value.
- *
- * @param config_path The full path to the configurarion file.
- * @param key_name The key name.
- * @param value The toml_value to parse.
- */
-static bool bool_value_parse( char const *config_path, char const *key_name,
-                              toml_value const *value ) {
-  assert( config_path != NULL );
-  assert( key_name != NULL );
-  assert( value != NULL );
-
-  if ( value->type != TOML_BOOL ) {
-    print_error(
-      config_path, value->loc.line, value->loc.col,
-      "invalid value for \"%s\"; expected boolean\n", key_name
-    );
-    exit( EX_CONFIG );
-  }
-
-  return value->b;
 }
 
 /**
@@ -1069,42 +1215,6 @@ static void includes_parse_string( char const *config_path,
 }
 
 /**
- * Parses an integer value.
- *
- * @param config_path The full path to the configurarion file.
- * @param key_name The key name.
- * @param value The toml_value to parse.
- * @param value_min The minimum allowed value.
- * @param value_max The maximum allowed value.
- */
-static long int_value_parse( char const *config_path, char const *key_name,
-                             toml_value const *value,
-                             long value_min, long value_max ) {
-  assert( config_path != NULL );
-  assert( key_name != NULL );
-  assert( value != NULL );
-
-  if ( value->type != TOML_INT ) {
-    print_error(
-      config_path, value->loc.line, value->loc.col,
-      "invalid value for \"%s\"; expected integer\n", key_name
-    );
-    exit( EX_CONFIG );
-  }
-
-  if ( value->i < value_min || value->i > value_max ) {
-    print_error(
-      config_path, value->loc.line, value->loc.col,
-      "\"%ld\": invalid value for \"%s\"; must be %ld-%ld\n",
-      value->i, key_name, value_min, value_max
-    );
-    exit( EX_CONFIG );
-  }
-
-  return value->i;
-}
-
-/**
  * Gets whether \a rel_path is among \a includes.
  *
  * @param rel_path The relative path of an include file, e.g., `"stdio.h"` or
@@ -1329,131 +1439,6 @@ static void std_cpp_includes_parse( char const *config_path,
     std_cpp_includes =
       string_array_value_parse( config_path, "std-cpp-includes", value );
   }
-}
-
-/**
- * Parses an array of strings values.
- *
- * @param config_path The full path to the configurarion file.
- * @param key_name The key name.
- * @param value The toml_value to parse.
- * @return Returns a pointer to the first element of a null-terminated string
- * array or NULL if the array is empty.
- *
- * @sa string_or_string_array_parse()
- * @sa string_value_parse()
- */
-static char** string_array_value_parse( char const *config_path,
-                                        char const *key_name,
-                                        toml_value const *value ) {
-  assert( config_path != NULL );
-  assert( key_name != NULL );
-  assert( value != NULL );
-
-  if ( value->type != TOML_ARRAY ) {
-    print_error(
-      config_path, value->loc.line, value->loc.col,
-      "invalid value for \"%s\"; expected array\n", key_name
-    );
-    exit( EX_CONFIG );
-  }
-
-  if ( value->a.size == 0 )
-    return NULL;
-  char **const array = MALLOC( char*, value->a.size + 1/*NULL*/ );
-
-  for ( unsigned i = 0; i < value->a.size; ++i ) {
-    toml_value *const a_value = &value->a.values[i];
-    if ( a_value->type != TOML_STRING ) {
-      print_error(
-        config_path, a_value->loc.line, a_value->loc.col,
-        "invalid value for \"%s\"; expected string\n", key_name
-      );
-      exit( EX_CONFIG );
-    }
-    array[i] = a_value->s;
-    a_value->s = NULL;                  // steal value's string
-  } // for
-
-  array[ value->a.size ] = NULL;
-  return array;
-}
-
-/**
- * Parses either a string value or an array of string values.
- *
- * @param config_path The full path to the configurarion file.
- * @param table The current toml_table.
- * @param key_name The key name.
- * @param value The toml_value to parse.
- * @param parse_fn The parse function to use.
- *
- * @sa string_array_value_parse()
- * @sa string_value_parse()
- */
-static void string_or_string_array_parse( char const *config_path,
-                                          toml_table const *table,
-                                          char const *key_name,
-                                          toml_value const *value,
-                                          config_parse_fn_t parse_fn ) {
-  assert( config_path != NULL );
-  assert( table != NULL );
-  assert( value != NULL );
-  assert( key_name != NULL );
-  assert( parse_fn != NULL );
-
-  switch ( value->type ) {
-    case TOML_STRING:
-      (*parse_fn)( config_path, table, value );
-      break;
-    case TOML_ARRAY:
-      for ( unsigned i = 0; i < value->a.size; ++i ) {
-        toml_value const *const a_value = &value->a.values[i];
-        if ( a_value->type != TOML_STRING ) {
-          print_error(
-            config_path, a_value->loc.line, a_value->loc.col,
-            "invalid value for \"%s\" key array; expected string\n", key_name
-          );
-          exit( EX_CONFIG );
-        }
-        (*parse_fn)( config_path, table, a_value );
-      } // for
-      break;
-    default:
-      print_error(
-        config_path, value->loc.line, value->loc.col,
-        "invalid value for \"%s\" key; expected string or array\n", key_name
-      );
-      exit( EX_CONFIG );
-  } // switch
-}
-
-/**
- * Parses a string value.
- *
- * @param config_path The full path to the configurarion file.
- * @param key_name The key name.
- * @param value The toml_value to parse.
- *
- * @sa string_array_value_parse()
- * @sa string_or_string_array_parse()
- */
-static char const* string_value_parse( char const *config_path,
-                                       char const *key_name,
-                                       toml_value const *value ) {
-  assert( config_path != NULL );
-  assert( key_name != NULL );
-  assert( value != NULL );
-
-  if ( value->type != TOML_STRING ) {
-    print_error(
-      config_path, value->loc.line, value->loc.col,
-      "invalid value for \"%s\"; expected string\n", key_name
-    );
-    exit( EX_CONFIG );
-  }
-
-  return value->s;
 }
 
 /**
