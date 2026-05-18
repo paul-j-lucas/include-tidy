@@ -1,3 +1,11 @@
+2026-05-17  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c, print.c, util.c: Fixes warnings when compiling with
+     --disable-assert.
+   * array.c, array.h, includes.c, options.c, util.c: ss/nocheck/nc/
+   * etc/config.toml: Removed apparently no-longer-needed getopt symbols.
+   * config_file.c: Removed unecessary #include.
+
 2026-05-16  Paul J. Lucas <paul@lucasmail.org>
 
    * symbols.c: Put symbol names in quotes.
