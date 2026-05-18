@@ -1,5 +1,6 @@
 2026-05-17  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c: s/array_at/array_front_nc/
    * config_file.c, print.c, util.c: Fixes warnings when compiling with
      --disable-assert.
    * array.c, array.h, includes.c, options.c, util.c: ss/nocheck/nc/
