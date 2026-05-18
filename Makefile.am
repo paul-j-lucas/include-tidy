@@ -24,6 +24,7 @@ SUBDIRS =		etc lib src man test
 EXTRA_DIST =		bootstrap \
 			Doxygen.sed \
 			Doxyfile \
+			include-tidy.css \
 			m4/gnulib-cache.m4 \
 			m4/update_m4.sh \
 			makedoc.sh \
