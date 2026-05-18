@@ -48,7 +48,7 @@ void array_cleanup( array_t *array, array_free_fn_t free_fn ) {
   assert( array != NULL );
 
   if ( free_fn != NULL ) {
-    char *element = POINTER_CAST( char*, array->elements );
+    char *element = array->elements;
     for ( size_t i = 0; i < array->len; ++i ) {
       (*free_fn)( element );
       element += array->esize;
