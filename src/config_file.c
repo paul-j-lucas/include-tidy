@@ -1083,7 +1083,7 @@ static void keep_include( char const *rel_path ) {
 static void keep_include_svpf( char const *config_path, char const *table_name,
                                toml_value const *value ) {
   (void)config_path;
-  assert( table_name != NULL );
+  (void)table_name;
   assert( value != NULL );
   assert( value->type == TOML_STRING );
 

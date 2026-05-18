@@ -106,6 +106,7 @@ char const WS_CHARS[] =           " \n\t\r\f\v";
 
 ////////// local functions ////////////////////////////////////////////////////
 
+#ifndef NDEBUG
 /**
  * Checks whether \a s is any one of \a matches, case-insensitive.
  *
@@ -123,6 +124,7 @@ static bool str_is_any( char const *s, char const *const matches[static 2] ) {
   }
   return false;
 }
+#endif /* NDEBUG */
 
 ////////// extern functions ///////////////////////////////////////////////////
 
