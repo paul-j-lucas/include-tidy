@@ -63,7 +63,7 @@ void* array_push_back( array_t *array ) {
   assert( array != NULL );
   size_t const new_len = array->len + 1;
   array_reserve( array, new_len );
-  void *const rv = array_at_nocheck( array, array->len );
+  void *const rv = array_at_nc( array, array->len );
   array->len = new_len;
   return rv;
 }
@@ -88,11 +88,14 @@ bool array_reserve( array_t *array, size_t res_len ) {
 /// @cond DOXYGEN_IGNORE
 
 extern inline void* array_at( array_t const*, size_t );
-extern inline void* array_at_nocheck( array_t const*, size_t );
+extern inline void* array_at_nc( array_t const*, size_t );
 extern inline void* array_back( array_t const* );
+extern inline void* array_back_nc( array_t const* );
 extern inline void* array_front( array_t const* );
+extern inline void* array_front_nc( array_t const* );
 extern inline void array_init( array_t*, size_t );
 extern inline void* array_pop_back( array_t* );
+extern inline void* array_pop_back_nc( array_t* );
 extern inline void array_sort( array_t*, int (*)( void const*, void const* ) );
 
 /// @endcond

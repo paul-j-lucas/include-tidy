@@ -624,7 +624,7 @@ static void includes_print_visitor( tidy_include const *include,
     unsigned const line_first = *(unsigned*)array_at( &include->lines, 0 );
     for ( unsigned i = 1; i < include->lines.len; ++i ) {
       free( comment );
-      unsigned const line = *(unsigned*)array_at_nocheck( &include->lines, i );
+      unsigned const line = *(unsigned*)array_at_nc( &include->lines, i );
       if ( include->is_needed ) {
         check_asprintf( &comment,
           "DELETE LINE %u (same as line %u)", line, line_first
@@ -1024,7 +1024,7 @@ void includes_print( void ) {
   includes_print_visitor_data ipvd = { .print_local = true };
   for ( size_t i = 0; i < include_array.len; ++i ) {
     includes_print_visitor(
-      *(tidy_include const**)array_at_nocheck( &include_array, i ), &ipvd
+      *(tidy_include const**)array_at_nc( &include_array, i ), &ipvd
     );
   } // for
 
@@ -1034,7 +1034,7 @@ void includes_print( void ) {
   ipvd.print_local = !ipvd.print_local;
   for ( size_t i = 0; i < include_array.len; ++i ) {
     includes_print_visitor(
-      *(tidy_include const**)array_at_nocheck( &include_array, i ), &ipvd
+      *(tidy_include const**)array_at_nc( &include_array, i ), &ipvd
     );
   } // for
 
@@ -1044,7 +1044,7 @@ void includes_print( void ) {
   ipvd.print_standard = true;
   for ( size_t i = 0; i < include_array.len; ++i ) {
     includes_print_visitor(
-      *(tidy_include const**)array_at_nocheck( &include_array, i ), &ipvd
+      *(tidy_include const**)array_at_nc( &include_array, i ), &ipvd
     );
   } // for
 

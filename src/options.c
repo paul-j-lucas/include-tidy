@@ -229,7 +229,7 @@ void opt_include_paths_add( char const *include_path ) {
     include_path = real_path;
 
   for ( size_t i = 0; i < opt_include_paths.len; ++i ) {
-    char const *const *const ppath = array_at_nocheck( &opt_include_paths, i );
+    char const *const *const ppath = array_at_nc( &opt_include_paths, i );
     if ( strcmp( include_path, *ppath ) == 0 )
       return;
   } // for
@@ -243,7 +243,7 @@ char const* opt_include_paths_relativize( char const *abs_path ) {
   char const *shortest_include_path = abs_path;
 
   for ( size_t i = 0; i < opt_include_paths.len; ++i ) {
-    char const *const *const ppath = array_at_nocheck( &opt_include_paths, i );
+    char const *const *const ppath = array_at_nc( &opt_include_paths, i );
     char const *const include_path_i      = *ppath;
     size_t const      include_path_i_len  = strlen( include_path_i );
 

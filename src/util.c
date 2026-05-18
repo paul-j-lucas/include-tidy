@@ -310,7 +310,7 @@ char* path_normalize( char const *path ) {
   if ( path_is_absolute( in_path.str ) )
     strbuf_putc( &out_path, '/' );
   for ( size_t i = 0; i < comp_stack.len; ++i ) {
-    char const *const comp = *(char const**)array_at_nocheck( &comp_stack, i );
+    char const *const comp = *(char const**)array_at_nc( &comp_stack, i );
     strbuf_paths( &out_path, comp );
   }
 

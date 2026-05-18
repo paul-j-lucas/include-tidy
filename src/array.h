@@ -123,10 +123,12 @@ bool array_reserve( array_t *array, size_t res_len );
  *
  * @sa array_at()
  * @sa array_back()
+ * @sa array_back_nc()
  * @sa array_front()
+ * @sa array_front_nc()
  */
 NODISCARD
-inline void* array_at_nocheck( array_t const *array, size_t index ) {
+inline void* array_at_nc( array_t const *array, size_t index ) {
   return (char*)array->elements + index * array->esize;
 }
 
@@ -142,13 +144,41 @@ inline void* array_at_nocheck( array_t const *array, size_t index ) {
  * that pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
- * @sa array_at_nocheck()
+ * @sa array_at_nc()
  * @sa array_back()
+ * @sa array_back_nc()
  * @sa array_front()
+ * @sa array_front_nc()
  */
 NODISCARD
 inline void* array_at( array_t const *array, size_t index ) {
-  return index < array->len ? array_at_nocheck( array, index ) : NULL;
+  return index < array->len ? array_at_nc( array, index ) : NULL;
+}
+
+/**
+ * Gets a pointer to the element at the back of \a array.
+ *
+ * @param array A pointer to the \ref array.
+ * @return Returns a pointer to the element at the back of \a array or NULL if
+ * \a array is empty.
+ *
+ * @warning \a array is _not_ checked to ensure it's not empty.
+ *
+ * @note If the type of element is a pointer, then this returns a _pointer to
+ * that pointer_, i.e., `T**`.
+ * @note This is an O(1) operation.
+ *
+ * @sa array_at()
+ * @sa array_at_nc()
+ * @sa array_back()
+ * @sa array_front()
+ * @sa array_front_nc()
+ * @sa array_pop_back()
+ * @sa array_pop_back_nc()
+ */
+NODISCARD
+inline void* array_back_nc( array_t const *array ) {
+  return array_at_nc( array, array->len - 1 );
 }
 
 /**
@@ -162,13 +192,40 @@ inline void* array_at( array_t const *array, size_t index ) {
  * that pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
- * @sa array_at_nocheck()
  * @sa array_at()
+ * @sa array_at_nc()
+ * @sa array_back_nc()
  * @sa array_front()
+ * @sa array_front_nc()
+ * @sa array_pop_back()
+ * @sa array_pop_back_nc()
  */
 NODISCARD
 inline void* array_back( array_t const *array ) {
-  return array->len > 0 ? array_at_nocheck( array, array->len - 1 ) : NULL;
+  return array->len > 0 ? array_back_nc( array ) : NULL;
+}
+
+/**
+ * Gets a pointer to the element at the front of \a array.
+ *
+ * @param array A pointer to the \ref array.
+ * @return Returns a pointer to the element at the front of \a array.
+ *
+ * @warning \a array is _not_ checked to ensure it's not empty.
+ *
+ * @note If the type of element is a pointer, then this returns a _pointer to
+ * that pointer_, i.e., `T**`.
+ * @note This is an O(1) operation.
+ *
+ * @sa array_at()
+ * @sa array_at_nc()
+ * @sa array_back()
+ * @sa array_back_nc()
+ * @sa array_front()
+ */
+NODISCARD
+inline void* array_front_nc( array_t const *array ) {
+  return array->elements;
 }
 
 /**
@@ -182,13 +239,15 @@ inline void* array_back( array_t const *array ) {
  * that pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
- * @sa array_at_nocheck()
  * @sa array_at()
+ * @sa array_at_nc()
  * @sa array_back()
+ * @sa array_back_nc()
+ * @sa array_front_nc()
  */
 NODISCARD
 inline void* array_front( array_t const *array ) {
-  return array->len > 0 ? array->elements : NULL;
+  return array->len > 0 ? array_front_nc( array ) : NULL;
 }
 
 /**
@@ -210,13 +269,43 @@ inline void array_init( array_t *array, size_t esize ) {
  * @return Returns a pointer to the element at the back of \a array.  The
  * caller is responsible for freeing it if necessary.
  *
+ * @warning \a array is _not_ checked to ensure it's not empty.
+ *
  * @note If the type of element is a pointer, then this returns a _pointer to
  * that pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
+ *
+ * @sa array_at()
+ * @sa array_at_nc()
+ * @sa array_back()
+ * @sa array_back_nc()
+ * @sa array_pop_back()
+ */
+PJL_DISCARD
+inline void* array_pop_back_nc( array_t *array ) {
+  return array_at_nc( array, --array->len );
+}
+
+/**
+ * Pops an element from the back of \a array.
+ *
+ * @param array The pointer to the \ref array.
+ * @return Returns a pointer to the element at the back of \a array or NULL if
+ * the array is empty.  The caller is responsible for freeing it if necessary.
+ *
+ * @note If the type of element is a pointer, then this returns a _pointer to
+ * that pointer_, i.e., `T**`.
+ * @note This is an O(1) operation.
+ *
+ * @sa array_at()
+ * @sa array_at_nc()
+ * @sa array_back()
+ * @sa array_back_nc()
+ * @sa array_pop_back_nc()
  */
 PJL_DISCARD
 inline void* array_pop_back( array_t *array ) {
-  return array->len > 0 ? array_at_nocheck( array, --array->len ) : NULL;
+  return array->len > 0 ? array_pop_back_nc( array ) : NULL;
 }
 
 /**
