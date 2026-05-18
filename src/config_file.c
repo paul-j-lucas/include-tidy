@@ -1480,8 +1480,8 @@ static void symbols_parse( char const *config_path, toml_table const *table,
  * @sa includes_parse_svpf()
  */
 static void symbols_parse_svpf( char const *config_path,
-                                     char const *table_name,
-                                     toml_value const *value ) {
+                                char const *table_name,
+                                toml_value const *value ) {
   (void)config_path;
   assert( table_name != NULL );
   assert( value != NULL );
