@@ -1,5 +1,19 @@
+2026-05-18  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c: Added symbol table ignore key.
+   * man/man1/include-tidy.1, test/Makefile.am, header-keep.c,
+     header-keep.toml, header-keep.test: Renamed test.
+   * config_file.c: Now printing already ignored warning.
+   * config_file.c: Added assert()s.
+   * man/man1/include-tidy.1, config_file.c, config_file.h, symbols.c: Added
+     ignore-symbols.
+   * man/man1/include-tidy.1, options.c: Swapped 'p' and 'P' for verbose.
+   * Makefile.am: Added include-tidy.css.
+
 2026-05-17  Paul J. Lucas <paul@lucasmail.org>
 
+   * configure.ac: Set version to 1.0.
+   * includes.c: Now following proxy in include_find_by_rel_path().
    * array.c: array_cleanup() now does nothing on NULL.
    * array.c: Eliminated POINTER_CAST().
    * includes.c: s/array_at/array_front_nc/
