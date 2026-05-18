@@ -145,8 +145,8 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
   assert( *pargc > 0 );
   assert(  pargv != NULL );
   assert( *pargv != NULL );
-  assert( clang_path != NULL );
-  assert( lang != NULL );
+  assert(  clang_path != NULL );
+  assert(  lang != NULL );
   ASSERT_RUN_ONCE();
 
   static char const CLANG_TEMPLATE[] =
@@ -461,9 +461,9 @@ static void insert_argv( int *pargc, char const **pargv[], size_t args_len,
  */
 static char const* is_long_opt( int argc, char const *const argv[],
                                 char const *opt, int *pargi ) {
-  assert( argc > 0 );
-  assert( argv != NULL );
-  assert( opt != NULL );
+  assert(  argc > 0 );
+  assert(  argv != NULL );
+  assert(   opt != NULL );
   assert( pargi != NULL );
 
   char const *const arg = argv[ *pargi ];
@@ -502,8 +502,8 @@ static char const* is_long_opt( int argc, char const *const argv[],
  */
 static char const* is_short_opt( int argc, char const *const argv[],
                                  char opt, int *pargi ) {
-  assert( argc > 0 );
-  assert( argv != NULL );
+  assert(  argc > 0 );
+  assert(  argv != NULL );
   assert( pargi != NULL );
 
   if ( argv[ *pargi ][0] != '-' || argv[ *pargi ][1] != opt )
@@ -530,9 +530,9 @@ static char const* is_short_opt( int argc, char const *const argv[],
  * a subsequent option.
  */
 static bool is_Xtidy_opt( int argc, char const *const argv[], int *pargi ) {
-  assert( argc > 0 );
-  assert( argv != NULL );
-  assert( pargi != NULL );
+  assert(   argc > 0 );
+  assert(   argv != NULL );
+  assert(  pargi != NULL );
   assert( *pargi < argc );
 
   if ( strcmp( argv[ *pargi ], "-Xtidy" ) != 0 )
@@ -644,8 +644,8 @@ static void move_tidy_args( int *pargc, char const *argv[],
   assert(  pargc != NULL );
   assert( *pargc > 0 );
   assert(   argv != NULL );
-  assert( ptidy_argc != NULL );
-  assert( ptidy_argv != NULL );
+  assert(  ptidy_argc != NULL );
+  assert(  ptidy_argv != NULL );
 
   int const argc = *pargc;
   int new_argc = 1, tidy_argc = 1;
