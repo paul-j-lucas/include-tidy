@@ -41,7 +41,7 @@ TESTS+=	tests/align-column.test \
 
 # Other tests
 TESTS+=	tests/duplicate.test \
-	tests/keep.test
+	tests/header-keep.test
 
 # Real-world tests.
 TESTS+=	tests/c_ast.test \

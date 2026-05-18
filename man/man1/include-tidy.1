@@ -897,6 +897,15 @@ meets the
 requirement
 thus averting a violation.
 .TP 5
+.BI ignore " \f1=\fP b"
+If true,
+the symbol name is to be ignored,
+that is,
+even if it's referenced from a file,
+the include file declaring it,
+if omitted,
+will not be reported as a violation.
+.TP
 .BR includes " \f1=\fP s" "\f1 | \fP[" s " \f1[,\fP " s "\f1]*\fP ]"
 Specifies that the symbol
 given for the table name
