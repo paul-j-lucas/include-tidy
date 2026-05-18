@@ -104,9 +104,6 @@ static void           ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
 #endif /* NEED_II_MATRIX */
 
 NODISCARD
-static bool           is_local_include( char const* );
-
-NODISCARD
 static char*          make_symbols_used_comment( tidy_include const* );
 
 NODISCARD
@@ -405,7 +402,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     clang_disposeString( abs_path_cxs );
 
     included->file     = included_file;
-    included->is_local = is_local_include( included->abs_path );
+    included->is_local = path_is_local( included->abs_path );
 
     //
     // We don't call opt_include_paths_relativize( included->abs_path ) because
@@ -682,22 +679,6 @@ static bool is_assoc_header( tidy_include const *include,
   //      #include "b.h"
   //
   return strcmp( include_no_ext, source_file_no_ext ) == 0;
-}
-
-/**
- * Gets whether \a abs_path refers to a local include file (as opposed to a
- * system include file).
- *
- * @param abs_path The absolute path of an include file.
- * @return Returns `true` only if \a abs_path refers to a local include file.
- */
-static bool is_local_include( char const *abs_path ) {
-  assert( abs_path != NULL );
-  assert( abs_path[0] == '/' );
-
-  size_t cwd_path_len;
-  char const *const cwd_path = get_cwd( &cwd_path_len );
-  return strncmp( abs_path, cwd_path, cwd_path_len ) == 0;
 }
 
 /**

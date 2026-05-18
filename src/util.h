@@ -937,7 +937,8 @@ void free_pptr( void *pptr );
  * Gets the absolute path of the current working directory.
  *
  * @param plen If not NULL, the length of the path is put here.
- * @return Returns the absolute path of the current working directory.
+ * @return Returns the absolute path of the current working directory.  The
+ * path is guarenteed to end with `'/'`.
  */
 NODISCARD
 char const* get_cwd( size_t *plen );
@@ -1031,6 +1032,26 @@ NODISCARD
 inline bool path_is_absolute( char const *path ) {
   return path[0] == '/';
 }
+
+/**
+ * Gets whether \a abs_path refers to a local file relative to the current
+ * working directory.
+ *
+ * @par Examples
+ * @parblock
+ * Assuming the current working directory is `/home/pjl/src/include-tidy/src`:
+ *
+ * `abs_path`                              | Local?
+ * --------------------------------------- | ------
+ * `/home/pjl/src/include-tidy/src/util.h` | true
+ * `/usr/include/stdio.h`                  | false
+ * @endparblock
+ *
+ * @param abs_path The absolute path of a file.
+ * @return Returns `true` only if \a abs_path refers to a local file.
+ */
+NODISCARD
+bool path_is_local( char const *abs_path );
 
 /**
  * Gets whether \a path is a relative path.

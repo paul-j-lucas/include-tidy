@@ -194,7 +194,7 @@ char const* get_cwd( size_t *plen ) {
   static size_t cwd_path_len;
 
   if ( cwd_path_len == 0 ) {
-    if ( getcwd( cwd_path_buf, sizeof cwd_path_buf ) == NULL ) {
+    if ( getcwd( cwd_path_buf, sizeof cwd_path_buf - 1 ) == NULL ) {
       fatal_error( EX_UNAVAILABLE,
         "could not get current working directory: %s\n", STRERROR()
       );
@@ -243,6 +243,15 @@ char const* path_ext( char const *path ) {
   char const *const file_name = base_name( path );
   char const *const dot = strrchr( file_name, '.' );
   return dot != NULL && dot[1] != '\0' ? dot + 1 : NULL;
+}
+
+bool path_is_local( char const *abs_path ) {
+  assert( abs_path != NULL );
+  assert( abs_path[0] == '/' );
+
+  size_t cwd_path_len;
+  char const *const cwd_path = get_cwd( &cwd_path_len );
+  return strncmp( abs_path, cwd_path, cwd_path_len ) == 0;
 }
 
 char const* path_no_dot_slash( char const *path ) {
