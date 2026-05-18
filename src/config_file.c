@@ -186,7 +186,6 @@ static FILE*        config_open( char const*, config_opts );
 NODISCARD
 static char const*  home_dir( void );
 
-static void         elide_include( char const* );
 static void         elide_includes_parse( char const*, toml_table const*,
                                           toml_value const* );
 static void         first_parse( char const*, toml_table const*,
@@ -792,12 +791,14 @@ static void elide_include( char const *rel_path ) {
 }
 
 /**
- * Adapter for a config_parse_fn_t function for the `"elide-includes"`
- * key.
+ * Parses a single string value of an `"elide-includes"` key.
  *
  * @param config_path Not used.
  * @param table Not used.
  * @param value The string toml_value.
+ *
+ * @sa elide_include()
+ * @sa elide_includes_parse()
  */
 static void elide_include_parse_string( char const *config_path,
                                         toml_table const *table,
@@ -816,6 +817,9 @@ static void elide_include_parse_string( char const *config_path,
  * @param config_path The full path to the configurarion file.
  * @param table The current toml_table.
  * @param value The toml_value to parse.
+ *
+ * @sa elide_include()
+ * @sa elide_include_parse_string()
  */
 static void elide_includes_parse( char const *config_path,
                                   toml_table const *table,
@@ -934,6 +938,8 @@ static void ignore_parse( char const *config_path, toml_table const *table,
  * @param config_path The full path to the configurarion file.
  * @param table The current toml_table.
  * @param value The toml_value to parse.
+ *
+ * @sa ignore_symbols_parse_string()
  */
 static void ignore_symbols_parse( char const *config_path,
                                   toml_table const *table,
@@ -950,12 +956,13 @@ static void ignore_symbols_parse( char const *config_path,
 }
 
 /**
- * Adapter for a config_parse_fn_t function for the `"ignore-symbols"`
- * key.
+ * Parses a single string value of an `"ignore-symbols"` key.
  *
  * @param config_path Not used.
  * @param table Not used.
  * @param value The string toml_value.
+ *
+ * @sa ignore_symbols_parse()
  */
 static void ignore_symbols_parse_string( char const *config_path,
                                          toml_table const *table,
@@ -1024,6 +1031,8 @@ static void include_add_explicit_proxy( char const *config_path,
  * @param config_path The full path to the configurarion file.
  * @param table The current toml_table.
  * @param value The toml_value to parse.
+ *
+ * @sa includes_parse_string()
  */
 static void includes_parse( char const *config_path, toml_table const *table,
                             toml_value const *value ) {
@@ -1037,12 +1046,13 @@ static void includes_parse( char const *config_path, toml_table const *table,
 }
 
 /**
- * Adapter for a config_parse_fn_t function for the `"includes"` key.
+ * Parses a single string value of an `"includes"` key.
  *
  * @param config_path The full path to the configurarion file.
  * @param table The table name.
  * @param value The string toml_value to parse.
  *
+ * @sa includes_parse()
  * @sa symbols_parse_string()
  */
 static void includes_parse_string( char const *config_path,
@@ -1128,6 +1138,9 @@ static bool is_standard_include( char const *rel_path, char *includes[] ) {
  * Marks the include file(s) having \a rel_path as ``kept.''
  *
  * @param rel_path The relative path of the include file to mark.
+ *
+ * @sa keep_include_parse_string()
+ * @sa keep_includes_parse()
  */
 static void keep_include( char const *rel_path ) {
   assert( rel_path != NULL );
@@ -1144,12 +1157,14 @@ static void keep_include( char const *rel_path ) {
 }
 
 /**
- * Adapter for a config_parse_fn_t function for the `"keep-includes"`
- * key.
+ * Parses a single string value of a `"keep-includes"` key.
  *
  * @param config_path The full path to the configurarion file.
  * @param table The table name.
  * @param value The string toml_value to parse.
+ *
+ * @sa keep_include()
+ * @sa keep_includes_parse()
  */
 static void keep_include_parse_string( char const *config_path,
                                        toml_table const *table,
@@ -1168,6 +1183,9 @@ static void keep_include_parse_string( char const *config_path,
  * @param config_path The full path to the configurarion file.
  * @param table The current toml_table.
  * @param value The toml_value to parse.
+ *
+ * @sa keep_include()
+ * @sa keep_include_parse_string()
  */
 static void keep_includes_parse( char const *config_path,
                                  toml_table const *table,
@@ -1530,6 +1548,8 @@ static void symbol_includes_dump( void ) {
  * @param config_path The full path to the configurarion file.
  * @param table The current toml_table.
  * @param value The toml_value to parse.
+ *
+ * @sa symbols_parse_string()
  */
 static void symbols_parse( char const *config_path, toml_table const *table,
                            toml_value const *value ) {
@@ -1543,13 +1563,14 @@ static void symbols_parse( char const *config_path, toml_table const *table,
 }
 
 /**
- * Adapter for a config_parse_fn_t function for the `"includes"` key.
+ * Parses a single string value of a `"symbols"` key.
  *
  * @param config_path The full path to the configurarion file.
  * @param table The table name.
  * @param value The strint toml_value to parse.
  *
  * @sa includes_parse_string()
+ * @sa symbols_parse()
  */
 static void symbols_parse_string( char const *config_path,
                                   toml_table const *table,
