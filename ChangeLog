@@ -1,5 +1,8 @@
 2026-05-18  Paul J. Lucas <paul@lucasmail.org>
 
+   * config_file.c: Now using array_t for std_c_includes and std_cpp_includes.
+   * array.c, array.h: Added array_push_array_back().
+   * config_file.c: Added "local TOML type parsing functions" section.
    * config_file.c: Added symbol table ignore key.
    * man/man1/include-tidy.1, test/Makefile.am, header-keep.c,
      header-keep.toml, header-keep.test: Renamed test.
