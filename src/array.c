@@ -45,7 +45,8 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 void array_cleanup( array_t *array, array_free_fn_t free_fn ) {
-  assert( array != NULL );
+  if ( array == NULL )
+    return;
 
   if ( free_fn != NULL ) {
     char *element = array->elements;
