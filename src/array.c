@@ -34,6 +34,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 /// @endcond
 
@@ -58,6 +59,22 @@ void array_cleanup( array_t *array, array_free_fn_t free_fn ) {
 
   free( array->elements );
   array_init( array, array->esize );
+}
+
+void* array_push_array_back( array_t *dst_array, array_t *src_array ) {
+  assert( dst_array != NULL );
+  assert( src_array != NULL );
+  assert( dst_array->esize == src_array->esize );
+
+  if ( src_array->len == 0 )
+    return NULL;
+
+  array_reserve( dst_array, src_array->len );
+  void *const dst_end = array_at_nc( dst_array, dst_array->len );
+  memcpy( dst_end, src_array->elements, src_array->len * src_array->esize );
+  dst_array->len += src_array->len;
+  src_array->len = 0;
+  return dst_end;
 }
 
 void* array_push_back( array_t *array ) {

@@ -85,6 +85,18 @@ struct array {
 void array_cleanup( array_t *array, array_free_fn_t free_fn );
 
 /**
+ * Pushes the elements of \a src_array onto the back of \a dst_array.
+ *
+ * @param dst_array The \ref array to push onto.
+ * @param src_array The \ref array to push the elements of.  It's length is set
+ * to zero upon return.
+ * @return Returns a pointer to the first pushed element in \a dst_array or
+ * NULL if \a src_array is empty.
+ */
+PJL_DISCARD
+void* array_push_array_back( array_t *dst_array, array_t *src_array );
+
+/**
  * Appends space for a new element onto the back of \a array.
  *
  * @param array The \ref array to push onto.
