@@ -799,9 +799,9 @@ static void elide_include( char const *rel_path ) {
  * @param table Not used.
  * @param value The string toml_value.
  */
-static void elide_include_string( char const *config_path,
-                                  toml_table const *table,
-                                  toml_value const *value ) {
+static void elide_include_parse_string( char const *config_path,
+                                        toml_table const *table,
+                                        toml_value const *value ) {
   (void)config_path;
   (void)table;
   assert( value != NULL );
@@ -827,7 +827,7 @@ static void elide_includes_parse( char const *config_path,
   if ( strcmp( table->name, arg_source_path ) != 0 )
     return;
   string_or_string_array_parse(
-    config_path, table, "elide-includes", value, &elide_include_string
+    config_path, table, "elide-includes", value, &elide_include_parse_string
   );
 }
 
