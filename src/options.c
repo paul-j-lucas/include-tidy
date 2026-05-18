@@ -307,10 +307,10 @@ bool opt_verbose_parse( char const *verbose_format ) {
         verbose |= TIDY_VERBOSE_INCLUDES;
         break;
       case 'p':
-        verbose |= TIDY_VERBOSE_PROXIES_EXPLICIT;
+        verbose |= TIDY_VERBOSE_PROXIES_IMPLICIT;
         break;
       case 'P':
-        verbose |= TIDY_VERBOSE_PROXIES_IMPLICIT;
+        verbose |= TIDY_VERBOSE_PROXIES_EXPLICIT;
         break;
       case 's':
         verbose |= TIDY_VERBOSE_SYMBOLS;
