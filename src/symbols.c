@@ -295,6 +295,11 @@ static void maybe_add_symbol( CXCursor sym_cursor,
     return;
 
   char const *const sym_name = tidy_getCursorScopedName( sym_cursor );
+  if ( config_ignore_symbol( sym_name ) ) {
+    FREE( sym_name );
+    return;
+  }
+
   tidy_symbol new_symbol = { .name = sym_name };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_set, &new_symbol, sizeof new_symbol );

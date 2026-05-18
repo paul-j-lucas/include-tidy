@@ -205,6 +205,10 @@ static void         first_parse( char const*, toml_table const*,
                                  toml_value const* );
 static void         ignore_as_argument_parse( char const*, toml_table const*,
                                               toml_value const* );
+static void         ignore_symbols_parse( char const*, toml_table const*,
+                                          toml_value const* );
+static void         ignore_symbols_parse_svpf( char const*, char const*,
+                                               toml_value const* );
 static void         includes_parse( char const*, toml_table const*,
                                     toml_value const* );
 static void         includes_parse_svpf( char const*, char const*,
@@ -269,6 +273,7 @@ static config_key const CONFIG_KEYS[] = {
   { "comment-style",      TABLE_INCLUDE_TIDY,   &comment_style_parse      },
   { "elide-includes",     TABLE_HEADER_SOURCE,  &elide_includes_parse     },
   { "first",              TABLE_HEADER,         &first_parse              },
+  { "ignore-symbols",     TABLE_HEADER_SOURCE,  &ignore_symbols_parse     },
   { "includes",           TABLE_SYMBOL,         &includes_parse           },
   { "keep",               TABLE_HEADER,         &keep_parse               },
   { "ignore-as-argument", TABLE_HEADER_SOURCE,  &ignore_as_argument_parse },
@@ -295,6 +300,7 @@ static char const *const TABLE_KINDS[] = {
 ////////// local variables ////////////////////////////////////////////////////
 
 static rb_tree_t  ignore_rel_path_set;  ///< Set of files to ignore.
+static rb_tree_t  ignore_symbol_set;    ///< Set of symbols to ignore.
 static char     **std_c_includes;       ///< Standard-ish C include files.
 static size_t     std_c_includes_size;  ///< Size of \ref std_c_includes.
 static char     **std_cpp_includes;     ///< Standard C++ include files.
@@ -477,6 +483,7 @@ static void config_cleanup( void ) {
     free( std_cpp_includes );
   }
   rb_tree_cleanup( &ignore_rel_path_set, /*free_fn=*/NULL );
+  rb_tree_cleanup( &ignore_symbol_set, /*free_fn=*/NULL );
   rb_tree_cleanup(
     &source_header_map,
     POINTER_CAST( rb_free_fn_t, &source_header_cleanup )
@@ -906,6 +913,49 @@ static void ignore_as_argument_parse( char const *config_path,
     )
   );
 };
+
+/**
+ * Parses the value of an `"ignore-symbols"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param value The toml_value to parse.
+ */
+static void ignore_symbols_parse( char const *config_path,
+                                  toml_table const *table,
+                                  toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( value != NULL );
+
+  if ( strcmp( table->name, arg_source_path ) != 0 )
+    return;
+  string_or_string_array_parse(
+    config_path, table, "ignore-symbols", value, &ignore_symbols_parse_svpf
+  );
+}
+
+/**
+ * Adapter for a string_value_parse_fn_t function for the `"ignore-symbols"`
+ * key.
+ *
+ * @param config_path Not used.
+ * @param table_name Not used.
+ * @param value The string toml_value.
+ */
+static void ignore_symbols_parse_svpf( char const *config_path,
+                                       char const *table_name,
+                                       toml_value const *value ) {
+  (void)config_path;
+  (void)table_name;
+
+  PJL_DISCARD_RV(
+    rb_tree_insert(
+      &ignore_symbol_set, CONST_CAST( char*, value->s ),
+      strlen( value->s ) + 1/*\0*/
+    )
+  );
+}
 
 /**
  * Adds an explicit proxy from \a from_include_file to \a to_include_file.
@@ -1555,11 +1605,18 @@ bool config_ignore_rel_path( char const *rel_path ) {
   return rb_tree_find( &ignore_rel_path_set, rel_path ) != NULL;
 }
 
+bool config_ignore_symbol( char const *sym_name ) {
+  return rb_tree_find( &ignore_symbol_set, sym_name ) != NULL;
+}
+
 void config_init( void ) {
   ASSERT_RUN_ONCE();
 
   rb_tree_init(
     &ignore_rel_path_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &strcmp )
+  );
+  rb_tree_init(
+    &ignore_symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &strcmp )
   );
   rb_tree_init(
     &source_header_map, RB_DINT,
