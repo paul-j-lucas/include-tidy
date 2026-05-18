@@ -233,8 +233,7 @@ void opt_include_paths_add( char const *include_path ) {
     if ( strcmp( include_path, *ppath ) == 0 )
       return;
   } // for
-  char **const pback = array_push_back( &opt_include_paths );
-  *pback = check_strdup( include_path );
+  *(char**)array_push_back( &opt_include_paths ) = check_strdup( include_path );
 }
 
 char const* opt_include_paths_relativize( char const *abs_path ) {
