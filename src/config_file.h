@@ -69,13 +69,6 @@ NODISCARD
 CXFile config_get_symbol_include( char const *symbol_name );
 
 /**
- * Reads an **include-tidy**(5) configuration file, if any.
- *
- * @note This function must be called at most once.
- */
-void config_init( void );
-
-/**
  * Gets whether \a rel_path should not be checked for violations when given as
  * the command-line argument.
  *
@@ -83,7 +76,14 @@ void config_init( void );
  * @return Returns `true` only if \a rel_path should be ignored.
  */
 NODISCARD
-bool config_is_ignore( char const *rel_path );
+bool config_ignore_rel_path( char const *rel_path );
+
+/**
+ * Reads an **include-tidy**(5) configuration file, if any.
+ *
+ * @note This function must be called at most once.
+ */
+void config_init( void );
 
 /**
  * Gets whether \a rel_path refers to a standard C, C++, POSIX, BSD, or Linux

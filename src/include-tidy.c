@@ -97,7 +97,7 @@ int main( int argc, char const *argv[] ) {
   CXTranslationUnit tu = trans_unit_init( argc, argv );
   includes_init( tu );
   config_init();
-  if ( !config_is_ignore( arg_source_path ) ) {
+  if ( !config_ignore_rel_path( arg_source_path ) ) {
     trans_unit_check_for_errors( tu );
     implicit_proxies_init( tu );
     symbols_init( tu );

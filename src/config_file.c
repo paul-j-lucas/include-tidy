@@ -294,7 +294,7 @@ static char const *const TABLE_KINDS[] = {
 
 ////////// local variables ////////////////////////////////////////////////////
 
-static rb_tree_t  ignore_set;           ///< Set of files to ignore.
+static rb_tree_t  ignore_rel_path_set;  ///< Set of files to ignore.
 static char     **std_c_includes;       ///< Standard-ish C include files.
 static size_t     std_c_includes_size;  ///< Size of \ref std_c_includes.
 static char     **std_cpp_includes;     ///< Standard C++ include files.
@@ -476,7 +476,7 @@ static void config_cleanup( void ) {
       free( *ppattern );
     free( std_cpp_includes );
   }
-  rb_tree_cleanup( &ignore_set, /*free_fn=*/NULL );
+  rb_tree_cleanup( &ignore_rel_path_set, /*free_fn=*/NULL );
   rb_tree_cleanup(
     &source_header_map,
     POINTER_CAST( rb_free_fn_t, &source_header_cleanup )
@@ -901,7 +901,7 @@ static void ignore_as_argument_parse( char const *config_path,
     return;
   PJL_DISCARD_RV(
     rb_tree_insert(
-      &ignore_set, CONST_CAST( char*, table->name ),
+      &ignore_rel_path_set, CONST_CAST( char*, table->name ),
       strlen( table->name ) + 1/*\0*/
     )
   );
@@ -1551,10 +1551,16 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   return best_include != NULL ? best_include->file : NULL;
 }
 
+bool config_ignore_rel_path( char const *rel_path ) {
+  return rb_tree_find( &ignore_rel_path_set, rel_path ) != NULL;
+}
+
 void config_init( void ) {
   ASSERT_RUN_ONCE();
 
-  rb_tree_init( &ignore_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &strcmp ) );
+  rb_tree_init(
+    &ignore_rel_path_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &strcmp )
+  );
   rb_tree_init(
     &source_header_map, RB_DINT,
     POINTER_CAST( rb_cmp_fn_t, &source_header_cmp )
@@ -1588,10 +1594,6 @@ void config_init( void ) {
 
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_SYMBOLS) != 0 )
     symbol_includes_dump();
-}
-
-bool config_is_ignore( char const *rel_path ) {
-  return rb_tree_find( &ignore_set, rel_path ) != NULL;
 }
 
 bool config_is_standard_include( char const *rel_path ) {
