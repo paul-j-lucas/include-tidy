@@ -948,6 +948,8 @@ static void ignore_symbols_parse_svpf( char const *config_path,
                                        toml_value const *value ) {
   (void)config_path;
   (void)table_name;
+  assert( value != NULL );
+  assert( value->type == TOML_STRING );
 
   PJL_DISCARD_RV(
     rb_tree_insert(
