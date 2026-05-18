@@ -599,7 +599,7 @@ static void includes_print_visitor( tidy_include const *include,
       opt_comment_style[0] = "// ";
       reset_opt_comment_style = true;
     }
-    unsigned const line = *(unsigned*)array_at( &include->lines, 0 );
+    unsigned const line = *(unsigned*)array_front_nc( &include->lines );
     check_asprintf( &comment, "DELETE LINE %u", line );
     sgr_color = sgr_include_del;
     do_print_include = true;
@@ -621,7 +621,7 @@ static void includes_print_visitor( tidy_include const *include,
     if ( true_clear( &ipvd->print_blank_line ) )
       PUTC( '\n' );
 
-    unsigned const line_first = *(unsigned*)array_at( &include->lines, 0 );
+    unsigned const line_first = *(unsigned*)array_front_nc( &include->lines );
     for ( unsigned i = 1; i < include->lines.len; ++i ) {
       free( comment );
       unsigned const line = *(unsigned*)array_at_nc( &include->lines, i );
