@@ -1,5 +1,6 @@
 2026-05-18  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c, util.c, util.h: Added path_is_local().
    * config_file.c: Now using array_t for std_c_includes and std_cpp_includes.
    * array.c, array.h: Added array_push_array_back().
    * config_file.c: Added "local TOML type parsing functions" section.
