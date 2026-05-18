@@ -925,8 +925,13 @@ tidy_include* include_find_by_rel_path( char const *rel_path ) {
   rb_iterator_init( &tidy_include_set, &iter );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( path_ends_with( include->abs_path, rel_path, rel_path_len ) )
-      return include;
+    if ( !path_ends_with( include->abs_path, rel_path, rel_path_len ) )
+      continue;
+    for ( ; include->proxy != NULL; include = include->proxy ) {
+      if ( !path_ends_with( include->proxy->abs_path, rel_path, rel_path_len ) )
+        break;
+    } // for
+    return include;
   } // for
 
   return NULL;
