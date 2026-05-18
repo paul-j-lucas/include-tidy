@@ -27,6 +27,7 @@
 // local
 #include "pjl_config.h"
 #include "config_file.h"
+#include "array.h"
 #include "bit_util.h"
 #include "cli_options.h"
 #include "includes.h"
@@ -269,9 +270,8 @@ static char const *const TABLE_KINDS[] = {
 
 static rb_tree_t  ignore_rel_path_set;  ///< Set of files to ignore.
 static rb_tree_t  ignore_symbol_set;    ///< Set of symbols to ignore.
-static char     **std_c_includes;       ///< Standard-ish C include files.
-static size_t     std_c_includes_size;  ///< Size of \ref std_c_includes.
-static char     **std_cpp_includes;     ///< Standard C++ include files.
+static array_t    std_c_includes;       ///< Standard-ish C include files.
+static array_t    std_cpp_includes;     ///< Standard C++ include files.
 static bool       verbose_printed_any;  ///< Print any configuration files?
 
 /**
@@ -363,9 +363,9 @@ static long int_value_parse( char const *config_path, char const *key_name,
  * @sa string_value_parse()
  */
 NODISCARD
-static char** string_array_value_parse( char const *config_path,
-                                        char const *key_name,
-                                        toml_value const *value ) {
+static array_t string_array_value_parse( char const *config_path,
+                                         char const *key_name,
+                                         toml_value const *value ) {
   assert( config_path != NULL );
   assert( key_name != NULL );
   assert( value != NULL );
@@ -378,24 +378,26 @@ static char** string_array_value_parse( char const *config_path,
     exit( EX_CONFIG );
   }
 
-  if ( value->a.size == 0 )
-    return NULL;
-  char **const array = MALLOC( char*, value->a.size + 1/*NULL*/ );
+  array_t array;
+  array_init( &array, sizeof(char*) );
 
-  for ( unsigned i = 0; i < value->a.size; ++i ) {
-    toml_value *const a_value = &value->a.values[i];
-    if ( a_value->type != TOML_STRING ) {
-      print_error(
-        config_path, a_value->loc.line, a_value->loc.col,
-        "invalid value for \"%s\"; expected string\n", key_name
-      );
-      exit( EX_CONFIG );
-    }
-    array[i] = a_value->s;
-    a_value->s = NULL;                  // steal value's string
-  } // for
+  if ( value->a.size > 0 ) {
+    array_reserve( &array, value->a.size );
 
-  array[ value->a.size ] = NULL;
+    for ( unsigned i = 0; i < value->a.size; ++i ) {
+      toml_value *const a_value = &value->a.values[i];
+      if ( a_value->type != TOML_STRING ) {
+        print_error(
+          config_path, a_value->loc.line, a_value->loc.col,
+          "invalid value for \"%s\"; expected string\n", key_name
+        );
+        exit( EX_CONFIG );
+      }
+      *(char**)array_push_back( &array ) = a_value->s;
+      a_value->s = NULL;                // steal value's string
+    } // for
+  }
+
   return array;
 }
 
@@ -494,14 +496,10 @@ static void add_c_includes_parse( char const *config_path,
   (void)table;
   assert( value != NULL );
 
-  char **const add_c_includes =
+  array_t add_c_includes =
     string_array_value_parse( config_path, "add-c-includes", value );
-  REALLOC( std_c_includes, std_c_includes_size + value->a.size + 1 );
-  memcpy( std_c_includes + std_c_includes_size, add_c_includes,
-          value->a.size * sizeof std_c_includes[0] );
-  free( add_c_includes );
-  std_c_includes_size += value->a.size;
-  std_c_includes[ std_c_includes_size ] = NULL;
+  array_push_array_back( &std_c_includes, &add_c_includes );
+  array_cleanup( &add_c_includes, /*free_fn=*/NULL );
 }
 
 /**
@@ -608,16 +606,8 @@ static void color_parse( char const *config_path, toml_table const *table,
  * Cleans-up all configuration data.
  */
 static void config_cleanup( void ) {
-  if ( std_c_includes != NULL ) {
-    for ( char **ppattern = std_c_includes; *ppattern != NULL; ++ppattern )
-      free( *ppattern );
-    free( std_c_includes );
-  }
-  if ( std_cpp_includes != NULL ) {
-    for ( char **ppattern = std_cpp_includes; *ppattern != NULL; ++ppattern )
-      free( *ppattern );
-    free( std_cpp_includes );
-  }
+  array_cleanup( &std_c_includes, &free_pptr );
+  array_cleanup( &std_cpp_includes, &free_pptr );
   rb_tree_cleanup( &ignore_rel_path_set, /*free_fn=*/NULL );
   rb_tree_cleanup( &ignore_symbol_set, /*free_fn=*/NULL );
   rb_tree_cleanup(
@@ -1223,14 +1213,17 @@ static void includes_parse_string( char const *config_path,
  * @return Returns `true` only if \a rel_path is among \a includes.
  */
 NODISCARD
-static bool is_standard_include( char const *rel_path, char *includes[] ) {
+static bool is_standard_include( char const *rel_path,
+                                 array_t const *includes ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
+  assert( includes != NULL );
 
   if ( includes != NULL ) {
-    for ( char **ppattern = includes; *ppattern != NULL; ++ppattern ) {
-      int const flags = strstr( *ppattern, "**" ) == NULL ? FNM_PATHNAME : 0;
-      switch ( fnmatch( *ppattern, rel_path, flags ) ) {
+    for ( size_t i = 0; i < includes->len; ++i ) {
+      char const *const pattern = array_at_nc( includes, i );
+      int const flags = strstr( pattern, "**" ) == NULL ? FNM_PATHNAME : 0;
+      switch ( fnmatch( pattern, rel_path, flags ) ) {
         case 0:
           return true;
         case FNM_NOMATCH:
@@ -1414,10 +1407,9 @@ static void std_c_includes_parse( char const *config_path,
   (void)table;
   assert( value != NULL );
 
-  if ( std_c_includes == NULL ) {
+  if ( std_c_includes.len == 0 ) {
     std_c_includes =
       string_array_value_parse( config_path, "std-c-includes", value );
-    std_c_includes_size = value->a.size;
   }
 }
 
@@ -1435,7 +1427,7 @@ static void std_cpp_includes_parse( char const *config_path,
   (void)table;
   assert( value != NULL );
 
-  if ( std_cpp_includes == NULL ) {
+  if ( std_cpp_includes.len == 0 ) {
     std_cpp_includes =
       string_array_value_parse( config_path, "std-cpp-includes", value );
   }
@@ -1686,8 +1678,8 @@ bool config_is_standard_include( char const *rel_path ) {
   assert( path_is_relative( rel_path ) );
 
   return  (tidy_lang == CXLanguage_CPlusPlus &&
-           is_standard_include( rel_path, std_cpp_includes )) ||
-          is_standard_include( rel_path, std_c_includes );
+           is_standard_include( rel_path, &std_cpp_includes )) ||
+          is_standard_include( rel_path, &std_c_includes );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
