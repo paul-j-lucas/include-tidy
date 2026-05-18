@@ -205,6 +205,8 @@ static void         first_parse( char const*, toml_table const*,
                                  toml_value const* );
 static void         ignore_as_argument_parse( char const*, toml_table const*,
                                               toml_value const* );
+static void         ignore_parse( char const*, toml_table const*,
+                                  toml_value const* );
 static void         ignore_symbols_parse( char const*, toml_table const*,
                                           toml_value const* );
 static void         ignore_symbols_parse_svpf( char const*, char const*,
@@ -273,6 +275,7 @@ static config_key const CONFIG_KEYS[] = {
   { "comment-style",      TABLE_INCLUDE_TIDY,   &comment_style_parse      },
   { "elide-includes",     TABLE_HEADER_SOURCE,  &elide_includes_parse     },
   { "first",              TABLE_HEADER,         &first_parse              },
+  { "ignore",             TABLE_SYMBOL,         &ignore_parse             },
   { "ignore-symbols",     TABLE_HEADER_SOURCE,  &ignore_symbols_parse     },
   { "includes",           TABLE_SYMBOL,         &includes_parse           },
   { "keep",               TABLE_HEADER,         &keep_parse               },
@@ -913,6 +916,29 @@ static void ignore_as_argument_parse( char const *config_path,
     )
   );
 };
+
+/**
+ * Parses the value of an `"ignore"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param value The toml_value to parse.
+ */
+static void ignore_parse( char const *config_path, toml_table const *table,
+                          toml_value const *value ) {
+  assert( config_path != NULL );
+  (void)table;
+  assert( value != NULL );
+
+  if ( !bool_value_parse( config_path, "ignore", value ) )
+    return;
+  PJL_DISCARD_RV(
+    rb_tree_insert(
+      &ignore_symbol_set, CONST_CAST( char*, table->name ),
+      strlen( table->name ) + 1/*\0*/
+    )
+  );
+}
 
 /**
  * Parses the value of an `"ignore-symbols"` key.
