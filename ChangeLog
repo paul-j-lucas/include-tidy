@@ -1,5 +1,7 @@
 2026-05-17  Paul J. Lucas <paul@lucasmail.org>
 
+   * array.c: array_cleanup() now does nothing on NULL.
+   * array.c: Eliminated POINTER_CAST().
    * includes.c: s/array_at/array_front_nc/
    * config_file.c, print.c, util.c: Fixes warnings when compiling with
      --disable-assert.
