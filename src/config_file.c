@@ -951,12 +951,17 @@ static void ignore_symbols_parse_svpf( char const *config_path,
   assert( value != NULL );
   assert( value->type == TOML_STRING );
 
-  PJL_DISCARD_RV(
-    rb_tree_insert(
-      &ignore_symbol_set, CONST_CAST( char*, value->s ),
-      strlen( value->s ) + 1/*\0*/
-    )
+  rb_insert_rv_t const rv_rbi = rb_tree_insert(
+    &ignore_symbol_set, CONST_CAST( char*, value->s ),
+    strlen( value->s ) + 1/*\0*/
   );
+  if ( !rv_rbi.inserted ) {
+    print_warning(
+      config_path, value->loc.line, value->loc.col,
+      "\"%s\" already ignored\n",
+      value->s
+    );
+  }
 }
 
 /**
