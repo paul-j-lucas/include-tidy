@@ -292,8 +292,8 @@ static char const *const TABLE_KINDS[] = {
   [ TABLE_NONE ] = "none",
   [ TABLE_INCLUDE_TIDY ] = "include-tidy",
   [ TABLE_HEADER ] = "header",
+  [ TABLE_HEADER_SOURCE ] = "source or header",
   [ TABLE_SOURCE ] = "source",
-  [ TABLE_SOURCE | TABLE_HEADER ] = "source or header",
   [ TABLE_SYMBOL ] = "symbol"
 };
 
