@@ -140,6 +140,8 @@ void array_cleanup( array_t *array, array_free_fn_t free_fn );
  * to zero upon return.
  * @return Returns a pointer to the first pushed element in \a dst_array or
  * NULL if \a src_array is empty.
+ *
+ * @sa array_push_back()
  */
 PJL_DISCARD
 void* array_push_array_back( array_t *dst_array, array_t *src_array );
@@ -149,6 +151,8 @@ void* array_push_array_back( array_t *dst_array, array_t *src_array );
  *
  * @param array The \ref array to push onto.
  * @return Returns a pointer to the new element.
+ *
+ * @sa array_push_array_back()
  */
 NODISCARD
 void* array_push_back( array_t *array );
@@ -177,8 +181,8 @@ bool array_reserve( array_t *array, size_t res_len );
  * @warning \a index is _not_ checked to ensure it's &lt; the array's length.
  * A value &ge; the array's length results in undefined behavior.
  *
- * @note If the type of element is a pointer, then this returns a _pointer to
- * that pointer_, i.e., `T**`.
+ * @note If the element type is a pointer, then this returns a _pointer to that
+ * pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
  * @sa array_at()
@@ -200,8 +204,8 @@ inline void* array_at_nc( array_t const *array, size_t index ) {
  * @return Returns a pointer to the element at \a index or NULL if \a index
  * &ge; \ref array::len "len".
  *
- * @note If the type of element is a pointer, then this returns a _pointer to
- * that pointer_, i.e., `T**`.
+ * @note If the element type is a pointer, then this returns a _pointer to that
+ * pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
  * @sa array_at_nc()
@@ -224,8 +228,8 @@ inline void* array_at( array_t const *array, size_t index ) {
  *
  * @warning \a array is _not_ checked to ensure it's not empty.
  *
- * @note If the type of element is a pointer, then this returns a _pointer to
- * that pointer_, i.e., `T**`.
+ * @note If the element type is a pointer, then this returns a _pointer to that
+ * pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
  * @sa array_at()
@@ -248,8 +252,8 @@ inline void* array_back_nc( array_t const *array ) {
  * @return Returns a pointer to the element at the back of \a array or NULL if
  * \a array is empty.
  *
- * @note If the type of element is a pointer, then this returns a _pointer to
- * that pointer_, i.e., `T**`.
+ * @note If the element type is a pointer, then this returns a _pointer to that
+ * pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
  * @sa array_at()
@@ -273,8 +277,8 @@ inline void* array_back( array_t const *array ) {
  *
  * @warning \a array is _not_ checked to ensure it's not empty.
  *
- * @note If the type of element is a pointer, then this returns a _pointer to
- * that pointer_, i.e., `T**`.
+ * @note If the element type is a pointer, then this returns a _pointer to that
+ * pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
  * @sa array_at()
@@ -295,8 +299,8 @@ inline void* array_front_nc( array_t const *array ) {
  * @return Returns a pointer to the element at the front of \a array or NULL if
  * \a array is empty.
  *
- * @note If the type of element is a pointer, then this returns a _pointer to
- * that pointer_, i.e., `T**`.
+ * @note If the element type is a pointer, then this returns a _pointer to that
+ * pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
  * @sa array_at()
@@ -331,8 +335,8 @@ inline void array_init( array_t *array, size_t esize ) {
  *
  * @warning \a array is _not_ checked to ensure it's not empty.
  *
- * @note If the type of element is a pointer, then this returns a _pointer to
- * that pointer_, i.e., `T**`.
+ * @note If the element type is a pointer, then this returns a _pointer to that
+ * pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
  * @sa array_at()
@@ -353,8 +357,8 @@ inline void* array_pop_back_nc( array_t *array ) {
  * @return Returns a pointer to the element at the back of \a array or NULL if
  * the array is empty.  The caller is responsible for freeing it if necessary.
  *
- * @note If the type of element is a pointer, then this returns a _pointer to
- * that pointer_, i.e., `T**`.
+ * @note If the element type is a pointer, then this returns a _pointer to that
+ * pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
  *
  * @sa array_at()
