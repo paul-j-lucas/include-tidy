@@ -275,7 +275,18 @@ includes = [
 
 # Some systems have these in sys/types.h, but POSIX says they're in stdint.h.
 [stdint.h]
-symbols = [ "int8_t", "int16_t", "int32_t", "int64_t" ]
+symbols = [
+  "int8_t",
+  "int16_t",
+  "int32_t",
+  "int64_t",
+  "intptr_t",
+  "uint8_t",
+  "uint16_t",
+  "uint32_t",
+  "uint64_t",
+  "uintptr_t"
+]
 
 # strcasecmp(3) is declared in <strings.h> (plural) according to POSIX, but
 # some platforms still have it in <string.h> (singular), so just pick the
