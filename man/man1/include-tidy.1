@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "May 18, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "May 19, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -452,6 +452,22 @@ Specifies the path of the configuration file to use first.
 Change to directory
 .I d
 before tidying.
+.TP
+.BR \-\-debug " | " \-D
+Turns on
+.B include-tidy
+debugging output:
+.RS 5
+.IP \(bu 3
+If an error or warning message is printed,
+includes the
+.RI \f(CW[\fP file \f(CW:\fP line \f(CW]\fP
+of the code that generated said message.
+.RE
+.IP
+(This is a debugging aid for developers of
+.B include-tidy
+itself.)
 .TP
 .BR \-\-error \f1=\fPs "\f1 | \fP" "" \-e " s"
 When to exit with a non-zero status.

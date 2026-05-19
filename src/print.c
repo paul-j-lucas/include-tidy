@@ -105,13 +105,8 @@ static void fl_print_impl( char const *tidy_file, int tidy_line,
   color_end( stderr, what_color );
   EPUTS( ": " );
 
-#if 0
   if ( opt_debug )
     EPRINTF( "[%s:%d] ", tidy_file, tidy_line );
-#else
-  (void)tidy_file;
-  (void)tidy_line;
-#endif
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"

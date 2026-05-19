@@ -77,6 +77,7 @@ static struct option const OPTIONS[] = {
   { "color",            required_argument,  NULL, COPT(COLOR)             },
   { "comment-style",    required_argument,  NULL, COPT(COMMENT_STYLE)     },
   { "config",           required_argument,  NULL, COPT(CONFIG)            },
+  { "debug",            no_argument,        NULL, COPT(DEBUG)             },
   { "directory",        required_argument,  NULL, COPT(DIRECTORY)         },
   { "error",            required_argument,  NULL, COPT(ERROR)             },
   { "help",             no_argument,        NULL, COPT(HELP)              },
@@ -102,6 +103,7 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(COLOR) ] = "When to colorize output; default=\"not_file\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
   [ COPT(CONFIG) ] = "Configuration file path",
+  [ COPT(DEBUG) ] = "Print " PACKAGE " debug output",
   [ COPT(DIRECTORY) ] = "Change directory before tidying",
   [ COPT(ERROR) ] = "When to exit with a non-zero status",
   [ COPT(HELP) ] = "Print this help and exit",
@@ -914,6 +916,9 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         break;
       case COPT(CONFIG):
         opt_config_path = optarg;
+        break;
+      case COPT(DEBUG):
+        opt_debug = true;
         break;
       case COPT(DIRECTORY):
         opt_directory = optarg;

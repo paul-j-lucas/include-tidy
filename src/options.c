@@ -66,6 +66,7 @@ color_when    opt_color_when = COLOR_NOT_FILE;
 char const   *opt_comment_style[2] = { "// ", "" };
 bool          opt_config_layers = true;
 char const   *opt_config_path;
+bool          opt_debug;
 tidy_error    opt_error;
 unsigned      opt_line_length = OPT_LINE_LENGTH_DEFAULT;
 tidy_verbose  opt_verbose;

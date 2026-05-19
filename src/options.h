@@ -81,6 +81,7 @@ extern color_when   opt_color_when;       ///< When to colorize.
 extern char const  *opt_comment_style[2]; ///< Comment delimiters to use.
 extern bool         opt_config_layers;    ///< Do configuration file layering?
 extern char const  *opt_config_path;      ///< Configuration file path.
+extern bool         opt_debug;            ///< Print debugging output?
 extern tidy_error   opt_error;            ///< When to exit with non-zero.
 extern unsigned     opt_line_length;      ///< Line length.
 extern tidy_verbose opt_verbose;          ///< Print verbose output?
