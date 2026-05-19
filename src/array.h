@@ -39,11 +39,59 @@
 
 /// @endcond
 
-/**
- * @defgroup array-group Dynamic Array
- * A type for a dynamic array functions for manipulating said array.
- * @{
- */
+///
+/// @defgroup array-group Dynamic Array
+/// A type for a dynamic array and functions for manipulating said array.
+///
+/// @remarks
+/// Functions without an `nc` suffix do bounds-checking; functions with an `nc`
+/// (no-check) suffix don't.
+///
+/// @par Example
+/// @parblock
+/// An array of `int`:
+///
+///       array_t array_of_int;
+///       array_init( &array_of_int, sizeof(int) );
+///       *(int*)array_push_back( &array_of_int ) = 42;
+///       // ...
+///       array_cleanup( &array_of_int, /*free_fn=*/NULL );
+///
+/// Notice that \ref array_push_back _only_ makes space for a new element and
+/// doesn't actually push it; instead, it returns a pointer to the new element
+/// that we then cast to `int*` and dereference to assign a value to it.  In
+/// general, for an array of type `T`, the pointer is of type `T*`.
+///
+/// Since the elements are just `int`s, no clean-up function is needed.
+/// @endparblock
+///
+/// @par Example
+/// @parblock
+/// An array of `char*`:
+///
+///       array_t array_of_str;
+///       array_init( &array_of_str, sizeof(char*) );
+///       *(char**)array_push_back( &array_of_int ) = strdup( "hello" );
+///       *(char**)array_push_back( &array_of_int ) = strdup( "world" );
+///       // ...
+///       array_cleanup( &array_of_int, &free_pptr );
+///
+/// Similar to the previous example, except now the element `T` is `char*`, so,
+/// as before, the pointer is of type `T*` or `char**`.
+///
+/// Since the elements are owning `char*` pointers, a clean-up function is
+/// needed.  Note that \ref array_cleanup passes a _pointer_ to each element to
+/// be cleaned-up, so, in the case of an element of type `char*`, a _pointer_
+/// to that pointer is passed, hence you can't use `free`, but instead need a
+/// function that frees a pointer pointed to by a pointer such as:
+///
+///     void free_pptr( void *pptr ) {
+///       if ( pptr != NULL )
+///         free( *(void**)pptr );
+///     }
+/// @endparblock
+/// @{
+///
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
