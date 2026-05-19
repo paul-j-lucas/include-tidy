@@ -71,10 +71,10 @@
 ///
 ///       array_t array_of_str;
 ///       array_init( &array_of_str, sizeof(char*) );
-///       *(char**)array_push_back( &array_of_int ) = strdup( "hello" );
-///       *(char**)array_push_back( &array_of_int ) = strdup( "world" );
+///       *(char**)array_push_back( &array_of_str ) = strdup( "hello" );
+///       *(char**)array_push_back( &array_of_str ) = strdup( "world" );
 ///       // ...
-///       array_cleanup( &array_of_int, &free_pptr );
+///       array_cleanup( &array_of_str, &free_pptr );
 ///
 /// Similar to the previous example, except now the element `T` is `char*`, so,
 /// as before, the pointer is of type `T*` or `char**`.
