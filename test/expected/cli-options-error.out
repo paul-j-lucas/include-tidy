@@ -75,7 +75,7 @@ usage: include-tidy [-Xtidy tidy-option]... [clang-option]... source-file
        include-tidy other-option
 
 tidy options:
-  --align-column=ARG  (-a) Align comments to this column; default=80.
+  --align-column=ARG  (-a) Align comments to this column; default=41.
   --all-includes      (-A) Print all includes, not just those in violation.
   --clang=ARG         (-C) Path of clang to use or "none"; default="clang".
   --color=ARG         (-k) When to colorize output; default="not_file".
@@ -111,7 +111,7 @@ usage: include-tidy [-Xtidy tidy-option]... [clang-option]... source-file
        include-tidy other-option
 
 tidy options:
-  --align-column=ARG  (-a) Align comments to this column; default=80.
+  --align-column=ARG  (-a) Align comments to this column; default=41.
   --all-includes      (-A) Print all includes, not just those in violation.
   --clang=ARG         (-C) Path of clang to use or "none"; default="clang".
   --color=ARG         (-k) When to colorize output; default="not_file".
