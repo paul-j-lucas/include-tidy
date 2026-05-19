@@ -9,13 +9,13 @@
 #       the Free Software Foundation, either version 3 of the License, or
 #       (at your option) any later version.
 #
-#     This program is distributed in the hope that it will be useful,
-#     but WITHOUT ANY WARRANTY; without even the implied warranty of
-#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#     GNU General Public License for more details.
+#       This program is distributed in the hope that it will be useful,
+#       but WITHOUT ANY WARRANTY; without even the implied warranty of
+#       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#       GNU General Public License for more details.
 #
-#     You should have received a copy of the GNU General Public License
-#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#       You should have received a copy of the GNU General Public License
+#       along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
 [include-tidy]
@@ -246,7 +246,7 @@ includes = [
   "stdlib.h",
   "string.h",
   "time.h",
-  "wchar.h",
+  "wchar.h"
 ]
 
 # size_t is declared in all of these, so any one is sufficient.
@@ -258,7 +258,7 @@ includes = [
   "string.h",
   "time.h",
   "uchar.h",
-  "wchar.h",
+  "wchar.h"
 ]
 
 # ssize_t is declared in all of these, so any one is sufficient.
@@ -273,7 +273,7 @@ includes = [
   "wchar.h",
 ]
 
-# Some systems have these in sys/types.h, but POSIX says they're in stdint.h.
+# Some platforms have these in sys/types.h, but POSIX says they're in stdint.h.
 [stdint.h]
 symbols = [
   "int8_t",
@@ -288,13 +288,23 @@ symbols = [
   "uintptr_t"
 ]
 
-# strcasecmp(3) is declared in <strings.h> (plural) according to POSIX, but
-# some platforms still have it in <string.h> (singular), so just pick the
-# former.
+# Some platforms still have this in string.h (singular), but POSIX says it's in
+# strings.h (plural).
 [strcasecmp]
 includes = "strings.h"
 
 [time_t]
 includes = "time.h"
+
+# wchar_t is declared in all of these, so any one is sufficient.
+[wchar_t]
+includes = [
+  "wchar.h",
+  "wctype.h"
+]
+
+# Some platforms have this in ctype.h, but C95 says it's in wctype.h.
+[wint_t]
+includes = "wctype.h"
 
 # vim:se et sw=2 ts=2:
