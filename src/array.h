@@ -135,9 +135,11 @@ void array_cleanup( array_t *array, array_free_fn_t free_fn );
 /**
  * Pushes the elements of \a src_array onto the back of \a dst_array.
  *
+ * @note Both arrays _must_ have the same \ref array::esize "element size".
+ *
  * @param dst_array The \ref array to push onto.
- * @param src_array The \ref array to push the elements of.  It's length is set
- * to zero upon return.
+ * @param src_array The \ref array to push the elements of.  It's \ref
+ * array::len "length" is set to zero upon return.
  * @return Returns a pointer to the first pushed element in \a dst_array or
  * NULL if \a src_array is empty.
  *
@@ -376,7 +378,7 @@ inline void* array_pop_back( array_t *array ) {
  * Calls **qsort**(3) on \a array.
  *
  * @param array The array to sort.
- * @param cmp_fn The comparison functiomn to use.
+ * @param cmp_fn The comparison function to use.
  */
 inline void array_sort( array_t *array,
                         int (*cmp_fn)( void const*, void const* ) ) {
