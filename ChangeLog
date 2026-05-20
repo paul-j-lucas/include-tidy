@@ -1,5 +1,6 @@
 2026-05-19  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c: Factored out should_print_include().
    * array.c, array.h: Fixed bugs; made array_push_back() inline.
    * cli-help.out, cli-options-error.out: Updated tests.
    * man/man1/include-tidy.1, cli_options.c, cli_options.h, options.c,
