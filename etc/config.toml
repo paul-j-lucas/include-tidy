@@ -294,6 +294,8 @@ symbols = [
 [strcasecmp]
 includes = "strings.h"
 
+# Without this, other headers, like stdio.h, can include sys/types.h that some
+# systems declare time_t in, but C says it's in time.h.
 [time_t]
 includes = "time.h"
 
@@ -304,7 +306,7 @@ includes = [
   "wctype.h"
 ]
 
-# Some platforms have this in ctype.h, but C95 says it's in wctype.h.
+# Some platforms have this in ctype.h, but C says it's in wctype.h.
 [wint_t]
 includes = "wctype.h"
 
