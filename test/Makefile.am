@@ -40,7 +40,8 @@ TESTS+=	tests/align-column.test \
 	tests/comment-style.test
 
 # Other tests
-TESTS+=	tests/duplicate.test \
+TESTS+=	tests/associated-header.test \
+	tests/duplicate.test \
 	tests/header-keep.test
 
 # Real-world tests.

@@ -96,7 +96,6 @@ enum config_table_kind {
 typedef enum    config_opts       config_opts;
 typedef struct  config_key        config_key;
 typedef enum    config_table_kind config_table_kind;
-typedef struct  source_header     source_header;
 typedef struct  symbol_includes   symbol_includes;
 
 /**
@@ -146,15 +145,7 @@ struct config_key {
  */
 struct symbol_includes {
   char const *from_symbol_name;         ///< Symbol name.
-  rb_tree_t   to_includes;              ///< Include file(s).
-};
-
-/**
- * Mapping of a source file to its associated header.
- */
-struct source_header {
-  char const *source_rel_path;          ///< Source relative path.
-  char const *header_rel_path;          ///< Header relative path.
+  rb_tree_t   to_include_set;           ///< Include file(s).
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -210,7 +201,6 @@ static void         line_length_parse( char const*, toml_table const*,
                                        toml_value const* );
 static void         proxy_parse( char const*, toml_table const*,
                                  toml_value const* );
-static void         source_header_cleanup( source_header* );
 static void         std_c_includes_parse( char const*, toml_table const*,
                                           toml_value const* );
 static void         std_cpp_includes_parse( char const*, toml_table const*,
@@ -266,6 +256,15 @@ static char const *const TABLE_KINDS[] = {
   [ TABLE_SYMBOL ] = "symbol"
 };
 
+////////// extern variables ///////////////////////////////////////////////////
+
+/// @cond DOXYGEN_IGNORE
+/// Otherwise Doxygen generates two entries.
+
+char const *assoc_header_rel_path;
+
+/// @endcond
+
 ////////// local variables ////////////////////////////////////////////////////
 
 static rb_tree_t  ignore_rel_path_set;  ///< Set of files to ignore.
@@ -273,11 +272,6 @@ static rb_tree_t  ignore_symbol_set;    ///< Set of symbols to ignore.
 static array_t    std_c_includes;       ///< Standard-ish C include files.
 static array_t    std_cpp_includes;     ///< Standard C++ include files.
 static bool       verbose_printed_any;  ///< Print any configuration files?
-
-/**
- * Mapping from source files to their associated headers.
- */
-static rb_tree_t source_header_map;
 
 /**
  * Mapping from symbols to the include file(s) they're declared in.
@@ -560,17 +554,11 @@ static void associated_header_parse( char const *config_path,
   assert( table != NULL );
   assert( value != NULL );
 
+  if ( strcmp( table->name, arg_source_path ) != 0 )
+    return;
   char const *const string_value =
     string_value_parse( config_path, "associated-header", value );
-
-  source_header new_sh = { .source_rel_path = table->name };
-  rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &source_header_map, &new_sh, sizeof new_sh );
-  if ( !rv_rbi.inserted )
-    return;
-  source_header *const sh = RB_DINT( rv_rbi.node );
-  sh->source_rel_path = check_strdup( table->name );
-  sh->header_rel_path = check_strdup( string_value );
+  assoc_header_rel_path = check_strdup( string_value );
 }
 
 /**
@@ -606,14 +594,11 @@ static void color_parse( char const *config_path, toml_table const *table,
  * Cleans-up all configuration data.
  */
 static void config_cleanup( void ) {
+  FREE( assoc_header_rel_path );
   array_cleanup( &std_c_includes, &free_pptr );
   array_cleanup( &std_cpp_includes, &free_pptr );
   rb_tree_cleanup( &ignore_rel_path_set, /*free_fn=*/NULL );
   rb_tree_cleanup( &ignore_symbol_set, /*free_fn=*/NULL );
-  rb_tree_cleanup(
-    &source_header_map,
-    POINTER_CAST( rb_free_fn_t, &source_header_cleanup )
-  );
   rb_tree_cleanup(
     &symbol_includes_map,
     POINTER_CAST( rb_free_fn_t, &symbol_includes_cleanup )
@@ -1370,36 +1355,6 @@ static void proxy_parse( char const *config_path, toml_table const *table,
 }
 
 /**
- * Cleans-up a source_header.
- *
- * @param sh The source_header to clean up.  If NULL, does nothing.
- */
-static void source_header_cleanup( source_header *sh ) {
-  if ( sh == NULL )
-    return;
-  FREE( sh->source_rel_path );
-  FREE( sh->header_rel_path );
-}
-
-/**
- * Compares two \ref symbol_includes objects.
- *
- * @param i_sh The first source_header.
- * @param j_sh The second source_header.
- * @return Returns a number less than 0, 0, or greater than 0 if the \ref
- * source_header::source_rel_path "source_rel_path" of \a i_sh is less than,
- * equal to, or greater than the \ref source_header::source_rel_path
- * "source_rel_path" \a j_sh, respectively.
- */
-NODISCARD
-static int source_header_cmp( source_header const *i_sh,
-                              source_header const *j_sh ) {
-  assert( i_sh != NULL );
-  assert( j_sh != NULL );
-  return strcmp( i_sh->source_rel_path, j_sh->source_rel_path );
-}
-
-/**
  * Parses the value of an `"std-c-includes"` key.
  *
  * @param config_path The full path to the configurarion file.
@@ -1448,7 +1403,7 @@ static void symbol_includes_cleanup( symbol_includes *si ) {
   if ( si == NULL )
     return;
   FREE( si->from_symbol_name );
-  rb_tree_cleanup( &si->to_includes, /*free_fn=*/NULL );
+  rb_tree_cleanup( &si->to_include_set, /*free_fn=*/NULL );
 }
 
 /**
@@ -1487,11 +1442,11 @@ static void symbol_include_add( char const *from_symbol_name,
   if ( rv_rbi.inserted ) {
     si->from_symbol_name = check_strdup( from_symbol_name );
     rb_tree_init(
-      &si->to_includes, RB_DPTR,
+      &si->to_include_set, RB_DPTR,
       POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_rel_path )
     );
   }
-  PJL_DISCARD_RV( rb_tree_insert( &si->to_includes, to_include, 0 ) );
+  PJL_DISCARD_RV( rb_tree_insert( &si->to_include_set, to_include, 0 ) );
 }
 
 /**
@@ -1509,7 +1464,7 @@ static void symbol_includes_dump( void ) {
 
     bool comma = false;
     rb_iterator_t ti_iter;
-    rb_iterator_init( &si->to_includes, &ti_iter );
+    rb_iterator_init( &si->to_include_set, &ti_iter );
     for ( tidy_include *to_include;
           (to_include = rb_iterator_next( &ti_iter )) != NULL; ) {
       char delims[2];
@@ -1587,16 +1542,6 @@ static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-char const* config_get_assoc_header( char const *source_rel_path ) {
-  assert( source_rel_path != NULL );
-  source_header find_sh = { .source_rel_path = source_rel_path };
-  rb_node_t *const found_rb = rb_tree_find( &source_header_map, &find_sh );
-  if ( found_rb == NULL )
-    return NULL;
-  source_header const *const found_sh = RB_DINT( found_rb );
-  return found_sh->header_rel_path;
-}
-
 CXFile config_get_symbol_include( char const *symbol_name ) {
   assert( symbol_name != NULL );
 
@@ -1606,11 +1551,11 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   if ( found_rb == NULL )
     return NULL;
   symbol_includes const *const found_si = RB_DINT( found_rb );
-  if ( rb_tree_empty( &found_si->to_includes ) )
+  if ( rb_tree_empty( &found_si->to_include_set ) )
     return NULL;
 
   rb_iterator_t iter;
-  rb_iterator_init( &found_si->to_includes, &iter );
+  rb_iterator_init( &found_si->to_include_set, &iter );
 
   tidy_include const *best_include = NULL;
   for ( tidy_include const *to_include;
@@ -1643,10 +1588,6 @@ void config_init( void ) {
   );
   rb_tree_init(
     &ignore_symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &strcmp )
-  );
-  rb_tree_init(
-    &source_header_map, RB_DINT,
-    POINTER_CAST( rb_cmp_fn_t, &source_header_cmp )
   );
   rb_tree_init(
     &symbol_includes_map, RB_DINT,

@@ -47,17 +47,15 @@
  * @{
  */
 
-////////// extern functions ///////////////////////////////////////////////////
+////////// extern variables ///////////////////////////////////////////////////
 
 /**
- * Gets the associated header file for \a source_rel_path, if any.
- *
- * @param source_rel_path The relative path of the source file being tidied.
- * @return Returns the relative path of the associated header file or NULL for
- * none.
+ * The associated header for the file being tidied, if any, and only if set
+ * explicitly via the `associated-header` configuration key.
  */
-NODISCARD
-char const* config_get_assoc_header( char const *source_rel_path );
+extern char const *assoc_header_rel_path;
+
+////////// extern functions ///////////////////////////////////////////////////
 
 /**
  * Gets the header file that \a symbol_name maps to, if any.

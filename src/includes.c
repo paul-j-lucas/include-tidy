@@ -646,21 +646,18 @@ static void includes_print_visitor( tidy_include const *include,
  * being tidied.
  *
  * @param include The include to check.
- * @param assoc_file_name The file name associated with the file being tidied,
- * if any.
  * @param source_file_no_ext arg_source_path but without its filename
  * extension.
  * @return Returns `true` only if \a include is the associated header for the
  * file currently being tidied.
  */
 static bool is_assoc_header( tidy_include const *include,
-                             char const *assoc_file_name,
                              char const *source_file_no_ext ) {
   assert( include != NULL );
   assert( source_file_no_ext != NULL );
 
-  if ( assoc_file_name != NULL )
-    return strcmp( include->rel_path, assoc_file_name ) == 0;
+  if ( assoc_header_rel_path != NULL )
+    return strcmp( include->rel_path, assoc_header_rel_path ) == 0;
 
   char const *const include_ext = path_ext( include->rel_path );
   if ( include_ext == NULL || include_ext[0] != 'h' )
@@ -670,11 +667,11 @@ static bool is_assoc_header( tidy_include const *include,
   char const *const include_no_ext = path_no_ext( include->rel_path, path_buf );
   //
   // If this include file's name matches the source file's (without
-  // extensions), it's the .h associated with the .c, so sort the this include
-  // file first, e.g.:
+  // extensions), it's the .h associated with the .c, so sort this include file
+  // first, e.g.:
   //
   //      // foo.c
-  //      #include "foo.h"      // associated header sorted first
+  //      #include "foo.h"              // associated header sorted first
   //      #include "a.h"
   //      #include "b.h"
   //
@@ -861,17 +858,14 @@ tidy_include* get_associated_header( void ) {
       goto done;
 
     char path_buf[ PATH_MAX ];
-    char const *const source_base_name = base_name( arg_source_path );
-    char const *const assoc_file_name =
-      config_get_assoc_header( source_base_name );
-    char const *const source_file_no_ext =
-      path_no_ext( source_base_name, path_buf );
+    char const *const source_path_no_ext =
+      path_no_ext( arg_source_path, path_buf );
 
     rb_iterator_t iter;
     rb_iterator_init( &tidy_include_set, &iter );
     for ( tidy_include *include;
           (include = rb_iterator_next( &iter )) != NULL; ) {
-      if ( is_assoc_header( include, assoc_file_name, source_file_no_ext ) ) {
+      if ( is_assoc_header( include, source_path_no_ext ) ) {
         assoc_include = include;
         break;
       }
