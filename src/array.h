@@ -391,8 +391,8 @@ inline void* array_push_back( array_t *array ) {
  * @param array The array to sort.
  * @param cmp_fn The comparison function to use.
  */
-inline void array_sort( array_t *array,
-                        int (*cmp_fn)( void const*, void const* ) ) {
+inline void array_qsort( array_t *array,
+                         int (*cmp_fn)( void const*, void const* ) ) {
   qsort( array->elements, array->len, array->esize, cmp_fn );
 }
 

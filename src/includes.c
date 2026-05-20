@@ -1023,7 +1023,7 @@ void includes_print( void ) {
   include = get_associated_header();
   if ( include != NULL )
     include->sort_rank = TIDY_SORT_ASSOCIATED;
-  array_sort( &include_array, &tidy_include_cmp_for_print );
+  array_qsort( &include_array, &tidy_include_cmp_for_print );
 
   // Print local includes.
   includes_print_visitor_data ipvd = { .print_local = true };
