@@ -35,7 +35,7 @@
 // standard
 #include <stdbool.h>
 #include <stddef.h>                     /* for size_t */
-#include <stdlib.h>                     /* for qsort */
+#include <stdlib.h>                     /* for bsearch, qsort */
 
 /// @endcond
 
@@ -44,8 +44,8 @@
 /// A type for a dynamic array and functions for manipulating said array.
 ///
 /// @remarks
-/// Functions without an `nc` suffix do bounds-checking; functions with an `nc`
-/// (no-check) suffix don't.
+/// Functions without an `_nc` suffix do bounds-checking; functions with an
+/// `_nc` (no-check) suffix don't.
 ///
 /// @par Example
 /// @parblock
@@ -264,6 +264,20 @@ inline void* array_back_nc( array_t const *array ) {
 NODISCARD
 inline void* array_back( array_t const *array ) {
   return array->len > 0 ? array_back_nc( array ) : NULL;
+}
+
+/**
+ * Calls **bsearch**(3) on \a array.
+ *
+ * @param array The array to search.
+ * @param cmp_fn The comparison function to use.
+ * @return Returns a pointer to the matching element or NULL if no match is
+ * found.
+ */
+NODISCARD
+inline void* array_bsearch( array_t *array, void const *key,
+                            int (cmp_fn)( void const*, void const*) ) {
+  return bsearch( key, array->elements, array->len, array->esize, cmp_fn );
 }
 
 /**

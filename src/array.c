@@ -100,6 +100,8 @@ extern inline void* array_at( array_t const*, size_t );
 extern inline void* array_at_nc( array_t const*, size_t );
 extern inline void* array_back( array_t const* );
 extern inline void* array_back_nc( array_t const* );
+extern inline void* array_bsearch( array_t*, void const*,
+                                   int (*)( void const*, void const* ) );
 extern inline void* array_front( array_t const* );
 extern inline void* array_front_nc( array_t const* );
 extern inline void array_init( array_t*, size_t );
