@@ -29,7 +29,7 @@
  */
 
 // local
-#include "pjl_config.h"
+#include "pjl_config.h"                 /* must go first */
 #include "red_black.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -461,14 +461,14 @@ static rb_node_t* rb_tree_minimum( rb_tree_t const *tree, rb_node_t *x_node ) {
 static void rb_tree_reset( rb_tree_t *tree ) {
   assert( tree != NULL );
 
-  tree->root = &tree->nil;
   tree->cmp_fn = NULL;
-  tree->size = 0;
   tree->nil = (rb_node_t){
     .child = { &tree->nil, &tree->nil },
     .parent = &tree->nil,
     .color = RB_BLACK
   };
+  tree->root = &tree->nil;
+  tree->size = 0;
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
