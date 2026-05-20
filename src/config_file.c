@@ -262,12 +262,12 @@ static char const *const TABLE_KINDS[] = {
 /// Otherwise Doxygen generates two entries.
 
 char const       *tidy_associated_header_rel_path;
+bool              tidy_ignore_source_path;
 
 /// @endcond
 
 ////////// local variables ////////////////////////////////////////////////////
 
-static rb_tree_t  ignore_rel_path_set;  ///< Set of files to ignore.
 static rb_tree_t  ignore_symbol_set;    ///< Set of symbols to ignore.
 static array_t    std_c_includes;       ///< Standard-ish C include files.
 static array_t    std_cpp_includes;     ///< Standard C++ include files.
@@ -597,7 +597,6 @@ static void config_cleanup( void ) {
   FREE( tidy_associated_header_rel_path );
   array_cleanup( &std_c_includes, &free_pptr );
   array_cleanup( &std_cpp_includes, &free_pptr );
-  rb_tree_cleanup( &ignore_rel_path_set, /*free_fn=*/NULL );
   rb_tree_cleanup( &ignore_symbol_set, /*free_fn=*/NULL );
   rb_tree_cleanup(
     &symbol_includes_map,
@@ -1020,14 +1019,10 @@ static void ignore_as_argument_parse( char const *config_path,
   assert( table != NULL );
   assert( value != NULL );
 
-  if ( !bool_value_parse( config_path, "ignore-as-argument", value ) )
+  if ( strcmp( table->name, arg_source_path ) != 0 )
     return;
-  PJL_DISCARD_RV(
-    rb_tree_insert(
-      &ignore_rel_path_set, CONST_CAST( char*, table->name ),
-      strlen( table->name ) + 1/*\0*/
-    )
-  );
+  if ( bool_value_parse( config_path, "ignore-as-argument", value ) )
+    tidy_ignore_source_path = true;
 };
 
 /**
@@ -1572,10 +1567,6 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   return best_include != NULL ? best_include->file : NULL;
 }
 
-bool config_ignore_rel_path( char const *rel_path ) {
-  return rb_tree_find( &ignore_rel_path_set, rel_path ) != NULL;
-}
-
 bool config_ignore_symbol( char const *sym_name ) {
   return rb_tree_find( &ignore_symbol_set, sym_name ) != NULL;
 }
@@ -1583,9 +1574,6 @@ bool config_ignore_symbol( char const *sym_name ) {
 void config_init( void ) {
   ASSERT_RUN_ONCE();
 
-  rb_tree_init(
-    &ignore_rel_path_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &strcmp )
-  );
   rb_tree_init(
     &ignore_symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &strcmp )
   );

@@ -53,7 +53,9 @@
  * The associated header for the file being tidied, if any, and only if set
  * explicitly via the `associated-header` configuration key.
  */
-extern char const *tidy_associated_header_rel_path;
+extern char const  *tidy_associated_header_rel_path;
+
+extern bool         tidy_ignore_source_path;
 
 ////////// extern functions ///////////////////////////////////////////////////
 
@@ -65,16 +67,6 @@ extern char const *tidy_associated_header_rel_path;
  */
 NODISCARD
 CXFile config_get_symbol_include( char const *symbol_name );
-
-/**
- * Gets whether \a rel_path should not be checked for violations when given as
- * the command-line argument.
- *
- * @param rel_path The relative path to check.
- * @return Returns `true` only if \a rel_path should be ignored.
- */
-NODISCARD
-bool config_ignore_rel_path( char const *rel_path );
 
 /**
  * Gets whether \a sym_name should be ignored.
