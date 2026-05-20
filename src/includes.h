@@ -156,8 +156,16 @@ NODISCARD
 tidy_include* include_find_by_File( CXFile file );
 
 /**
- * Given a relative path to an include file, e.g.: `clang-c/Index.h`, gets its
- * corresponding include.
+ * Attempts to find an include file by its relative path.
+ *
+ * @remarks
+ * @parblock
+ * Since multiple files can have the same relative path, ones _without_ a
+ * proxy, if any, are preferred.
+ *
+ * To find _all_ include files having \a rel_path, use an rb_iterator on
+ * \ref tidy_include_set instead.
+ * @endparblock
  *
  * @param rel_path The relative path of the include file to find.
  * @return Returns its corresponding tidy_include or NULL if not found.
