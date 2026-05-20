@@ -128,6 +128,8 @@ struct array {
  * @param free_fn A pointer to a function used to free each element or NULL if
  * unnecessary.
  *
+ * @note If \a free_fn is NULL, then this is an O(1) operation; otherwise O(n).
+ *
  * @sa array_init()
  */
 void array_cleanup( array_t *array, array_free_fn_t free_fn );
@@ -135,29 +137,18 @@ void array_cleanup( array_t *array, array_free_fn_t free_fn );
 /**
  * Pushes the elements of \a src_array onto the back of \a dst_array.
  *
- * @note Both arrays _must_ have the same \ref array::esize "element size".
- *
  * @param dst_array The \ref array to push onto.
  * @param src_array The \ref array to push the elements of.  It's \ref
  * array::len "length" is set to zero upon return.
  * @return Returns a pointer to the first pushed element in \a dst_array or
  * NULL if \a src_array is empty.
  *
+ * @note Both arrays _must_ have the same \ref array::esize "element size".
+ *
  * @sa array_push_back()
  */
 PJL_DISCARD
 void* array_push_array_back( array_t *dst_array, array_t *src_array );
-
-/**
- * Appends space for a new element onto the back of \a array.
- *
- * @param array The \ref array to push onto.
- * @return Returns a pointer to the new element.
- *
- * @sa array_push_array_back()
- */
-NODISCARD
-void* array_push_back( array_t *array );
 
 /**
  * Ensures at least \a res_len additional elements of capacity exist in \a
@@ -372,6 +363,20 @@ inline void* array_pop_back_nc( array_t *array ) {
 PJL_DISCARD
 inline void* array_pop_back( array_t *array ) {
   return array->len > 0 ? array_pop_back_nc( array ) : NULL;
+}
+
+/**
+ * Appends space for a new element onto the back of \a array.
+ *
+ * @param array The \ref array to push onto.
+ * @return Returns a pointer to the new element.
+ *
+ * @sa array_push_array_back()
+ */
+NODISCARD
+inline void* array_push_back( array_t *array ) {
+  array_reserve( array, 1 );
+  return array_at_nc( array, array->len++ );
 }
 
 /**

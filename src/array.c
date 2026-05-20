@@ -77,18 +77,9 @@ void* array_push_array_back( array_t *dst_array, array_t *src_array ) {
   return dst_end;
 }
 
-void* array_push_back( array_t *array ) {
-  assert( array != NULL );
-  size_t const new_len = array->len + 1;
-  array_reserve( array, new_len );
-  void *const rv = array_at_nc( array, array->len );
-  array->len = new_len;
-  return rv;
-}
-
 bool array_reserve( array_t *array, size_t res_len ) {
   assert( array != NULL );
-  if ( res_len < array->cap - array->len )
+  if ( res_len <= array->cap - array->len )
     return false;
   if ( array->cap == 0 )
     array->cap = 2;
@@ -114,6 +105,7 @@ extern inline void* array_front_nc( array_t const* );
 extern inline void array_init( array_t*, size_t );
 extern inline void* array_pop_back( array_t* );
 extern inline void* array_pop_back_nc( array_t* );
+extern inline void* array_push_back( array_t* );
 extern inline void array_sort( array_t*, int (*)( void const*, void const* ) );
 
 /// @endcond
