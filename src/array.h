@@ -128,7 +128,7 @@ struct array {
  * @param free_fn A pointer to a function used to free each element or NULL if
  * unnecessary.
  *
- * @note If \a free_fn is NULL, then this is an O(1) operation; otherwise O(n).
+ * @note If \a free_fn is NULL, this is an O(1) operation; otherwise O(N).
  *
  * @sa array_init()
  */
@@ -144,6 +144,7 @@ void array_cleanup( array_t *array, array_free_fn_t free_fn );
  * NULL if \a src_array is empty.
  *
  * @note Both arrays _must_ have the same \ref array::esize "element size".
+ * @note This is an O(N) operation.
  *
  * @sa array_push_back()
  */
@@ -158,6 +159,9 @@ void* array_push_array_back( array_t *dst_array, array_t *src_array );
  * elements for.
  * @param res_len The number of additional elements to reserve.
  * @return Returns `true` only if a memory reallocation was necessary.
+ *
+ * @note This is an O(1) best-case operation and O(N + log R) worst-case (where
+ * R is \a res_len).
  */
 PJL_DISCARD
 bool array_reserve( array_t *array, size_t res_len );
@@ -370,6 +374,8 @@ inline void* array_pop_back( array_t *array ) {
  *
  * @param array The \ref array to push onto.
  * @return Returns a pointer to the new element.
+ *
+ * @note This is an O(1) amortized operation and O(N) worst-case.
  *
  * @sa array_push_array_back()
  */
