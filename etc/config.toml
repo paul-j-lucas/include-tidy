@@ -234,6 +234,7 @@ std-cpp-includes = [
   "version",
 ]
 
+# Gnulib weirdly declares free(3) in its string.h, but C says it's in stdlib.h.
 [free]
 includes = "stdlib.h"
 
