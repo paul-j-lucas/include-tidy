@@ -213,18 +213,18 @@ static void ii_matrix_visitor( CXFile included_file,
   if ( includer_file == NULL )
     return;
 
-  unsigned i;
+  unsigned includer_instance_id;
   if ( clang_File_isEqual( includer_file, source_file ) ) {
-    i = 0;
+    includer_instance_id = 0;
   }
   else {
     tidy_include *const includer = include_find_by_File( includer_file );
     if ( includer == NULL )
       return;
-    i = includer->instance_id;
+    includer_instance_id = includer->instance_id;
   }
 
-  ii_matrix[ i ][ included->instance_id ] = 1;
+  ii_matrix[ includer_instance_id ][ included->instance_id ] = 1;
 }
 #endif /* NEED_II_MATRIX */
 
