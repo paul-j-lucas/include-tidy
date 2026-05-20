@@ -1,5 +1,6 @@
 2026-05-20  Paul J. Lucas <paul@lucasmail.org>
 
+   * man/man1/include-tidy.1, config_file.c: Added add-cpp-includes.
    * config_file.c, config_file.h, include-tidy.c: Replaced ignore_rel_path_set
      and config_ignore_rel_path() with tidy_ignore_source_path.
    * config_file.c, config_file.h, includes.c, test/Makefile.am,
