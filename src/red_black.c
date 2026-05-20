@@ -478,6 +478,7 @@ void rb_iterator_init( rb_tree_t const *tree, rb_iterator_t *iter ) {
   assert( iter != NULL );
 
   iter->curr = tree->root;
+  //    stack                           // intentionally not initialized
   iter->stack_top = 0;
   iter->tree = tree;
 }
