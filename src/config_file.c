@@ -261,7 +261,7 @@ static char const *const TABLE_KINDS[] = {
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-char const *assoc_header_rel_path;
+char const       *tidy_associated_header_rel_path;
 
 /// @endcond
 
@@ -558,7 +558,7 @@ static void associated_header_parse( char const *config_path,
     return;
   char const *const string_value =
     string_value_parse( config_path, "associated-header", value );
-  assoc_header_rel_path = check_strdup( string_value );
+  tidy_associated_header_rel_path = check_strdup( string_value );
 }
 
 /**
@@ -594,7 +594,7 @@ static void color_parse( char const *config_path, toml_table const *table,
  * Cleans-up all configuration data.
  */
 static void config_cleanup( void ) {
-  FREE( assoc_header_rel_path );
+  FREE( tidy_associated_header_rel_path );
   array_cleanup( &std_c_includes, &free_pptr );
   array_cleanup( &std_cpp_includes, &free_pptr );
   rb_tree_cleanup( &ignore_rel_path_set, /*free_fn=*/NULL );

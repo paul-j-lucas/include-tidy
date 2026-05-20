@@ -53,7 +53,7 @@
  * The associated header for the file being tidied, if any, and only if set
  * explicitly via the `associated-header` configuration key.
  */
-extern char const *assoc_header_rel_path;
+extern char const *tidy_associated_header_rel_path;
 
 ////////// extern functions ///////////////////////////////////////////////////
 
