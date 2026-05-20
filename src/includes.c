@@ -79,6 +79,13 @@ typedef struct includes_print_visitor_data  includes_print_visitor_data;
 ////////// structures /////////////////////////////////////////////////////////
 
 /**
+ * Additional data passed to includes_init_visitor().
+ */
+struct includes_init_visitor_data {
+  bool  verbose_printed;                ///< Printed any verbose output?
+};
+
+/**
  * Additional data for includes_print_visitor().
  */
 struct includes_print_visitor_data {
@@ -87,13 +94,6 @@ struct includes_print_visitor_data {
   bool  print_standard;                 ///< Print standard includes?
   bool  printed_any_includes;           ///< Print any includes?
   bool  printed_source_file;            ///< Printed source file name?
-};
-
-/**
- * Additional data passed to includes_init_visitor().
- */
-struct includes_init_visitor_data {
-  bool  verbose_printed;                ///< Printed any verbose output?
 };
 
 ////////// local functions ////////////////////////////////////////////////////
