@@ -728,6 +728,30 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
 }
 
 /**
+ * Gets whether \a include should be printed.
+ *
+ * @param include The tidy_include to check.
+ * @return Returns `true` only if \a include should be printed.
+ */
+NODISCARD
+static bool should_print_include( tidy_include const *include ) {
+  assert( include != NULL );
+
+  if ( include->elide )
+    return false;
+  if ( include->lines.len > 1 )
+    return true;
+  if ( opt_all_includes && (include->is_needed || include->keep) )
+    return true;
+
+  bool const is_direct = include->depth == 0;
+  if ( include->is_needed != is_direct )
+    return true;
+
+  return false;
+}
+
+/**
  * Given a file having either an absolute or relative path, gets its normalized
  * relative path.
  *
@@ -981,17 +1005,12 @@ void includes_print( void ) {
   rb_iterator_t iter;
   rb_iterator_init( &tidy_include_set, &iter );
   while ( (include = rb_iterator_next( &iter )) != NULL ) {
-    if ( include->elide )
-      continue;
-    bool const is_direct = include->depth == 0;
-    if ( (include->is_needed ? (!is_direct || opt_all_includes) : is_direct) ||
-         (include->keep && opt_all_includes) ||
-         include->lines.len > 1 ) {
+    if ( should_print_include( include ) ) {
       *(tidy_include const**)array_push_back( &include_array ) = include;
       if ( !include->keep ) {
         if ( !include->is_needed )
           ++tidy_includes_unnecessary;
-        else if ( !is_direct )
+        else if ( include->depth > 0 )
           ++tidy_includes_missing;
       }
       if ( include->lines.len > 1 ) {
