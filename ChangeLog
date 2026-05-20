@@ -1,5 +1,12 @@
 2026-05-20  Paul J. Lucas <paul@lucasmail.org>
 
+   * config_file.c, config_file.h, include-tidy.c: Replaced ignore_rel_path_set
+     and config_ignore_rel_path() with tidy_ignore_source_path.
+   * config_file.c, config_file.h, includes.c, test/Makefile.am,
+     associated-header.c, associated-header.toml, z-associated-header.h,
+     associated-header.out, associated-header.test: Need only a single
+     assoc_header_rel_path.
+   * array.c, array.h: Added array_bsearch().
    * config_file.c: include_add_explicit_proxy() now iterates over all
      from-includes.
 
