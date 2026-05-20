@@ -1135,30 +1135,36 @@ static void include_add_explicit_proxy( char const *config_path,
   assert( table != NULL );
   assert( value != NULL );
 
-  tidy_include *const from_include = include_find_by_rel_path( value->s );
-  if ( from_include == NULL )
-    return;
   tidy_include *const to_include = include_find_by_rel_path( table->name );
   if ( to_include == NULL )
     return;
 
-  if ( from_include->proxy != NULL ) {
-    print_warning(
-      config_path, value->loc.line, value->loc.col,
-      "\"%s\" already has proxy \"%s\"\n",
-      from_include->rel_path, from_include->proxy->rel_path
-    );
-  }
-  else if ( include_proxy_would_cycle( from_include, to_include ) ) {
-    print_warning(
-      config_path, value->loc.line, value->loc.col,
-      "\"%s\": proxy cycle detected\n", from_include->rel_path
-    );
-  }
-  else {
-    from_include->proxy = to_include;
-    from_include->is_proxy_explicit = true;
-  }
+  rb_iterator_t iter;
+  size_t const  rel_path_len = strlen( value->s );
+
+  rb_iterator_init( &tidy_include_set, &iter );
+  for ( tidy_include *from_include;
+        (from_include = rb_iterator_next( &iter )) != NULL; ) {
+    if ( !path_ends_with( from_include->abs_path, value->s, rel_path_len ) )
+      continue;
+    if ( from_include->proxy != NULL ) {
+      print_warning(
+        config_path, value->loc.line, value->loc.col,
+        "\"%s\" already has proxy \"%s\"\n",
+        from_include->rel_path, from_include->proxy->rel_path
+      );
+    }
+    else if ( include_proxy_would_cycle( from_include, to_include ) ) {
+      print_warning(
+        config_path, value->loc.line, value->loc.col,
+        "\"%s\": proxy cycle detected\n", from_include->rel_path
+      );
+    }
+    else {
+      from_include->proxy = to_include;
+      from_include->is_proxy_explicit = true;
+    }
+  } // for
 }
 
 /**
