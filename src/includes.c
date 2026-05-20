@@ -418,7 +418,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     //
     // If the user includes it unnecessarily, it would print:
     //
-    //      #include <editline/readline.h>  // DELETE line xxxx
+    //      #include <editline/readline.h>  // DELETE LINE xx
     //
     // that the user didn't include with that name.  Therefore, relativize the
     // original CXFile's path.
