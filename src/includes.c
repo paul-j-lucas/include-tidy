@@ -167,7 +167,7 @@ static void ii_matrix_init( CXTranslationUnit tu, unsigned N ) {
   } // for
 
   CXFile const source_file = clang_getFile( tu, arg_source_path );
-  clang_getInclusions( tu, ii_matrix_visitor, source_file );
+  clang_getInclusions( tu, &ii_matrix_visitor, source_file );
 
   for ( unsigned k = 0; k < N; ++k ) {
     for ( unsigned i = 0; i < N; ++i ) {
