@@ -470,7 +470,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       //        </usr/include/sys/signal.h>
       //
       // That is, a standard header (e.g., sys/wait.h) includes a non-standard
-      // a header (e.g., sys/signal.h) so sys/signal.h's includer is set to
+      // header (e.g., sys/signal.h) so sys/signal.h's includer is set to
       // sys/wait.h.
       //
       // Later, the standard header version of the non-standard header (e.g.,
