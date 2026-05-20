@@ -663,9 +663,23 @@ but these are
 .I additionally
 to be considered ``standard'' C include files.
 .IP
-As the only special case to configuration file layering,
+As one of only two special cases to configuration file layering,
 the include files given for
 .B add-c-includes
+are
+.I cumulative
+from all configuration files.
+.TP
+.BI add-cpp-includes " \f1=\fP " [ s " \f1[,\fP " s "\f1]*\fP ]"
+Like
+.BR std-cpp-includes ,
+but these are
+.I additionally
+to be considered ``standard'' C++ include files.
+.IP
+As one of only two special cases to configuration file layering,
+the include files given for
+.B add-cpp-includes
 are
 .I cumulative
 from all configuration files.

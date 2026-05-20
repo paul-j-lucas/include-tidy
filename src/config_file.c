@@ -152,6 +152,8 @@ struct symbol_includes {
 
 static void         add_c_includes_parse( char const*, toml_table const*,
                                           toml_value const* );
+static void         add_cpp_includes_parse( char const*, toml_table const*,
+                                            toml_value const* );
 static void         align_column_parse( char const*, toml_table const*,
                                         toml_value const* );
 static void         all_includes_parse( char const*, toml_table const*,
@@ -224,6 +226,7 @@ static int          tidy_include_cmp_by_rel_path( tidy_include const*,
  */
 static config_key const CONFIG_KEYS[] = {
   { "add-c-includes",     TABLE_INCLUDE_TIDY,   &add_c_includes_parse     },
+  { "add-cpp-includes",   TABLE_INCLUDE_TIDY,   &add_cpp_includes_parse   },
   { "align-column",       TABLE_INCLUDE_TIDY,   &align_column_parse       },
   { "all-includes",       TABLE_INCLUDE_TIDY,   &all_includes_parse       },
   { "associated-header",  TABLE_SOURCE,         &associated_header_parse  },
@@ -494,6 +497,26 @@ static void add_c_includes_parse( char const *config_path,
     string_array_value_parse( config_path, "add-c-includes", value );
   array_push_array_back( &std_c_includes, &add_c_includes );
   array_cleanup( &add_c_includes, /*free_fn=*/NULL );
+}
+
+/**
+ * Parses the value of an `"add-cpp-includes"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table Not used.
+ * @param value The toml_value to parse.
+ */
+static void add_cpp_includes_parse( char const *config_path,
+                                    toml_table const *table,
+                                    toml_value const *value ) {
+  assert( config_path != NULL );
+  (void)table;
+  assert( value != NULL );
+
+  array_t add_cpp_includes =
+    string_array_value_parse( config_path, "add-cpp-includes", value );
+  array_push_array_back( &std_cpp_includes, &add_cpp_includes );
+  array_cleanup( &add_cpp_includes, /*free_fn=*/NULL );
 }
 
 /**
