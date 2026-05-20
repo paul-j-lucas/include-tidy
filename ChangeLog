@@ -1,3 +1,8 @@
+2026-05-20  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c: include_add_explicit_proxy() now iterates over all
+     from-includes.
+
 2026-05-19  Paul J. Lucas <paul@lucasmail.org>
 
    * includes.c: Factored out should_print_include().
