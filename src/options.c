@@ -71,7 +71,7 @@ tidy_error    opt_error;
 unsigned      opt_line_length = OPT_LINE_LENGTH_DEFAULT;
 tidy_verbose  opt_verbose;
 
-char const   *arg_source_path;
+char const   *tidy_source_path;
 
 /// @endcond
 

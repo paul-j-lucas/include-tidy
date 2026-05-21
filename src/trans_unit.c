@@ -79,16 +79,16 @@ static inline char const* plural_s( unsigned long long n ) {
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Checks that arg_source_path actually exists; if not, prints an error message
- * and exits.
+ * Checks that tidy_source_path actually exists; if not, prints an error
+ * message and exits.
  */
-static void check_arg_source_path_exists( void ) {
+static void check_source_path_exists( void ) {
   if ( tidy_tu == NULL ) {
     // libclang isn't specific enough about a failure, so see if the reason is
     // because the source file doesn't exist or isn't readable.
-    FILE *const file = fopen( arg_source_path, "r" );
+    FILE *const file = fopen( tidy_source_path, "r" );
     if ( file == NULL ) {
-      print_error( arg_source_path, 0, 0, "%s\n", STRERROR() );
+      print_error( tidy_source_path, 0, 0, "%s\n", STRERROR() );
       exit( EX_DATAERR );
     }
     fclose( file );
@@ -164,7 +164,7 @@ CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
 
   enum CXErrorCode const error_code = clang_parseTranslationUnit2(
     tidy_index,
-    arg_source_path,
+    tidy_source_path,
     argv + 1, argc - 1,                 // skip argv[0] (program name)
     /*unsaved_files=*/NULL, 
     /*num_unsaved_files=*/0,
@@ -180,7 +180,7 @@ CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
     case CXError_InvalidArguments:
       fatal_error( EX_SOFTWARE, "invalid arguments given to libclang\n" );
     case CXError_Failure:
-      check_arg_source_path_exists();
+      check_source_path_exists();
       break;
     case CXError_Success:
       //

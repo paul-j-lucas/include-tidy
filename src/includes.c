@@ -166,7 +166,7 @@ static void ii_matrix_init( CXTranslationUnit tu, unsigned N ) {
       ii_matrix[i][j] = 0;
   } // for
 
-  CXFile const source_file = clang_getFile( tu, arg_source_path );
+  CXFile const source_file = clang_getFile( tu, tidy_source_path );
   clang_getInclusions( tu, &ii_matrix_visitor, source_file );
 
   for ( unsigned k = 0; k < N; ++k ) {
@@ -191,7 +191,7 @@ static void ii_matrix_init( CXTranslationUnit tu, unsigned N ) {
  * @param inclusion_stack The source locations of includes that lead up to \a
  * included_file being included.
  * @param inclusion_len The length of \a inclusion_stack.
- * @param data The `CXFile` for arg_source_path.
+ * @param data The `CXFile` for tidy_source_path.
  */
 static void ii_matrix_visitor( CXFile included_file,
                                CXSourceLocation *inclusion_stack,
@@ -570,7 +570,7 @@ static void includes_print_visitor( tidy_include const *include,
 
   if ( (opt_verbose & TIDY_VERBOSE_SOURCE_FILE) != 0 &&
        false_set( &ipvd->printed_source_file ) ) {
-    verbose_printf( "%s\n", arg_source_path );
+    verbose_printf( "%s\n", tidy_source_path );
   }
 
   char       *comment = NULL;
@@ -646,7 +646,7 @@ static void includes_print_visitor( tidy_include const *include,
  * being tidied.
  *
  * @param include The include to check.
- * @param source_file_no_ext arg_source_path but without its filename
+ * @param source_file_no_ext tidy_source_path but without its filename
  * extension.
  * @return Returns `true` only if \a include is the associated header for the
  * file currently being tidied.
@@ -848,7 +848,7 @@ tidy_include* get_associated_header( void ) {
   static tidy_include *assoc_include;
 
   RUN_ONCE {
-    char const *const ext = path_ext( arg_source_path );
+    char const *const ext = path_ext( tidy_source_path );
     if ( ext == NULL )
       goto done;
     char const *const lang = get_ext_language( ext );
@@ -859,7 +859,7 @@ tidy_include* get_associated_header( void ) {
 
     char path_buf[ PATH_MAX ];
     char const *const source_path_no_ext =
-      path_no_ext( arg_source_path, path_buf );
+      path_no_ext( tidy_source_path, path_buf );
 
     rb_iterator_t iter;
     rb_iterator_init( &tidy_include_set, &iter );

@@ -572,7 +572,7 @@ void symbols_init( CXTranslationUnit tu ) {
 
   CXCursor const cursor = clang_getTranslationUnitCursor( tu );
   symbols_init_visitor_data sivd = {
-    .source_file = clang_getFile( tu, arg_source_path )
+    .source_file = clang_getFile( tu, tidy_source_path )
   };
   clang_visitChildren( cursor, &symbols_init_visitor, &sivd );
   if ( sivd.verbose_printed )

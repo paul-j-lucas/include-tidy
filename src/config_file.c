@@ -577,7 +577,7 @@ static void associated_header_parse( char const *config_path,
   assert( table != NULL );
   assert( value != NULL );
 
-  if ( strcmp( table->name, arg_source_path ) != 0 )
+  if ( strcmp( table->name, tidy_source_path ) != 0 )
     return;
   char const *const string_value =
     string_value_parse( config_path, "associated-header", value );
@@ -971,7 +971,7 @@ static void elide_includes_parse( char const *config_path,
   assert( table != NULL );
   assert( value != NULL );
 
-  if ( strcmp( table->name, arg_source_path ) != 0 )
+  if ( strcmp( table->name, tidy_source_path ) != 0 )
     return;
   string_or_string_array_parse(
     config_path, table, "elide-includes", value, &elide_include_parse_string
@@ -1042,7 +1042,7 @@ static void ignore_as_argument_parse( char const *config_path,
   assert( table != NULL );
   assert( value != NULL );
 
-  if ( strcmp( table->name, arg_source_path ) != 0 )
+  if ( strcmp( table->name, tidy_source_path ) != 0 )
     return;
   if ( bool_value_parse( config_path, "ignore-as-argument", value ) )
     tidy_ignore_source_path = true;
@@ -1087,7 +1087,7 @@ static void ignore_symbols_parse( char const *config_path,
   assert( table != NULL );
   assert( value != NULL );
 
-  if ( strcmp( table->name, arg_source_path ) != 0 )
+  if ( strcmp( table->name, tidy_source_path ) != 0 )
     return;
   string_or_string_array_parse(
     config_path, table, "ignore-symbols", value, &ignore_symbols_parse_string
@@ -1306,7 +1306,7 @@ static void keep_includes_parse( char const *config_path,
   assert( table != NULL );
   assert( value != NULL );
 
-  if ( strcmp( table->name, arg_source_path ) != 0 )
+  if ( strcmp( table->name, tidy_source_path ) != 0 )
     return;
   string_or_string_array_parse(
     config_path, table, "keep-includes", value, &keep_include_parse_string

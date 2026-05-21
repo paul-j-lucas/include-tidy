@@ -841,10 +841,10 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   // Finally, we have to call **clang** and insert `-isystem` options for the
   // include paths it would use to compile the source file.
 
-  arg_source_path = get_source_path( *pargc, *pargv );
+  tidy_source_path = get_source_path( *pargc, *pargv );
   char const *const clang_path = get_clang_path( *pargc, *pargv );
   char const *const ext =
-    arg_source_path != NULL ? path_ext( arg_source_path ) : NULL;
+    tidy_source_path != NULL ? path_ext( tidy_source_path ) : NULL;
   char const *lang = get_x_language( *pargc, *pargv );
   if ( lang == NULL && ext != NULL )
     lang = get_ext_language( ext );
@@ -1037,7 +1037,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   insert_argv( pargc, pargv, ARRAY_SIZE( CLANG_ARGS ), CLANG_ARGS );
 
   // argv[argc-1] is the source file, but we've already copied it into
-  // arg_source_path, so just NULL it out.
+  // tidy_source_path, so just NULL it out.
   (*pargv)[ --*pargc ] = NULL;
 
   return;

@@ -94,7 +94,7 @@ extern tidy_verbose opt_verbose;          ///< Print verbose output?
 
 ////////// extern argument variables //////////////////////////////////////////
 
-extern char const  *arg_source_path;      ///< The file being tidied.
+extern char const  *tidy_source_path;   ///< The file being tidied.
 
 ////////// extern functions ///////////////////////////////////////////////////
 
