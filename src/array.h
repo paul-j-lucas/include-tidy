@@ -123,7 +123,7 @@ struct array {
  * Cleans-up all memory associated with \a array but does _not_ free \a array
  * itself.
  *
- * @param array The array tree to clean up.  If NULL, does nothing; otherwise,
+ * @param array The array to clean up.  If NULL, does nothing; otherwise,
  * reinitializes \a array upon completion.
  * @param free_fn A pointer to a function used to free each element or NULL if
  * unnecessary.
