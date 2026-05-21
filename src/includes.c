@@ -281,8 +281,8 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       //
       // That is, a local implementation of a standard header (as is done when
       // using Gnulib) eventually does a (non-standard) #include_next to
-      // include the real standard one.  The local header should be a proxy
-      // for the real one.
+      // include the real standard one.  The local header (even though it's
+      // standard) should be a proxy for the real one.
       //
       strcmp( base_name( included->rel_path ),
               base_name( includer->rel_path ) ) == 0 ) {
