@@ -1,3 +1,7 @@
+2026-05-21  Paul J. Lucas <paul@lucasmail.org>
+
+   * trans_unit.c: Now using access() instead of fopen().
+
 2026-05-20  Paul J. Lucas <paul@lucasmail.org>
 
    * man/man1/include-tidy.1, config_file.c: Added add-cpp-includes.
