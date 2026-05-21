@@ -39,8 +39,9 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h>                     /* for exit(3) */
 #include <sysexits.h>
+#include <unistd.h>                     /* for access(2) */
 
 /// @endcond
 
@@ -77,23 +78,6 @@ static inline char const* plural_s( unsigned long long n ) {
 }
 
 ////////// local functions ////////////////////////////////////////////////////
-
-/**
- * Checks that tidy_source_path actually exists; if not, prints an error
- * message and exits.
- */
-static void check_source_path_exists( void ) {
-  if ( tidy_tu == NULL ) {
-    // libclang isn't specific enough about a failure, so see if the reason is
-    // because the source file doesn't exist or isn't readable.
-    FILE *const file = fopen( tidy_source_path, "r" );
-    if ( file == NULL ) {
-      print_error( tidy_source_path, 0, 0, "%s\n", STRERROR() );
-      exit( EX_DATAERR );
-    }
-    fclose( file );
-  }
-}
 
 /**
  * Cleans-up the translation unit.
@@ -180,7 +164,14 @@ CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
     case CXError_InvalidArguments:
       fatal_error( EX_SOFTWARE, "invalid arguments given to libclang\n" );
     case CXError_Failure:
-      check_source_path_exists();
+      //
+      // Libclang isn't specific about the cause of a failure, so see if the
+      // reason is because the source file doesn't exist or isn't readable.
+      //
+      if ( access( tidy_source_path, R_OK ) == -1 ) {
+        print_error( tidy_source_path, 0, 0, "%s\n", STRERROR() );
+        exit( EX_DATAERR );
+      }
       break;
     case CXError_Success:
       //
