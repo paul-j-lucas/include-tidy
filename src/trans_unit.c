@@ -38,7 +38,6 @@
 // standard
 #include <assert.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>                     /* for exit(3) */
 #include <sysexits.h>
 #include <unistd.h>                     /* for access(2) */
