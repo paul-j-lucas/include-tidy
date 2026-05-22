@@ -104,7 +104,7 @@ static unsigned get_next_token_index( CXToken const tokens[],
   return i;
 }
 
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
  * Gets whether it's possible to go from a cursor that refernces a symbol to
  * the cursor that defines said symbol via the set of files that were included.

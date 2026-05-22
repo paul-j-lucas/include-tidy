@@ -92,7 +92,7 @@ struct tidy_include {
   tidy_include   *includer;             ///< Include including this, if any.
   tidy_include   *proxy;                ///< Proxy include, if any.
   unsigned        depth;                ///< Include depth.
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
   unsigned        instance_id;          ///< Instance ID.
 #endif /* NEED_II_MATRIX */
   array_t         lines;                ///< Line number(s) included from.
@@ -203,7 +203,7 @@ NODISCARD
 bool include_proxy_would_cycle( tidy_include const *from_include,
                                 tidy_include const *to_include );
 
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
  * Gets whether \a i_include includes \a j_include, and whether directly or
  * indirectly.

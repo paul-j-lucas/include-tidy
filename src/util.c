@@ -210,7 +210,7 @@ char const* get_cwd( size_t *plen ) {
   return cwd_path_buf;
 }
 
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim ) {
   // ensure &elements[0] is suitably aligned
   size_t const ptrs_size = round_up_pow_2( sizeof(void*) * idim, ealign );
@@ -375,7 +375,7 @@ extern inline char const* (null_if_empty)( char const* );
 
 extern inline bool path_is_absolute( char const* );
 extern inline bool path_is_relative( char const* );
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 extern inline size_t round_up_pow_2( size_t, size_t );
 #endif /* NEED_II_MATRIX */
 extern inline char* strncpy_0( char*, char const*, size_t );

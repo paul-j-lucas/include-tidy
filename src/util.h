@@ -943,7 +943,7 @@ void free_pptr( void *pptr );
 NODISCARD
 char const* get_cwd( size_t *plen );
 
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
  * Dynamically allocates a two-dimensional matrix [\a idim][\a jdim] elements
  * of size \a esize.
@@ -1111,7 +1111,7 @@ char* path_normalize( char const *path );
  */
 _Noreturn void perror_exit( int status );
 
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
  * Rounds \a n up to a multiple of \a multiple.
  *

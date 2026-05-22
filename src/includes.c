@@ -48,7 +48,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>                     /* for PATH_MAX */
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 #include <stdalign.h>
 #endif /* NEED_II_MATRIX */
 #include <stdbool.h>
@@ -69,7 +69,7 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 typedef unsigned char ii_matrix_t;      ///< Element type for ii_matrix.
 #endif /* NEED_II_MATRIX */
 
@@ -98,7 +98,7 @@ struct includes_print_visitor_data {
 
 ////////// local functions ////////////////////////////////////////////////////
 
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 static void           ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
                                          CXClientData );
 #endif /* NEED_II_MATRIX */
@@ -126,6 +126,12 @@ unsigned  tidy_includes_unnecessary;
 ////////// local variables ////////////////////////////////////////////////////
 
 #ifdef NEED_II_MATRIX
+// All code guarded by NEED_II_MATRIX is code used for calculating an include-
+// include matrix (see below).  As some point, I thought it was necessary, but,
+// at least currently, it's apparently not.  But I didn't want to delete the
+// code (even though it still would be in the git repo) just in case it turns
+// out to be necessary after all at some point.
+
 /**
  * Include-include matrix.
  *
@@ -138,8 +144,8 @@ unsigned  tidy_includes_unnecessary;
  * Indicies are values of \ref tidy_include::instance_id "instance_id".
  *
  * The zeroth column is special in that if <code>ii_matrix[0][</code>\e
- * j<code>]</code> is &gt; 0, it means that the souce file includes include
- * file \e j.
+ * j<code>]</code> is &gt; 0, it means that \ref tidy_source_path includes
+ * include file \e j.
  * @endparblock
  */
 static ii_matrix_t  **ii_matrix;
@@ -147,7 +153,7 @@ static ii_matrix_t  **ii_matrix;
 
 ////////// local functions ////////////////////////////////////////////////////
 
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
  * Initializes the \ref ii_matrix.
  *
@@ -335,7 +341,7 @@ static void include_proxies_dump( bool want_explicit ) {
  * Cleans-up set of included files.
  */
 static void includes_cleanup( void ) {
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
   free( ii_matrix );
 #endif /* NEED_II_MATRIX */
   rb_tree_cleanup(
@@ -425,7 +431,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     //
     included->rel_path = tidy_File_getRelativePath( included_file );
 
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
     included->instance_id = tidy_include_set.size;
 #endif /* NEED_II_MATRIX */
 
@@ -969,7 +975,7 @@ bool include_proxy_would_cycle( tidy_include const *from_include,
   return false;
 }
 
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 unsigned includes_include( tidy_include const *i_include,
                            tidy_include const *j_include ) {
   assert( j_include != NULL );
@@ -991,7 +997,7 @@ void includes_init( CXTranslationUnit tu ) {
   clang_visitChildren( cursor, &includes_init_visitor, &iivd );
   if ( iivd.verbose_printed )
     verbose_printf( "\n" );
-#ifdef NEED_II_MATRIX
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
   ii_matrix_init( tu, tidy_include_set.size + 1 );
 #endif /* NEED_II_MATRIX */
 }
