@@ -101,7 +101,7 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(ALL_INCLUDES) ] = "Print all includes, not just those in violation",
   [ COPT(CLANG) ] = "Path of clang to use or \"none\"; default=\"" OPT_CLANG_DEFAULT "\"",
   [ COPT(COLOR) ] = "When to colorize output; default=\"not_file\"",
-  [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"",
+  [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"; default=\"//\"",
   [ COPT(CONFIG) ] = "Configuration file path",
   [ COPT(DEBUG) ] = "Print " PACKAGE " debug output",
   [ COPT(DIRECTORY) ] = "Change directory before tidying",

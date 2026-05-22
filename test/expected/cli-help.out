@@ -7,7 +7,7 @@ tidy options:
   --all-includes      (-A) Print all includes, not just those in violation.
   --clang=ARG         (-C) Path of clang to use or "none"; default="clang".
   --color=ARG         (-k) When to colorize output; default="not_file".
-  --comment-style=ARG (-s) Comment style: "//", "/*", or "none".
+  --comment-style=ARG (-s) Comment style: "//", "/*", or "none"; default="//".
   --config=ARG        (-c) Configuration file path.
   --debug             (-D) Print include-tidy debug output.
   --directory=ARG     (-d) Change directory before tidying.
