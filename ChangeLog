@@ -1,5 +1,8 @@
 2026-05-22  Paul J. Lucas <paul@lucasmail.org>
 
+   * options.c: Removed unnecessary forward declarations.
+   * cli_options.c, cli-help.out, cli-options-error.out: Added default="//" to
+     help.
    * array.h: Added missing '*' to cmp_fn.
    * config_file.c, includes.c, includes.h: Replaced tidy_include::elide and
      keep with handling, an enumeration.
