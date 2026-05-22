@@ -80,13 +80,6 @@ char const   *tidy_source_path;
 static array_t  opt_include_paths;      ///< Array of `-I` paths.
 static bool     opt_is_set_impl[ 256 ]; ///< Was an option set?
 
-////////// local functions ////////////////////////////////////////////////////
-
-NODISCARD
-static unsigned long long parse_ull( char const* );
-
-static void               set_all_or_none( char const**, char const* );
-
 /////////// local functions ///////////////////////////////////////////////////
 
 /**
