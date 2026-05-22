@@ -270,6 +270,7 @@ inline void* array_back( array_t const *array ) {
  * Calls **bsearch**(3) on \a array.
  *
  * @param array The array to search.
+ * @param key The key to search for.
  * @param cmp_fn The comparison function to use.
  * @return Returns a pointer to the matching element or NULL if no match is
  * found.
