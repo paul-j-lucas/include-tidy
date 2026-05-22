@@ -90,7 +90,6 @@ struct tidy_include {
   bool            elide;                ///< Elide even if necessary?
   bool            keep;                 ///< Keep even if unnecessary?
   bool            is_local;             ///< Local include file?
-  bool            is_needed;            ///< Include needed?
   bool            is_proxy_explicit;    ///< Was \ref proxy explicitly added?
   rb_tree_t       symbol_set;           ///< Symbols referenced from this file.
 };

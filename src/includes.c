@@ -577,10 +577,11 @@ static void includes_print_visitor( tidy_include const *include,
   char        delims[2];
   bool        do_print_include = false;
   bool const  is_direct = include->depth == 0;
+  bool const  is_needed = include->symbol_set.size > 0;
   bool        reset_opt_comment_style = false;
   char const *sgr_color = NULL;
 
-  if ( include->is_needed || include->keep ) {
+  if ( is_needed || include->keep ) {
     if ( is_direct || include->keep ) {
       do_print_include = opt_all_includes;
     }
@@ -622,7 +623,7 @@ static void includes_print_visitor( tidy_include const *include,
     for ( unsigned i = 1; i < include->lines.len; ++i ) {
       free( comment );
       unsigned const line = *(unsigned*)array_at_nc( &include->lines, i );
-      if ( include->is_needed ) {
+      if ( is_needed ) {
         check_asprintf( &comment,
           "DELETE LINE %u (same as line %u)", line, line_first
         );
@@ -738,11 +739,13 @@ static bool should_print_include( tidy_include const *include ) {
     return false;
   if ( include->lines.len > 1 )
     return true;
-  if ( opt_all_includes && (include->is_needed || include->keep) )
+
+  bool const is_needed = include->symbol_set.size > 0;
+  if ( opt_all_includes && (is_needed || include->keep) )
     return true;
 
   bool const is_direct = include->depth == 0;
-  if ( include->is_needed != is_direct )
+  if ( is_needed != is_direct )
     return true;
 
   return false;
@@ -898,7 +901,6 @@ tidy_include const* include_add_symbol( CXFile include_file,
     return NULL;
   while ( include->proxy != NULL )
     include = include->proxy;
-  include->is_needed = true;
   PJL_DISCARD_RV( rb_tree_insert( &include->symbol_set, sym, sizeof *sym ) );
   return include;
 }
@@ -1002,7 +1004,7 @@ void includes_print( void ) {
     if ( should_print_include( include ) ) {
       *(tidy_include const**)array_push_back( &include_array ) = include;
       if ( !include->keep ) {
-        if ( !include->is_needed )
+        if ( include->symbol_set.size == 0 )
           ++tidy_includes_unnecessary;
         else if ( include->depth > 0 )
           ++tidy_includes_missing;
