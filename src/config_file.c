@@ -1157,7 +1157,7 @@ static void include_add_explicit_proxy( char const *config_path,
  * having \a rel_path to \a handling.
  *
  * @param rel_path The relative path of the include file to use.
- * @param handline The handling to set.
+ * @param handling The handling to set.
  */
 static void include_handle( char const *rel_path, tidy_handling handling ) {
   assert( rel_path != NULL );
