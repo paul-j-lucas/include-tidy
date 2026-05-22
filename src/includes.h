@@ -51,6 +51,15 @@
 ////////// enumerations ///////////////////////////////////////////////////////
 
 /**
+ * How to handle an include file.
+ */
+enum tidy_handling {
+  TIDY_HANDLE_DEFAULT,                  ///< Default handling.
+  TIDY_HANDLE_ELIDE,                    ///< Elide even if necessary.
+  TIDY_HANDLE_KEEP                      ///< Keep even if unncessary.
+};
+
+/**
  * Sorting "ranks" when includes are printed.
  *
  * @remarks In order for an include's \ref tidy_include::sort_rank "sort_rank"
@@ -66,6 +75,7 @@ enum tidy_sort_rank {
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
+typedef enum    tidy_handling   tidy_handling;
 typedef struct  tidy_include    tidy_include;
 typedef enum    tidy_sort_rank  tidy_sort_rank;
 
@@ -86,9 +96,8 @@ struct tidy_include {
   unsigned        instance_id;          ///< Instance ID.
 #endif /* NEED_II_MATRIX */
   array_t         lines;                ///< Line number(s) included from.
+  tidy_handling   handling;             ///< Handle specially?
   tidy_sort_rank  sort_rank;            ///< Sorting rank.
-  bool            elide;                ///< Elide even if necessary?
-  bool            keep;                 ///< Keep even if unnecessary?
   bool            is_local;             ///< Local include file?
   bool            is_proxy_explicit;    ///< Was \ref proxy explicitly added?
   rb_tree_t       symbol_set;           ///< Symbols referenced from this file.

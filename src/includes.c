@@ -561,7 +561,9 @@ static void includes_print_visitor( tidy_include const *include,
   assert( include != NULL );
   assert( ipvd != NULL );
 
-  if ( include->keep && !opt_all_includes )
+  bool const keep = include->handling == TIDY_HANDLE_KEEP;
+
+  if ( keep && !opt_all_includes )
     return;
   if ( ipvd->print_local != include->is_local )
     return;
@@ -581,8 +583,8 @@ static void includes_print_visitor( tidy_include const *include,
   bool        reset_opt_comment_style = false;
   char const *sgr_color = NULL;
 
-  if ( is_needed || include->keep ) {
-    if ( is_direct || include->keep ) {
+  if ( is_needed || keep ) {
+    if ( is_direct || keep ) {
       do_print_include = opt_all_includes;
     }
     else {
@@ -735,14 +737,16 @@ NODISCARD
 static bool should_print_include( tidy_include const *include ) {
   assert( include != NULL );
 
-  if ( include->elide )
+  if ( include->handling == TIDY_HANDLE_ELIDE )
     return false;
   if ( include->lines.len > 1 )
     return true;
 
   bool const is_needed = include->symbol_set.size > 0;
-  if ( opt_all_includes && (is_needed || include->keep) )
+  if ( opt_all_includes &&
+       (is_needed || include->handling == TIDY_HANDLE_KEEP) ) {
     return true;
+  }
 
   bool const is_direct = include->depth == 0;
   if ( is_needed != is_direct )
@@ -1003,7 +1007,7 @@ void includes_print( void ) {
   while ( (include = rb_iterator_next( &iter )) != NULL ) {
     if ( should_print_include( include ) ) {
       *(tidy_include const**)array_push_back( &include_array ) = include;
-      if ( !include->keep ) {
+      if ( include->handling != TIDY_HANDLE_KEEP ) {
         if ( include->symbol_set.size == 0 )
           ++tidy_includes_unnecessary;
         else if ( include->depth > 0 )

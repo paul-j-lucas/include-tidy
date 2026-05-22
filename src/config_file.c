@@ -188,6 +188,7 @@ static void         ignore_symbols_parse( char const*, toml_table const*,
                                           toml_value const* );
 static void         ignore_symbols_parse_string( char const*, toml_table const*,
                                                  toml_value const* );
+static void         include_handle( char const*, tidy_handling );
 static void         includes_parse( char const*, toml_table const*,
                                     toml_value const* );
 static void         includes_parse_string( char const*, toml_table const*,
@@ -915,33 +916,14 @@ static void config_parse( char const *config_path, FILE *config_file ) {
 }
 
 /**
- * Marks the include file(s) having \a rel_path as ``elide.''
- *
- * @param rel_path The relative path of the include file to mark.
- */
-static void elide_include( char const *rel_path ) {
-  assert( rel_path != NULL );
-
-  rb_iterator_t iter;
-  size_t const  rel_path_len = strlen( rel_path );
-
-  rb_iterator_init( &tidy_include_set, &iter );
-  for ( tidy_include *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( path_ends_with( include->abs_path, rel_path, rel_path_len ) )
-      include->elide = true;
-  } // for
-}
-
-/**
  * Parses a single string value of an `"elide-includes"` key.
  *
  * @param config_path Not used.
  * @param table Not used.
  * @param value The string toml_value.
  *
- * @sa elide_include()
  * @sa elide_includes_parse()
+ * @sa include_handle()
  */
 static void elide_include_parse_string( char const *config_path,
                                         toml_table const *table,
@@ -951,7 +933,7 @@ static void elide_include_parse_string( char const *config_path,
   assert( value != NULL );
   assert( value->type == TOML_STRING );
 
-  elide_include( value->s );
+  include_handle( value->s, TIDY_HANDLE_ELIDE );
 }
 
 /**
@@ -961,8 +943,8 @@ static void elide_include_parse_string( char const *config_path,
  * @param table The current toml_table.
  * @param value The toml_value to parse.
  *
- * @sa elide_include()
  * @sa elide_include_parse_string()
+ * @sa include_handle()
  */
 static void elide_includes_parse( char const *config_path,
                                   toml_table const *table,
@@ -1171,6 +1153,27 @@ static void include_add_explicit_proxy( char const *config_path,
 }
 
 /**
+ * Sets the \ref tidy_include::handling "handling" field of the include file(s)
+ * having \a rel_path to \a handling.
+ *
+ * @param rel_path The relative path of the include file to use.
+ * @param handline The handling to set.
+ */
+static void include_handle( char const *rel_path, tidy_handling handling ) {
+  assert( rel_path != NULL );
+
+  rb_iterator_t iter;
+  size_t const  rel_path_len = strlen( rel_path );
+
+  rb_iterator_init( &tidy_include_set, &iter );
+  for ( tidy_include *include;
+        (include = rb_iterator_next( &iter )) != NULL; ) {
+    if ( path_ends_with( include->abs_path, rel_path, rel_path_len ) )
+      include->handling = handling;
+  } // for
+}
+
+/**
  * Parses the value of an `"includes"` key.
  *
  * @param config_path The full path to the configurarion file.
@@ -1247,35 +1250,13 @@ static bool is_standard_include( char const *rel_path,
 }
 
 /**
- * Marks the include file(s) having \a rel_path as ``kept.''
- *
- * @param rel_path The relative path of the include file to mark.
- *
- * @sa keep_include_parse_string()
- * @sa keep_includes_parse()
- */
-static void keep_include( char const *rel_path ) {
-  assert( rel_path != NULL );
-
-  rb_iterator_t iter;
-  size_t const  rel_path_len = strlen( rel_path );
-
-  rb_iterator_init( &tidy_include_set, &iter );
-  for ( tidy_include *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( path_ends_with( include->abs_path, rel_path, rel_path_len ) )
-      include->keep = true;
-  } // for
-}
-
-/**
  * Parses a single string value of a `"keep-includes"` key.
  *
  * @param config_path The full path to the configurarion file.
  * @param table The table name.
  * @param value The string toml_value to parse.
  *
- * @sa keep_include()
+ * @sa include_handle()
  * @sa keep_includes_parse()
  */
 static void keep_include_parse_string( char const *config_path,
@@ -1286,7 +1267,7 @@ static void keep_include_parse_string( char const *config_path,
   assert( value != NULL );
   assert( value->type == TOML_STRING );
 
-  keep_include( value->s );
+  include_handle( value->s, TIDY_HANDLE_KEEP );
 }
 
 /**
@@ -1296,7 +1277,7 @@ static void keep_include_parse_string( char const *config_path,
  * @param table The current toml_table.
  * @param value The toml_value to parse.
  *
- * @sa keep_include()
+ * @sa include_handle()
  * @sa keep_include_parse_string()
  */
 static void keep_includes_parse( char const *config_path,
@@ -1327,7 +1308,7 @@ static void keep_parse( char const *config_path, toml_table const *table,
   assert( value != NULL );
 
   if ( bool_value_parse( config_path, "keep", value ) )
-    keep_include( table->name );
+    include_handle( table->name, TIDY_HANDLE_KEEP );
 }
 
 /**
