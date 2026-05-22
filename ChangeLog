@@ -1,5 +1,6 @@
 2026-05-21  Paul J. Lucas <paul@lucasmail.org>
 
+   * trans_unit.c: Removed #include <stdio.h>.
    * trans_unit.c: Now using access() instead of fopen().
 
 2026-05-20  Paul J. Lucas <paul@lucasmail.org>
