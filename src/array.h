@@ -276,7 +276,7 @@ inline void* array_back( array_t const *array ) {
  */
 NODISCARD
 inline void* array_bsearch( array_t *array, void const *key,
-                            int (cmp_fn)( void const*, void const*) ) {
+                            int (*cmp_fn)( void const*, void const*) ) {
   return bsearch( key, array->elements, array->len, array->esize, cmp_fn );
 }
 
