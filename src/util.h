@@ -933,16 +933,6 @@ fnv1a_t fnv1a_s( char const *s );
  */
 void free_pptr( void *pptr );
 
-/**
- * Gets the absolute path of the current working directory.
- *
- * @param plen If not NULL, the length of the path is put here.
- * @return Returns the absolute path of the current working directory.  The
- * path is guarenteed to end with `'/'`.
- */
-NODISCARD
-char const* get_cwd( size_t *plen );
-
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
  * Dynamically allocates a two-dimensional matrix [\a idim][\a jdim] elements
@@ -981,6 +971,16 @@ inline char* nonconst_null_if_empty( char *s ) {
 
 #define null_if_empty(S)          NONCONST_OVERLOAD( null_if_empty, (S) )
 /// @endcond
+
+/**
+ * Gets the absolute path of the current working directory.
+ *
+ * @param plen If not NULL, the length of the path is put here.
+ * @return Returns the absolute path of the current working directory.  The
+ * path is guarenteed to end with `'/'`.
+ */
+NODISCARD
+char const* path_cwd( size_t *plen );
 
 /**
  * Gets whether \a abs_path ends with \a rel_path.

@@ -189,7 +189,21 @@ void free_pptr( void *pptr ) {
     free( *POINTER_CAST( void**, pptr ) );
 }
 
-char const* get_cwd( size_t *plen ) {
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
+void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim ) {
+  // ensure &elements[0] is suitably aligned
+  size_t const ptrs_size = round_up_pow_2( sizeof(void*) * idim, ealign );
+  size_t const row_size = esize * jdim;
+  // allocate the row pointers followed by the elements
+  void **const rows = MALLOC( char, ptrs_size + idim * row_size );
+  char *const elements = POINTER_CAST( char*, rows ) + ptrs_size;
+  for ( size_t i = 0; i < idim; ++i )
+    rows[i] = &elements[ i * row_size ];
+  return rows;
+}
+#endif /* NEED_II_MATRIX */
+
+char const* path_cwd( size_t *plen ) {
   static char   cwd_path_buf[ PATH_MAX ];
   static size_t cwd_path_len;
 
@@ -209,20 +223,6 @@ char const* get_cwd( size_t *plen ) {
     *plen = cwd_path_len;
   return cwd_path_buf;
 }
-
-#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim ) {
-  // ensure &elements[0] is suitably aligned
-  size_t const ptrs_size = round_up_pow_2( sizeof(void*) * idim, ealign );
-  size_t const row_size = esize * jdim;
-  // allocate the row pointers followed by the elements
-  void **const rows = MALLOC( char, ptrs_size + idim * row_size );
-  char *const elements = POINTER_CAST( char*, rows ) + ptrs_size;
-  for ( size_t i = 0; i < idim; ++i )
-    rows[i] = &elements[ i * row_size ];
-  return rows;
-}
-#endif /* NEED_II_MATRIX */
 
 bool path_ends_with( char const *abs_path, char const *rel_path,
                      size_t rel_path_len ) {
@@ -250,7 +250,7 @@ bool path_is_local( char const *abs_path ) {
   assert( abs_path[0] == '/' );
 
   size_t cwd_path_len;
-  char const *const cwd_path = get_cwd( &cwd_path_len );
+  char const *const cwd_path = path_cwd( &cwd_path_len );
   return strncmp( abs_path, cwd_path, cwd_path_len ) == 0;
 }
 
@@ -298,7 +298,7 @@ char* path_normalize( char const *path ) {
     path = path_no_dot_slash( path );
     if ( strstr( path, "../" ) != NULL ) {
       size_t cwd_path_len;
-      char const *const cwd_path = get_cwd( &cwd_path_len );
+      char const *const cwd_path = path_cwd( &cwd_path_len );
       strbuf_putsn( &in_path, cwd_path, cwd_path_len );
     }
   }

@@ -708,7 +708,7 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
       ++case_num;
       strbuf_reset( path_buf );
       size_t cwd_path_len;
-      char const *const cwd_path = get_cwd( &cwd_path_len );
+      char const *const cwd_path = path_cwd( &cwd_path_len );
       strbuf_putsn( path_buf, cwd_path, cwd_path_len );
       strbuf_paths( path_buf, PACKAGE ".toml" );
       config_file = config_open( path_buf->str, CONFIG_OPT_IGNORE_ENOENT );
