@@ -95,8 +95,8 @@ bool path_ends_with( char const *abs_path, char const *rel_path,
 char const* path_ext( char const *path ) {
   assert( path != NULL );
   // Do path_basename() first for a case like "a.b/c".
-  char const *const file_name = path_basename( path );
-  char const *const dot = strrchr( file_name, '.' );
+  char const *const base_name = path_basename( path );
+  char const *const dot = strrchr( base_name, '.' );
   return dot != NULL && dot[1] != '\0' ? dot + 1 : NULL;
 }
 
