@@ -1,5 +1,7 @@
 2026-05-25  Paul J. Lucas <paul@lucasmail.org>
 
+   * include-tidy.c, includes.c, includes.h, symbols.c, symbols.h,
+     trans_unit.c, trans_unit.h: Now using tidy_tu global.
    * include-tidy.c, includes.c, path_util.c, path_util.h, unit_test.c:
      s/base_name/path_basename/
    * src/Makefile.am, cli_options.c, config_file.c, include-tidy.c, includes.c,
