@@ -348,15 +348,15 @@ static char const* get_source_path( int argc, char const *argv[] ) {
 
   // The source path tends to be last (or near it), so iterate backwards.
   for ( int i = argc - 1; i >= 1; --i ) {
-    char const *const argi = argv[i];
-    if ( unlikely( argi[0] == '\0' ) || argi[0] == '-' )
+    char const *const argv_i = argv[i];
+    if ( unlikely( argv_i[0] == '\0' ) || argv_i[0] == '-' )
       continue;
-    char const *const ext = path_ext( argi );
+    char const *const ext = path_ext( argv_i );
     if ( ext == NULL )
       continue;
     char const *const lang = get_ext_language( ext );
     if ( lang != NULL )
-      return argi;
+      return argv_i;
   } // for
 
   return NULL;
