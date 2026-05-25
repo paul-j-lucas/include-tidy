@@ -42,6 +42,7 @@ include_tidy_SOURCES =	array.c array.h \
 			include-tidy.c include-tidy.h \
 			includes.c includes.h \
 			options.c options.h \
+			path_util.c path_util.h \
 			pjl_config.h config.h \
 			print.c print.h \
 			red_black.c red_black.h \
@@ -55,6 +56,7 @@ include_tidy_SOURCES =	array.c array.h \
 
 BASE_TEST_SOURCES =	pjl_config.h config.h \
 			array.c array.h \
+			path_util.c path_util.h \
 			strbuf.c strbuf.h \
 			type_traits.h \
 			util.c util.h \

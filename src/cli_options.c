@@ -28,6 +28,7 @@
 #include "cli_options.h"
 #include "include-tidy.h"
 #include "options.h"
+#include "path_util.h"
 #include "print.h"
 #include "strbuf.h"
 #include "tidy_util.h"

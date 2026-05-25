@@ -31,6 +31,7 @@
 #include "color.h"
 #include "config_file.h"
 #include "options.h"
+#include "path_util.h"
 #include "print.h"
 #include "red_black.h"
 #include "strbuf.h"

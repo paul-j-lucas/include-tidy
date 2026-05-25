@@ -20,6 +20,7 @@
 
 // local
 #include "pjl_config.h"
+#include "path_util.h"
 #include "util.h"
 #include "unit_test.h"
 

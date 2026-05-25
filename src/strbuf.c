@@ -26,6 +26,7 @@
 // local
 #include "pjl_config.h"                 /* must go first */
 #include "strbuf.h"
+#include "path_util.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE

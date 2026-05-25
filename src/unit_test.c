@@ -21,6 +21,7 @@
 // local
 #include "pjl_config.h"
 #include "unit_test.h"
+#include "path_util.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE

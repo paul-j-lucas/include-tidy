@@ -29,6 +29,7 @@
 #include "options.h"
 #include "array.h"
 #include "color.h"
+#include "path_util.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
