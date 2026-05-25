@@ -201,7 +201,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
 #endif /* __APPLE__ */
 
       char const *const include_path = str_trim( line_buf );
-      if ( include_path[0] != '/' )
+      if ( unlikely( path_is_relative( include_path ) ) )
         continue;
 
       // Insert new -isystem option before last argv (the filename).
