@@ -42,7 +42,6 @@
 #include <stdio.h>
 #include <stdlib.h>                     /* for malloc(), ... */
 #include <string.h>
-#include <strings.h>                    /* for strcasecmp() */
 #include <sysexits.h>
 #include <unistd.h>                     /* for close(2), getpid(3) */
 
@@ -103,28 +102,6 @@ static fnv1a_t const FNV1A_PRIME = 1099511628211UL;
 char const WS_CHARS[] =           " \n\t\r\f\v";
 
 /// @endcond
-
-////////// local functions ////////////////////////////////////////////////////
-
-#ifndef NDEBUG
-/**
- * Checks whether \a s is any one of \a matches, case-insensitive.
- *
- * @param s The null-terminated string to check or null.  May be NULL.
- * @param matches The null-terminated array of values to check against.
- * @return Returns `true` only if \a s is among \a matches.
- */
-NODISCARD
-static bool str_is_any( char const *s, char const *const matches[static 2] ) {
-  if ( s != NULL ) {
-    for ( char const *const *match = matches; *match != NULL; ++match ) {
-      if ( strcasecmp( s, *match ) == 0 )
-        return true;
-    } // for
-  }
-  return false;
-}
-#endif /* NDEBUG */
 
 ////////// extern functions ///////////////////////////////////////////////////
 
@@ -334,20 +311,6 @@ void perror_exit( int status ) {
   perror( prog_name );
   exit( status );
 }
-
-#ifndef NDEBUG
-bool str_is_affirmative( char const *s ) {
-  static char const *const AFFIRMATIVES[] = {
-    "1",
-    "t",
-    "true",
-    "y",
-    "yes",
-    NULL
-  };
-  return str_is_any( s, AFFIRMATIVES );
-}
-#endif /* NDEBUG */
 
 char* str_trim( char *s ) {
   assert( s != NULL );

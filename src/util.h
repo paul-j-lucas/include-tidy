@@ -1125,18 +1125,6 @@ inline size_t round_up_pow_2( size_t n, size_t multiple ) {
 }
 #endif /* NEED_II_MATRIX */
 
-#ifndef NDEBUG
-/**
- * Checks whether \a s is an affirmative value.  An affirmative value is one of
- * 1, t, true, y, or yes, case-insensitive.
- *
- * @param s The null-terminated string to check or null.
- * @return Returns `true` only if \a s is affirmative.
- */
-NODISCARD
-bool str_is_affirmative( char const *s );
-#endif /* NDEBUG */
-
 /**
  * A variant of **strncpy**(3) that always null-terminates \a dst.
  *
