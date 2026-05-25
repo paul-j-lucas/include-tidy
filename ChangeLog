@@ -1,3 +1,10 @@
+2026-05-24  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c: Now using insert_argv() in add_clang_include_paths().
+   * cli_options.c: Added argi parameter to insert_argv().
+   * cli_options.c: Now using memcpy().
+   * cli_options.c: Now using path_is_relative().
+
 2026-05-22  Paul J. Lucas <paul@lucasmail.org>
 
    * options.c: Removed unnecessary forward declarations.
