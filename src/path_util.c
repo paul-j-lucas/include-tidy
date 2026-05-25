@@ -39,7 +39,7 @@
 #include <stdlib.h>                     /* for malloc(), ... */
 #include <string.h>
 #include <sysexits.h>
-#include <unistd.h>                     /* for close(2), getpid(3) */
+#include <unistd.h>                     /* for getcwd() */
 
 /// @endcond
 
