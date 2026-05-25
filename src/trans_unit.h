@@ -40,7 +40,8 @@
  */
 
 // extern variables
-extern enum CXLanguageKind tidy_lang;   ///< Source file language.
+extern enum CXLanguageKind  tidy_lang;  ///< Source file language.
+extern CXTranslationUnit    tidy_tu;    ///< Translation unit.
 
 ////////// extern functions ///////////////////////////////////////////////////
 
@@ -48,19 +49,16 @@ extern enum CXLanguageKind tidy_lang;   ///< Source file language.
  * Checks for translation unit errors and prints them, if any.
  *
  * @note If there are errors, this function does not return.
- *
- * @param tu The translation unit to use.
  */
-void trans_unit_check_for_errors( CXTranslationUnit tu );
+void trans_unit_check_for_errors( void );
 
 /**
- * Initializes the translation unit by parsing \ref tidy_source_path.
+ * Initializes \ref tidy_tu by parsing \ref tidy_source_path.
  *
  * @param argc The command-line argument count.
  * @param argv The command-line argument values.
- * @return Returns the initialized translation unit.
  */
-CXTranslationUnit trans_unit_init( int argc, char const *const argv[] );
+void trans_unit_init( int argc, char const *const argv[] );
 
 ///////////////////////////////////////////////////////////////////////////////
 

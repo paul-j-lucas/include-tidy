@@ -35,9 +35,6 @@
 #include "symbols.h"
 #include "trans_unit.h"
 
-// libclang
-#include <clang-c/Index.h>
-
 // system
 #include <sysexits.h>
 
@@ -94,13 +91,13 @@ int main( int argc, char const *argv[] ) {
   options_init();
   cli_options_init( &argc, &argv );
   colors_init();
-  CXTranslationUnit tu = trans_unit_init( argc, argv );
-  includes_init( tu );
+  trans_unit_init( argc, argv );
+  includes_init();
   config_init();
   if ( !tidy_ignore_source_path ) {
-    trans_unit_check_for_errors( tu );
-    implicit_proxies_init( tu );
-    symbols_init( tu );
+    trans_unit_check_for_errors();
+    implicit_proxies_init();
+    symbols_init();
     includes_print();
   }
   return tidy_status();

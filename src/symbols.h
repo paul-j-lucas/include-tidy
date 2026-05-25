@@ -29,13 +29,6 @@
 // local
 #include "pjl_config.h"
 
-/// @cond DOXYGEN_IGNORE
-
-// libclang
-#include <clang-c/Index.h>
-
-/// @endcond
-
 /**
  * @defgroup tidy-symbols-group Symbols
  * Structures and functions for keeping track of symbols referenced.
@@ -49,7 +42,7 @@ typedef struct tidy_symbol tidy_symbol;
 ////////// structures /////////////////////////////////////////////////////////
 
 /**
- * A symbol declared in a translation unit.
+ * A symbol used in a translation unit.
  */
 struct tidy_symbol {
   char const *name;                     ///< Symbol name.
@@ -58,11 +51,9 @@ struct tidy_symbol {
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Initializes the internal set of all symbols from the given translation unit.
- *
- * @param tu The translation unit to use.
+ * Initializes the internal set of all symbols in the translation unit.
  */
-void symbols_init( CXTranslationUnit tu );
+void symbols_init( void );
 
 /**
  * Compares two \ref tidy_symbol objects.

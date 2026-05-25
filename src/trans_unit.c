@@ -52,7 +52,6 @@
 ////////// local variables ////////////////////////////////////////////////////
 
 static CXIndex            tidy_index;   ///< Current libclang index.
-static CXTranslationUnit  tidy_tu;      ///< Current libclang translation unit.
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -60,6 +59,7 @@ static CXTranslationUnit  tidy_tu;      ///< Current libclang translation unit.
 /// Otherwise Doxygen generates two entries.
 
 enum CXLanguageKind       tidy_lang;
+CXTranslationUnit         tidy_tu;
 
 /// @endcond
 
@@ -90,17 +90,17 @@ static void trans_unit_cleanup( void ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void trans_unit_check_for_errors( CXTranslationUnit tu ) {
-  assert( tu != NULL );
+void trans_unit_check_for_errors( void ) {
+  assert( tidy_tu != NULL );
 
-  unsigned const diag_count = clang_getNumDiagnostics( tu );
+  unsigned const diag_count = clang_getNumDiagnostics( tidy_tu );
   if ( diag_count == 0 )
     return;
 
   unsigned error_count = 0;
 
   for ( unsigned i = 0; i < diag_count; ++i ) {
-    CXDiagnostic const diag = clang_getDiagnostic( tu, i );
+    CXDiagnostic const diag = clang_getDiagnostic( tidy_tu, i );
     switch ( clang_getDiagnosticSeverity( diag ) ) {
       case CXDiagnostic_Error:
       case CXDiagnostic_Fatal:
@@ -133,7 +133,7 @@ void trans_unit_check_for_errors( CXTranslationUnit tu ) {
   }
 }
 
-CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
+void trans_unit_init( int argc, char const *const argv[] ) {
   ASSERT_RUN_ONCE();
   assert( argc > 0 );
   assert( argv != NULL );
@@ -183,8 +183,6 @@ CXTranslationUnit trans_unit_init( int argc, char const *const argv[] ) {
 
   CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
   tidy_lang = clang_getCursorLanguage( cursor );
-
-  return tidy_tu;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

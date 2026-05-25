@@ -132,13 +132,11 @@ NODISCARD
 tidy_include* get_associated_header( void );
 
 /**
- * Initializes the implicit include proxies for the given translation unit.
- *
- * @param tu The translation unit to use.
+ * Initializes the implicit include proxies for the translation unit.
  *
  * @sa includes_init()
  */
-void implicit_proxies_init( CXTranslationUnit tu );
+void implicit_proxies_init( void );
 
 /**
  * Adds \a sym to the set of symbols that are used in the file being tidied and
@@ -223,11 +221,9 @@ unsigned includes_include( tidy_include const *i_include,
 /**
  * Initializes the set of files included in the given translation unit.
  *
- * @param tu The translation unit to use.
- *
  * @sa implicit_proxies_init()
  */
-void includes_init( CXTranslationUnit tu );
+void includes_init( void );
 
 /**
  * Prints include files.

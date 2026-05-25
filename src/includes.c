@@ -37,6 +37,7 @@
 #include "strbuf.h"
 #include "symbols.h"
 #include "tidy_util.h"
+#include "trans_unit.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -158,13 +159,12 @@ static ii_matrix_t  **ii_matrix;
 /**
  * Initializes the \ref ii_matrix.
  *
- * @param tu The translation unit to use.
  * @param N The size of the matrix, i.e., <code>[</code>\e N<code>][</code>\e
  * N<code>]</code>.
  *
  * @sa [Floyd-Warshall algorithm](https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm)
  */
-static void ii_matrix_init( CXTranslationUnit tu, unsigned N ) {
+static void ii_matrix_init( unsigned N ) {
   ii_matrix = POINTER_CAST( ii_matrix_t**,
     matrix2d_new( sizeof(ii_matrix_t), alignof(ii_matrix_t), N, N )
   );
@@ -173,8 +173,8 @@ static void ii_matrix_init( CXTranslationUnit tu, unsigned N ) {
       ii_matrix[i][j] = 0;
   } // for
 
-  CXFile const source_file = clang_getFile( tu, tidy_source_path );
-  clang_getInclusions( tu, &ii_matrix_visitor, source_file );
+  CXFile const source_file = clang_getFile( tidy_tu, tidy_source_path );
+  clang_getInclusions( tidy_tu, &ii_matrix_visitor, source_file );
 
   for ( unsigned k = 0; k < N; ++k ) {
     for ( unsigned i = 0; i < N; ++i ) {
@@ -890,10 +890,10 @@ done:
   return assoc_include;
 }
 
-void implicit_proxies_init( CXTranslationUnit tu ) {
+void implicit_proxies_init( void ) {
   ASSERT_RUN_ONCE();
 
-  CXCursor const cursor = clang_getTranslationUnitCursor( tu );
+  CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
   clang_visitChildren( cursor, &implicit_proxies_visitor, /*data=*/NULL );
 
   if ( (opt_verbose & TIDY_VERBOSE_PROXIES_EXPLICIT) != 0 )
@@ -985,7 +985,7 @@ unsigned includes_include( tidy_include const *i_include,
 }
 #endif /* NEED_II_MATRIX */
 
-void includes_init( CXTranslationUnit tu ) {
+void includes_init( void ) {
   ASSERT_RUN_ONCE();
   rb_tree_init(
     &tidy_include_set, RB_DINT,
@@ -994,12 +994,12 @@ void includes_init( CXTranslationUnit tu ) {
   ATEXIT( &includes_cleanup );
 
   includes_init_visitor_data iivd = { 0 };
-  CXCursor cursor = clang_getTranslationUnitCursor( tu );
+  CXCursor cursor = clang_getTranslationUnitCursor( tidy_tu );
   clang_visitChildren( cursor, &includes_init_visitor, &iivd );
   if ( iivd.verbose_printed )
     verbose_printf( "\n" );
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-  ii_matrix_init( tu, tidy_include_set.size + 1 );
+  ii_matrix_init( tidy_include_set.size + 1 );
 #endif /* NEED_II_MATRIX */
 }
 

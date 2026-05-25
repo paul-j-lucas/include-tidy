@@ -32,6 +32,7 @@
 #include "options.h"
 #include "print.h"
 #include "red_black.h"
+#include "trans_unit.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -161,9 +162,8 @@ static CXCursor macro_get_cursor_by_name( CXToken token, CXCursor scope_cursor,
   if ( clang_getTokenKind( token ) != CXToken_Identifier )
     return rv_cursor;
 
-  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( scope_cursor );
-  CXString const          token_cxs = clang_getTokenSpelling( tu, token );
-  char const *const       token_cs = clang_getCString( token_cxs );
+  CXString const    token_cxs = clang_getTokenSpelling( tidy_tu, token );
+  char const *const token_cs = clang_getCString( token_cxs );
 
   if ( strcmp( token_cs, "__VA_ARGS__" ) != 0 &&
        strcmp( token_cs, "__VA_OPT__" ) != 0 &&
@@ -178,14 +178,13 @@ static CXCursor macro_get_cursor_by_name( CXToken token, CXCursor scope_cursor,
 /**
  * Gets the names of all of a macro's parameters.
  *
- * @param tu The translation unit to use.
  * @param tokens The array of macro tokens.
  * @param token_count The length of \a tokens.
  * @param param_set The set to add the parameter names to.
  * @return Returns the index of the token one past the `)`.
  */
-static unsigned macro_get_params( CXTranslationUnit tu, CXToken const tokens[],
-                                  unsigned token_count, rb_tree_t *param_set ) {
+static unsigned macro_get_params( CXToken const tokens[], unsigned token_count,
+                                  rb_tree_t *param_set ) {
   assert( param_set != NULL );
 
   unsigned rv_idx = 1;
@@ -201,7 +200,7 @@ static unsigned macro_get_params( CXTranslationUnit tu, CXToken const tokens[],
         continue;
     } // switch
 
-    CXString const    token_cxs = clang_getTokenSpelling( tu, tokens[i] );
+    CXString const    token_cxs = clang_getTokenSpelling( tidy_tu, tokens[i] );
     char const *const token_cs = clang_getCString( token_cxs );
 
     switch ( kind ) {
@@ -232,22 +231,20 @@ static unsigned macro_get_params( CXTranslationUnit tu, CXToken const tokens[],
 /**
  * Gets the cursor for the fully qualified symbol from \a tokens.
  *
- * @param tu The translation to use.
  * @param tokens The array of macro tokens.
  * @param token_count The length of \a tokens.
  * @param ptoken_idx A pointer to the current index within \a tokens.
  * @param param_set The set of macro parameter names.
  * @return Returns said cursor or the null cursor for none.
  */
-static CXCursor macro_get_symbol_cursor( CXTranslationUnit tu,
-                                         CXToken const tokens[],
+static CXCursor macro_get_symbol_cursor( CXToken const tokens[],
                                          unsigned token_count,
                                          unsigned *ptoken_idx,
                                          rb_tree_t const *param_set ) {
   assert( ptoken_idx != NULL );
   assert( param_set != NULL );
 
-  CXCursor const tu_cursor = clang_getTranslationUnitCursor( tu );
+  CXCursor const tu_cursor = clang_getTranslationUnitCursor( tidy_tu );
 
   CXCursor rv_cursor =
     macro_get_cursor_by_name( tokens[ *ptoken_idx ], tu_cursor, param_set );
@@ -264,7 +261,7 @@ static CXCursor macro_get_symbol_cursor( CXTranslationUnit tu,
       break;
     if ( clang_getTokenKind( tokens[i] ) != CXToken_Punctuation )
       break;                            // can't be "::"
-    if ( !tidy_Token_isEqual( tu, tokens[i], "::" ) )
+    if ( !tidy_Token_isEqual( tidy_tu, tokens[i], "::" ) )
       break;
     i = get_next_token_index( tokens, token_count, i );
     if ( i >= token_count )
@@ -416,12 +413,11 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
  */
 static void visit_FieldDecl( CXCursor field_cursor,
                              symbols_init_visitor_data *sivd ) {
-  CXSourceRange const     range = tidy_getCursorExtent( field_cursor );
-  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( field_cursor );
+  CXSourceRange const range = tidy_getCursorExtent( field_cursor );
 
   CXToken *tokens;
   unsigned token_count;
-  clang_tokenize( tu, range, &tokens, &token_count );
+  clang_tokenize( tidy_tu, range, &tokens, &token_count );
 
   for ( unsigned i = 0; i < token_count; ++i ) {
     CXCursor const rv_cursor = tidy_getCursorByToken( tokens[i], field_cursor );
@@ -429,7 +425,7 @@ static void visit_FieldDecl( CXCursor field_cursor,
       maybe_add_symbol( rv_cursor, sivd );
   } // for
 
-  clang_disposeTokens( tu, tokens, token_count );
+  clang_disposeTokens( tidy_tu, tokens, token_count );
 }
 
 /**
@@ -453,12 +449,11 @@ static void visit_FieldDecl( CXCursor field_cursor,
  */
 static void visit_MacroDefinition( CXCursor macro_cursor,
                                    symbols_init_visitor_data *sivd ) {
-  CXSourceRange const     macro_range = clang_getCursorExtent( macro_cursor );
-  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( macro_cursor );
+  CXSourceRange const range = clang_getCursorExtent( macro_cursor );
 
   CXToken *tokens;
   unsigned token_count;
-  clang_tokenize( tu, macro_range, &tokens, &token_count );
+  clang_tokenize( tidy_tu, range, &tokens, &token_count );
 
   //
   // While iterating over all tokens of the macro, we have to skip identifers
@@ -470,18 +465,18 @@ static void visit_MacroDefinition( CXCursor macro_cursor,
   rb_tree_init( &param_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &strcmp ) );
 
   unsigned i = clang_Cursor_isMacroFunctionLike( macro_cursor ) ?
-    macro_get_params( tu, tokens, token_count, &param_set ) :
+    macro_get_params( tokens, token_count, &param_set ) :
     1;                                  // tokens[0] = macro name; start at 1
 
   for ( ; i < token_count; ++i ) {
     CXCursor const sym_cursor =
-      macro_get_symbol_cursor( tu, tokens, token_count, &i, &param_set );
+      macro_get_symbol_cursor( tokens, token_count, &i, &param_set );
     if ( !tidy_Cursor_isInvalid( sym_cursor ) )
       maybe_add_symbol( sym_cursor, sivd );
   } // for
 
   rb_tree_cleanup( &param_set, /*free_fn=*/NULL );
-  clang_disposeTokens( tu, tokens, token_count );
+  clang_disposeTokens( tidy_tu, tokens, token_count );
 }
 
 /**
@@ -563,16 +558,16 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void symbols_init( CXTranslationUnit tu ) {
+void symbols_init( void ) {
   ASSERT_RUN_ONCE();
   rb_tree_init(
     &symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
   );
   ATEXIT( &symbols_cleanup );
 
-  CXCursor const cursor = clang_getTranslationUnitCursor( tu );
+  CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
   symbols_init_visitor_data sivd = {
-    .source_file = clang_getFile( tu, tidy_source_path )
+    .source_file = clang_getFile( tidy_tu, tidy_source_path )
   };
   clang_visitChildren( cursor, &symbols_init_visitor, &sivd );
   if ( sivd.verbose_printed )
