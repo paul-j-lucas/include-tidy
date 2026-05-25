@@ -431,20 +431,26 @@ static void grow_argv( int *pargc, char const **pargv[], size_t n ) {
  * @param pargc A pointer to the argument count from \c main().  It is
  * incremented by 1.
  * @param pargv A pointer to the argument values from \c main().
+ * @param argi The index to insert \a args into \a *pargv at.
  * @param args_len The length of \a args.
  * @param args The arguments to insert.
  */
-static void insert_argv( int *pargc, char const **pargv[], size_t args_len,
-                         char const *const args[args_len] ) {
+static void insert_argv( int *pargc, char const **pargv[], size_t argi,
+                         size_t args_len, char const *const args[args_len] ) {
   assert(  pargc != NULL );
   assert( *pargc > 0 );
   assert(  pargv != NULL );
   assert( *pargv != NULL );
+  assert(  argi < STATIC_CAST( size_t, *pargc ) );
+
+  if ( args_len == 0 )
+    return;
 
   size_t const old_argc = STATIC_CAST( size_t, *pargc );
   grow_argv( pargc, pargv, args_len );
-  memmove( &(*pargv)[1 + args_len], &(*pargv)[1], old_argc * sizeof(char*) );
-  memcpy( &(*pargv)[1], args, args_len * sizeof(char*) );
+  memmove( &(*pargv)[argi + args_len], &(*pargv)[argi],
+           (old_argc - argi) * sizeof(char*) );
+  memcpy( &(*pargv)[argi], args, args_len * sizeof(char*) );
 }
 
 /**
@@ -1033,7 +1039,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     "-Qunused-arguments",
     "-Wno-unknown-warning-option",
   };
-  insert_argv( pargc, pargv, ARRAY_SIZE( CLANG_ARGS ), CLANG_ARGS );
+  insert_argv( pargc, pargv, 1, ARRAY_SIZE( CLANG_ARGS ), CLANG_ARGS );
 
   // argv[argc-1] is the source file, but we've already copied it into
   // tidy_source_path, so just NULL it out.
