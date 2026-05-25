@@ -426,7 +426,7 @@ static void grow_argv( int *pargc, char const **pargv[], size_t n ) {
 }
 
 /**
- * Inserts \a args into \a *pargv.
+ * Inserts \a args into \a *pargv after *pargv[0].
  *
  * @param pargc A pointer to the argument count from \c main().  It is
  * incremented by 1.
@@ -444,8 +444,7 @@ static void insert_argv( int *pargc, char const **pargv[], size_t args_len,
   size_t const old_argc = STATIC_CAST( size_t, *pargc );
   grow_argv( pargc, pargv, args_len );
   memmove( &(*pargv)[1 + args_len], &(*pargv)[1], old_argc * sizeof(char*) );
-  for ( size_t i = 0; i < args_len; ++i )
-    (*pargv)[1 + i] = args[i];
+  memcpy( &(*pargv)[1], args, args_len * sizeof(char*) );
 }
 
 /**
