@@ -54,7 +54,7 @@ extern enum CXLanguageKind tidy_lang;   ///< Source file language.
 void trans_unit_check_for_errors( CXTranslationUnit tu );
 
 /**
- * Initializes the translation unit by parsing the source file.
+ * Initializes the translation unit by parsing \ref tidy_source_path.
  *
  * @param argc The command-line argument count.
  * @param argv The command-line argument values.
