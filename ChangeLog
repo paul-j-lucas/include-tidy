@@ -1,3 +1,14 @@
+2026-05-25  Paul J. Lucas <paul@lucasmail.org>
+
+   * include-tidy.c, includes.c, path_util.c, path_util.h, unit_test.c:
+     s/base_name/path_basename/
+   * src/Makefile.am, cli_options.c, config_file.c, include-tidy.c, includes.c,
+     options.c, path_util.c, path_util.h, strbuf.c, unit_test.c, util.c,
+     util.h, util_test.c: Split path functions into path_util.[ch].
+   * util.h: Added assert() to round_up_pow_2().
+   * strbuf.c, util.c, util.h: Using path_is_absolute() more.
+   * util.c, util.h: Removed str_is_affirmative().
+
 2026-05-24  Paul J. Lucas <paul@lucasmail.org>
 
    * cli_options.c: Now using insert_argv() in add_clang_include_paths().
