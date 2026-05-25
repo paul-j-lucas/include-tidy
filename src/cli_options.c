@@ -125,6 +125,8 @@ static struct option const*
                     get_option( int );
 
 static void         grow_argv( int*, char const**[], size_t );
+static void         insert_argv( int*, char const**[], size_t, size_t,
+                                 char const *const[] );
 
 NODISCARD
 static bool         is_Xtidy_opt( int, char const *const[], int* );
@@ -180,10 +182,12 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
   } // while
 
   if ( found_include_search_paths ) {
-    int argi = *pargc;                  // where to insert new -isystem option
+    // Find the index to insert the new -isystem option before the last argv
+    // that is not an option (the filename).
+    size_t isystem_argi = STATIC_CAST( size_t, *pargc );
     for ( int i = *pargc - 1; i > 0; --i ) {
       if ( (*pargv)[i][0] != '-' ) {
-        argi = i;
+        isystem_argi = STATIC_CAST( size_t, i );
         break;
       }
     } // for
@@ -204,14 +208,10 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
       if ( unlikely( path_is_relative( include_path ) ) )
         continue;
 
-      // Insert new -isystem option before last argv (the filename).
-      grow_argv( pargc, pargv, 1 );
-      memmove( &(*pargv)[ argi + 1 ], &(*pargv)[ argi ],
-               STATIC_CAST( size_t, *pargc - argi ) * sizeof(char*) );
-
       char *new_arg = NULL;
       check_asprintf( &new_arg, "-isystem%s", include_path );
-      (*pargv)[ argi++ ] = new_arg;
+      insert_argv( pargc, pargv, isystem_argi++, 1,
+                   CONST_CAST( char const**, &new_arg ) );
     } // while
 
     (*pargv)[ *pargc ] = NULL;
@@ -436,7 +436,7 @@ static void grow_argv( int *pargc, char const **pargv[], size_t n ) {
  * @param args The arguments to insert.
  */
 static void insert_argv( int *pargc, char const **pargv[], size_t argi,
-                         size_t args_len, char const *const args[args_len] ) {
+                         size_t args_len, char const *const args[] ) {
   assert(  pargc != NULL );
   assert( *pargc > 0 );
   assert(  pargv != NULL );
