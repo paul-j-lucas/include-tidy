@@ -426,7 +426,7 @@ static void grow_argv( int *pargc, char const **pargv[], size_t n ) {
 }
 
 /**
- * Inserts an argument into \a *pargv.
+ * Inserts \a args into \a *pargv.
  *
  * @param pargc A pointer to the argument count from \c main().  It is
  * incremented by 1.
