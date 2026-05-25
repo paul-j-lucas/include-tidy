@@ -219,14 +219,14 @@ void verbose_print_tokens( CXCursor cursor ) {
     printf( "%s\"%s\"", i > 0 ? ", " : "", token_cs );
     clang_disposeString( token_cxs );
   }
-  puts( "" );
+  putchar( '\n' );
   verbose_printf( "]\n" );
 
   clang_disposeTokens( tu, tokens, tokens_len );
 }
 
 int verbose_printf( char const *format, ... ) {
-  fputs( "// tidy | ", stdout );
+  PUTS( "// tidy | " );
   va_list args;
   va_start( args, format );
   int const raw_len = vprintf( format, args );

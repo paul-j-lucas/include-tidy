@@ -169,10 +169,7 @@ void verbose_print_cursor( CXCursor cursor );
 void verbose_print_tokens( CXCursor cursor );
 
 /**
- * Prints verbose output.
- *
- * @remarks If \ref opt_verbose is #TIDY_VERBOSE_NONE, this function does
- * nothing.
+ * Prints output preceeded by `"// tidy | "`.
  *
  * @param format The `printf()` format string literal to use.
  * @param ... The `printf()` arguments.
