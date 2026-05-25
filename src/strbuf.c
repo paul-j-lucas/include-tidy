@@ -64,12 +64,12 @@ char* strbuf_paths( strbuf_t *sbuf, char const *component ) {
 
   if ( sbuf->len > 0 ) {
     if ( sbuf->str[ sbuf->len - 1 ] == '/' ) {
-      if ( component[0] == '/' ) {
+      if ( path_is_absolute( component ) ) {
         ++component;
         --comp_len;
       }
     } else {
-      if ( component[0] != '/' ) {
+      if ( path_is_relative( component ) ) {
         strbuf_reserve( sbuf, comp_len + 1 );
         strbuf_putc( sbuf, '/' );
       }

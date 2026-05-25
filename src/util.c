@@ -224,7 +224,7 @@ char const* path_ext( char const *path ) {
 
 bool path_is_local( char const *abs_path ) {
   assert( abs_path != NULL );
-  assert( abs_path[0] == '/' );
+  assert( path_is_absolute( abs_path ) );
 
   size_t cwd_path_len;
   char const *const cwd_path = path_cwd( &cwd_path_len );

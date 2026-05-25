@@ -1063,7 +1063,7 @@ bool path_is_local( char const *abs_path );
  */
 NODISCARD
 inline bool path_is_relative( char const *path ) {
-  return path[0] != '/';
+  return !path_is_absolute( path );
 }
 
 /**
