@@ -50,7 +50,7 @@
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-char const* base_name( char const *path_name ) {
+char const* path_basename( char const *path_name ) {
   assert( path_name != NULL );
   char const *const slash = strrchr( path_name, '/' );
   if ( slash != NULL )
@@ -94,8 +94,8 @@ bool path_ends_with( char const *abs_path, char const *rel_path,
 
 char const* path_ext( char const *path ) {
   assert( path != NULL );
-  // Do base_name() first for a case like "a.b/c".
-  char const *const file_name = base_name( path );
+  // Do path_basename() first for a case like "a.b/c".
+  char const *const file_name = path_basename( path );
   char const *const dot = strrchr( file_name, '.' );
   return dot != NULL && dot[1] != '\0' ? dot + 1 : NULL;
 }

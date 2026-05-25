@@ -88,7 +88,7 @@ static int tidy_status( void ) {
  * @return Returns 0 on success, non-zero on failure.
  */
 int main( int argc, char const *argv[] ) {
-  prog_name = base_name( argv[0] );
+  prog_name = path_basename( argv[0] );
 
   // Initialization MUST happen in this order.
   options_init();

@@ -47,7 +47,7 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Extracts the base portion of a path-name.
+ * Extracts the base portion of a \a path_name.
  * Unlike **basename**(3):
  *  + Trailing `/` characters are not deleted.
  *  + \a path_name is never modified (hence can therefore be `const`).
@@ -59,7 +59,7 @@
  * "/" is returned.
  */
 NODISCARD
-char const* base_name( char const *path_name );
+char const* path_basename( char const *path_name );
 
 /**
  * Gets the absolute path of the current working directory.

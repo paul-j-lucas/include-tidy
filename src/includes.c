@@ -291,8 +291,8 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       // include the real standard one.  The local header (even though it's
       // standard) should be a proxy for the real one.
       //
-      strcmp( base_name( included->rel_path ),
-              base_name( includer->rel_path ) ) == 0 ) {
+      strcmp( path_basename( included->rel_path ),
+              path_basename( includer->rel_path ) ) == 0 ) {
     included->proxy = includer;
   }
 
@@ -490,8 +490,8 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       //
       tidy_include *const includer = include_find_by_File( includer_file );
       if ( includer != old_includer &&
-           strcmp( base_name( included->rel_path ),
-                   base_name( includer->rel_path ) ) == 0 ) {
+           strcmp( path_basename( included->rel_path ),
+                   path_basename( includer->rel_path ) ) == 0 ) {
         included->includer = includer;
       }
     }
