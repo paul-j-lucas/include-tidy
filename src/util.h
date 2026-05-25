@@ -28,6 +28,9 @@
 
 // local
 #include "pjl_config.h"
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
+#include "bit_util.h"                   /* for is_1_bit() */
+#endif /* NEED_II_MATRIX */
 #include "type_traits.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -1121,6 +1124,7 @@ _Noreturn void perror_exit( int status );
  */
 NODISCARD
 inline size_t round_up_pow_2( size_t n, size_t multiple ) {
+  assert( is_1_bit( multiple ) );
   return (n + multiple - 1) & ~(multiple - 1);
 }
 #endif /* NEED_II_MATRIX */
