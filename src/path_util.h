@@ -76,30 +76,30 @@ NODISCARD
 char const* path_cwd( size_t *plen );
 
 /**
- * Gets whether \a abs_path ends with \a rel_path.
+ * Gets whether \a path ends with \a end_path.
  *
- * @remarks This function ensures that \a rel_path will match only at directory
- * boundaries, i.e., either the character preceding the match in \a abs_path
- * must be <tt>'/'</tt> or \a abs_path equals \a rel_path.
+ * @remarks This function ensures that \a end_path will match only at directory
+ * boundaries, i.e., either the character preceding the match in \a path must
+ * be <tt>'/'</tt> or \a path equals \a end_path.
  *
  * @par Examples
  * @parblock
  *
- * `abs_path`                | `rel_path`         | Result
+ * `path`                    | `end_path`         | Result
  * ------------------------- | ------------------ | ------
  *  `/var/log/bar/error.log` | `bar/error.log`    | `true`
  *  `/var/log/bar/error.log` | `foobar/error.log` | `false`
  * @endparblock
  *
- * @param abs_path The absolute path to check against.
- * @param rel_path The relative path to check.
- * @param rel_path_len The length of \a rel_path.
- * @return Returns `true` only if \a abs_path ends with \a rel_path at a
- * directory boundary.
+ * @param path The absolute path to check against.
+ * @param end_path The relative path to check.
+ * @param end_path_len The length of \a end_path.
+ * @return Returns `true` only if \a path ends with \a end_path at a directory
+ * boundary.
  */
 NODISCARD
-bool path_ends_with( char const *abs_path, char const *rel_path,
-                     size_t rel_path_len );
+bool path_ends_with( char const *path, char const *end_path,
+                     size_t end_path_len );
 
 /**
  * Gets the filename extension of \a path, if any.

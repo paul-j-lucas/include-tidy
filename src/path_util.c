@@ -79,17 +79,17 @@ char const* path_cwd( size_t *plen ) {
   return cwd_path_buf;
 }
 
-bool path_ends_with( char const *abs_path, char const *rel_path,
-                     size_t rel_path_len ) {
-  assert( rel_path != NULL );
-  assert( abs_path != NULL );
+bool path_ends_with( char const *path, char const *end_path,
+                     size_t end_path_len ) {
+  assert( path != NULL );
+  assert( end_path != NULL );
 
-  size_t const abs_path_len = strlen( abs_path );
-  if ( rel_path_len > abs_path_len )
+  size_t const path_len = strlen( path );
+  if ( end_path_len > path_len )
     return false;
-  char const *const suffix = abs_path + (abs_path_len - rel_path_len);
-  return  strcmp( rel_path, suffix ) == 0 &&
-          (suffix == abs_path || suffix[-1] == '/');
+  char const *const suffix = path + (path_len - end_path_len);
+  return  strcmp( end_path, suffix ) == 0 &&
+          (suffix == path || suffix[-1] == '/');
 }
 
 char const* path_ext( char const *path ) {
