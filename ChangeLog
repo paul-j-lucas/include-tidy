@@ -1,3 +1,11 @@
+2026-05-26  Paul J. Lucas <paul@lucasmail.org>
+
+   * path_util.c, path_util.h: path_ends_with() doesn't require an absolute
+     path.
+   * path_util_test.c: Added test_path_normalize().
+   * path_util_test.c: Added test_path_no_dot_slash().
+   * array.h: Added #ifndefs for NODISCARD and PJL_DISCARD.
+
 2026-05-25  Paul J. Lucas <paul@lucasmail.org>
 
    * include-tidy.c, includes.c, includes.h, symbols.c, symbols.h,
