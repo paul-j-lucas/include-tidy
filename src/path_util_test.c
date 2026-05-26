@@ -98,6 +98,43 @@ static bool test_path_no_ext( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_path_normalize( void ) {
+  TEST_FUNC_BEGIN();
+
+  char *path;
+
+  if ( TEST( (path = path_normalize( "/a" )) != NULL ) ) {
+    TEST( strcmp( path, "/a" ) == 0 );
+    free( path );
+  }
+  if ( TEST( (path = path_normalize( "/a/./b" )) != NULL ) ) {
+    TEST( strcmp( path, "/a/b" ) == 0 );
+    free( path );
+  }
+  if ( TEST( (path = path_normalize( "/a/b/." )) != NULL ) ) {
+    TEST( strcmp( path, "/a/b" ) == 0 );
+    free( path );
+  }
+  if ( TEST( (path = path_normalize( "/a/../b" )) != NULL ) ) {
+    TEST( strcmp( path, "/b" ) == 0 );
+    free( path );
+  }
+  if ( TEST( (path = path_normalize( "/a/.././b" )) != NULL ) ) {
+    TEST( strcmp( path, "/b" ) == 0 );
+    free( path );
+  }
+  if ( TEST( (path = path_normalize( "/a/b/../../c" )) != NULL ) ) {
+    TEST( strcmp( path, "/c" ) == 0 );
+    free( path );
+  }
+  if ( TEST( (path = path_normalize( "/a/b/.././../c" )) != NULL ) ) {
+    TEST( strcmp( path, "/c" ) == 0 );
+    free( path );
+  }
+
+  TEST_FUNC_END();
+}
+
 ////////// main ///////////////////////////////////////////////////////////////
 
 int main( int argc, char const *const argv[] ) {
@@ -107,6 +144,7 @@ int main( int argc, char const *const argv[] ) {
   test_path_ext();
   test_path_no_dot_slash();
   test_path_no_ext();
+  test_path_normalize();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
