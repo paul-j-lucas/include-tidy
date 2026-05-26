@@ -58,7 +58,20 @@ static bool test_path_ext( void ) {
   TEST( path_ext( "a." ) == NULL );
   TEST( (ext = path_ext( "a.b" )) != NULL )
     && TEST( strcmp( ext, "b" ) == 0 );
+  TEST( (ext = path_ext( "a.b.c" )) != NULL )
+    && TEST( strcmp( ext, "c" ) == 0 );
   TEST( path_ext( "a.b/c" ) == NULL );
+
+  TEST_FUNC_END();
+}
+
+static bool test_path_no_dot_slash( void ) {
+  TEST_FUNC_BEGIN();
+
+  TEST( strcmp( path_no_dot_slash( "a" ), "a" ) == 0 );
+  TEST( strcmp( path_no_dot_slash( ".a" ), ".a" ) == 0 );
+  TEST( strcmp( path_no_dot_slash( "./a" ), "a" ) == 0 );
+  TEST( strcmp( path_no_dot_slash( "././a" ), "a" ) == 0 );
 
   TEST_FUNC_END();
 }
@@ -92,6 +105,7 @@ int main( int argc, char const *const argv[] ) {
 
   test_path_ends_with();
   test_path_ext();
+  test_path_no_dot_slash();
   test_path_no_ext();
 }
 
