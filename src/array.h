@@ -37,6 +37,13 @@
 #include <stddef.h>                     /* for size_t */
 #include <stdlib.h>                     /* for bsearch, qsort */
 
+#ifndef NODISCARD
+# define NODISCARD                      /* nothing */
+#endif /* NODISCARD */
+#ifndef PJL_DISCARD
+# define PJL_DISCARD                    /* nothing */
+#endif /* PJL_DISCARD */
+
 /// @endcond
 
 ///
