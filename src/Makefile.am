@@ -22,7 +22,7 @@
 .MAKE.JOB.PREFIX=
 
 bin_PROGRAMS =		include-tidy
-check_PROGRAMS =	red_black_test strbuf_test toml_test util_test
+check_PROGRAMS =	path_util_test red_black_test strbuf_test toml_test
 
 AM_CFLAGS =		$(INCLUDE_TIDY_CFLAGS) $(LIBCLANG_CPPFLAGS)
 AM_CPPFLAGS =		-I$(top_srcdir)/lib -I$(top_builddir)/lib
@@ -62,6 +62,9 @@ BASE_TEST_SOURCES =	pjl_config.h config.h \
 			util.c util.h \
 			unit_test.c unit_test.h
 
+path_util_test_SOURCES=	$(BASE_TEST_SOURCES) \
+			path_util_test.c
+
 red_black_test_SOURCES=	$(BASE_TEST_SOURCES) \
 			red_black.c red_black.h \
 			red_black_test.c
@@ -73,9 +76,6 @@ toml_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 			red_black.c red_black.h \
 			toml_lite.c toml_lite.h \
 			toml_test.c
-
-util_test_SOURCES =	$(BASE_TEST_SOURCES) \
-			util_test.c
 
 tidy:
 	@for file in *.h *.c; \
