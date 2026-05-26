@@ -48,10 +48,14 @@
 
 /**
  * Extracts the base portion of a \a path_name.
+ *
+ * @remarks
+ * @parblock
  * Unlike **basename**(3):
  *  + Trailing `/` characters are not deleted.
  *  + \a path_name is never modified (hence can therefore be `const`).
  *  + Returns a pointer within \a path_name (hence is multi-call safe).
+ * #endparblock
  *
  * @param path_name The path-name to extract the base portion of.
  * @return Returns a pointer to the last component of \a path_name.
@@ -66,7 +70,7 @@ char const* path_basename( char const *path_name );
  *
  * @param plen If not NULL, the length of the path is put here.
  * @return Returns the absolute path of the current working directory.  The
- * path is guarenteed to end with `'/'`.
+ * path is guaranteed to end with `'/'`.
  */
 NODISCARD
 char const* path_cwd( size_t *plen );
@@ -126,7 +130,7 @@ inline bool path_is_absolute( char const *path ) {
  * Gets whether \a abs_path refers to a local file relative to the current
  * working directory.
  *
- * @par Examples
+ * @par Example
  * @parblock
  * Assuming the current working directory is `/home/pjl/src/include-tidy/src`:
  *
