@@ -36,7 +36,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "May 19, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "May 26, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -138,7 +138,9 @@ TIDY_CFLAGS = $(CFLAGS) $(AM_CFLAGS) $(CPPFLAGS) $(AM_CPPFLAGS)
 
 tidy:
         @for file in *.h *.c; do \\
-          include-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) $$file; \\
+          [ -f "$$file" ] || \\
+            include-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) "$$file" || \\
+            exit $$?; \\
         done
 .cE
 then simply
