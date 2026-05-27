@@ -1,5 +1,9 @@
 2026-05-26  Paul J. Lucas <paul@lucasmail.org>
 
+   * man/man1/include-tidy.1, src/Makefile.am: Better way to invoke
+     include-tidy from a Makefile.
+   * path_util_test.c: Added #include <stdlib.h>.
+   * clang_util.c: Added "const".
    * path_util.c, path_util.h: path_ends_with() doesn't require an absolute
      path.
    * path_util_test.c: Added test_path_normalize().
