@@ -80,8 +80,7 @@ toml_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 tidy:
 	@for file in *.h *.c; do \
 	  [ ! -f "$$file" ] || \
-	    include-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) "$$file" || \
-	    exit $$?; \
+	    include-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) "$$file" || exit $$?; \
 	done
 
 # vim:set noet sw=8 ts=8:
