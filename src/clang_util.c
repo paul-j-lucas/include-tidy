@@ -272,8 +272,8 @@ CXFile tidy_getCursorLocation_File( CXCursor cursor ) {
 }
 
 char* tidy_getCursorSpelling( CXCursor cursor ) {
-  CXString cxs = clang_getCursorSpelling( cursor );
-  char *const s = check_strdup( clang_getCString( cxs ) );
+  CXString const  cxs = clang_getCursorSpelling( cursor );
+  char *const     s = check_strdup( clang_getCString( cxs ) );
   clang_disposeString( cxs );
   return s;
 }
