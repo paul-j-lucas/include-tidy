@@ -21,8 +21,8 @@
 // local
 #include "pjl_config.h"
 #include "toml_lite.h"
-#include "util.h"
 #include "unit_test.h"
+#include "util.h"
 
 // standard
 #include <assert.h>
