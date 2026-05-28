@@ -1,3 +1,7 @@
+2026-05-28  Paul J. Lucas <paul@lucasmail.org>
+
+   * man/man1/include-tidy.1: Man page fixes.
+
 2026-05-27  Paul J. Lucas <paul@lucasmail.org>
 
    * config_file.c: Eliminated pointless "if".
