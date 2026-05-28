@@ -1,3 +1,9 @@
+2026-05-27  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c: Eliminated pointless "if".
+   * config_file.c: Now treating other non-zero return value from fnmatch() the
+     same as FNM_NOMATCH.
+
 2026-05-26  Paul J. Lucas <paul@lucasmail.org>
 
    * man/man1/include-tidy.1, src/Makefile.am: Better way to invoke
