@@ -55,7 +55,7 @@
  *  + Trailing `/` characters are not deleted.
  *  + \a path_name is never modified (hence can therefore be `const`).
  *  + Returns a pointer within \a path_name (hence is multi-call safe).
- * #endparblock
+ * @endparblock
  *
  * @param path_name The path-name to extract the base portion of.
  * @return Returns a pointer to the last component of \a path_name.
