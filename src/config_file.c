@@ -1222,7 +1222,7 @@ static void includes_parse_string( char const *config_path,
  *
  * @param rel_path The relative path of an include file, e.g., `"stdio.h"` or
  * `"sys/wait.h"`.
- * @param includes A NULL-terminated array of include paths.
+ * @param includes An array of include paths.
  * @return Returns `true` only if \a rel_path is among \a includes.
  */
 NODISCARD
