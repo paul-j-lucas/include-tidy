@@ -1232,23 +1232,21 @@ static bool is_standard_include( char const *rel_path,
   assert( path_is_relative( rel_path ) );
   assert( includes != NULL );
 
-  if ( includes != NULL ) {
-    for ( size_t i = 0; i < includes->len; ++i ) {
-      char const *const pattern = array_at_nc( includes, i );
-      int const flags = strstr( pattern, "**" ) == NULL ? FNM_PATHNAME : 0;
-      int const fnm_rv = fnmatch( pattern, rel_path, flags );
-      switch ( fnm_rv ) {
-        case 0:
-          return true;
-        case FNM_NOMATCH:
-        default:
-          // The man page for fnmatch(3) says it can return another non-zero
-          // value on error -- but it's implementation specific, so just treat
-          // it the same as FNM_NOMATCH.
-          break;
-      } // switch
-    } // for
-  }
+  for ( size_t i = 0; i < includes->len; ++i ) {
+    char const *const pattern = array_at_nc( includes, i );
+    int const flags = strstr( pattern, "**" ) == NULL ? FNM_PATHNAME : 0;
+    int const fnm_rv = fnmatch( pattern, rel_path, flags );
+    switch ( fnm_rv ) {
+      case 0:
+        return true;
+      case FNM_NOMATCH:
+      default:
+        // The man page for fnmatch(3) says it can return another non-zero
+        // value on error -- but it's implementation specific, so just treat it
+        // the same as FNM_NOMATCH.
+        break;
+    } // switch
+  } // for
 
   return false;
 }
