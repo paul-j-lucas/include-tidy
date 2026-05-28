@@ -21,27 +21,26 @@
 .\" define code-start macro
 .de cS
 .sp
-.nr cS_ps \n[.ps]                       \" save current point size
-.ps -1                                  \" shrink it
+.ps -2                                  \" shrink it
 .nf
 .RS 5
 .ft CW
 ..
 .\" define code-end macro
 .de cE
-.ft 1
+.ft
 .RE
 .fi
-.ps \n[cS_ps]                           \" restore original size
+.ps                                     \" restore original size
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "May 26, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "May 28, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
 .B include-tidy
-.BI "[-Xtidy " tidy-option ]...
+.BI "[\-Xtidy " tidy-option ]...
 .BI [ clang-option ]...
 .I source-file
 .br
@@ -133,7 +132,7 @@ In your
 .BR Makefile ,
 have:
 .cS
-TIDY_FLAGS = -Xtidy --verbose=f -Xtidy --error=never
+TIDY_FLAGS  = -Xtidy --verbose=f -Xtidy --error=never
 TIDY_CFLAGS = $(CFLAGS) $(AM_CFLAGS) $(CPPFLAGS) $(AM_CPPFLAGS)
 
 tidy:
@@ -295,14 +294,14 @@ Every
 option
 .I must
 be preceded by an
-.B -Xtidy
+.B \-Xtidy
 option to distinguish it from a
 .BR clang (1)
 option.
 For example,
 in:
 .cS
-include-tidy -Xtidy --all-includes -I../lib source.c
+include-tidy -Xtidy --all-includes \-I../lib source.c
 .cE
 the
 .BR \-\-all-includes
@@ -310,7 +309,7 @@ option
 is given only to
 .B include-tidy
 and the
-.B -I../lib
+.B \-I../lib
 option is given only to
 .BR clang (1).
 .PP
@@ -363,7 +362,11 @@ The include associated to the current
 is printed next.
 For example,
 if the source file being tidied is \f(CWfoo.c\fP,
-then its associated include is \f(CWfoo.h\fP.
+then its associated include is \f(CWfoo.h\fP
+unless overridden via
+.B associated-header
+(see
+.BR "Source Tables" ).
 .RE
 .TP
 .BR \-\-clang \f1=\fPf "\f1 | \fP" "" \-C " f"
@@ -378,9 +381,9 @@ in which case
 paths to system include directories
 must be specified explicitly
 via either
-.B -I
+.B \-I
 or
-.B -isystem
+.B \-isystem
 options.
 .TP
 .BR \-\-color \f1=\fPs "\f1 | \fP" "" \-k " s"
@@ -568,7 +571,7 @@ The default is none.
 Options that are neither one of
 .B "Other Options"
 nor preceded by
-.B -Xtidy
+.B \-Xtidy
 are
 .BR clang (1)
 options
@@ -724,15 +727,11 @@ is either C or C++
 can include C header files).
 .IP
 Globbing is supported.
-A single
-.B *
-matches any sequence of characters except
-.B /
+A single \f(CW*\fP
+matches any sequence of characters except \f(CW/\fP
 that limits matching within a single directory.
-A double
-.B **
-matches any sequence of characters including
-.B /
+A double \f(CW**\fP
+matches any sequence of characters including \f(CW/\fP
 that matches within
 .I any
 subdirectory.
@@ -799,7 +798,7 @@ should be ignored:
 .cS
 [config.h]
 ignore-as-argument = true
-.cE 0
+.cE
 .RE
 .TP
 .BI ignore-symbols " \f1=\fP s" "\f1 | \fP[" s " \f1[,\fP " s "\f1]*\fP ]"
@@ -1006,11 +1005,11 @@ or
 .B \-c
 option.
 .IP \n+[step].
-.B ./include-tidy.toml
+\f(CW./include-tidy.toml\fP
 .IP \n+[step].
-.B $XDG_CONFIG_HOME/include-tidy/config.toml
+\f(CW$XDG_CONFIG_HOME/include-tidy/config.toml\fP
 .IP \n+[step].
-.BR ~/.config/include-tidy/config.toml ,
+\f(CW~/.config/include-tidy/config.toml\fP,
 but only if
 .B XDG_CONFIG_HOME
 is empty or unset.
@@ -1023,9 +1022,9 @@ then for each
 .I path
 in it,
 the first of
-.IB path /include-tidy/config.toml \f1.\fP
+.IR path \f(CW/include-tidy/config.toml\fP.
 .IP \n+[step].
-.BR /etc/xdg/include-tidy/config.toml ,
+\f(CW/etc/xdg/include-tidy/config.toml\fP,
 but only if
 .B XDG_CONFIG_DIRS
 is empty or unset.
@@ -1041,14 +1040,11 @@ with the only exception of the
 .B add-c-includes
 option.
 For example,
-if in
-.BR ./include-tidy.toml ,
+if in \f(CW./include-tidy.toml\fP,
 .B align-colum
 is set to 35,
-but in
-.B config.toml
-in
-.BR /etc/xdg/include-tidy ,
+but in \f(CWconfig.toml\fP
+in \f(CW/etc/xdg/include-tidy\fP,
 it's set to 41,
 then 35
 (the value in the first file found in order)
@@ -1103,7 +1099,7 @@ Used only when
 .B XDG_CONFIG_HOME
 is empty or unset
 to locate a configuration file in
-.BR ~/.config/include-tidy/config.toml .
+\f(CW~/.config/include-tidy/config.toml\fP.
 If
 .B HOME
 is also empty or unset,
@@ -1144,7 +1140,7 @@ that specifies a bold red foreground
 on the terminal's default background.
 .IP
 Capability names containing upper-case letters are unique to
-.BR cdecl ;
+.BR include-tidy ;
 those in all lower-case are upwards compatible with
 .BR gcc .
 .RS
@@ -1194,7 +1190,7 @@ then for each
 .I path
 in it,
 the first of
-.IB path /include-tidy/config.toml
+.IR path \f(CW/include-tidy/config.toml\fP
 to exist
 and be readable
 is used as a configuration file.
@@ -1203,19 +1199,19 @@ is used as a configuration file.
 If set to a path
 of a directory
 and
-.B $XDG_CONFIG_HOME/include-tidy/config.toml
+\f(CW$XDG_CONFIG_HOME/include-tidy/config.toml\fP
 exists and is readable,
 then that used as a configuration file.
 .SH FILES
 .PD 0
 .TP
-.B ./include-tidy.toml
+\f(CW./include-tidy.toml\fP
 .TP
-.B $XDG_CONFIG_HOME/include-tidy/config.toml
+\f(CW$XDG_CONFIG_HOME/include-tidy/config.toml\fP
 .TP
-.B ~/.config/include-tidy/config.toml
+\f(CW~/.config/include-tidy/config.toml\fP
 .TP
-.B /etc/xdg/include-tidy/config.toml
+\f(CW/etc/xdg/include-tidy/config.toml\fP
 .PD
 Configuration files.
 .SH BUGS
