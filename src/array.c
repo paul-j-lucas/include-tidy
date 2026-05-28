@@ -83,9 +83,22 @@ bool array_reserve( array_t *array, size_t res_len ) {
     return false;
   if ( array->cap == 0 )
     array->cap = 2;
-  size_t const future_len = array->len + res_len;
-  while ( array->cap < future_len )
-    array->cap <<= 1;
+  size_t const min_cap = array->len + res_len;
+  //
+  // Why not grow by 2x?  The problem is that the size of each new allocation
+  // is always > the sum of all previous allocations combined, which means
+  // malloc can't reuse even a block coalesced from previous allocations.
+  //
+  // For example, given the previous allocations of 2, 4, and 8 (summing to
+  // 14), the next allocation will be 16, but 16 > 14, so malloc can't use that
+  // block.
+  //
+  // In contast, growing by 1.5x yields allocations 2, 3, and 4 (summing to 9),
+  // and the next allocation will be 6, and 6 <= 9, so malloc can use that
+  // block.
+  //
+  while ( array->cap < min_cap )
+    array->cap += array->cap >> 1;      // grow by ~1.5x
   array->elements = check_realloc( array->elements, array->cap * array->esize );
   return true;
 }
