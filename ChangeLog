@@ -1,5 +1,6 @@
 2026-05-28  Paul J. Lucas <paul@lucasmail.org>
 
+   * array.c: Now growing array by 1.5x.
    * man/man1/include-tidy.1: Man page fixes.
 
 2026-05-27  Paul J. Lucas <paul@lucasmail.org>
