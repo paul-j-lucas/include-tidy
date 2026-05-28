@@ -43,6 +43,9 @@
 
 ////////// extern constants ///////////////////////////////////////////////////
 
+/// @cond DOXYGEN_IGNORE
+/// Otherwise Doxygen generates two entries.
+
 ext_lang_map const EXT_LANG_MAP[] = {
   { "c",   "c"   },
   { "c++", "c++" },
@@ -58,6 +61,8 @@ ext_lang_map const EXT_LANG_MAP[] = {
   { "hxx", "c++" },
   { NULL,  NULL  }
 };
+
+/// @endcond
 
 ////////// extern functions ///////////////////////////////////////////////////
 
