@@ -43,6 +43,8 @@
  * @{
  */
 
+#define ARRAY_CAP_MIN             4     /**< Minimum array capacity. */
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 void array_cleanup( array_t *array, array_free_fn_t free_fn ) {
@@ -82,20 +84,20 @@ bool array_reserve( array_t *array, size_t res_len ) {
   if ( res_len <= array->cap - array->len )
     return false;
   if ( array->cap == 0 )
-    array->cap = 2;
+    array->cap = ARRAY_CAP_MIN;
   size_t const min_cap = array->len + res_len;
   //
   // Why not grow by 2x?  The problem is that the size of each new allocation
   // is always > the sum of all previous allocations combined, which means
   // malloc can't reuse even a block coalesced from previous allocations.
   //
-  // For example, given the previous allocations of 2, 4, and 8 (summing to
-  // 14), the next allocation will be 16, but 16 > 14, so malloc can't use that
-  // block.
+  // For example, given the previous allocations of 4, 8, and 16 (summing to
+  // 28), the next allocation will be 32, but 32 > 28, so malloc can't reuse
+  // that block.
   //
-  // In contast, growing by 1.5x yields allocations 2, 3, and 4 (summing to 9),
-  // and the next allocation will be 6, and 6 <= 9, so malloc can use that
-  // block.
+  // In contast, growing by 1.5x yields allocations 4, 6, and 9 (summing to
+  // 19), and the next allocation will be 13, and 13 <= 19, so malloc can reuse
+  // that block.
   //
   while ( array->cap < min_cap )
     array->cap += array->cap >> 1;      // grow by ~1.5x
