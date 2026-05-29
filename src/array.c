@@ -95,7 +95,7 @@ bool array_reserve( array_t *array, size_t res_len ) {
   // 28), the next allocation will be 32, but 32 > 28, so malloc can't reuse
   // that block.
   //
-  // In contast, growing by 1.5x yields allocations 4, 6, and 9 (summing to
+  // In contrast, growing by 1.5x yields allocations 4, 6, and 9 (summing to
   // 19), and the next allocation will be 13, and 13 <= 19, so malloc can reuse
   // that block.
   //
