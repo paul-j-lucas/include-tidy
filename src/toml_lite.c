@@ -623,9 +623,9 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *kv ) {
   assert( toml != NULL );
   assert( kv != NULL );
 
-  char       *key_name = NULL;
-  toml_loc    key_loc = toml->loc;
-  toml_value  value = { 0 };
+  char           *key_name = NULL;
+  toml_loc const  key_loc = toml->loc;
+  toml_value      value = { 0 };
 
   if ( !toml_key_parse( toml, &key_name, /*pkey_col=*/NULL,
                         /*pkey_len=*/NULL ) ) {
