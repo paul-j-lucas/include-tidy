@@ -945,6 +945,8 @@ void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim );
  * @param s The null-terminated string to check.
  * @return If \a s is either null or the empty string, returns NULL; otherwise
  * returns a pointer to the first non-whitespace character in \a s.
+ *
+ * @sa empty_if_null()
  */
 NODISCARD
 inline char const* null_if_empty( char const *s ) {
