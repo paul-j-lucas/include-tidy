@@ -1,3 +1,9 @@
+2026-05-30  Paul J. Lucas <paul@lucasmail.org>
+
+   * array.c, array.h: Added proper const overloading.
+   * array.c, array.h: Added restrict to array_push_array_back(); added
+     assert().
+
 2026-05-29  Paul J. Lucas <paul@lucasmail.org>
 
    * array.c: Added ARRAY_CAP_MIN set to 4.
