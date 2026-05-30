@@ -156,7 +156,8 @@ void array_cleanup( array_t *array, array_free_fn_t free_fn );
  * @sa array_push_back()
  */
 PJL_DISCARD
-void* array_push_array_back( array_t *dst_array, array_t *src_array );
+void* array_push_array_back( array_t *restrict dst_array,
+                             array_t *restrict src_array );
 
 /**
  * Ensures at least \a res_len additional elements of capacity exist in \a
