@@ -46,6 +46,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#define TOML_ARRAY_CAP_MIN        4     /**< Minimum array capacity. */
 #define TOML_STRING_LEN_MAX       1024  /**< Maximum string length. */
 
 ////////// local constants ////////////////////////////////////////////////////
@@ -202,7 +203,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
   assert( toml != NULL );
   assert( pa != NULL );
 
-  unsigned    array_cap = 16;
+  unsigned    array_cap = TOML_ARRAY_CAP_MIN;
   toml_array  a = { .values = MALLOC( toml_value, array_cap ) };
   int         c = '\0';
   bool        ok = false;
