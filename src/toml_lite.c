@@ -178,14 +178,14 @@ static int fpeekc( FILE *file ) {
 /**
  * Cleans-up a toml_array.
  *
- * @param a The toml_array to clean up.  If NULL, does nothing.
+ * @param array The toml_array to clean up.  If NULL, does nothing.
  */
-static void toml_array_cleanup( toml_array *a ) {
-  if ( a == NULL )
+static void toml_array_cleanup( toml_array *array ) {
+  if ( array == NULL )
     return;
-  for ( unsigned i = 0; i < a->size; ++i )
-    toml_value_cleanup( &a->values[i] );
-  free( a->values );
+  for ( unsigned i = 0; i < array->size; ++i )
+    toml_value_cleanup( &array->values[i] );
+  free( array->values );
 }
 
 /**
@@ -204,7 +204,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
   assert( pa != NULL );
 
   unsigned    array_cap = TOML_ARRAY_CAP_MIN;
-  toml_array  a = { .values = MALLOC( toml_value, array_cap ) };
+  toml_array  array = { .values = MALLOC( toml_value, array_cap ) };
   int         c = '\0';
   bool        ok = false;
   char        c_prev;
@@ -223,7 +223,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
         toml_comment_parse( toml );
         continue;
       case ',':
-        if ( a.size == 0 || c_prev == ',' ) {
+        if ( array.size == 0 || c_prev == ',' ) {
           toml->error = TOML_ERR_UNEX_CHAR;
           goto done;
         }
@@ -239,19 +239,19 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
     toml_value value;
     if ( !toml_value_parse( toml, &value ) )
       break;
-    if ( a.size + 1 >= array_cap ) {
+    if ( array.size + 1 >= array_cap ) {
       array_cap += array_cap >> 1;      // grow by ~1.5x
-      REALLOC( a.values, array_cap );
+      REALLOC( array.values, array_cap );
     }
-    a.values[ a.size++ ] = value;
+    array.values[ array.size++ ] = value;
   } // for
 
 done:
   --toml->array_depth;
   if ( ok )
-    *pa = a;
+    *pa = array;
   else
-    toml_array_cleanup( &a );
+    toml_array_cleanup( &array );
   return ok;
 }
 
@@ -895,10 +895,10 @@ static bool toml_value_parse( toml_file *toml, toml_value *pv ) {
         return true;
 
       case '[':;
-        toml_array a;
-        if ( !toml_array_parse( toml, &a ) )
+        toml_array array;
+        if ( !toml_array_parse( toml, &array ) )
           return false;
-        *pv = (toml_value){ .type = TOML_ARRAY, .loc = value_loc, .a = a };
+        *pv = (toml_value){ .type = TOML_ARRAY, .loc = value_loc, .a = array };
         return true;
 
       default:
