@@ -1,5 +1,8 @@
 2026-05-30  Paul J. Lucas <paul@lucasmail.org>
 
+   * toml_lite.c: Added "const".
+   * toml_lite.c: Added TOML_ARRAY_CAP_MIN and set it to 4.
+   * toml_lite.c: Now growing toml_array by 1.5x.
    * array.c, array.h: Added proper const overloading.
    * array.c, array.h: Added restrict to array_push_array_back(); added
      assert().
