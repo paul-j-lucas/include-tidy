@@ -113,19 +113,31 @@ bool array_reserve( array_t *array, size_t res_len ) {
 
 /// @cond DOXYGEN_IGNORE
 
-extern inline void* array_at( array_t const*, size_t );
-extern inline void* array_at_nc( array_t const*, size_t );
-extern inline void* array_back( array_t const* );
-extern inline void* array_back_nc( array_t const* );
+// See comment for NONCONST_OVERLOAD regarding ().
+extern inline void const* (array_at)( array_t const*, size_t );
+extern inline void const* (array_at_nc)( array_t const*, size_t );
+extern inline void const* (array_back)( array_t const* );
+extern inline void const* (array_back_nc)( array_t const* );
+
 extern inline void* array_bsearch( array_t*, void const*,
                                    int (*)( void const*, void const* ) );
-extern inline void* array_front( array_t const* );
-extern inline void* array_front_nc( array_t const* );
+
+// See comment for NONCONST_OVERLOAD regarding ().
+extern inline void const* (array_front)( array_t const* );
+extern inline void const* (array_front_nc)( array_t const* );
+
 extern inline void array_init( array_t*, size_t );
 extern inline void* array_pop_back( array_t* );
 extern inline void* array_pop_back_nc( array_t* );
 extern inline void* array_push_back( array_t* );
 extern inline void array_qsort( array_t*, int (*)( void const*, void const* ) );
+
+extern inline void* nonconst_array_at( array_t*, size_t );
+extern inline void* nonconst_array_at_nc( array_t*, size_t );
+extern inline void* nonconst_array_back( array_t* );
+extern inline void* nonconst_array_back_nc( array_t* );
+extern inline void* nonconst_array_front( array_t* );
+extern inline void* nonconst_array_front_nc( array_t* );
 
 /// @endcond
 

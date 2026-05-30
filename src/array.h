@@ -29,6 +29,7 @@
 
 // local
 #include "pjl_config.h"                 /* must go first */
+#include "util.h"
 
 /// @cond DOXYGEN_IGNORE
 
@@ -197,9 +198,19 @@ bool array_reserve( array_t *array, size_t res_len );
  * @sa array_front_nc()
  */
 NODISCARD
-inline void* array_at_nc( array_t const *array, size_t index ) {
+inline void const* array_at_nc( array_t const *array, size_t index ) {
   return (char*)array->elements + index * array->esize;
 }
+
+/// @cond DOXYGEN_IGNORE
+NODISCARD
+inline void* nonconst_array_at_nc( array_t *array, size_t index ) {
+  return CONST_CAST( void*, array_at_nc( array, index ) );
+}
+
+#define array_at_nc(ARRAY,INDEX) \
+  NONCONST_OVERLOAD( array_at_nc, (ARRAY), (INDEX) )
+/// @endcond
 
 /**
  * Gets a pointer to the element at \a offset of \a array.
@@ -220,9 +231,19 @@ inline void* array_at_nc( array_t const *array, size_t index ) {
  * @sa array_front_nc()
  */
 NODISCARD
-inline void* array_at( array_t const *array, size_t index ) {
+inline void const* array_at( array_t const *array, size_t index ) {
   return index < array->len ? array_at_nc( array, index ) : NULL;
 }
+
+/// @cond DOXYGEN_IGNORE
+NODISCARD
+inline void* nonconst_array_at( array_t *array, size_t index ) {
+  return CONST_CAST( void*, array_at( array, index ) );
+}
+
+#define array_at(ARRAY,INDEX) \
+  NONCONST_OVERLOAD( array_at, (ARRAY), (INDEX) )
+/// @endcond
 
 /**
  * Gets a pointer to the element at the back of \a array.
@@ -246,9 +267,19 @@ inline void* array_at( array_t const *array, size_t index ) {
  * @sa array_pop_back_nc()
  */
 NODISCARD
-inline void* array_back_nc( array_t const *array ) {
+inline void const* array_back_nc( array_t const *array ) {
   return array_at_nc( array, array->len - 1 );
 }
+
+/// @cond DOXYGEN_IGNORE
+NODISCARD
+inline void* nonconst_array_back_nc( array_t *array ) {
+  return CONST_CAST( void*, array_back_nc( array ) );
+}
+
+#define array_back_nc(ARRAY) \
+  NONCONST_OVERLOAD( array_back_nc, (ARRAY) )
+/// @endcond
 
 /**
  * Gets a pointer to the element at the back of \a array.
@@ -270,9 +301,19 @@ inline void* array_back_nc( array_t const *array ) {
  * @sa array_pop_back_nc()
  */
 NODISCARD
-inline void* array_back( array_t const *array ) {
+inline void const* array_back( array_t const *array ) {
   return array->len > 0 ? array_back_nc( array ) : NULL;
 }
+
+/// @cond DOXYGEN_IGNORE
+NODISCARD
+inline void* nonconst_array_back( array_t *array ) {
+  return CONST_CAST( void*, array_back( array ) );
+}
+
+#define array_back(ARRAY) \
+  NONCONST_OVERLOAD( array_back, (ARRAY) )
+/// @endcond
 
 /**
  * Calls **bsearch**(3) on \a array.
@@ -308,9 +349,19 @@ inline void* array_bsearch( array_t *array, void const *key,
  * @sa array_front()
  */
 NODISCARD
-inline void* array_front_nc( array_t const *array ) {
+inline void const* array_front_nc( array_t const *array ) {
   return array->elements;
 }
+
+/// @cond DOXYGEN_IGNORE
+NODISCARD
+inline void* nonconst_array_front_nc( array_t *array ) {
+  return CONST_CAST( void*, array_front_nc( array ) );
+}
+
+#define array_front_nc(ARRAY) \
+  NONCONST_OVERLOAD( array_front_nc, (ARRAY) )
+/// @endcond
 
 /**
  * Gets a pointer to the element at the front of \a array.
@@ -330,9 +381,19 @@ inline void* array_front_nc( array_t const *array ) {
  * @sa array_front_nc()
  */
 NODISCARD
-inline void* array_front( array_t const *array ) {
+inline void const* array_front( array_t const *array ) {
   return array->len > 0 ? array_front_nc( array ) : NULL;
 }
+
+/// @cond DOXYGEN_IGNORE
+NODISCARD
+inline void* nonconst_array_front( array_t *array ) {
+  return CONST_CAST( void*, array_front( array ) );
+}
+
+#define array_front(ARRAY) \
+  NONCONST_OVERLOAD( array_front, (ARRAY) )
+/// @endcond
 
 /**
  * Initializes \a array.
