@@ -1,5 +1,7 @@
 2026-05-31  Paul J. Lucas <paul@lucasmail.org>
 
+   * configure.ac, print.c, print.h, trans_unit.c: Now printing offending line
+     if there's an error in the source file.
    * strbuf.c: Now growing by 1.5x.
 
 2026-05-30  Paul J. Lucas <paul@lucasmail.org>
