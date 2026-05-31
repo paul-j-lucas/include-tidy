@@ -5,6 +5,22 @@ See the end of the file for license conditions.
 
 -------------------------------------------------------------------------------
 
+* Changes in Include-tidy 1.1
+
+** Printing error line
+If there's an error in a source file being tidied, **include-tidy** now prints
+the offending line with a `^` at the offending column.
+
+** Better involation from Makefile
+A better way to invoke **include-tidy** from a Makefile is now given.
+
+** `--comment-style` help default
+Added `default="//"` to the help message for `--comment-style`.
+
+** Man page fixes
+A few things on the man page were fixed.
+
+
 * Changes in Include-tidy 1.0
 
 ** Initial version.

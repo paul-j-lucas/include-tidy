@@ -107,9 +107,9 @@ void trans_unit_check_for_errors( void ) {
         ++error_count;
         CXSourceLocation const diag_loc = clang_getDiagnosticLocation( diag );
         CXFile diag_file;
-        unsigned diag_line, diag_col;
+        unsigned diag_line, diag_col, diag_offset;
         clang_getSpellingLocation(
-          diag_loc, &diag_file, &diag_line, &diag_col, /*offset=*/NULL
+          diag_loc, &diag_file, &diag_line, &diag_col, &diag_offset
         );
         CXString const diag_file_cxs = clang_getFileName( diag_file );
         CXString const diag_msg_cxs = clang_getDiagnosticSpelling( diag );
@@ -117,6 +117,7 @@ void trans_unit_check_for_errors( void ) {
           clang_getCString( diag_file_cxs ), diag_line, diag_col,
           "%s\n", clang_getCString( diag_msg_cxs )
         );
+        print_source_line( tidy_source_path, diag_line, diag_col, diag_offset );
         clang_disposeString( diag_msg_cxs );
         clang_disposeString( diag_file_cxs );
         break;

@@ -40,6 +40,7 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>                     /* for free */
 #include <sysexits.h>
 
 /// @endcond
@@ -170,6 +171,48 @@ void print_include( char const *sgr_color, char const delims[static 2],
 
   color_end( stdout, sgr_color );
   PUTC( '\n' );
+}
+
+void print_source_line( char const *path, unsigned line, unsigned col,
+                        unsigned offset ) {
+  assert( path != NULL );
+  assert( line > 0 );
+  assert( col > 0 );
+
+  FILE *const fsource = fopen( path, "rb" );
+  if ( fsource == NULL )
+    return;
+  long const line_pos =
+    STATIC_CAST( long, offset ) - (STATIC_CAST( long, col ) - 1);
+  if ( line_pos < 0 )
+    goto done;
+  if ( fseek( fsource, line_pos, SEEK_SET ) == -1 )
+    goto done;
+
+  char         *line_buf = NULL;
+  size_t        line_cap = 0;
+  ssize_t const raw_len = getline( &line_buf, &line_cap, fsource );
+  if ( raw_len == -1 )
+    goto done;
+
+  EPRINTF( "%5u | %s", line, line_buf );
+  unsigned const line_len = STATIC_CAST( unsigned, raw_len );
+  if ( line_buf[ line_len - 1 ] != '\n' )
+    EPUTC( '\n' );
+
+  EPRINTF( "%5s | ", "" );
+  for ( unsigned i = 1; i < col && (i - 1) < line_len; ++i )
+    EPUTC( line_buf[i - 1] == '\t' ? '\t' : ' ' );
+
+  color_start( stderr, sgr_caret );
+  EPUTC( '^' );
+  color_end( stderr, sgr_caret );
+  EPUTC( '\n' );
+
+  free( line_buf );
+
+done:
+  fclose( fsource );
 }
 
 void verbose_print_cursor( CXCursor cursor ) {

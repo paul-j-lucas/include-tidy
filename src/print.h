@@ -155,6 +155,18 @@ void print_include( char const *sgr_color, char const delims[static 2],
                     char const *rel_path, char const *comment );
 
 /**
+ * Prints the given \a line of \a path, presumably where an error occurred,
+ * followed by a line with a `^` at \a col.
+ *
+ * @param path The file's path.
+ * @param line The line to print.
+ * @param col The column to print.
+ * @param offset The offset within \a path of the error.
+ */
+void print_source_line( char const *path, unsigned line, unsigned col,
+                        unsigned offset );
+
+/**
  * Prints a cursor's "spelling", kind, and source location.
  *
  * @param cursor The cursor to print.
