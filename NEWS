@@ -11,7 +11,7 @@ See the end of the file for license conditions.
 If there's an error in a source file being tidied, **include-tidy** now prints
 the offending line with a `^` at the offending column.
 
-** Better involation from Makefile
+** Better invocation from Makefile
 A better way to invoke **include-tidy** from a Makefile is now given.
 
 ** `--comment-style` help default
