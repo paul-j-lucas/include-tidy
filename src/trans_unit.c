@@ -114,7 +114,7 @@ void trans_unit_check_for_errors( void ) {
         CXString const    diag_file_cxs = clang_getFileName( diag_file );
         char const *const diag_file_cs = clang_getCString( diag_file_cxs );
         CXString const    diag_msg_cxs = clang_getDiagnosticSpelling( diag );
-        print_error(
+        print_file_error(
           diag_file_cs, diag_line, diag_col,
           "%s\n", clang_getCString( diag_msg_cxs )
         );
@@ -130,7 +130,6 @@ void trans_unit_check_for_errors( void ) {
 
   if ( error_count > 0 ) {
     print_error(
-      NULL, 0, 0,
       "%u error%s generated\n", error_count, plural_s( error_count )
     );
     exit( EX_DATAERR );
@@ -161,13 +160,13 @@ void trans_unit_init( int argc, char const *const argv[] ) {
 
   switch ( error_code ) {
     case CXError_ASTReadError:
-      print_error( tidy_source_path, 0, 0, "libclang AST error\n" );
+      print_file_error( tidy_source_path, 0, 0, "libclang AST error\n" );
       exit( EX_UNAVAILABLE );
     case CXError_Crashed:
-      print_error( tidy_source_path, 0, 0, "libclang crashed\n" );
+      print_file_error( tidy_source_path, 0, 0, "libclang crashed\n" );
       exit( EX_UNAVAILABLE );
     case CXError_InvalidArguments:
-      print_error( NULL, 0, 0, "invalid arguments given to libclang\n" );
+      print_error( "invalid arguments given to libclang\n" );
       exit( EX_SOFTWARE );
     case CXError_Failure:
       //
@@ -175,7 +174,7 @@ void trans_unit_init( int argc, char const *const argv[] ) {
       // reason is because the source file doesn't exist or isn't readable.
       //
       if ( access( tidy_source_path, R_OK ) == -1 ) {
-        print_error( tidy_source_path, 0, 0, "%s\n", STRERROR() );
+        print_file_error( tidy_source_path, 0, 0, "%s\n", STRERROR() );
         exit( EX_DATAERR );
       }
       break;

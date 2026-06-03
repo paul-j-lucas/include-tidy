@@ -302,7 +302,7 @@ static bool bool_value_parse( char const *config_path, char const *key_name,
   assert( value != NULL );
 
   if ( value->type != TOML_BOOL ) {
-    print_error(
+    print_file_error(
       config_path, value->loc.line, value->loc.col,
       "invalid value for \"%s\"; expected boolean\n", key_name
     );
@@ -330,7 +330,7 @@ static long int_value_parse( char const *config_path, char const *key_name,
   assert( value != NULL );
 
   if ( value->type != TOML_INT ) {
-    print_error(
+    print_file_error(
       config_path, value->loc.line, value->loc.col,
       "invalid value for \"%s\"; expected integer\n", key_name
     );
@@ -338,7 +338,7 @@ static long int_value_parse( char const *config_path, char const *key_name,
   }
 
   if ( value->i < value_min || value->i > value_max ) {
-    print_error(
+    print_file_error(
       config_path, value->loc.line, value->loc.col,
       "\"%ld\": invalid value for \"%s\"; must be %ld-%ld\n",
       value->i, key_name, value_min, value_max
@@ -370,7 +370,7 @@ static array_t string_array_value_parse( char const *config_path,
   assert( value != NULL );
 
   if ( value->type != TOML_ARRAY ) {
-    print_error(
+    print_file_error(
       config_path, value->loc.line, value->loc.col,
       "invalid value for \"%s\"; expected array\n", key_name
     );
@@ -386,7 +386,7 @@ static array_t string_array_value_parse( char const *config_path,
     for ( unsigned i = 0; i < value->a.size; ++i ) {
       toml_value *const a_value = &value->a.values[i];
       if ( a_value->type != TOML_STRING ) {
-        print_error(
+        print_file_error(
           config_path, a_value->loc.line, a_value->loc.col,
           "invalid value for \"%s\"; expected string\n", key_name
         );
@@ -431,7 +431,7 @@ static void string_or_string_array_parse( char const *config_path,
       for ( unsigned i = 0; i < value->a.size; ++i ) {
         toml_value const *const a_value = &value->a.values[i];
         if ( a_value->type != TOML_STRING ) {
-          print_error(
+          print_file_error(
             config_path, a_value->loc.line, a_value->loc.col,
             "invalid value for \"%s\" key array; expected string\n", key_name
           );
@@ -441,7 +441,7 @@ static void string_or_string_array_parse( char const *config_path,
       } // for
       break;
     default:
-      print_error(
+      print_file_error(
         config_path, value->loc.line, value->loc.col,
         "invalid value for \"%s\" key; expected string or array\n", key_name
       );
@@ -468,7 +468,7 @@ static char const* string_value_parse( char const *config_path,
   assert( value != NULL );
 
   if ( value->type != TOML_STRING ) {
-    print_error(
+    print_file_error(
       config_path, value->loc.line, value->loc.col,
       "invalid value for \"%s\"; expected string\n", key_name
     );
@@ -606,7 +606,7 @@ static void color_parse( char const *config_path, toml_table const *table,
     return;
 
   if ( !opt_color_parse( string_value ) ) {
-    print_error(
+    print_file_error(
       config_path, value->loc.line, value->loc.col,
       "invalid value for \"color\"\n"
     );
@@ -650,7 +650,7 @@ static void comment_style_parse( char const *config_path,
     return;
 
   if ( !opt_comment_style_parse( string_value ) ) {
-    print_error(
+    print_file_error(
       config_path, value->loc.line, value->loc.col,
       "invalid value for \"comment-style\";"
       " must be one of \"//\", \"/*\", or \"none\"\n"
@@ -822,10 +822,10 @@ static FILE* config_open( char const *path, config_opts opts ) {
         FALLTHROUGH;
       default:
         if ( (opts & CONFIG_OPT_ERROR_IS_FATAL) != 0 ) {
-          print_error( path, 0, 0, "%s\n", STRERROR() );
+          print_file_error( path, 0, 0, "%s\n", STRERROR() );
           exit( EX_NOINPUT );
         }
-        print_warning( path, 0, 0, "%s\n", STRERROR() );
+        print_file_warning( path, 0, 0, "%s\n", STRERROR() );
         break;
     } // switch
   }
@@ -851,14 +851,14 @@ static void config_parse( char const *config_path, FILE *config_file ) {
 
   while ( toml_table_next( &toml, &table ) ) {
     if ( table.name == NULL ) {
-      print_error(
+      print_file_error(
         config_path, toml.loc.line, toml.loc.col,
         "required table name missing\n"
       );
       exit( EX_CONFIG );
     }
     if ( toml_table_empty( &table ) ) {
-      print_error(
+      print_file_error(
         config_path, table.loc.line, table.loc.col,
         "\"%s\": empty table\n", table.name
       );
@@ -874,7 +874,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
           (kv = toml_iterator_next( &iter )) != NULL; ) {
       config_key const *const key = config_key_parse( kv->key.name );
       if ( key == NULL ) {
-        print_error(
+        print_file_error(
           config_path, kv->key.loc.line, kv->key.loc.col,
           "\"%s\": unknown key\n", table.name
         );
@@ -887,7 +887,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       }
       else if ( (key->table_kinds & table_kinds) == 0 ) {
         assert( table_kinds < ARRAY_SIZE( TABLE_KINDS ) );
-        print_error(
+        print_file_error(
           config_path, kv->key.loc.line, kv->key.loc.col,
           "\"%s\": key not allowed in %s table%s; allowed only in %s table%s\n",
           key->name,
@@ -906,7 +906,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   toml_table_cleanup( &table );
 
   if ( toml.error ) {
-    print_error(
+    print_file_error(
       config_path, toml.loc.line, toml.loc.col,
       "%s\n", toml_error_msg( &toml )
     );
@@ -1099,7 +1099,7 @@ static void ignore_symbols_parse_string( char const *config_path,
     strlen( value->s ) + 1/*\0*/
   );
   if ( !rv_rbi.inserted ) {
-    print_warning(
+    print_file_warning(
       config_path, value->loc.line, value->loc.col,
       "\"%s\" already ignored\n",
       value->s
@@ -1134,14 +1134,14 @@ static void include_add_explicit_proxy( char const *config_path,
     if ( !path_ends_with( from_include->abs_path, value->s, rel_path_len ) )
       continue;
     if ( from_include->proxy != NULL ) {
-      print_warning(
+      print_file_warning(
         config_path, value->loc.line, value->loc.col,
         "\"%s\" already has proxy \"%s\"\n",
         from_include->rel_path, from_include->proxy->rel_path
       );
     }
     else if ( include_proxy_would_cycle( from_include, to_include ) ) {
-      print_warning(
+      print_file_warning(
         config_path, value->loc.line, value->loc.col,
         "\"%s\": proxy cycle detected\n", from_include->rel_path
       );
@@ -1603,7 +1603,7 @@ void config_init( void ) {
   } while ( opt_config_layers || !found_at_least_1 );
 
   if ( !found_at_least_1 ) {
-    print_error( "include-tidy.toml", 0, 0, "no configuration file found\n" );
+    print_error( "no configuration file found\n" );
     exit( EX_CONFIG );
   }
 

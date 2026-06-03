@@ -52,6 +52,26 @@
  * called from.
  * @note A newline is _not_ printed.
  *
+ * @param FORMAT The `printf()` style format string.
+ * @param ... The `printf()` arguments.
+ *
+ * @sa fl_print_error()
+ * @sa #print_file_error()
+ * @sa #print_file_warning()
+ */
+#define print_error(FORMAT, ...)            \
+  fl_print_error( __FILE__, __LINE__,       \
+    NULL, 0, 0, FORMAT                      \
+    VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__  \
+  )
+
+/**
+ * Prints an error message about \a SOURCE_PATH to standard error.
+ *
+ * @note In debug mode, also prints the file & line where the function was
+ * called from.
+ * @note A newline is _not_ printed.
+ *
  * @param SOURCE_PATH The source file's path or NULL for none.
  * @param SOURCE_LINE The source file's error line or zero for none.
  * @param SOURCE_COL The source file's error column or zero for none.
@@ -59,12 +79,13 @@
  * @param ... The `printf()` arguments.
  *
  * @sa fl_print_error()
- * @sa #print_warning()
+ * @sa #print_error()
+ * @sa #print_file_warning()
  */
-#define print_error(SOURCE_PATH, SOURCE_LINE, SOURCE_COL, FORMAT, ...)  \
-  fl_print_error( __FILE__, __LINE__,                                   \
-    (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), FORMAT                  \
-    VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__                              \
+#define print_file_error(SOURCE_PATH, SOURCE_LINE, SOURCE_COL, FORMAT, ...) \
+  fl_print_error( __FILE__, __LINE__,                                       \
+    (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), FORMAT                      \
+    VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__                                  \
   )
 
 /**
@@ -82,11 +103,12 @@
  *
  * @sa fl_print_warning()
  * @sa #print_error()
+ * @sa #print_file_error()
  */
-#define print_warning(SOURCE_PATH, SOURCE_LINE, SOURCE_COL, FORMAT, ...)  \
-  fl_print_warning( __FILE__, __LINE__,                                   \
-    (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), FORMAT                    \
-    VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__                                \
+#define print_file_warning(SOURCE_PATH, SOURCE_LINE, SOURCE_COL, FORMAT, ...) \
+  fl_print_warning( __FILE__, __LINE__,                                       \
+    (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), FORMAT                        \
+    VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__                                    \
   )
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -98,7 +120,7 @@
  * called from.
  * @note A newline is _not_ printed.
  * @note This function isn't normally called directly; use the #print_error()
- * macro instead.
+ * or #print_file_error() macros instead.
  *
  * @param tidy_file The name of the file where this function was called from.
  * @param tidy_line The line number within \a tidy_file where this function was
@@ -111,6 +133,7 @@
  *
  * @sa fl_print_warning()
  * @sa #print_error()
+ * @sa #print_file_error()
  */
 PJL_PRINTF_LIKE_FUNC(6)
 void fl_print_error( char const *tidy_file, int tidy_line,
@@ -123,8 +146,8 @@ void fl_print_error( char const *tidy_file, int tidy_line,
  * @note In debug mode, also prints the file & line where the function was
  * called from.
  * @note A newline is _not_ printed.
- * @note This function isn't normally called directly; use the #print_warning()
- * macro instead.
+ * @note This function isn't normally called directly; use the
+ * #print_file_warning() macro instead.
  *
  * @param tidy_file The name of the file where this function was called from.
  * @param tidy_line The line number within \a tidy_file where this function was
@@ -136,7 +159,7 @@ void fl_print_error( char const *tidy_file, int tidy_line,
  * @param ... The `printf()` arguments.
  *
  * @sa fl_print_error()
- * @sa #print_warning()
+ * @sa #print_file_warning()
  */
 PJL_PRINTF_LIKE_FUNC(6)
 void fl_print_warning( char const *tidy_file, int tidy_line,
