@@ -291,19 +291,16 @@ static void maybe_add_symbol( CXCursor sym_cursor,
   if ( clang_File_isEqual( sym_file, sivd->source_file ) )
     return;
 
-  char const *const sym_name = tidy_getCursorScopedName( sym_cursor );
-  if ( config_ignore_symbol( sym_name ) ) {
-    FREE( sym_name );
-    return;
-  }
+  tidy_symbol new_symbol = {
+    .name = tidy_getCursorScopedName( sym_cursor )
+  };
+  if ( config_ignore_symbol( new_symbol.name ) )
+    goto skip;
 
-  tidy_symbol new_symbol = { .name = sym_name };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_set, &new_symbol, sizeof new_symbol );
-  if ( !rv_rbi.inserted ) {
-    tidy_symbol_cleanup( &new_symbol );
-    return;
-  }
+  if ( !rv_rbi.inserted )
+    goto skip;
 
   tidy_symbol *const  symbol = RB_DINT( rv_rbi.node );
   CXFile              include_file = config_get_symbol_include( symbol->name );
@@ -334,6 +331,11 @@ static void maybe_add_symbol( CXCursor sym_cursor,
       clang_disposeString( abs_path_cxs );
     }
   }
+
+  return;
+
+skip:
+  tidy_symbol_cleanup( &new_symbol );
 }
 
 /**
