@@ -291,24 +291,24 @@ static void maybe_add_symbol( CXCursor sym_cursor,
   if ( clang_File_isEqual( sym_file, sivd->source_file ) )
     return;
 
-  tidy_symbol new_symbol = {
+  tidy_symbol new_sym = {
     .name = tidy_getCursorScopedName( sym_cursor )
   };
-  if ( config_ignore_symbol( new_symbol.name ) )
+  if ( config_ignore_symbol( new_sym.name ) )
     goto skip;
 
   rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &symbol_set, &new_symbol, sizeof new_symbol );
+    rb_tree_insert( &symbol_set, &new_sym, sizeof new_sym );
   if ( !rv_rbi.inserted )
     goto skip;
 
-  tidy_symbol *const  symbol = RB_DINT( rv_rbi.node );
-  CXFile              include_file = config_get_symbol_include( symbol->name );
+  tidy_symbol *const  sym = RB_DINT( rv_rbi.node );
+  CXFile              include_file = config_get_symbol_include( sym->name );
 
   if ( include_file == NULL )
     include_file = sym_file;
   tidy_include const *const include_added_to =
-    include_add_symbol( include_file, symbol );
+    include_add_symbol( include_file, sym );
 
   if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
     if ( false_set( &sivd->verbose_printed ) )
@@ -319,14 +319,14 @@ static void maybe_add_symbol( CXCursor sym_cursor,
       include_get_delims( include_added_to, delims );
       verbose_printf(
         "  \"%s\" -> %c%s%c\n",
-        symbol->name, delims[0], include_added_to->abs_path, delims[1]
+        sym->name, delims[0], include_added_to->abs_path, delims[1]
       );
     }
     else {
       CXString const abs_path_cxs = tidy_File_getRealPathName( include_file );
       char const *const abs_path = clang_getCString( abs_path_cxs );
       verbose_printf(
-        "  \"%s\" -> \"%s\" (NOT added)\n", symbol->name, abs_path
+        "  \"%s\" -> \"%s\" (NOT added)\n", sym->name, abs_path
       );
       clang_disposeString( abs_path_cxs );
     }
@@ -335,7 +335,7 @@ static void maybe_add_symbol( CXCursor sym_cursor,
   return;
 
 skip:
-  tidy_symbol_cleanup( &new_symbol );
+  tidy_symbol_cleanup( &new_sym );
 }
 
 /**
