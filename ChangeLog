@@ -1,3 +1,18 @@
+2026-06-03  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c: Now setting argv[argc] = NULL in grow_argv().
+   * cli_options.c: Removed duplicate "clang".
+   * cli_options.c: Removed unnecessary grow_argv() forward declaration.
+
+2026-06-02  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c, includes.c, print.h, trans_unit.c: Added
+     print_file_error().
+   * trans_unit.c: Replaced some fatal_error() with print_error().
+   * trans_unit.c: Now consistently using diag_file_cs.
+   * symbols.c: Using tidy_symbol_cleanup() for ignore case as well.
+   * includes.c: s/sizeof *sym/0/
+
 2026-05-31  Paul J. Lucas <paul@lucasmail.org>
 
    * configure.ac, print.c, print.h, trans_unit.c: Now printing offending line
