@@ -111,13 +111,14 @@ void trans_unit_check_for_errors( void ) {
         clang_getSpellingLocation(
           diag_loc, &diag_file, &diag_line, &diag_col, &diag_offset
         );
-        CXString const diag_file_cxs = clang_getFileName( diag_file );
-        CXString const diag_msg_cxs = clang_getDiagnosticSpelling( diag );
+        CXString const    diag_file_cxs = clang_getFileName( diag_file );
+        char const *const diag_file_cs = clang_getCString( diag_file_cxs );
+        CXString const    diag_msg_cxs = clang_getDiagnosticSpelling( diag );
         print_error(
-          clang_getCString( diag_file_cxs ), diag_line, diag_col,
+          diag_file_cs, diag_line, diag_col,
           "%s\n", clang_getCString( diag_msg_cxs )
         );
-        print_source_line( tidy_source_path, diag_line, diag_col, diag_offset );
+        print_source_line( diag_file_cs, diag_line, diag_col, diag_offset );
         clang_disposeString( diag_msg_cxs );
         clang_disposeString( diag_file_cxs );
         break;
