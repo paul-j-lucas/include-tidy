@@ -129,9 +129,11 @@ void trans_unit_check_for_errors( void ) {
   } // for
 
   if ( error_count > 0 ) {
-    fatal_error( EX_DATAERR,
+    print_error(
+      NULL, 0, 0,
       "%u error%s generated\n", error_count, plural_s( error_count )
     );
+    exit( EX_DATAERR );
   }
 }
 
@@ -159,11 +161,14 @@ void trans_unit_init( int argc, char const *const argv[] ) {
 
   switch ( error_code ) {
     case CXError_ASTReadError:
-      fatal_error( EX_UNAVAILABLE, "libclang AST error\n" );
+      print_error( tidy_source_path, 0, 0, "libclang AST error\n" );
+      exit( EX_UNAVAILABLE );
     case CXError_Crashed:
-      fatal_error( EX_UNAVAILABLE, "libclang crashed\n" );
+      print_error( tidy_source_path, 0, 0, "libclang crashed\n" );
+      exit( EX_UNAVAILABLE );
     case CXError_InvalidArguments:
-      fatal_error( EX_SOFTWARE, "invalid arguments given to libclang\n" );
+      print_error( NULL, 0, 0, "invalid arguments given to libclang\n" );
+      exit( EX_SOFTWARE );
     case CXError_Failure:
       //
       // Libclang isn't specific about the cause of a failure, so see if the
