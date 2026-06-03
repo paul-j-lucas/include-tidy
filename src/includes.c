@@ -912,7 +912,7 @@ tidy_include const* include_add_symbol( CXFile include_file,
     return NULL;
   while ( include->proxy != NULL )
     include = include->proxy;
-  PJL_DISCARD_RV( rb_tree_insert( &include->symbol_set, sym, sizeof *sym ) );
+  PJL_DISCARD_RV( rb_tree_insert( &include->symbol_set, sym, 0 ) );
   return include;
 }
 
