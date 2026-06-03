@@ -153,7 +153,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
   assert(  lang != NULL );
   ASSERT_RUN_ONCE();
 
-  static char const CLANG_TEMPLATE[] =
+  static char const CLANG_COMMAND[] =
     "%s"          // clang path
     " -E"         // run only the preprocessor stage
     " -v"         // show verbose output
@@ -163,7 +163,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
     " 2>&1";      // redirect stderr to stdout
 
   char *clang_command = NULL;
-  check_asprintf( &clang_command, CLANG_TEMPLATE, clang_path, lang );
+  check_asprintf( &clang_command, CLANG_COMMAND, clang_path, lang );
 
   FILE *const fclang = popen( clang_command, "r" );
   free( clang_command );
