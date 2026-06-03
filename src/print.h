@@ -52,9 +52,9 @@
  * called from.
  * @note A newline is _not_ printed.
  *
- * @param SOURCE_PATH The source file's path.
- * @param SOURCE_LINE The source file's error line.
- * @param SOURCE_COL The source file's error column.
+ * @param SOURCE_PATH The source file's path or NULL for none.
+ * @param SOURCE_LINE The source file's error line or zero for none.
+ * @param SOURCE_COL The source file's error column or zero for none.
  * @param FORMAT The `printf()` style format string.
  * @param ... The `printf()` arguments.
  *
@@ -74,9 +74,9 @@
  * called from.
  * @note A newline is _not_ printed.
  *
- * @param SOURCE_PATH The source file's path.
- * @param SOURCE_LINE The source file's error line.
- * @param SOURCE_COL The source file's error column.
+ * @param SOURCE_PATH The source file's path or NULL for none.
+ * @param SOURCE_LINE The source file's error line or zero for none.
+ * @param SOURCE_COL The source file's error column or zero for none.
  * @param FORMAT The `printf()` style format string.
  * @param ... The `printf()` arguments.
  *
@@ -103,9 +103,9 @@
  * @param tidy_file The name of the file where this function was called from.
  * @param tidy_line The line number within \a tidy_file where this function was
  * called from.
- * @param source_path The source file's path.
- * @param source_line The source file's error line.
- * @param source_col The source file's error column.
+ * @param source_path The source file's path or NULL for none.
+ * @param source_line The source file's error line or zero for none.
+ * @param source_col The source file's error column or zero for none.
  * @param format The `printf()` style format string.
  * @param ... The `printf()` arguments.
  *
@@ -129,9 +129,9 @@ void fl_print_error( char const *tidy_file, int tidy_line,
  * @param tidy_file The name of the file where this function was called from.
  * @param tidy_line The line number within \a tidy_file where this function was
  * called from.
- * @param source_path The source file's path.
- * @param source_line The source file's error line.
- * @param source_col The source file's error column.
+ * @param source_path The source file's path or NULL for none.
+ * @param source_line The source file's error line or zero for none.
+ * @param source_col The source file's error column or zero for none.
  * @param format The `printf()` style format string.
  * @param ... The `printf()` arguments.
  *

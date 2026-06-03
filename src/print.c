@@ -62,9 +62,9 @@
  * @param tidy_file The name of the file where this function was called from.
  * @param tidy_line The line number within \a tidy_file where this function was
  * called from.
- * @param source_path The source file's path.
- * @param source_line The source file's error line.
- * @param source_col The source file's error column.
+ * @param source_path The source file's path or NULL for none.
+ * @param source_line The source file's error line or zero for none.
+ * @param source_col The source file's error column or zero for none.
  * @param what What to print, e.g., `error` or `warning`.
  * @param what_color The color to print \a what in, if any.
  * @param format The `printf()` style format string.
