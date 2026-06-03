@@ -125,7 +125,6 @@ NODISCARD
 static struct option const*
                     get_option( int );
 
-static void         grow_argv( int*, char const**[], size_t );
 static void         insert_argv( int*, char const**[], size_t, size_t,
                                  char const *const[] );
 
