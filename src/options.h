@@ -91,6 +91,7 @@ extern tidy_verbose opt_verbose;          ///< Print verbose output?
 #define OPT_CLANG_DEFAULT         "clang" /**< Default `clang` path. */
 #define OPT_LINE_LENGTH_DEFAULT   80      /**< Default line length. */
 #define OPT_LINE_LENGTH_MAX       256     /**< Maximum line length. */
+#define OPT_VERBOSE_ALL           "acCdfipPsS"  /**< All verbose values. */
 
 ////////// extern argument variables //////////////////////////////////////////
 

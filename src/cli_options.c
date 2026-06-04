@@ -960,7 +960,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       case COPT(VERBOSE):
         if ( !opt_verbose_parse( optarg ) ) {
           fatal_error( EX_USAGE,
-            "\"%s\": invalid value for %s; must be [ais]\n",
+            "\"%s\": invalid value for %s; must be [" OPT_VERBOSE_ALL "]+\n",
             optarg, get_opt_format( opt )
           );
         }
