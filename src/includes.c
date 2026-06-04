@@ -661,6 +661,7 @@ static void includes_print_visitor( tidy_include const *include,
  * @return Returns `true` only if \a include is the associated header for the
  * file currently being tidied.
  */
+NODISCARD
 static bool is_assoc_header( tidy_include const *include,
                              char const *source_file_no_ext ) {
   assert( include != NULL );
@@ -695,6 +696,7 @@ static bool is_assoc_header( tidy_include const *include,
  * @param include The tidy_include to make the comment for.
  * @return Returns said comment.  The caller is responsible for freeing it.
  */
+NODISCARD
 static char* make_symbols_used_comment( tidy_include const *include ) {
   assert( include != NULL );
 
