@@ -1,3 +1,9 @@
+2026-06-04  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c, options.c, options.h: Fixed "must be one of [...]" for
+     --verbose.
+   * cli_options.c: Removed unnecessary call to opt_mark_set().
+
 2026-06-03  Paul J. Lucas <paul@lucasmail.org>
 
    * cli_options.c: Now setting argv[argc] = NULL in grow_argv().
