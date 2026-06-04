@@ -921,7 +921,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
             optarg, get_opt_format( opt )
           );
         }
-        opt_mark_set( COPT(COMMENT_STYLE) );
         break;
       case COPT(CONFIG):
         opt_config_path = optarg;
