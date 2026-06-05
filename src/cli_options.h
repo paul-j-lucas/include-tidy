@@ -46,6 +46,7 @@
 #define OPT_LINE_LENGTH           l
 #define OPT_NO_CONFIG_LAYERS      L
 #define OPT_COMMENT_STYLE         s
+#define OPT_COMMENT_SYMBOLS       S
 #define OPT_VERSION               v
 #define OPT_VERBOSE               V
 

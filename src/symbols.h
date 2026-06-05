@@ -46,6 +46,7 @@ typedef struct tidy_symbol tidy_symbol;
  */
 struct tidy_symbol {
   char const *name;                     ///< Symbol name.
+  unsigned    ref_count;                ///< Number of times referenced.
 };
 
 ////////// extern functions ///////////////////////////////////////////////////

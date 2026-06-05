@@ -1,0 +1,15 @@
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes comment-symbols.c
+#include <stdio.h>                      // fprintf, fputs, stdout
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-symbols=alpha comment-symbols.c
+#include <stdio.h>                      // fprintf, fputs, stdout
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-symbols=length comment-symbols.c
+#include <stdio.h>                      // fputs, stdout, fprintf
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-symbols=most-used comment-symbols.c
+#include <stdio.h>                      // fputs
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-symbols=ref-count comment-symbols.c
+#include <stdio.h>                      // fputs, stdout, fprintf
+

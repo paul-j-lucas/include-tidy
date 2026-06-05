@@ -61,6 +61,7 @@ unsigned      opt_align_column = OPT_ALIGN_COLUMN_DEFAULT;
 bool          opt_all_includes;
 color_when    opt_color_when = COLOR_NOT_FILE;
 char const   *opt_comment_style[2] = { "// ", "" };
+tidy_com_sym  opt_comment_symbols;
 bool          opt_config_layers = true;
 char const   *opt_config_path;
 bool          opt_debug;
@@ -195,6 +196,32 @@ bool opt_comment_style_parse( char const *s ) {
   }
 
   return true;
+}
+
+bool opt_comment_symbols_parse( char const *s ) {
+  struct com_sym_map {
+    char const   *com_sym_str;
+    tidy_com_sym  com_sym;
+  };
+  typedef struct com_sym_map com_sym_map;
+
+  static com_sym_map const COM_SYM_MAP[] = {
+    { "alpha",      TIDY_COM_SYM_ALPHA     },
+    { "length",     TIDY_COM_SYM_LENGTH    },
+    { "ref-count",  TIDY_COM_SYM_REF_COUNT },
+    { "most-used",  TIDY_COM_SYM_MOST_USED },
+  };
+
+  assert( s != NULL );
+
+  FOREACH_ARRAY_ELEMENT( com_sym_map, m, COM_SYM_MAP ) {
+    if ( strcasecmp( s, m->com_sym_str ) == 0 ) {
+      opt_comment_symbols = m->com_sym;
+      return true;
+    }
+  } // for
+
+  return false;
 }
 
 bool opt_error_parse( char const *s ) {

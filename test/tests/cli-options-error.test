@@ -16,6 +16,12 @@ test_include_tidy -Xtidy --comment-style=X
 test_include_tidy -Xtidy -s
 test_include_tidy -Xtidy -sX
 
+test_include_tidy -Xtidy --comment-symbols
+test_include_tidy -Xtidy --comment-symbols=
+test_include_tidy -Xtidy --comment-symbols=X
+test_include_tidy -Xtidy -S
+test_include_tidy -Xtidy -SX
+
 test_include_tidy -Xtidy --config
 test_include_tidy -Xtidy --config=
 test_include_tidy -Xtidy -c

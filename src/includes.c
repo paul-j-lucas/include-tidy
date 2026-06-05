@@ -106,12 +106,18 @@ static void         ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
 #endif /* NEED_II_MATRIX */
 
 NODISCARD
-static char*        make_symbols_used_comment( tidy_include const* );
+static char*        make_symbols_comment( tidy_include const* );
 
 NODISCARD
 static char const*  tidy_File_getRelativePath( CXFile );
 
 static void         tidy_include_cleanup( tidy_include* );
+
+NODISCARD
+static int          tidy_symbol_ptr_cmp_by_name_length( void const*,
+                                                        void const* ),
+                    tidy_symbol_ptr_cmp_by_ref_count( void const*,
+                                                      void const* );
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -598,7 +604,7 @@ static void includes_print_visitor( tidy_include const *include,
       do_print_include = true;
     }
     if ( do_print_include && opt_comment_style[0][0] != '\0' )
-      comment = make_symbols_used_comment( include );
+      comment = make_symbols_comment( include );
   }
   else if ( is_direct ) {
     if ( opt_comment_style[0][0] == '\0' ) {
@@ -696,22 +702,56 @@ static bool is_assoc_header( tidy_include const *include,
  * @return Returns said comment.  The caller is responsible for freeing it.
  */
 NODISCARD
-static char* make_symbols_used_comment( tidy_include const *include ) {
+static char* make_symbols_comment( tidy_include const *include ) {
   assert( include != NULL );
 
   size_t const fixed_len = opt_align_column +
     strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
 
-  bool          comma = false;
-  bool          done = false;
+  array_t symbols_array;
+  array_init( &symbols_array, sizeof(tidy_symbol*) );
+  array_reserve( &symbols_array, include->symbol_set.size );
+
   rb_iterator_t iter;
-  strbuf_t      symbols_buf;
-
-  strbuf_init( &symbols_buf );
   rb_iterator_init( &include->symbol_set, &iter );
+  for ( tidy_symbol const *sym; (sym = rb_iterator_next( &iter )) != NULL; )
+    *(tidy_symbol const**)array_push_back( &symbols_array ) = sym;
 
-  for ( tidy_symbol const *sym;
-        !done && (sym = rb_iterator_next( &iter )) != NULL; ) {
+  strbuf_t symbols_buf;
+  strbuf_init( &symbols_buf );
+
+  switch ( opt_comment_symbols ) {
+    case TIDY_COM_SYM_ALPHA:
+      // Array is already sorted alphabetically.
+      break;
+    case TIDY_COM_SYM_LENGTH:
+      array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_name_length );
+      break;
+    case TIDY_COM_SYM_MOST_USED:;
+      // We could sort by ref_count descending as in TIDY_COM_SYM_REF_COUNT
+      // then simply use only the zeroth element, but sorting is O(n log n),
+      // whereas just iterating through the entire array is O(n).
+      tidy_symbol const *most_ref_sym =
+        *(tidy_symbol const**)array_at_nc( &symbols_array, 0 );
+      for ( size_t i = 1; i < symbols_array.len; ++i ) {
+        tidy_symbol const *const sym =
+          *(tidy_symbol const**)array_at_nc( &symbols_array, i );
+        if ( sym->ref_count > most_ref_sym->ref_count )
+          most_ref_sym = sym;
+      } // for
+      strbuf_puts( &symbols_buf, most_ref_sym->name );
+      goto done;
+    case TIDY_COM_SYM_REF_COUNT:
+      array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_ref_count );
+      break;
+  } // switch
+
+  bool comma = false;
+  bool is_done = false;
+
+  for ( size_t i = 0; !is_done && i < symbols_array.len; ++i ) {
+    tidy_symbol const *const sym =
+      *(tidy_symbol const**)array_at_nc( &symbols_array, i );
     char const   *sym_name = sym->name;
     size_t const  sym_name_len = strlen( sym_name );
     size_t        add_len = (comma ? STRLITLEN( ", " ) : 0) + sym_name_len;
@@ -724,7 +764,7 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
       if ( new_line_len > opt_line_length )
         break;                          // ", ..." didn't fit either
       sym_name = "...";
-      done = true;
+      is_done = true;
     }
 
     strbuf_sepsn_puts(
@@ -732,6 +772,8 @@ static char* make_symbols_used_comment( tidy_include const *include ) {
     );
   } // for
 
+done:
+  array_cleanup( &symbols_array, /*free_fn=*/NULL );
   return strbuf_take( &symbols_buf );
 }
 
@@ -855,6 +897,61 @@ static int tidy_include_cmp_for_print( void const *pi_data,
   if ( i_include->sort_rank > j_include->sort_rank )
     return 1;
   return strcmp( i_include->rel_path, j_include->rel_path );
+}
+
+/**
+ * Compares two \ref tidy_symbol objects by their name length.
+ *
+ * @param i_pp The first pointer to a `tidy_symbol*`.
+ * @param j_pp The second pointer to a `tidy_symbol*`.
+ * @return Returns a number less than 0, 0, or greater than 0 if the length of
+ * the first symbol's name is less than, equal to, or greater than the length
+ * of the second symbol's name, respectively.
+ *
+ * @sa tidy_symbol_ptr_cmp_by_ref_count()
+ */
+NODISCARD
+static int tidy_symbol_ptr_cmp_by_name_length( void const *i_pp,
+                                               void const *j_pp ) {
+  assert( i_pp != NULL );
+  assert( j_pp != NULL );
+
+  tidy_symbol const *const i_sym = *POINTER_CAST( tidy_symbol const**, i_pp );
+  tidy_symbol const *const j_sym = *POINTER_CAST( tidy_symbol const**, j_pp );
+
+  int const cmp =
+    STATIC_CAST( int, strlen( i_sym->name ) ) -
+    STATIC_CAST( int, strlen( j_sym->name ) );
+
+  return cmp != 0 ? cmp : strcmp( i_sym->name, j_sym->name );
+}
+
+/**
+ * Compares two \ref tidy_symbol objects by their \ref tidy_symbol::ref_count
+ * "reference count", descending.
+ *
+ * @param i_pp The first pointer to a `tidy_symbol*`.
+ * @param j_pp The second pointer to a `tidy_symbol*`.
+ * @return Returns a number less than 0, 0, or greater than 0 if the reference
+ * count of the second symbol is less than, equal to, or greater than the
+ * reference count of the first symbol, respectively.
+ *
+ * @sa tidy_symbol_ptr_cmp_by_name_length()
+ */
+NODISCARD
+static int tidy_symbol_ptr_cmp_by_ref_count( void const *i_pp,
+                                             void const *j_pp ) {
+  assert( i_pp != NULL );
+  assert( j_pp != NULL );
+
+  tidy_symbol const *const i_sym = *POINTER_CAST( tidy_symbol const**, i_pp );
+  tidy_symbol const *const j_sym = *POINTER_CAST( tidy_symbol const**, j_pp );
+
+  int const cmp =                       // descending, so j_sym is first
+    STATIC_CAST( int, j_sym->ref_count ) -
+    STATIC_CAST( int, i_sym->ref_count );
+
+  return cmp != 0 ? cmp : strcmp( i_sym->name, j_sym->name );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////

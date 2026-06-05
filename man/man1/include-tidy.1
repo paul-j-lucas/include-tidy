@@ -35,7 +35,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "May 28, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "June 5, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -89,6 +89,9 @@ or
 .B \-\-comment-style
 or
 .BR \-s ,
+.B \-\-comment-symbols
+or
+.BR \-S ,
 and the
 .B \-\-line-length
 or
@@ -449,6 +452,37 @@ may need to be quoted
 to prevent shell expansion.)
 Comments for unnecessary headers
 are always printed.
+This option implies
+.BR \-\-all-includes .
+.TP
+.BR \-\-comment-symbols \f1=\fPs "\f1 | \fP" "" \-S " s"
+Specifies which symbols
+and in what order
+to include in a comment.
+The choices for
+.I s
+are:
+.RS 8
+.TP 11
+.PD 0
+.B alpha
+Sorted alphabetically.
+.TP
+.B length
+Sorted by name length, ascending.
+.TP
+.B ref-count
+Sorted by reference count, descending.
+.TP
+.B most-used
+Only the most-used symbol.
+.RE
+.PD
+.IP
+The default is
+.BR alpha .
+This option implies
+.BR \-\-all-includes .
 .TP
 .BR \-\-config \f1=\fPf "\f1 | \fP" "" \-c " f"
 Specifies the path of the configuration file to use first.
@@ -707,6 +741,11 @@ command-line option.
 .BI comment-style " \f1=\fP s"
 Same as the
 .B \-\-comment-style
+command-line option.
+.TP
+.BI comment-symbols " \f1=\fP s"
+Same as the
+.B \-\-comment-symbols
 command-line option.
 .TP
 .BI line-length " \f1=\fP n"

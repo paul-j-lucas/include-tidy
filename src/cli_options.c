@@ -77,6 +77,7 @@ static struct option const OPTIONS[] = {
   { "clang",            required_argument,  NULL, COPT(CLANG)             },
   { "color",            required_argument,  NULL, COPT(COLOR)             },
   { "comment-style",    required_argument,  NULL, COPT(COMMENT_STYLE)     },
+  { "comment-symbols",  required_argument,  NULL, COPT(COMMENT_SYMBOLS)   },
   { "config",           required_argument,  NULL, COPT(CONFIG)            },
   { "debug",            no_argument,        NULL, COPT(DEBUG)             },
   { "directory",        required_argument,  NULL, COPT(DIRECTORY)         },
@@ -103,6 +104,7 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(CLANG) ] = "Path of clang to use or \"none\"; default=\"" OPT_CLANG_DEFAULT "\"",
   [ COPT(COLOR) ] = "When to colorize output; default=\"not_file\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"; default=\"//\"",
+  [ COPT(COMMENT_SYMBOLS) ] = "Comment symbols sort order",
   [ COPT(CONFIG) ] = "Configuration file path",
   [ COPT(DEBUG) ] = "Print " PACKAGE " debug output",
   [ COPT(DIRECTORY) ] = "Change directory before tidying",
@@ -921,6 +923,16 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
             optarg, get_opt_format( opt )
           );
         }
+        opt_all_includes = true;
+        break;
+      case COPT(COMMENT_SYMBOLS):
+        if ( !opt_comment_symbols_parse( optarg ) ) {
+          fatal_error( EX_USAGE,
+            "\"%s\": invalid value for %s\n",
+            optarg, get_opt_format( opt )
+          );
+        }
+        opt_all_includes = true;
         break;
       case COPT(CONFIG):
         opt_config_path = optarg;

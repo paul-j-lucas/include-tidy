@@ -1,0 +1,30 @@
+EXPECTED_EXIT=0
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy --comment-symbols=alpha \
+    comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy --comment-symbols=length \
+    comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy --comment-symbols=most-used \
+    comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy --comment-symbols=ref-count \
+    comment-symbols.c

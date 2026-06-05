@@ -17,6 +17,15 @@ A better way to invoke **include-tidy** from a Makefile is now given.
 ** `--comment-style` help default
 Added `default="//"` to the help message for `--comment-style`.
 
+** `--comment-style` implies `--all-includes`
+Use of the `--comment-style` option now implies the `--all-includes` option.
+
+** New `--comment-symbols` option
+A new `--comment-symbols` or `-S` option allows you to specify the sort order
+of symbols in comments: `alpha` (alphabetically, the default), `length` (name
+length), `ref-count` (reference count, descending), `most-used` (only the most-
+used symbol).
+
 ** Man page fixes
 A few things on the man page were fixed.
 

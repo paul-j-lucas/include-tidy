@@ -166,6 +166,8 @@ static void         color_parse( char const*, toml_table const*,
                                  toml_value const* );
 static void         comment_style_parse( char const*, toml_table const*,
                                          toml_value const* );
+static void         comment_symbols_parse( char const*, toml_table const*,
+                                           toml_value const* );
 
 NODISCARD
 static config_key const*
@@ -234,6 +236,7 @@ static config_key const CONFIG_KEYS[] = {
   { "associated-header",  TABLE_SOURCE,         &associated_header_parse  },
   { "color",              TABLE_INCLUDE_TIDY,   &color_parse              },
   { "comment-style",      TABLE_INCLUDE_TIDY,   &comment_style_parse      },
+  { "comment-symbols",    TABLE_INCLUDE_TIDY,   &comment_symbols_parse    },
   { "elide-includes",     TABLE_HEADER_SOURCE,  &elide_includes_parse     },
   { "first",              TABLE_HEADER,         &first_parse              },
   { "ignore",             TABLE_SYMBOL,         &ignore_parse             },
@@ -658,6 +661,37 @@ static void comment_style_parse( char const *config_path,
     exit( EX_CONFIG );
   }
   opt_mark_set( COPT(COMMENT_STYLE) );
+}
+
+/**
+ * Parses the value of an `"comment-symbols"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table Not used.
+ * @param value The toml_value to parse.
+ */
+static void comment_symbols_parse( char const *config_path,
+                                   toml_table const *table,
+                                   toml_value const *value ) {
+  assert( config_path != NULL );
+  (void)table;
+  assert( value != NULL );
+
+  char const *const string_value =
+    string_value_parse( config_path, "comment-symbols", value );
+
+  if ( opt_is_set( COPT(COMMENT_SYMBOLS) ) )
+    return;
+
+  if ( !opt_comment_symbols_parse( string_value ) ) {
+    print_file_error(
+      config_path, value->loc.line, value->loc.col,
+      "invalid value for \"comment-symbols\";"
+      " must be one of \"alpha\", \"length\", \"ref-count\", or \"most-used\"\n"
+    );
+    exit( EX_CONFIG );
+  }
+  opt_mark_set( COPT(COMMENT_SYMBOLS) );
 }
 
 /**

@@ -3,22 +3,23 @@ usage: include-tidy [-Xtidy tidy-option]... [clang-option]... source-file
        include-tidy other-option
 
 tidy options:
-  --align-column=ARG  (-a) Align comments to this column; default=41.
-  --all-includes      (-A) Print all includes, not just those in violation.
-  --clang=ARG         (-C) Path of clang to use or "none"; default="clang".
-  --color=ARG         (-k) When to colorize output; default="not_file".
-  --comment-style=ARG (-s) Comment style: "//", "/*", or "none"; default="//".
-  --config=ARG        (-c) Configuration file path.
-  --debug             (-D) Print include-tidy debug output.
-  --directory=ARG     (-d) Change directory before tidying.
-  --error=ARG         (-e) When to exit with a non-zero status.
-  --line-length=ARG   (-l) Line length; default=80.
-  --no-config-layers  (-L) Don't do configuration file layering.
-  --verbose=ARG       (-V) Print verbose output.
+  --align-column=ARG    (-a) Align comments to this column; default=41.
+  --all-includes        (-A) Print all includes, not just those in violation.
+  --clang=ARG           (-C) Path of clang to use or "none"; default="clang".
+  --color=ARG           (-k) When to colorize output; default="not_file".
+  --comment-style=ARG   (-s) Comment style: "//", "/*", or "none"; default="//".
+  --comment-symbols=ARG (-S) Comment symbols sort order.
+  --config=ARG          (-c) Configuration file path.
+  --debug               (-D) Print include-tidy debug output.
+  --directory=ARG       (-d) Change directory before tidying.
+  --error=ARG           (-e) When to exit with a non-zero status.
+  --line-length=ARG     (-l) Line length; default=80.
+  --no-config-layers    (-L) Don't do configuration file layering.
+  --verbose=ARG         (-V) Print verbose output.
 
 other options:
-  --help                   Print this help and exit.
-  --version                Print version and exit.
+  --help                     Print this help and exit.
+  --version                  Print version and exit.
 
 include-tidy home page: https://github.com/paul-j-lucas/include-tidy
 Report bugs to: https://github.com/paul-j-lucas/include-tidy/issues

@@ -299,12 +299,12 @@ static void maybe_add_symbol( CXCursor sym_cursor,
 
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_set, &new_sym, sizeof new_sym );
+  tidy_symbol *const sym = RB_DINT( rv_rbi.node );
+  ++sym->ref_count;
   if ( !rv_rbi.inserted )
     goto skip;
 
-  tidy_symbol *const  sym = RB_DINT( rv_rbi.node );
-  CXFile              include_file = config_get_symbol_include( sym->name );
-
+  CXFile include_file = config_get_symbol_include( sym->name );
   if ( include_file == NULL )
     include_file = sym_file;
   tidy_include const *const include_added_to =

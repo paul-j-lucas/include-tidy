@@ -43,6 +43,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Which symbols and in what order to include in a comment.
+ */
+enum tidy_com_sym {
+  TIDY_COM_SYM_ALPHA,                   ///< Sorted alphabetically.
+  TIDY_COM_SYM_LENGTH,                  ///< Sorted by name length, ascending.
+  TIDY_COM_SYM_MOST_USED,               ///< Only most used symbol.
+  TIDY_COM_SYM_REF_COUNT                ///< Sorted by ref. count, descending.
+};
+
+/**
  * When to exit with a non-zero status code.
  */
 enum tidy_error {
@@ -70,6 +80,7 @@ enum tidy_verbose {
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
+typedef enum tidy_com_sym tidy_com_sym;
 typedef enum tidy_error   tidy_error;
 typedef enum tidy_verbose tidy_verbose;
 
@@ -79,6 +90,7 @@ extern unsigned     opt_align_column;     ///< Comment alignment column.
 extern bool         opt_all_includes;     ///< Print all includes?
 extern color_when   opt_color_when;       ///< When to colorize.
 extern char const  *opt_comment_style[2]; ///< Comment delimiters to use.
+extern tidy_com_sym opt_comment_symbols;  ///< How to list symbols in comments.
 extern bool         opt_config_layers;    ///< Do configuration file layering?
 extern char const  *opt_config_path;      ///< Configuration file path.
 extern bool         opt_debug;            ///< Print debugging output?
@@ -125,6 +137,15 @@ bool opt_color_parse( char const *s );
  */
 NODISCARD
 bool opt_comment_style_parse( char const *s );
+
+/**
+ * Parses the comment symbols.
+ *
+ * @param s The comment symbols to parse.
+ * @return Returns `true` only if \a s parsed successfully.
+ */
+NODISCARD
+bool opt_comment_symbols_parse( char const *s );
 
 /**
  * Parses when to exit with a non-zero exit status.
