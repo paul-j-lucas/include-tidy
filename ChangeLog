@@ -1,5 +1,14 @@
+2026-06-05  Paul J. Lucas <paul@lucasmail.org>
+
+   * man/man1/include-tidy.1, cli_options.c, cli_options.h, config_file.c,
+     includes.c, options.c, options.h, symbols.c, symbols.h, test/Makefile.am,
+     comment-symbols.c, cli-comment-symbols.out, cli-help.out,
+     cli-options-error.out, cli-comment-symbols.test, cli-options-error.test:
+     Added --comment-symbols option.
+
 2026-06-04  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c: Added NODISCARD.
    * cli_options.c, options.c, options.h: Fixed "must be one of [...]" for
      --verbose.
    * cli_options.c: Removed unnecessary call to opt_mark_set().
