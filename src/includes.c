@@ -101,18 +101,17 @@ struct includes_print_visitor_data {
 ////////// local functions ////////////////////////////////////////////////////
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-static void           ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
-                                         CXClientData );
+static void         ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
+                                       CXClientData );
 #endif /* NEED_II_MATRIX */
 
 NODISCARD
-static char*          make_symbols_used_comment( tidy_include const* );
+static char*        make_symbols_used_comment( tidy_include const* );
 
 NODISCARD
-char const*           tidy_File_getRelativePath( CXFile );
+static char const*  tidy_File_getRelativePath( CXFile );
 
-static void           tidy_include_cleanup( tidy_include* );
-
+static void         tidy_include_cleanup( tidy_include* );
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -773,7 +772,7 @@ static bool should_print_include( tidy_include const *include ) {
  * responsible for freeing it.
  */
 NODISCARD
-char const* tidy_File_getRelativePath( CXFile file ) {
+static char const* tidy_File_getRelativePath( CXFile file ) {
   assert( file != NULL );
 
   CXString const    path_cxs = clang_getFileName( file );
