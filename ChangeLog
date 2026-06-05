@@ -1,5 +1,6 @@
 2026-06-05  Paul J. Lucas <paul@lucasmail.org>
 
+   * man/man1/include-tidy.1: Made "choices" wording consistent.
    * man/man1/include-tidy.1, cli_options.c, cli_options.h, config_file.c,
      includes.c, options.c, options.h, symbols.c, symbols.h, test/Makefile.am,
      comment-symbols.c, cli-comment-symbols.out, cli-help.out,
