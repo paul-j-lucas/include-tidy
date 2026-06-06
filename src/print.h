@@ -35,6 +35,9 @@
 // libclang
 #include <clang-c/Index.h>
 
+// standard
+#include <stddef.h>                     /* for NULL */
+
 /// @endcond
 
 /**
