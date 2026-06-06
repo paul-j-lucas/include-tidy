@@ -171,7 +171,7 @@ void opt_include_paths_add( char const *include_path );
  * abs_path were `/opt/local/libexec/llvm-21/include/clang-c/Index.h`, then
  * this function would return `clang-c/Index.h`.
  *
- * @param abs_path The absolte path of a file being included.
+ * @param abs_path The absolute path of a file being included.
  * @return Returns the shortened path of \a abs_path relative to one of the
  * `-I` absolute paths.
  *
