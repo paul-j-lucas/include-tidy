@@ -1267,7 +1267,7 @@ static bool is_standard_include( char const *rel_path,
   assert( includes != NULL );
 
   for ( size_t i = 0; i < includes->len; ++i ) {
-    char const *const pattern = array_at_nc( includes, i );
+    char const *const pattern = *(char const**)array_at_nc( includes, i );
     int const flags = strstr( pattern, "**" ) == NULL ? FNM_PATHNAME : 0;
     int const fnm_rv = fnmatch( pattern, rel_path, flags );
     switch ( fnm_rv ) {
