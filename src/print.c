@@ -179,13 +179,13 @@ void print_source_line( char const *path, unsigned line, unsigned col,
   assert( line > 0 );
   assert( col > 0 );
 
-  FILE *const fsource = fopen( path, "rb" );
-  if ( fsource == NULL )
-    return;
   long const line_pos =
     STATIC_CAST( long, offset ) - (STATIC_CAST( long, col ) - 1);
   if ( line_pos < 0 )
-    goto done;
+    return;
+  FILE *const fsource = fopen( path, "rb" );
+  if ( fsource == NULL )
+    return;
   if ( fseek( fsource, line_pos, SEEK_SET ) == -1 )
     goto done;
 
