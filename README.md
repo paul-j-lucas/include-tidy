@@ -65,7 +65,11 @@ you can generate `configure` yourself by doing:
 
     ./bootstrap
 
-Then follow the generic installation instructions
+Or you can download a
+[released version](https://github.com/paul-j-lucas/include-tidy/releases)
+that contains `configure`.
+In either case,
+then follow the generic installation instructions
 given in `INSTALL`.
 
 If you would like to generate the developer documentation,
