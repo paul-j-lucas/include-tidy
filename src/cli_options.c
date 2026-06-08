@@ -854,11 +854,11 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   tidy_source_path = get_source_path( *pargc, *pargv );
   char const *const clang_path = get_clang_path( *pargc, *pargv );
-  char const *const ext =
+  char const *const source_ext =
     tidy_source_path != NULL ? path_ext( tidy_source_path ) : NULL;
   char const *lang = get_x_language( *pargc, *pargv );
-  if ( lang == NULL && ext != NULL )
-    lang = get_ext_language( ext );
+  if ( lang == NULL && source_ext != NULL )
+    lang = get_ext_language( source_ext );
   if ( clang_path != NULL && lang != NULL )
     add_clang_include_paths( pargc, pargv, clang_path, lang );
 
@@ -1028,10 +1028,10 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   if ( lang == NULL ) {
     EPRINTF( "%s: ", prog_name );
-    if ( ext == NULL )
+    if ( source_ext == NULL )
       EPUTS( "missing" );
     else
-      EPRINTF( "\"%s\": unknown", ext );
+      EPRINTF( "\"%s\": unknown", source_ext );
     EPUTS( " extension; must be one of " );
     bool comma = false;
     for ( ext_lang_map const *m = EXT_LANG_MAP; m->ext != NULL; ++m )
