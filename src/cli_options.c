@@ -142,17 +142,17 @@ static bool         is_Xtidy_opt( int, char const *const[], int* );
  * @param pargc A pointer to the argument count from \c main().
  * @param pargv A pointer to the argument values from \c main().
  * @param clang_path The path of the **clang** to use.
- * @param lang The language to use, either `"c"` or `"c++"`.
+ * @param source_lang The language to use, either `"c"` or `"c++"`.
  */
 static void add_clang_include_paths( int *pargc, char const **pargv[],
                                      char const *clang_path,
-                                     char const *lang ) {
+                                     char const *source_lang ) {
   assert(  pargc != NULL );
   assert( *pargc > 0 );
   assert(  pargv != NULL );
   assert( *pargv != NULL );
   assert(  clang_path != NULL );
-  assert(  lang != NULL );
+  assert(  source_lang != NULL );
   ASSERT_RUN_ONCE();
 
   static char const CLANG_COMMAND[] =
@@ -165,7 +165,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
     " 2>&1";      // redirect stderr to stdout
 
   char *clang_command = NULL;
-  check_asprintf( &clang_command, CLANG_COMMAND, clang_path, lang );
+  check_asprintf( &clang_command, CLANG_COMMAND, clang_path, source_lang );
 
   FILE *const fclang = popen( clang_command, "r" );
   free( clang_command );
@@ -856,11 +856,11 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   char const *const clang_path = get_clang_path( *pargc, *pargv );
   char const *const source_ext =
     tidy_source_path != NULL ? path_ext( tidy_source_path ) : NULL;
-  char const *lang = get_x_language( *pargc, *pargv );
-  if ( lang == NULL && source_ext != NULL )
-    lang = get_ext_language( source_ext );
-  if ( clang_path != NULL && lang != NULL )
-    add_clang_include_paths( pargc, pargv, clang_path, lang );
+  char const *source_lang = get_x_language( *pargc, *pargv );
+  if ( source_lang == NULL && source_ext != NULL )
+    source_lang = get_ext_language( source_ext );
+  if ( clang_path != NULL && source_lang != NULL )
+    add_clang_include_paths( pargc, pargv, clang_path, source_lang );
 
   // So #include "/path/to/current/directory/foo.h" will get relativized to
   // "foo.h".
@@ -1026,7 +1026,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     exit( EX_OK );
   }
 
-  if ( lang == NULL ) {
+  if ( source_lang == NULL ) {
     EPRINTF( "%s: ", prog_name );
     if ( source_ext == NULL )
       EPUTS( "missing" );
