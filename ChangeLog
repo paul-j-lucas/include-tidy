@@ -1,5 +1,7 @@
 2026-06-09  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c: Added support for -isystem-after, -iquote, and -cxx-isystem
+     options.
    * cli_options.c: Added move_tidy_long_option().
    * cli_options.c: Now also handling --include-directory and -isystem with =.
    * cli_options.c: Moved calls to fatal_error.
