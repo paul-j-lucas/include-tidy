@@ -90,9 +90,9 @@ static void options_cleanup( void ) {
 }
 
 /**
- * Parses a string into an <code>unsigned long long</code>.
+ * Parses a string into an `unsigned long long`.
  *
- * @remarks Unlike **strtoull(3)**, insists that \a s is entirely a non-
+ * @remarks Unlike **strtoull**(3), insists that \a s is entirely a non-
  * negative integer.
  *
  * @param s The NULL-terminated string to parse.

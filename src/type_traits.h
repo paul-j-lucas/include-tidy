@@ -66,7 +66,7 @@
 
 /**
  * Checks (at compile-time) whether the type of \a EXPR is a C string type,
- * i.e., <code>char*</code> or <code>char const*</code>.
+ * i.e., `char*` or `char const*`.
  *
  * @param EXPR An expression. It is _not_ evaluated.
  * @return Returns 1 (true) only if \a EXPR is a C string type; 0 (false)
