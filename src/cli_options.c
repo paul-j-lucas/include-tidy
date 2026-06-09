@@ -700,7 +700,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
     else if ( STRNCMPLIT( argv[i], "-I" ) == 0 ) {
       argv[ new_argc++ ] = argv[i];
       tidy_argv[ tidy_argc++ ] = argv[i];
-      if ( argv[i][2] == '\0' ) {  // -I <dir>, not -I<dir>
+      if ( argv[i][2] == '\0' ) {       // -I <dir>
         if ( ++i >= argc ) {
           short_opt = 'I';
           goto short_opt_requires_argument;
@@ -710,21 +710,56 @@ static void move_tidy_args( int *pargc, char const *argv[],
       }
     }
 
+    else if ( STRNCMPLIT( argv[i], "--include-directory" ) == 0 ) {
+      argv[ new_argc++ ] = argv[i];
+      char const *dir_arg;
+      switch ( argv[i][STRLITLEN( "--include-directory" )] ) {
+        case '\0':                      // --include-directory <dir>
+          if ( ++i >= argc ) {
+            long_opt = "--include-directory";
+            goto long_opt_requires_argument;
+          }
+          argv[ new_argc++ ] = argv[i];
+          dir_arg = argv[i];
+          break;
+        case '=':                       // --include-directory=<dir>
+          dir_arg = argv[i] + STRLITLEN( "--include-directory=" );
+          break;
+        default:                        // --include-directory<dir>
+          dir_arg = argv[i] + STRLITLEN( "--include-directory" );
+          break;
+      } // switch
+
+      // Convert --include-directory to -I for include-tidy.
+      char *new_arg = NULL;
+      check_asprintf( &new_arg, "-I%s", dir_arg );
+      tidy_argv[ tidy_argc++ ] = new_arg;
+    }
+
     else if ( STRNCMPLIT( argv[i], "-isystem" ) == 0 ) {
       argv[ new_argc++ ] = argv[i];
-      char *new_arg = NULL;
+      char const *dir_arg;
+      switch ( argv[i][STRLITLEN( "-isystem" )] ) {
+        case '\0':                      // -isystem <dir>
+          if ( ++i >= argc ) {
+            long_opt = "-isystem";
+            goto long_opt_requires_argument;
+          }
+          argv[ new_argc++ ] = argv[i];
+          dir_arg = argv[i];
+          break;
+        case '=':                       // -isystem=<dir>
+          dir_arg = argv[i] + STRLITLEN( "-isystem=" );
+          break;
+        default:                        // -isystem<dir>
+          dir_arg = argv[i] + STRLITLEN( "-isystem" );
+          break;
+      } // switch
+
       // Convert -isystem to -I for include-tidy.
-      check_asprintf( &new_arg, "-I%s", argv[i] + STRLITLEN( "-isystem" ) );
+      char *new_arg = NULL;
+      check_asprintf( &new_arg, "-I%s", dir_arg );
       tidy_argv[ tidy_argc++ ] = new_arg;
-      if ( argv[i][STRLITLEN( "-isystem" )] == '\0' ) {
-        // -isystem <dir>, not -isystem<dir>
-        if ( ++i >= argc ) {
-          long_opt = "-isystem";
-          goto long_opt_requires_argument;
-        }
-        argv[ new_argc++ ] = argv[i];
-        tidy_argv[ tidy_argc++ ] = argv[i];
-      }
     }
 
     else if ( STRNCMPLIT( argv[i], "--help" ) == 0 ||
