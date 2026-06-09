@@ -662,41 +662,54 @@ static void move_tidy_args( int *pargc, char const *argv[],
 
   int const argc = *pargc;
   int new_argc = 1, tidy_argc = 1;
+  char const *long_opt;
+  char short_opt;
 
   char const **const tidy_argv =
     MALLOC( char*, STATIC_CAST( size_t, argc ) + 1/*NULL*/ );
   tidy_argv[0] = argv[0];
 
   for ( int i = 1; i < argc; ++i ) {
+
     if ( is_Xtidy_opt( argc, argv, &i ) ) {
       tidy_argv[ tidy_argc++ ] = argv[i];
       if ( argv[i][0] == '-' && isalnum( argv[i][1] ) ) {
         if ( argv[i][2] != '\0' )
           continue;
-        char const short_opt = argv[i][1];
+        short_opt = argv[i][1];
         struct option const *const option = get_option( short_opt );
         if ( option == NULL ) {
           fatal_error( EX_USAGE,
             "'%c': invalid option; use --help for help\n", short_opt
           );
         }
-        if ( option->has_arg == no_argument )
-          continue;
-        if ( ++i >= argc )
-          fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", short_opt );
-        tidy_argv[ tidy_argc++ ] = argv[i];
+        switch ( option->has_arg ) {
+          case no_argument:
+            break;
+          case optional_argument:
+            UNEXPECTED_INT_VALUE( option->has_arg );
+          case required_argument:
+            if ( ++i >= argc )
+              goto short_opt_requires_argument;
+            tidy_argv[ tidy_argc++ ] = argv[i];
+            break;
+        } // switch
       }
     }
+
     else if ( STRNCMPLIT( argv[i], "-I" ) == 0 ) {
       argv[ new_argc++ ] = argv[i];
       tidy_argv[ tidy_argc++ ] = argv[i];
       if ( argv[i][2] == '\0' ) {  // -I <dir>, not -I<dir>
-        if ( ++i >= argc )
-          fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", argv[i][1] );
+        if ( ++i >= argc ) {
+          short_opt = 'I';
+          goto short_opt_requires_argument;
+        }
         argv[ new_argc++ ] = argv[i];
         tidy_argv[ tidy_argc++ ] = argv[i];
       }
     }
+
     else if ( STRNCMPLIT( argv[i], "-isystem" ) == 0 ) {
       argv[ new_argc++ ] = argv[i];
       char *new_arg = NULL;
@@ -705,16 +718,20 @@ static void move_tidy_args( int *pargc, char const *argv[],
       tidy_argv[ tidy_argc++ ] = new_arg;
       if ( argv[i][STRLITLEN( "-isystem" )] == '\0' ) {
         // -isystem <dir>, not -isystem<dir>
-        if ( ++i >= argc )
-          fatal_error( EX_USAGE, "\"-isystem\" requires an argument\n" );
+        if ( ++i >= argc ) {
+          long_opt = "-isystem";
+          goto long_opt_requires_argument;
+        }
         argv[ new_argc++ ] = argv[i];
         tidy_argv[ tidy_argc++ ] = argv[i];
       }
     }
+
     else if ( STRNCMPLIT( argv[i], "--help" ) == 0 ||
               STRNCMPLIT( argv[i], "--version" ) == 0 ) {
       tidy_argv[ tidy_argc++ ] = argv[i];
     }
+
     else {
       argv[ new_argc++ ] = argv[i];
     }
@@ -725,6 +742,13 @@ static void move_tidy_args( int *pargc, char const *argv[],
   *pargc = new_argc;
   *ptidy_argc = tidy_argc;
   *ptidy_argv = tidy_argv;
+  return;
+
+short_opt_requires_argument:
+  fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", short_opt );
+
+long_opt_requires_argument:
+  fatal_error( EX_USAGE, "\"%s\" requires an argument\n", long_opt );
 }
 
 /**
