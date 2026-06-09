@@ -713,15 +713,33 @@ static void move_tidy_args( int *pargc, char const *argv[],
       }
     }
 
-    else if ( STRNCMPLIT( argv[i], "--include-directory" ) == 0 ) {
+    else if ( STRNCMPLIT( argv[i], "-cxx-isystem" ) == 0 ) {
       move_tidy_long_option(
-        "--include-directory", argc, argv, &new_argc, &tidy_argc, tidy_argv, &i
+        "-cxx-isystem", argc, argv, &new_argc, &tidy_argc, tidy_argv, &i
+      );
+    }
+
+    else if ( STRNCMPLIT( argv[i], "-iquote" ) == 0 ) {
+      move_tidy_long_option(
+        "-iquote", argc, argv, &new_argc, &tidy_argc, tidy_argv, &i
       );
     }
 
     else if ( STRNCMPLIT( argv[i], "-isystem" ) == 0 ) {
       move_tidy_long_option(
         "-isystem", argc, argv, &new_argc, &tidy_argc, tidy_argv, &i
+      );
+    }
+
+    else if ( STRNCMPLIT( argv[i], "-isystem-after" ) == 0 ) {
+      move_tidy_long_option(
+        "-isystem-after", argc, argv, &new_argc, &tidy_argc, tidy_argv, &i
+      );
+    }
+
+    else if ( STRNCMPLIT( argv[i], "--include-directory" ) == 0 ) {
+      move_tidy_long_option(
+        "--include-directory", argc, argv, &new_argc, &tidy_argc, tidy_argv, &i
       );
     }
 
