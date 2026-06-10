@@ -176,15 +176,16 @@ static config_key const*
 NODISCARD
 static FILE*        config_open( char const*, config_opts );
 
-NODISCARD
-static char const*  home_dir( void );
-
 static void         elide_includes_parse( char const*, toml_table const*,
                                           toml_value const* );
 static void         error_parse( char const*, toml_table const*,
                                  toml_value const* );
 static void         first_parse( char const*, toml_table const*,
                                  toml_value const* );
+
+NODISCARD
+static char const*  home_dir( void );
+
 static void         ignore_as_argument_parse( char const*, toml_table const*,
                                               toml_value const* );
 static void         ignore_parse( char const*, toml_table const*,
@@ -1028,29 +1029,6 @@ static void error_parse( char const *config_path, toml_table const *table,
 }
 
 /**
- * Gets the full path of the user's home directory.
- *
- * @return Returns said directory or NULL if it is not obtainable.
- */
-NODISCARD
-static char const* home_dir( void ) {
-  static char const *home;
-
-  RUN_ONCE {
-    home = null_if_empty( getenv( "HOME" ) );
-#if HAVE_GETEUID && HAVE_GETPWUID && HAVE_STRUCT_PASSWD_PW_DIR
-    if ( home == NULL ) {
-      struct passwd const *const pw = getpwuid( geteuid() );
-      if ( pw != NULL )
-        home = null_if_empty( pw->pw_dir );
-    }
-#endif /* HAVE_GETEUID && && HAVE_GETPWUID && HAVE_STRUCT_PASSWD_PW_DIR */
-  }
-
-  return home;
-}
-
-/**
  * Parses the value of an `"first"` key.
  *
  * @param config_path The full path to the configurarion file.
@@ -1075,6 +1053,29 @@ static void first_parse( char const *config_path, toml_table const *table,
     if ( path_ends_with( include->abs_path, table->name, rel_path_len ) )
       include->sort_rank = TIDY_SORT_FIRST;
   } // for
+}
+
+/**
+ * Gets the full path of the user's home directory.
+ *
+ * @return Returns said directory or NULL if it is not obtainable.
+ */
+NODISCARD
+static char const* home_dir( void ) {
+  static char const *home;
+
+  RUN_ONCE {
+    home = null_if_empty( getenv( "HOME" ) );
+#if HAVE_GETEUID && HAVE_GETPWUID && HAVE_STRUCT_PASSWD_PW_DIR
+    if ( home == NULL ) {
+      struct passwd const *const pw = getpwuid( geteuid() );
+      if ( pw != NULL )
+        home = null_if_empty( pw->pw_dir );
+    }
+#endif /* HAVE_GETEUID && && HAVE_GETPWUID && HAVE_STRUCT_PASSWD_PW_DIR */
+  }
+
+  return home;
 }
 
 /**
