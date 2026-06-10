@@ -133,9 +133,6 @@ static void         insert_argv( int*, char const**[], size_t, size_t,
 NODISCARD
 static bool         is_Xtidy_opt( int, char const *const[], int* );
 
-static void         move_tidy_long_option( char const*, int, char const*[],
-                                           int*, int*, char const*[], int* );
-
 /////////// local functions ///////////////////////////////////////////////////
 
 /**
@@ -701,9 +698,10 @@ static void move_tidy_args( int *pargc, char const *argv[],
             break;
         } // switch
       }
+      continue;
     }
 
-    else if ( STRNCMPLIT( argv[i], "-I" ) == 0 ) {
+    if ( STRNCMPLIT( argv[i], "-I" ) == 0 ) {
       argv[ new_argc++ ] = argv[i];
       tidy_argv[ tidy_argc++ ] = argv[i];
       if ( argv[i][2] == '\0' ) {       // -I <dir>
@@ -714,46 +712,58 @@ static void move_tidy_args( int *pargc, char const *argv[],
         argv[ new_argc++ ] = argv[i];
         tidy_argv[ tidy_argc++ ] = argv[i];
       }
+      continue;
     }
 
-    else if ( STRNCMPLIT( argv[i], "-cxx-isystem" ) == 0 ) {
-      move_tidy_long_option(
-        "-cxx-isystem", argc, argv, &new_argc, &tidy_argc, tidy_argv, &i
-      );
-    }
+    static char const *const LONG_INCLUDE_PATH_OPTIONS[] = {
+      "--include-directory",
+      "-cxx-isystem",
+      "-iquote",
+      "-isystem",
+      "-isystem-after",
+    };
 
-    else if ( STRNCMPLIT( argv[i], "-iquote" ) == 0 ) {
-      move_tidy_long_option(
-        "-iquote", argc, argv, &new_argc, &tidy_argc, tidy_argv, &i
-      );
-    }
+    bool found_long_include_path_opt = false;
+    FOREACH_ARRAY_ELEMENT( char const*, popt, LONG_INCLUDE_PATH_OPTIONS ) {
+      size_t const opt_len = strlen( *popt );
+      if ( strncmp( argv[i], *popt, opt_len ) == 0 ) {
+        argv[ new_argc++ ] = argv[i];
 
-    else if ( STRNCMPLIT( argv[i], "-isystem" ) == 0 ) {
-      move_tidy_long_option(
-        "-isystem", argc, argv, &new_argc, &tidy_argc, tidy_argv, &i
-      );
-    }
+        char const *dir_arg;
+        switch ( argv[i][ opt_len ] ) {
+          case '\0':                    // <long_opt> <dir>
+            if ( ++i >= argc )
+              fatal_error( EX_USAGE, "\"%s\" requires an argument\n", *popt );
+            argv[ new_argc++ ] = argv[i];
+            dir_arg = argv[i];
+            break;
+          case '=':                     // <long_opt>=<dir>
+            dir_arg = argv[i] + opt_len + 1;
+            break;
+          default:                      // <long_opt><dir>
+            dir_arg = argv[i] + opt_len;
+            break;
+        } // switch
 
-    else if ( STRNCMPLIT( argv[i], "-isystem-after" ) == 0 ) {
-      move_tidy_long_option(
-        "-isystem-after", argc, argv, &new_argc, &tidy_argc, tidy_argv, &i
-      );
-    }
+        // Convert option to -I<dir> for include-tidy.
+        char *new_arg = NULL;
+        check_asprintf( &new_arg, "-I%s", dir_arg );
+        tidy_argv[ tidy_argc++ ] = new_arg;
 
-    else if ( STRNCMPLIT( argv[i], "--include-directory" ) == 0 ) {
-      move_tidy_long_option(
-        "--include-directory", argc, argv, &new_argc, &tidy_argc, tidy_argv, &i
-      );
-    }
+        found_long_include_path_opt = true;
+        break;
+      }
+    } // for
+    if ( found_long_include_path_opt )
+      continue;
 
-    else if ( STRNCMPLIT( argv[i], "--help" ) == 0 ||
-              STRNCMPLIT( argv[i], "--version" ) == 0 ) {
+    if ( STRNCMPLIT( argv[i], "--help" ) == 0 ||
+         STRNCMPLIT( argv[i], "--version" ) == 0 ) {
       tidy_argv[ tidy_argc++ ] = argv[i];
+      continue;
     }
 
-    else {
-      argv[ new_argc++ ] = argv[i];
-    }
+    argv[ new_argc++ ] = argv[i];
   } // for
 
   argv[ new_argc ] = tidy_argv[ tidy_argc ] = NULL;
@@ -765,60 +775,6 @@ static void move_tidy_args( int *pargc, char const *argv[],
 
 short_opt_requires_argument:
   fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", short_opt );
-}
-
-/**
- * Helper function for move_tidy_args() that moves a long command-line option
- * to a separate array.
- *
- * @param long_option The long option to move.  Must begin with <tt>'-'</tt>.
- * @param argc The command-line argument count.
- * @param argv The command-line argument values.
- * @param pnew_argc A pointer to what will be the new argument count.
- * @param ptidy_argc A pointer to an `argc` for **include-tidy** specific
- * options.
- * @param tidy_argv An array to receive **include-tidy** specific options.
- * @param pargi A pointer to the current argument index variable.
- */
-static void move_tidy_long_option( char const *long_option, int argc,
-                                   char const *argv[], int *pnew_argc,
-                                   int *ptidy_argc, char const *tidy_argv[],
-                                   int *pargi ) {
-  assert(  long_option != NULL );
-  assert(  long_option[0] == '-' );
-  assert(  argc > 0 );
-  assert(  argv != NULL );
-  assert( pnew_argc != NULL );
-  assert( ptidy_argc != NULL );
-  assert( pargi != NULL );
-
-  char const   *dir_arg;
-  int           i = *pargi;
-  size_t const  long_len = strlen( long_option );
-
-  argv[ (*pnew_argc)++ ] = argv[i];
-
-  switch ( argv[i][long_len] ) {
-    case '\0':                          // <long_option> <dir>
-      if ( ++i >= argc )
-        fatal_error( EX_USAGE, "\"%s\" requires an argument\n", long_option );
-      argv[ (*pnew_argc)++ ] = argv[i];
-      dir_arg = argv[i];
-      break;
-    case '=':                           // <long_option>=<dir>
-      dir_arg = argv[i] + long_len + 1;
-      break;
-    default:                            // <long_option><dir>
-      dir_arg = argv[i] + long_len;
-      break;
-  } // switch
-
-  // Convert to -I for include-tidy.
-  char *new_arg = NULL;
-  check_asprintf( &new_arg, "-I%s", dir_arg );
-  tidy_argv[ (*ptidy_argc)++ ] = new_arg;
-
-  *pargi = i;
 }
 
 /**
