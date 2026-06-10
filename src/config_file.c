@@ -181,6 +181,8 @@ static char const*  home_dir( void );
 
 static void         elide_includes_parse( char const*, toml_table const*,
                                           toml_value const* );
+static void         error_parse( char const*, toml_table const*,
+                                 toml_value const* );
 static void         first_parse( char const*, toml_table const*,
                                  toml_value const* );
 static void         ignore_as_argument_parse( char const*, toml_table const*,
@@ -238,6 +240,7 @@ static config_key const CONFIG_KEYS[] = {
   { "comment-style",      TABLE_INCLUDE_TIDY,   &comment_style_parse      },
   { "comment-symbols",    TABLE_INCLUDE_TIDY,   &comment_symbols_parse    },
   { "elide-includes",     TABLE_HEADER_SOURCE,  &elide_includes_parse     },
+  { "error",              TABLE_INCLUDE_TIDY,   &error_parse              },
   { "first",              TABLE_HEADER,         &first_parse              },
   { "ignore",             TABLE_SYMBOL,         &ignore_parse             },
   { "ignore-symbols",     TABLE_HEADER_SOURCE,  &ignore_symbols_parse     },
@@ -993,6 +996,35 @@ static void elide_includes_parse( char const *config_path,
   string_or_string_array_parse(
     config_path, table, "elide-includes", value, &elide_include_parse_string
   );
+}
+
+/**
+ * Parses the value of a `"error"` key.
+ *
+ * @param config_path The full path to the configurarion file.
+ * @param table The current toml_table.
+ * @param value The toml_value to parse.
+ */
+static void error_parse( char const *config_path, toml_table const *table,
+                         toml_value const *value ) {
+  assert( config_path != NULL );
+  assert( table != NULL );
+  assert( value != NULL );
+
+  char const *const string_value =
+    string_value_parse( config_path, "error", value );
+
+  if ( opt_is_set( COPT(ERROR) ) )
+    return;
+
+  if ( !opt_color_parse( string_value ) ) {
+    print_file_error(
+      config_path, value->loc.line, value->loc.col,
+      "invalid value for \"error\"\n"
+    );
+    exit( EX_CONFIG );
+  }
+  opt_mark_set( COPT(ERROR) );
 }
 
 /**

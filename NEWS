@@ -5,6 +5,12 @@ See the end of the file for license conditions.
 
 -------------------------------------------------------------------------------
 
+* Changes in Include-tidy 1.2
+
+** `error`
+The `--error` option is now also settable via a configuration file.
+
+
 * Changes in Include-tidy 1.1.1
 
 ** Fixed cast and dereference bug
