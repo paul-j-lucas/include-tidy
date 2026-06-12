@@ -1,5 +1,9 @@
 2026-06-12  Paul J. Lucas <paul@lucasmail.org>
 
+   * man/man1/include-tidy.1: s/BR/BI/ for option arguments.
+   * man/man1/include-tidy.1: Added section for -x.
+   * config_file.c: Eliminated variable.
+   * config_file.c: Fixed parsing of "error" in config file.
    * cli_options.c: Eliminated found_include_search_paths.
    * cli_options.c: Now checking for '-' in get_long_opt_value() and
      get_short_opt_value().
