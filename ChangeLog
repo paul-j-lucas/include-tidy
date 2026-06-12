@@ -1,3 +1,13 @@
+2026-06-11  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c: Removed redundant "if".
+
+2026-06-10  Paul J. Lucas <paul@lucasmail.org>
+
+   * configure.ac, man/man1/include-tidy.1, config_file.c: Made "error"
+     settable via configurationf file.
+   * cli_options.c: Folded move_tidy_long_option() back in.
+
 2026-06-09  Paul J. Lucas <paul@lucasmail.org>
 
    * cli_options.c: Added support for -isystem-after, -iquote, and -cxx-isystem
