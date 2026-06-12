@@ -119,9 +119,10 @@ static char const *const OPTIONS_HELP[] = {
 ////////// local functions ////////////////////////////////////////////////////
 
 NODISCARD
-static char const*  get_opt_format( int ),
-                 *  is_long_opt( int, char const *const[], char const*, int* ),
-                 *  is_short_opt( int, char const *const[], char, int* );
+static char const*  get_long_opt_value( int, char const *const[], char const*,
+                                        int* ),
+                 *  get_opt_format( int ),
+                 *  get_short_opt_value( int, char const *const[], char, int* );
 
 NODISCARD
 static struct option const*
@@ -277,14 +278,55 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
   for ( int i = 1; i < argc; ++i ) {
     if ( !is_Xtidy_opt( argc, argv, &i ) )
       continue;
-    char const *clang_path = is_short_opt( argc, argv, COPT(CLANG), &i );
+    char const *clang_path = get_short_opt_value( argc, argv, COPT(CLANG), &i );
     if ( clang_path == NULL )
-      clang_path = is_long_opt( argc, argv, clang_option->name, &i );
+      clang_path = get_long_opt_value( argc, argv, clang_option->name, &i );
     if ( clang_path != NULL )
       return strcmp( clang_path, "none" ) == 0 ? NULL : clang_path;
   } // for
 
   return OPT_CLANG_DEFAULT;
+}
+
+/**
+ * Checks whether the \a argv[\a *pargi] is a long option \a opt having an
+ * argument: if so, returns that argument.
+ *
+ * @param argc The command-line argument count.
+ * @param argv The command-line argument values.
+ * @param opt The long option (without the `--`).
+ * @param pargi A pointer to the current argument index variable.
+ * @return Returns the value of the argument or NULL if \a argv[\a *pargi] is
+ * not \a opt.
+ *
+ * @sa get_short_opt_value()
+ */
+static char const* get_long_opt_value( int argc, char const *const argv[],
+                                       char const *opt, int *pargi ) {
+  assert(  argc > 0 );
+  assert(  argv != NULL );
+  assert(   opt != NULL );
+  assert( pargi != NULL );
+
+  char const *const arg = argv[ *pargi ];
+
+  if ( STRNCMPLIT( arg, "--" ) != 0 )
+    return NULL;
+  size_t const opt_len = strlen( opt );
+  if ( strncmp( arg + STRLITLEN( "--" ), opt, opt_len ) != 0 )
+    return NULL;
+  if ( arg[ STRLITLEN( "--" ) + opt_len ] == '=' ) {
+    char const *const value = arg + STRLITLEN( "--" ) + opt_len + 1;
+    if ( value[0] != '\0' )
+      return value;
+  }
+  else if ( ++*pargi < argc ) {
+    char const *const value = argv[ *pargi ];
+    if ( value != NULL && value[0] != '\0' )
+      return value;
+  }
+
+  fatal_error( EX_USAGE, "\"--%s\" requires an argument\n", opt );
 }
 
 /**
@@ -341,6 +383,38 @@ static struct option const* get_option( int short_opt ) {
 }
 
 /**
+ * Checks whether the \a argv[\a *pargi] is a short option \a opt having an
+ * argument: if so, returns that argument.
+ *
+ * @param argc The command-line argument count.
+ * @param argv The command-line argument values.
+ * @param opt The short option character.
+ * @param pargi A pointer to the current argument index variable.
+ * @return Returns the value of the argument or NULL if \a argv[\a *pargi] is
+ * not \a opt.
+ *
+ * @sa get_long_opt_value()
+ */
+static char const* get_short_opt_value( int argc, char const *const argv[],
+                                        char opt, int *pargi ) {
+  assert(  argc > 0 );
+  assert(  argv != NULL );
+  assert( pargi != NULL );
+
+  if ( argv[ *pargi ][0] != '-' || argv[ *pargi ][1] != opt )
+    return NULL;
+  if ( argv[ *pargi ][2] != '\0' )    // -x<arg>, not -x <arg>
+    return argv[ *pargi ] + 2;
+  if ( ++*pargi < argc ) {
+    char const *const value = argv[ *pargi ];
+    if ( value != NULL && value[0] != '\0' )
+      return value;
+  }
+
+  fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", opt );
+}
+
+/**
  * Gets the likely source path from \a argv.
  *
  * @param argc The argument count from \c main().
@@ -380,7 +454,7 @@ static char const* get_x_language( int argc, char const *const argv[] ) {
   assert( argv != NULL );
 
   for ( int i = 1; i < argc; ++i ) {
-    char const *const lang = is_short_opt( argc, argv, 'x', &i );
+    char const *const lang = get_short_opt_value( argc, argv, 'x', &i );
     if ( lang == NULL )
       continue;
     if ( strcmp( lang, "c" ) == 0 )
@@ -437,79 +511,6 @@ static void insert_argv( int *pargc, char const **pargv[], size_t argi,
 
   *pargc = STATIC_CAST( int, new_argc );
   (*pargv)[ new_argc ] = NULL;
-}
-
-/**
- * Checks whether the \a argv[\a *pargi] is a long option \a opt having an
- * argument.
- *
- * @param argc The command-line argument count.
- * @param argv The command-line argument values.
- * @param opt The long option (without the `--`).
- * @param pargi A pointer to the current argument index variable.
- * @return Returns the value of the argument or NULL if \a argv[\a *pargi] is
- * not \a opt.
- *
- * @sa is_short_opt()
- */
-static char const* is_long_opt( int argc, char const *const argv[],
-                                char const *opt, int *pargi ) {
-  assert(  argc > 0 );
-  assert(  argv != NULL );
-  assert(   opt != NULL );
-  assert( pargi != NULL );
-
-  char const *const arg = argv[ *pargi ];
-
-  if ( STRNCMPLIT( arg, "--" ) != 0 )
-    return NULL;
-  size_t const opt_len = strlen( opt );
-  if ( strncmp( arg + STRLITLEN( "--" ), opt, opt_len ) != 0 )
-    return NULL;
-  if ( arg[ STRLITLEN( "--" ) + opt_len ] == '=' ) {
-    char const *const value = arg + STRLITLEN( "--" ) + opt_len + 1;
-    if ( value[0] != '\0' )
-      return value;
-  }
-  else if ( ++*pargi < argc ) {
-    char const *const value = argv[ *pargi ];
-    if ( value != NULL && value[0] != '\0' )
-      return value;
-  }
-
-  fatal_error( EX_USAGE, "\"--%s\" requires an argument\n", opt );
-}
-
-/**
- * Checks whether the \a argv[\a *pargi] is a short option \a opt having an
- * argument.
- *
- * @param argc The command-line argument count.
- * @param argv The command-line argument values.
- * @param opt The short option character.
- * @param pargi A pointer to the current argument index variable.
- * @return Returns the value of the argument or NULL if \a argv[\a *pargi] is
- * not \a opt.
- *
- * @sa is_long_opt()
- */
-static char const* is_short_opt( int argc, char const *const argv[],
-                                 char opt, int *pargi ) {
-  assert(  argc > 0 );
-  assert(  argv != NULL );
-  assert( pargi != NULL );
-
-  if ( argv[ *pargi ][0] != '-' || argv[ *pargi ][1] != opt )
-    return NULL;
-  if ( argv[ *pargi ][2] != '\0' )    // -x<arg>, not -x <arg>
-    return argv[ *pargi ] + 2;
-  if ( ++*pargi < argc ) {
-    char const *const value = argv[ *pargi ];
-    if ( value != NULL && value[0] != '\0' )
-      return value;
-  }
-
-  fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", opt );
 }
 
 /**
