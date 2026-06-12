@@ -396,42 +396,6 @@ static char const* get_x_language( int argc, char const *const argv[] ) {
 }
 
 /**
- * Makes \a *pargv \a n elements longer.
- *
- * @param pargc A pointer to the argument count from \c main().  It is
- * incremented by \a n.
- * @param pargv A pointer to the argument values from \c main().
- * @param n The number of elements to grow \a *pargv by.
- */
-static void grow_argv( int *pargc, char const **pargv[], size_t n ) {
-  assert(  pargc != NULL );
-  assert( *pargc > 0 );
-  assert(  pargv != NULL );
-  assert( *pargv != NULL );
-
-  if ( n == 0 )
-    return;
-
-  size_t const old_argc = STATIC_CAST( size_t, *pargc );
-  size_t const new_argc = old_argc + n;
-
-  static char const **heap_argv;
-  if ( heap_argv == NULL ) {
-    // We can't realloc the argv passed to main(), so in order to insert an
-    // argument, we first have to duplicate it into the heap.
-    heap_argv = MALLOC( char*, new_argc + 1/*NULL*/ );
-    memcpy( heap_argv, *pargv, old_argc * sizeof(char*) );
-    *pargv = heap_argv;
-  }
-  else {
-    REALLOC( *pargv, new_argc + 1/*NULL*/ );
-  }
-
-  (*pargv)[ new_argc ] = NULL;
-  *pargc += STATIC_CAST( int, n );
-}
-
-/**
  * Inserts \a args into \a *pargv after *pargv[0].
  *
  * @param pargc A pointer to the argument count from \c main().  It is
@@ -453,10 +417,26 @@ static void insert_argv( int *pargc, char const **pargv[], size_t argi,
     return;
 
   size_t const old_argc = STATIC_CAST( size_t, *pargc );
-  grow_argv( pargc, pargv, args_len );
+  size_t const new_argc = old_argc + args_len;
+
+  static bool is_argv_on_heap = false;
+  if ( false_set( &is_argv_on_heap ) ) {
+    // We can't realloc the argv passed to main(), so in order to insert an
+    // argument, we first have to duplicate it into the heap.
+    char const **const heap_argv = MALLOC( char*, new_argc + 1/*NULL*/ );
+    memcpy( heap_argv, *pargv, old_argc * sizeof(char*) );
+    *pargv = heap_argv;
+  }
+  else {
+    REALLOC( *pargv, new_argc + 1/*NULL*/ );
+  }
+
   memmove( &(*pargv)[argi + args_len], &(*pargv)[argi],
            (old_argc - argi) * sizeof(char*) );
   memcpy( &(*pargv)[argi], args, args_len * sizeof(char*) );
+
+  *pargc += STATIC_CAST( int, args_len );
+  (*pargv)[ new_argc ] = NULL;
 }
 
 /**
