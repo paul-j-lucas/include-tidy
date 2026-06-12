@@ -1018,7 +1018,7 @@ static void error_parse( char const *config_path, toml_table const *table,
   if ( opt_is_set( COPT(ERROR) ) )
     return;
 
-  if ( !opt_color_parse( string_value ) ) {
+  if ( !opt_error_parse( string_value ) ) {
     print_file_error(
       config_path, value->loc.line, value->loc.col,
       "invalid value for \"error\"\n"
