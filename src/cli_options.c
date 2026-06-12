@@ -140,10 +140,10 @@ static bool         is_Xtidy_opt( int, char const *const[], int* );
  * Calls **clang**(1) and parses its verbose output to get the list of include
  * search paths that are inserted into \a *pargv.
  *
- * @param pargc A pointer to the argument count from \c main().  The count is
+ * @param pargc A pointer to the argument count from `main()`.  The count is
  * incremented by the number of include search paths inserted.
- * @param pargv A pointer to the argument values from \c main().  An argument
- * of the form <tt>-isystem</tt><i>path</i> is inserted for each search path.
+ * @param pargv A pointer to the argument values from `main()`.  An argument of
+ * the form <tt>-isystem</tt><i>path</i> is inserted for each search path.
  * @param clang_path The path of **clang** to use.
  * @param source_lang The language to use, either `"c"` or `"c++"`.
  */
@@ -262,8 +262,8 @@ static void check_options( void ) {
 /**
  * Gets the path to **clang**, if given.
  *
- * @param argc The command-line argument count.
- * @param argv The command-line argument values.
+ * @param argc The command-line argument count from `main()`.
+ * @param argv The command-line argument values from `main()`.
  * @return Returns the path to **clang** or NULL if it's `"none"`.
  */
 static char const* get_clang_path( int argc, char const *const argv[] ) {
@@ -290,8 +290,8 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
  * Checks whether the \a argv[\a *pargi] is a long option \a opt having an
  * argument: if so, returns that argument.
  *
- * @param argc The command-line argument count.
- * @param argv The command-line argument values.
+ * @param argc The command-line argument count from `main()`.
+ * @param argv The command-line argument values from `main()`.
  * @param opt The long option (without the `--`).
  * @param pargi A pointer to the current argument index variable.
  * @return Returns the value of the argument or NULL if \a argv[\a *pargi] is
@@ -385,8 +385,8 @@ static struct option const* get_option( int short_opt ) {
  * Checks whether the \a argv[\a *pargi] is a short option \a opt having an
  * argument: if so, returns that argument.
  *
- * @param argc The command-line argument count.
- * @param argv The command-line argument values.
+ * @param argc The command-line argument count from `main()`.
+ * @param argv The command-line argument values from `main()`.
  * @param opt The short option character.
  * @param pargi A pointer to the current argument index variable.
  * @return Returns the value of the argument or NULL if \a argv[\a *pargi] is
@@ -417,8 +417,8 @@ static char const* get_short_opt_value( int argc, char const *const argv[],
 /**
  * Gets the likely source path from \a argv.
  *
- * @param argc The argument count from \c main().
- * @param argv The argument values from \c main().
+ * @param argc The argument count from `main()`.
+ * @param argv The argument values from `main()`.
  * @return Returns the source path or NULL if none.
  */
 static char const* get_source_path( int argc, char const *argv[] ) {
@@ -444,8 +444,8 @@ static char const* get_source_path( int argc, char const *argv[] ) {
 /**
  * Gets the language of clang's `-x` option, if given.
  *
- * @param argc The command-line argument count.
- * @param argv The command-line argument values.
+ * @param argc The command-line argument count from `main()`.
+ * @param argv The command-line argument values from `main()`.
  * @return Returns the language of clang's `-x` option, either `"c"` or
  * `"c++"`, or NULL if not given.
  */
@@ -472,9 +472,9 @@ static char const* get_x_language( int argc, char const *const argv[] ) {
 /**
  * Inserts \a args into \a *pargv after *pargv[0].
  *
- * @param pargc A pointer to the argument count from \c main().  It is
+ * @param pargc A pointer to the argument count from `main()`.  It is
  * incremented by 1.
- * @param pargv A pointer to the argument values from \c main().
+ * @param pargv A pointer to the argument values from `main()`.
  * @param argi The index to insert \a args into \a *pargv at.
  * @param args_len The length of \a args.
  * @param args The arguments to insert.
@@ -517,8 +517,8 @@ static void insert_argv( int *pargc, char const **pargv[], size_t argi,
  * Checks whether the \a argv[\a *pargi] is `-Xtidy` and followed by a
  * subsequent option.
  *
- * @param argc The command-line argument count.
- * @param argv The command-line argument values.
+ * @param argc The command-line argument count from `main()`.
+ * @param argv The command-line argument values from `main()`.
  * @param pargi A pointer to the current argument index variable.
  * @return Returns `true` only if `argv[*pargi]` is `-Xtidy` and is followed by
  * a subsequent option.
