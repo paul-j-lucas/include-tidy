@@ -1,3 +1,9 @@
+2026-06-12  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c: Now just assigning new_argc.
+   * cli_options.c: Folded grow_argv into insert_argv.
+   * cli_options.c: Eliminated is_argv_on_heap.
+
 2026-06-11  Paul J. Lucas <paul@lucasmail.org>
 
    * cli_options.c: Removed redundant "if".
