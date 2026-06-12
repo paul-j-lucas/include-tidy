@@ -173,18 +173,13 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
   if ( fclang == NULL )
     goto error;
 
-  bool    found_include_search_paths = false;
   char   *line_buf = NULL;
   size_t  line_cap = 0;
 
   while ( getline( &line_buf, &line_cap, fclang ) != -1 ) {
-    if ( strcmp( line_buf, "#include <...> search starts here:\n" ) == 0 ) {
-      found_include_search_paths = true;
-      break;
-    }
-  } // while
+    if ( strcmp( line_buf, "#include <...> search starts here:\n" ) != 0 )
+      continue;
 
-  if ( found_include_search_paths ) {
     // Find the index to insert the new -isystem option before the last argv
     // that is not an option (the filename).
     size_t isystem_argi = STATIC_CAST( size_t, *pargc );
@@ -218,7 +213,8 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
     } // while
 
     (*pargv)[ *pargc ] = NULL;
-  }
+    break;
+  } // while
 
   free( line_buf );
   if ( ferror( fclang ) )
@@ -303,10 +299,11 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
  */
 static char const* get_long_opt_value( int argc, char const *const argv[],
                                        char const *opt, int *pargi ) {
-  assert(  argc > 0 );
-  assert(  argv != NULL );
-  assert(   opt != NULL );
-  assert( pargi != NULL );
+  assert(   argc > 0 );
+  assert(   argv != NULL );
+  assert(    opt != NULL );
+  assert(  pargi != NULL );
+  assert( *pargi > 0 );
 
   char const *const arg = argv[ *pargi ];
 
@@ -397,9 +394,10 @@ static struct option const* get_option( int short_opt ) {
  */
 static char const* get_short_opt_value( int argc, char const *const argv[],
                                         char opt, int *pargi ) {
-  assert(  argc > 0 );
-  assert(  argv != NULL );
-  assert( pargi != NULL );
+  assert(   argc > 0 );
+  assert(   argv != NULL );
+  assert(  pargi != NULL );
+  assert( *pargi > 0 );
 
   if ( argv[ *pargi ][0] != '-' || argv[ *pargi ][1] != opt )
     return NULL;
