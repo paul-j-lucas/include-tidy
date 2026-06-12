@@ -1,5 +1,6 @@
 2026-06-12  Paul J. Lucas <paul@lucasmail.org>
 
+   * man/man1/include-tidy.1: Now using source-file more.
    * man/man1/include-tidy.1: s/BR/BI/ for option arguments.
    * man/man1/include-tidy.1: Added section for -x.
    * config_file.c: Eliminated variable.
