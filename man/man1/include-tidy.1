@@ -35,7 +35,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "June 10, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "June 12, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -331,7 +331,7 @@ and
 .I s
 means
 .IR string .
-.TP 5
+.TP 6
 .BR \-\-align-column \f1=\fPn "\f1 | \fP" "" \-a " n"
 Sets the column at which to align comments
 after \f(CW#include\fP directives.
@@ -350,7 +350,7 @@ Within a group,
 includes are sorted by their relative path names
 with two exceptions.
 For the local group:
-.RS 5
+.RS 6
 .nr step 1 1
 .IP \n[step]. 3
 An include specified in a configuration file with a
@@ -465,7 +465,7 @@ to include in a comment.
 The choices for
 .I s
 are:
-.RS 8
+.RS 6
 .TP 11
 .PD 0
 .B alpha
@@ -499,7 +499,7 @@ before tidying.
 Turns on
 .B include-tidy
 debugging output:
-.RS 5
+.RS 6
 .IP \(bu 3
 If an error or warning message is printed,
 includes the
@@ -516,7 +516,7 @@ When to exit with a non-zero status.
 The choices for
 .I s
 are:
-.RS 8
+.RS 6
 .TP 12
 .PD 0
 .B always
@@ -556,8 +556,8 @@ Specifies what to be verbose about.
 The choices for
 .I s
 are:
-.RS 8
-.TP 4
+.RS 6
+.TP 3
 .PD 0
 .B a
 Command-line arguments given to
@@ -616,13 +616,57 @@ and are passed to
 .B clang
 .RB ( libclang )
 verbatim.
+Important
+.B clang
+options:
+.TP 6
+.BI \-x " s"
+Specifies the langauge
+.I s
+of
+.IR source-file ,
+either \f(CWc\fP or \f(CWc++\fP,
+overriding the language indicated
+by its filename extension,
+if any.
+The extensions of \f(CW.h\fP and \f(CW.c\fP
+indicate a C source file;
+the extensions of
+\f(CW.c++\fP,
+\f(CW.cc\fP,
+\f(CW.cp\fP,
+\f(CW.cpp\fP,
+\f(CW.cxx\fP,
+\f(CW.h++\fP,
+\f(CW.hh\fP,
+\f(CW.hp\fP,
+\f(CW.hpp\fP,
+and
+\f(CW.hxx\fP
+indicate a C++ source file.
+If
+.I source-file
+has any other extension
+or no extension,
+you
+.I must
+use this option to specify the language.
+.IP
+Additionally,
+unlike with a C or C++ compiler,
+\f(CW.h\fP files are given directly as arguments to
+.BR include-tidy .
+If you use \f(CW.h\fP for C++ headers,
+you'll need to specify
+.B \-xc++
+explicitly.
 .SS Other Options
 These options are given directly as-is
 since they would never be ambiguous
 with
 .BR clang (1)
 options.
-.TP 5
+.TP 6
 .BR \-\-help " | " \-h
 Prints a help message
 for command-line options
@@ -697,7 +741,7 @@ via the command-line,
 but without having to specify them
 via the command-line
 every time.
-.TP 5
+.TP 6
 .BI add-c-includes " \f1=\fP " [ s " \f1[,\fP " s "\f1]*\fP ]"
 Like
 .BR std-c-includes ,
@@ -797,7 +841,7 @@ e.g.,
 \f(CWstdio.h\fP
 or
 \f(CWsys/wait.h\fP.
-.TP 5
+.TP 6
 .BI elide-includes " \f1=\fP s" "\f1 | \fP[" s " \f1[,\fP " s "\f1]*\fP ]"
 When included by the file given for the table name,
 the one other include file
@@ -929,7 +973,7 @@ to declare the given symbols.
 This type of table specifies a source file,
 a \f(CW.c\fP or \f(CW.cpp\fP
 file.
-.TP 5
+.TP 6
 .BI associated-header " \f1=\fP s"
 Specifies that the source file
 given for the table name
@@ -974,7 +1018,7 @@ meets the
 .I include-what-you-use
 requirement
 thus averting a violation.
-.TP 5
+.TP 6
 .BI ignore " \f1=\fP b"
 If true,
 the symbol name is to be ignored,
