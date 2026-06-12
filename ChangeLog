@@ -1,5 +1,8 @@
 2026-06-12  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c: Eliminated found_include_search_paths.
+   * cli_options.c: Now checking for '-' in get_long_opt_value() and
+     get_short_opt_value().
    * cli_options.c: Now just assigning new_argc.
    * cli_options.c: Folded grow_argv into insert_argv.
    * cli_options.c: Eliminated is_argv_on_heap.
