@@ -935,14 +935,12 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     if ( opt == -1 )
       break;
     struct option const *const option = get_option( opt );
-    if ( option != NULL && option->has_arg != no_argument ) {
-      if ( option->has_arg == required_argument ) {
-        if ( optarg == NULL )
-          goto missing_arg;
-        SKIP_WS( optarg );
-        if ( optarg[0] == '\0' )
-          goto missing_arg;
-      }
+    if ( option != NULL && option->has_arg == required_argument ) {
+      if ( optarg == NULL )
+        goto missing_arg;
+      SKIP_WS( optarg );
+      if ( optarg[0] == '\0' )
+        goto missing_arg;
     }
     switch ( opt ) {
       case COPT(ALIGN_COLUMN):;
