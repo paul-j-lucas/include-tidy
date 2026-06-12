@@ -138,11 +138,13 @@ static bool         is_Xtidy_opt( int, char const *const[], int* );
 
 /**
  * Calls **clang**(1) and parses its verbose output to get the list of include
- * search paths.
+ * search paths that are inserted into \a *pargv.
  *
- * @param pargc A pointer to the argument count from \c main().
- * @param pargv A pointer to the argument values from \c main().
- * @param clang_path The path of the **clang** to use.
+ * @param pargc A pointer to the argument count from \c main().  The count is
+ * incremented by the number of include search paths inserted.
+ * @param pargv A pointer to the argument values from \c main().  An argument
+ * of the form <tt>-isystem</tt><i>path</i> is inserted for each search path.
+ * @param clang_path The path of **clang** to use.
  * @param source_lang The language to use, either `"c"` or `"c++"`.
  */
 static void add_clang_include_paths( int *pargc, char const **pargv[],
