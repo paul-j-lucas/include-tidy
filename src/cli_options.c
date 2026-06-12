@@ -412,14 +412,14 @@ static void grow_argv( int *pargc, char const **pargv[], size_t n ) {
   if ( n == 0 )
     return;
 
-  static bool   is_argv_on_heap = false;
-  size_t const  old_argc = STATIC_CAST( size_t, *pargc );
-  size_t const  new_argc = old_argc + n;
+  size_t const old_argc = STATIC_CAST( size_t, *pargc );
+  size_t const new_argc = old_argc + n;
 
-  if ( false_set( &is_argv_on_heap ) ) {
+  static char const **heap_argv;
+  if ( heap_argv == NULL ) {
     // We can't realloc the argv passed to main(), so in order to insert an
     // argument, we first have to duplicate it into the heap.
-    char const **const heap_argv = MALLOC( char*, new_argc + 1/*NULL*/ );
+    heap_argv = MALLOC( char*, new_argc + 1/*NULL*/ );
     memcpy( heap_argv, *pargv, old_argc * sizeof(char*) );
     *pargv = heap_argv;
   }
