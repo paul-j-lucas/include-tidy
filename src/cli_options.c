@@ -435,7 +435,7 @@ static void insert_argv( int *pargc, char const **pargv[], size_t argi,
            (old_argc - argi) * sizeof(char*) );
   memcpy( &(*pargv)[argi], args, args_len * sizeof(char*) );
 
-  *pargc += STATIC_CAST( int, args_len );
+  *pargc = STATIC_CAST( int, new_argc );
   (*pargv)[ new_argc ] = NULL;
 }
 
