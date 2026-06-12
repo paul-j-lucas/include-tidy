@@ -322,7 +322,7 @@ static char const* get_long_opt_value( int argc, char const *const argv[],
   }
   else if ( ++*pargi < argc ) {
     char const *const value = argv[ *pargi ];
-    if ( value != NULL && value[0] != '\0' )
+    if ( value != NULL && value[0] != '\0' && value[0] != '-' )
       return value;
   }
 
@@ -407,7 +407,7 @@ static char const* get_short_opt_value( int argc, char const *const argv[],
     return argv[ *pargi ] + 2;
   if ( ++*pargi < argc ) {
     char const *const value = argv[ *pargi ];
-    if ( value != NULL && value[0] != '\0' )
+    if ( value != NULL && value[0] != '\0' && value[0] != '-' )
       return value;
   }
 
