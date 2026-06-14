@@ -74,9 +74,9 @@ gl_INIT
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_TYPEOF
-AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
+AC_TYPE_UINT64_T
 AC_CHECK_MEMBERS([struct passwd.pw_dir],[],[],[[#include <pwd.h>]])
 PJL_COMPILE([__builtin_expect],[], [(void)__builtin_expect(1,1);])
 PJL_COMPILE([__VA_OPT__],
