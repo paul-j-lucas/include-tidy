@@ -1,3 +1,8 @@
+2026-06-14  Paul J. Lucas <paul@lucasmail.org>
+
+   * configure.ac: Added check for _Generic.
+   * configure.ac: Removed AC_TYPE_PID_T; added AC_TYPE_UINT64_T.
+
 2026-06-12  Paul J. Lucas <paul@lucasmail.org>
 
    * man/man1/include-tidy.1: Now using source-file more.
