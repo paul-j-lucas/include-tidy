@@ -10,6 +10,14 @@ See the end of the file for license conditions.
 ** `error`
 The `--error` option is now also settable via a configuration file.
 
+** Other include path options
+Added support for `--include-directory`, `-cxx-isystem`, `-iquote`, and
+`-isystem-after` **clang** options.
+
+** `=` in `-isystem`, etc.
+A `=` is now correctly allowed between `-isystem` (and other include path
+options) and its value, e.g., `-isystem=/path`, in addition to no `=`.
+
 
 * Changes in Include-tidy 1.1.1
 
