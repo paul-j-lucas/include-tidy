@@ -119,7 +119,7 @@ unsigned check_asprintf( char **ps, char const *format, ... ) {
 
 void* check_realloc( void *p, size_t size ) {
   assert( size > 0 );
-  p = p != NULL ? realloc( p, size ) : malloc( size );
+  p = realloc( p, size );
   PERROR_EXIT_IF( p == NULL, EX_OSERR );
   return p;
 }
