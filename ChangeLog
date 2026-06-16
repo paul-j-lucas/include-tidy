@@ -1,3 +1,7 @@
+2026-06-16  Paul J. Lucas <paul@lucasmail.org>
+
+   * util.c: Removed old p != NULL.
+
 2026-06-14  Paul J. Lucas <paul@lucasmail.org>
 
    * configure.ac: Added check for _Generic.
