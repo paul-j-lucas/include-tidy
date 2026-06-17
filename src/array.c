@@ -55,11 +55,9 @@ void array_cleanup( array_t *array, array_free_fn_t free_fn ) {
 
   if ( free_fn != NULL ) {
     char *element = array->elements;
-    size_t const len = array->len;
-    for ( size_t i = 0; i < len; ++i ) {
+    char const *const end = element + array->len * esize;
+    for ( ; element < end; element += esize )
       (*free_fn)( element );
-      element += esize;
-    } // for
   }
 
   free( array->elements );
