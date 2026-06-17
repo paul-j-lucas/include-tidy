@@ -51,16 +51,19 @@ void array_cleanup( array_t *array, array_free_fn_t free_fn ) {
   if ( array == NULL )
     return;
 
+  size_t const esize = array->esize;
+
   if ( free_fn != NULL ) {
     char *element = array->elements;
-    for ( size_t i = 0; i < array->len; ++i ) {
+    size_t const len = array->len;
+    for ( size_t i = 0; i < len; ++i ) {
       (*free_fn)( element );
-      element += array->esize;
+      element += esize;
     } // for
   }
 
   free( array->elements );
-  array_init( array, array->esize );
+  array_init( array, esize );
 }
 
 void* array_push_array_back( array_t *restrict dst_array,
