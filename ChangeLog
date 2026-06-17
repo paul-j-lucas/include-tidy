@@ -1,5 +1,7 @@
 2026-06-16  Paul J. Lucas <paul@lucasmail.org>
 
+   * array.c: Eliminated "i".
+   * array.c: Caching esize and len.
    * util.c: Removed old p != NULL.
 
 2026-06-14  Paul J. Lucas <paul@lucasmail.org>
