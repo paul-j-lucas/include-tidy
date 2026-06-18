@@ -136,6 +136,7 @@ struct array {
  * @param free_fn A pointer to a function used to free each element or NULL if
  * unnecessary.
  *
+ * @warning \a free_fn must _not_ modify \a array.
  * @note If \a free_fn is NULL, this is an O(1) operation; otherwise O(N).
  *
  * @sa array_init()
