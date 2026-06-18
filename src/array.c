@@ -47,7 +47,7 @@
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void array_cleanup( array_t *array, array_free_fn_t free_fn ) {
+void array_cleanup( array_t *restrict array, array_free_fn_t free_fn ) {
   if ( array == NULL )
     return;
 

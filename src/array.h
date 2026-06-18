@@ -140,7 +140,7 @@ struct array {
  *
  * @sa array_init()
  */
-void array_cleanup( array_t *array, array_free_fn_t free_fn );
+void array_cleanup( array_t *restrict array, array_free_fn_t free_fn );
 
 /**
  * Pushes the elements of \a src_array onto the back of \a dst_array.
