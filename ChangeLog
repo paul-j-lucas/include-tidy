@@ -1,5 +1,6 @@
 2026-06-18  Paul J. Lucas <paul@lucasmail.org>
 
+   * array.c, array.h: Added restrict.
    * array.c: Caching elements.
 
 2026-06-16  Paul J. Lucas <paul@lucasmail.org>
