@@ -1,3 +1,7 @@
+2026-06-19  Paul J. Lucas <paul@lucasmail.org>
+
+   * man/man1/include-tidy.1: Reworded --error explanation.
+
 2026-06-18  Paul J. Lucas <paul@lucasmail.org>
 
    * array.c, array.h: Added restrict.
