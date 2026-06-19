@@ -263,7 +263,12 @@ NODISCARD
 static bool file_in_color( FILE *file ) {
   assert( file != NULL );
   int const fd = fileno( file );
-  return (fd == STDOUT_FILENO || fd == STDERR_FILENO) && fd_in_color[ fd ];
+  switch ( fd ) {
+    case STDOUT_FILENO:
+    case STDERR_FILENO:
+      return fd_in_color[ fd ];
+  } // switch
+  return false;
 }
 
 /**
@@ -388,6 +393,7 @@ void color_start( FILE *file, char const *sgr_color ) {
   if ( sgr_color != NULL && file_in_color( file ) )
     FPRINTF( file, SGR_START SGR_EL, sgr_color );
 }
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */
