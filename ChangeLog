@@ -1,5 +1,6 @@
 2026-06-19  Paul J. Lucas <paul@lucasmail.org>
 
+   * color.c: Now using switch.
    * color.c, color.h: Moved SGR_ macros.
    * man/man1/include-tidy.1: Reworded --error explanation.
 
