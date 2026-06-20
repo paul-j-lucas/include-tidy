@@ -79,6 +79,21 @@ then do:
 
     make doc                            # or: make docs
 
+Since **include-tidy** uses
+[Autotools](https://en.wikipedia.org/wiki/GNU_Autotools)
+that is exclusively for Unix-like environments,
+**include-tidy**
+(or any other software that uses Autotools)
+will not compile
+nor run
+on native Windows.
+If you're determined to run **include-tidy** on Windows,
+you might try one of
+[Cygwin](https://www.cygwin.com),
+[MinGW-64](https://www.mingw-w64.org),
+or
+[WSL](https://learn.microsoft.com/en-us/windows/wsl/).
+
 **Paul J. Lucas**  
 San Francisco Bay Area, California, USA  
 8 April 2026
