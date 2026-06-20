@@ -807,7 +807,7 @@ typedef unsigned __int128 fnv1a_t;
 typedef uint64_t fnv1a_t;
 #endif /* HAVE_UNSIGNED_INT128 */
 
-////////// extern variables ///////////////////////////////////////////////////
+////////// extern constants ///////////////////////////////////////////////////
 
 /**
  * Whitespace characters.

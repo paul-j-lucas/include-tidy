@@ -66,7 +66,7 @@
  * @{
  */
 
-////////// enumerations ///////////////////////////////////////////////////////
+////////// enums //////////////////////////////////////////////////////////////
 
 /**
  * Options for the config_open() function.
@@ -113,7 +113,7 @@ typedef void (*config_parse_fn_t)( char const *config_path,
                                    toml_table const *table,
                                    toml_value const *value );
 
-////////// structures /////////////////////////////////////////////////////////
+////////// structs ////////////////////////////////////////////////////////////
 
 /**
  * Configuration key (in a table).
@@ -743,7 +743,7 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
       FALLTHROUGH;
 
     case 2:
-      // Try $PWD/include-tidy.toml
+      // Try $PWD/include-tidy.toml.
       ++case_num;
       strbuf_reset( path_buf );
       size_t cwd_path_len;

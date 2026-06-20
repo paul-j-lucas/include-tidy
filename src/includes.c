@@ -78,7 +78,7 @@ typedef unsigned char ii_matrix_t;      ///< Element type for ii_matrix.
 typedef struct includes_init_visitor_data   includes_init_visitor_data;
 typedef struct includes_print_visitor_data  includes_print_visitor_data;
 
-////////// structures /////////////////////////////////////////////////////////
+////////// structs ////////////////////////////////////////////////////////////
 
 /**
  * Additional data passed to includes_init_visitor().

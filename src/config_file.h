@@ -55,7 +55,7 @@
  */
 extern char const  *tidy_associated_header_rel_path;
 
-extern bool         tidy_ignore_source_path;
+extern bool         tidy_ignore_source_path;  ///< Ignore tidy_source_path?
 
 ////////// extern functions ///////////////////////////////////////////////////
 

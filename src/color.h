@@ -46,7 +46,7 @@
  * @{
  */
 
-///////////////////////////////////////////////////////////////////////////////
+////////// enums //////////////////////////////////////////////////////////////
 
 /**
  * When to colorize output.
@@ -57,9 +57,13 @@ enum color_when {
   COLOR_NOT_FILE,                       ///< Colorize only if `!ISREG` stdout.
   COLOR_ALWAYS                          ///< Always colorize.
 };
+
+////////// typedefs ///////////////////////////////////////////////////////////
+
 typedef enum color_when color_when;
 
-// extern variables
+////////// extern variables ///////////////////////////////////////////////////
+
 extern char const  *sgr_caret;          ///< Color of the caret `^`.
 extern char const  *sgr_error;          ///< Color of `error`.
 extern char const  *sgr_include_add;    ///< Color for `#include` to add.
