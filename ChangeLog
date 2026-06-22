@@ -1,3 +1,10 @@
+2026-06-22  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c: Both `-h` and `-v` are now correctly recognized as synonyms
+     for `--help` and `--version`, respectively.
+   * man/man1/include-tidy.1, cli_options.c: Now printing configure feature
+     options with --version --version.
+
 2026-06-19  Paul J. Lucas <paul@lucasmail.org>
 
    * color.c: Now using switch.
