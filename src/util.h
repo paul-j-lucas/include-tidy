@@ -915,7 +915,7 @@ _Noreturn void fatal_error( int status, char const *format, ... );
 fnv1a_t fnv1a_s( char const *s );
 
 /**
- * Like **free**(3) except frees the pointer pointed to by pptr.
+ * Like **free**(3) except frees the pointer pointed to by \a pptr.
  *
  * @param pptr The pointer to pointer to free.
  */
