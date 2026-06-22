@@ -846,9 +846,19 @@ static void print_usage( int status ) {
 }
 
 /**
- * Prints the **include-tidy** version.
+ * Convenience macro for printing a `configure` option.
+ *
+ * @param OPT The option string literal to print (without the leading `--`).
  */
-static void print_version( void ) {
+#define PUT_CONFIG_OPT(OPT) BLOCK( \
+  fputs( "\n  --" OPT, stdout ); printed_opt = true; )
+
+/**
+ * Prints the **include-tidy** version.
+ *
+ * @param verbose If `true`, prints configure feature &amp; package options.
+ */
+static void print_version( bool verbose ) {
   PUTS(
     PACKAGE_STRING "\n"
     "Copyright (C) " TIDY_COPYRIGHT_YEAR " " TIDY_AUTHOR "\n"
@@ -856,6 +866,17 @@ static void print_version( void ) {
     "This is free software: you are free to change and redistribute it.\n"
     "There is NO WARRANTY to the extent permitted by law.\n"
   );
+  if ( !verbose )
+    return;
+
+  PUTS( "\nconfigure feature & package options:" );
+  bool printed_opt = false;
+#ifdef NDEBUG
+  PUT_CONFIG_OPT( "disable-assert" );
+#endif /* NDEBUG */
+  if ( !printed_opt )
+    PUTS( " none" );
+  putchar( '\n' );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -900,7 +921,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   int               opt;
   char const       *opt_directory = NULL;
   bool              opt_help = false;
-  bool              opt_version = false;
+  unsigned          opt_version = 0;
   char const *const short_opts = make_short_opts( OPTIONS, SOPT(INCLUDE) ":" );
   int               tidy_argc;
   char const      **tidy_argv;
@@ -1008,7 +1029,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         }
         break;
       case COPT(VERSION):
-        opt_version = true;
+        ++opt_version;
         break;
 
       case ':':
@@ -1048,10 +1069,10 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     print_usage( EX_USAGE );
   if ( opt_help )
     print_usage( *pargc > 1 ? EX_USAGE : EX_OK );
-  if ( opt_version ) {
+  if ( opt_version > 0 ) {
     if ( *pargc > 1 )                   // include-tidy --version foo
       print_usage( EX_USAGE );
-    print_version();
+    print_version( /*verbose=*/opt_version > 1 );
     exit( EX_OK );
   }
 
