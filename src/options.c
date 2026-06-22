@@ -225,18 +225,28 @@ bool opt_comment_symbols_parse( char const *s ) {
 }
 
 bool opt_error_parse( char const *s ) {
+  struct error_map {
+    char const *error_str;
+    tidy_error  error;
+  };
+  typedef struct error_map error_map;
+
+  static error_map const ERROR_MAP[] = {
+    { "always",     TIDY_ERROR_ALWAYS         },
+    { "never",      TIDY_ERROR_NEVER          },
+    { "violations", TIDY_ERROR_IF_VIOLATIONS  },
+  };
+
   assert( s != NULL );
 
-  if ( strcmp( s, "always" ) == 0 )
-    opt_error = TIDY_ERROR_ALWAYS;
-  else if ( strcmp( s, "never" ) == 0 )
-    opt_error = TIDY_ERROR_NEVER;
-  else if ( strcmp( s, "violations" ) == 0 )
-    opt_error = TIDY_ERROR_IF_VIOLATIONS;
-  else
-    return false;
+  FOREACH_ARRAY_ELEMENT( error_map, m, ERROR_MAP ) {
+    if ( strcasecmp( s, m->error_str ) == 0 ) {
+      opt_error = m->error;
+      return true;
+    }
+  } // for
 
-  return true;
+  return false;
 }
 
 void opt_include_paths_add( char const *include_path ) {
