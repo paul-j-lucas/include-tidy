@@ -587,7 +587,7 @@ static char const* make_short_opts( struct option const options[static const 2],
  *
  * @remarks
  * @parblock
- * Command-line options of the form have:
+ * Command-line options of the form:
  *
  *  + <tt>-Xtidy</tt> _option_ have <tt>-Xtidy</tt> removed and _option_ moved
  *    to \a *ptidy_argv.
@@ -598,7 +598,8 @@ static char const* make_short_opts( struct option const options[static const 2],
  *    <tt>-I</tt><i>path</i>.
  *  + Same as above, but for also <tt>-cxx-system</tt>, <tt>-iquote</tt>,
  *    <tt>-isystem-after</tt>, and <tt>--include-directory</tt>.
- *  + <tt>--help</tt> or <tt>--version</tt> are moved to \a *ptidy_argv.
+ *  + <tt>--help</tt>, <tt>-h</tt>, <tt>--version</tt>, or <tt>-v</tt> are
+ *    moved to \a *ptidy_argv.
  *
  * All other options and arguments are left as-is in \a argv.  Examples:
  *
@@ -704,7 +705,6 @@ static void move_tidy_args( int *pargc, char const *argv[],
       "-isystem-after",
     };
 
-    bool found_long_include_path_opt = false;
     FOREACH_ARRAY_ELEMENT( char const*, popt, LONG_INCLUDE_PATH_OPTIONS ) {
       size_t const opt_len = strlen( *popt );
       if ( strncmp( argv[i], *popt, opt_len ) == 0 ) {
@@ -731,20 +731,26 @@ static void move_tidy_args( int *pargc, char const *argv[],
         check_asprintf( &new_arg, "-I%s", dir_arg );
         tidy_argv[ tidy_argc++ ] = new_arg;
 
-        found_long_include_path_opt = true;
-        break;
+        goto next_argv;
       }
     } // for
-    if ( found_long_include_path_opt )
-      continue;
 
-    if ( STRNCMPLIT( argv[i], "--help" ) == 0 ||
-         STRNCMPLIT( argv[i], "--version" ) == 0 ) {
-      tidy_argv[ tidy_argc++ ] = argv[i];
-      continue;
-    }
+    static char const *const OTHER_OPTIONS[] = {
+      "--help",     "-h",
+      "--version",  "-v",
+    };
+
+    FOREACH_ARRAY_ELEMENT( char const*, popt, OTHER_OPTIONS ) {
+      size_t const opt_len = strlen( *popt );
+      if ( strncmp( argv[i], *popt, opt_len ) == 0 ) {
+        tidy_argv[ tidy_argc++ ] = argv[i];
+        goto next_argv;
+      }
+    } // for
 
     argv[ new_argc++ ] = argv[i];
+
+next_argv:;
   } // for
 
   argv[ new_argc ] = tidy_argv[ tidy_argc ] = NULL;

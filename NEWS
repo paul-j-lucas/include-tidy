@@ -14,6 +14,10 @@ The `--error` option is now also settable via a configuration file.
 Added support for `--include-directory`, `-cxx-isystem`, `-iquote`, and
 `-isystem-after` **clang** options.
 
+** `-h` and `-v`
+Both are now correctly recognized as synonyms for `--help` and `--version`,
+respectively.
+
 ** `=` in `-isystem`, etc.
 A `=` is now correctly allowed between `-isystem` (and other include path
 options) and its value, e.g., `-isystem=/path`, in addition to no `=`.
