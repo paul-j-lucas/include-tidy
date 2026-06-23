@@ -147,7 +147,8 @@ static bool is_include_path( CXCursor ref_cursor, CXCursor def_cursor ) {
  * @param token The token to get the cursor for.
  * @param scope_cursor The cursor of the scope to search within.
  * @param param_set The set of macro parameter names.
- * @return Returns said cursor or the null cursor if \a token is:
+ * @return Returns said cursor; or an invalid cursor if \a token is an
+ * identifier, but not found; or the null cursor if \a token is:
  *  + Not an identifier; or:
  *  + Either `__VA_ARGS__` nor `__VA_OPT__`; or:
  *  + In \a param_set.
