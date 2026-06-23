@@ -394,7 +394,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     char const *const includer_name = clang_getCString( includer_name_cxs );
 
     print_file_error(
-      path_no_dot_slash( includer_name ), include_line, include_col,
+      includer_name, include_line, include_col,
       "\"%s\": %s (missing -I option?)\n",
       included_name, strerror( ENOENT )
     );

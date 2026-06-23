@@ -29,6 +29,7 @@
 #include "clang_util.h"
 #include "color.h"
 #include "options.h"
+#include "path_util.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -82,7 +83,7 @@ static void fl_print_impl( char const *tidy_file, int tidy_line,
 
   if ( source_path != NULL ) {
     color_start( stderr, sgr_locus );
-    EPRINTF( "\"%s\"", source_path );
+    EPRINTF( "\"%s\"", path_no_dot_slash( source_path ) );
     color_end( stderr, sgr_locus );
 
     if ( source_line > 0 ) {
