@@ -99,9 +99,9 @@ static void fl_print_impl( char const *tidy_file, int tidy_line,
         color_end( stderr, sgr_locus );
       }
     }
+    EPUTS( ": " );
   }
 
-  EPUTS( ": " );
   color_start( stderr, what_color );
   EPUTS( what );
   color_end( stderr, what_color );
