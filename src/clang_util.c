@@ -210,7 +210,7 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor ) {
     scope_cursor = parent;
   } // while
 
-  return clang_getNullCursor();
+  return (CXCursor){ .kind = CXCursor_NoDeclFound };
 }
 
 CXCursor tidy_getCursorByToken( CXToken token, CXCursor scope_cursor ) {

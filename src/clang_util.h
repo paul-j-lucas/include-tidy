@@ -126,7 +126,7 @@ CXString tidy_File_getRealPathName( CXFile file );
  *
  * @param name The name to get the cursor for.
  * @param scope_cursor The scope to look in.
- * @return Returns said cursor or the null cursor if not found.
+ * @return Returns said cursor or an invalid cursor if not found.
  *
  * @sa tidy_getCursorByToken()
  */
@@ -140,7 +140,7 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor );
  * @param token The token to get the cursor for.
  * @param scope_cursor The scope to look in.
  * @return Returns said cursor, or the null cursor if \a token is not an
- * identifier or not found.
+ * identifier, or an invalid cursor if not found.
  *
  * @sa tidy_getCursorByName()
  */
