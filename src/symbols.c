@@ -157,19 +157,19 @@ static CXCursor macro_get_cursor_by_name( CXToken token, CXCursor scope_cursor,
                                           rb_tree_t const *param_set ) {
   assert( param_set != NULL );
 
-  CXCursor rv_cursor = clang_getNullCursor();
-
   if ( clang_getTokenKind( token ) != CXToken_Identifier )
-    return rv_cursor;
+    return clang_getNullCursor();
 
   CXString const    token_cxs = clang_getTokenSpelling( tidy_tu, token );
   char const *const token_cs = clang_getCString( token_cxs );
 
-  if ( strcmp( token_cs, "__VA_ARGS__" ) != 0 &&
-       strcmp( token_cs, "__VA_OPT__" ) != 0 &&
-       rb_tree_find( param_set, token_cs ) == NULL ) {
-    rv_cursor = tidy_getCursorByName( token_cs, scope_cursor );
-  }
+  CXCursor const rv_cursor =
+    strcmp( token_cs, "__VA_ARGS__" ) != 0 &&
+    strcmp( token_cs, "__VA_OPT__" ) != 0 &&
+    rb_tree_find( param_set, token_cs ) == NULL ?
+      tidy_getCursorByName( token_cs, scope_cursor )
+    :
+      clang_getNullCursor();
 
   clang_disposeString( token_cxs );
   return rv_cursor;
