@@ -121,7 +121,7 @@ NODISCARD
 CXString tidy_File_getRealPathName( CXFile file );
 
 /**
- * Attempts to cwt the cursor for the identifier having \a name within \a
+ * Attempts to get the cursor for the identifier having \a name within \a
  * scope_cursor.
  *
  * @param name The name to get the cursor for.
