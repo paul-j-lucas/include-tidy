@@ -953,7 +953,35 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
 
+  // We have to do a first pass to handle these options before any others.
   opterr = 1;
+  for (;;) {
+    opt = getopt_long(
+      tidy_argc, CONST_CAST( char**, tidy_argv ), short_opts, OPTIONS,
+      /*longindex=*/NULL
+    );
+    if ( opt == -1 )
+      break;
+    if ( !check_optarg( opt ) )
+      goto missing_arg;
+    switch ( opt ) {
+      case COPT(DIRECTORY):
+        // We have to handle this option to change directory before -I options
+        // are handled.
+        opt_directory = optarg;
+        break;
+    } // switch
+  } // for
+
+  if ( opt_directory != NULL && chdir( opt_directory ) != 0 )
+    fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
+
+#ifdef __GLIBC__
+  optind = 0;
+#else
+  optind = 1;
+#endif /* __GLIBC__ */
+
   for (;;) {
     opt = getopt_long(
       tidy_argc, CONST_CAST( char**, tidy_argv ), short_opts, OPTIONS,
@@ -1010,8 +1038,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       case COPT(DEBUG):
         opt_debug = true;
         break;
-      case COPT(DIRECTORY):
-        opt_directory = optarg;
+      case COPT(DIRECTORY):             // already handled
         break;
       case COPT(ERROR):
         if ( !opt_error_parse( optarg ) ) {
@@ -1109,13 +1136,9 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     exit( EX_USAGE );
   }
 
-  if ( opt_directory != NULL ) {
-    if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )
-      verbose_printf( "change directory: \"%s\"\n", opt_directory );
-    if ( chdir( opt_directory ) != 0 )
-      fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
-    if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )
-      verbose_printf( "\n" );
+  if ( opt_directory != NULL && (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 ) {
+    verbose_printf( "change directory: \"%s\"\n", opt_directory );
+    verbose_printf( "\n" );
   }
 
   // We have do do this after --help and --version have been checked.

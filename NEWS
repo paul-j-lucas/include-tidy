@@ -7,6 +7,10 @@ See the end of the file for license conditions.
 
 * Changes in Include-tidy 1.2
 
+** Changing directory
+Changing directory via the `--directory` or `-d` options now works in all
+cases.
+
 ** `error`
 The `--error` option is now also settable via a configuration file.
 
