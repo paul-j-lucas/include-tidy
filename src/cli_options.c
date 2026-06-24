@@ -26,6 +26,7 @@
 // local
 #include "pjl_config.h"                 /* must go first */
 #include "cli_options.h"
+#include "array.h"
 #include "include-tidy.h"
 #include "options.h"
 #include "path_util.h"
@@ -950,39 +951,12 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   char const *const short_opts = make_short_opts( OPTIONS, SOPT(INCLUDE) ":" );
   int               tidy_argc;
   char const      **tidy_argv;
+  array_t           tmp_include_paths;
 
   move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
+  array_init( &tmp_include_paths, sizeof(char*) );
 
   opterr = 0;                           // suppress default error message
-
-  // We have to do a first pass to handle these options before any others.
-  for (;;) {
-    opt = getopt_long(
-      tidy_argc, CONST_CAST( char**, tidy_argv ), short_opts, OPTIONS,
-      /*longindex=*/NULL
-    );
-    if ( opt == -1 )
-      break;
-    if ( !check_optarg( opt ) )
-      goto missing_arg;
-    switch ( opt ) {
-      case COPT(DIRECTORY):
-        // We have to handle this option to change directory before -I options
-        // are handled.
-        opt_directory = optarg;
-        break;
-    } // switch
-  } // for
-
-  if ( opt_directory != NULL && chdir( opt_directory ) != 0 )
-    fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
-
-#ifdef __GLIBC__
-  optind = 0;
-#else
-  optind = 1;
-#endif /* __GLIBC__ */
-
   for (;;) {
     opt = getopt_long(
       tidy_argc, CONST_CAST( char**, tidy_argv ), short_opts, OPTIONS,
@@ -1039,7 +1013,8 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       case COPT(DEBUG):
         opt_debug = true;
         break;
-      case COPT(DIRECTORY):             // already handled
+      case COPT(DIRECTORY):
+        opt_directory = optarg;
         break;
       case COPT(ERROR):
         if ( !opt_error_parse( optarg ) ) {
@@ -1054,7 +1029,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         opt_help = true;
         break;
       case COPT(INCLUDE):
-        opt_include_paths_add( optarg );
+        *(char**)array_push_back( &tmp_include_paths ) = optarg;
         break;
       case COPT(LINE_LENGTH):
         if ( !opt_line_length_parse( optarg ) ) {
@@ -1137,10 +1112,22 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     exit( EX_USAGE );
   }
 
-  if ( opt_directory != NULL && (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 ) {
-    verbose_printf( "change directory: \"%s\"\n", opt_directory );
-    verbose_printf( "\n" );
+  if ( opt_directory != NULL ) {
+    if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )
+      verbose_printf( "change directory: \"%s\"\n", opt_directory );
+     if ( chdir( opt_directory ) != 0 )
+        fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
+    if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )
+      verbose_printf( "\n" );
   }
+
+  // The reason for tmp_include_paths is that we have to defer callint
+  // opt_include_paths_add() until after chrdir() (if at all).
+  for ( size_t i = 0; i < tmp_include_paths.len; ++i ) {
+    char const *const *const ppath = array_at_nc( &tmp_include_paths, i );
+    opt_include_paths_add( *ppath );
+  } // for
+  array_cleanup( &tmp_include_paths, /*free_fn=*/NULL );
 
   // We have do do this after --help and --version have been checked.
   char const *const CLANG_ARGS[] = {
