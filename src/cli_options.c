@@ -953,8 +953,9 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
 
+  opterr = 0;                           // suppress default error message
+
   // We have to do a first pass to handle these options before any others.
-  opterr = 1;
   for (;;) {
     opt = getopt_long(
       tidy_argc, CONST_CAST( char**, tidy_argv ), short_opts, OPTIONS,
