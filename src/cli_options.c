@@ -231,6 +231,25 @@ error:
 }
 
 /**
+ * Checks `optarg` for \a opt.
+ *
+ * @param opt The option to check `optarg` for.
+ * @return Returns `true` only if:
+ *  + \a opt does not correspond to an option; or:
+ *  + The option does not require and argument; or:
+ *  + The argument is not empty.
+ */
+static bool check_optarg( int opt ) {
+  struct option const *const option = get_option( opt );
+  if ( option == NULL || option->has_arg != required_argument )
+    return true;
+  if ( optarg == NULL )
+    return false;
+  SKIP_WS( optarg );
+  return optarg[0] != '\0';
+}
+
+/**
  * If \a opt was given, checks that _only_ it was given and, if not, prints an
  * error message and exits; if \a opt was not given, does nothing.
  *
@@ -942,14 +961,8 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     );
     if ( opt == -1 )
       break;
-    struct option const *const option = get_option( opt );
-    if ( option != NULL && option->has_arg == required_argument ) {
-      if ( optarg == NULL )
-        goto missing_arg;
-      SKIP_WS( optarg );
-      if ( optarg[0] == '\0' )
-        goto missing_arg;
-    }
+    if ( !check_optarg( opt ) )
+      goto missing_arg;
     switch ( opt ) {
       case COPT(ALIGN_COLUMN):;
         if ( !opt_align_column_parse( optarg ) ) {
