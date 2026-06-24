@@ -311,12 +311,19 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
     fnv1a_t const     hash = fnv1a_s( abs_path );
 
     clang_disposeString( abs_path_cxs );
+
+#ifdef HAVE_TYPEOF
+    typedef typeof( ((CXFileUniqueID*)0)->data[0] ) CXFileUniqueID_data_t;
+#else
+    typedef unsigned long long CXFileUniqueID_data_t;
+#endif /* HAVE_TYPEOF */
+
     id = (CXFileUniqueID){
       .data = {
 #if HAVE_UNSIGNED_INT128
-        STATIC_CAST( unsigned long long, hash >> 64 ),
+        STATIC_CAST( CXFileUniqueID_data_t, hash >> 64 ),
 #endif /* HAVE_UNSIGNED_INT128 */
-        STATIC_CAST( unsigned long long, hash )
+        STATIC_CAST( CXFileUniqueID_data_t, hash )
       }
     };
   }
