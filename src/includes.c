@@ -398,6 +398,9 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       "\"%s\": %s (missing -I option?)\n",
       included_name, strerror( ENOENT )
     );
+
+    clang_disposeString( included_name_cxs );
+    clang_disposeString( includer_name_cxs );
     exit( EX_DATAERR );
   }
 
