@@ -1121,7 +1121,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       verbose_printf( "\n" );
   }
 
-  // The reason for tmp_include_paths is that we have to defer callint
+  // tmp_include_paths is needed because we have to defer calling
   // opt_include_paths_add() until after chrdir() (if at all).
   for ( size_t i = 0; i < tmp_include_paths.len; ++i ) {
     char const *const *const ppath = array_at_nc( &tmp_include_paths, i );
