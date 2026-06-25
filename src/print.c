@@ -195,10 +195,14 @@ void print_source_line( char const *path, unsigned line, unsigned col,
   ssize_t const raw_len = getline( &line_buf, &line_cap, fsource );
   if ( raw_len == -1 )
     goto done;
+  unsigned const line_len = STATIC_CAST( unsigned, raw_len );
 
   EPRINTF( "%5u | %s", line, line_buf );
-  unsigned const line_len = STATIC_CAST( unsigned, raw_len );
-  if ( line_buf[ line_len - 1 ] != '\n' )
+  //
+  // getline() includes the \n in the buffer except if EOF is reached, so check
+  // if the last character is \n: if not, print one explicitly.
+  //
+  if ( unlikely( line_buf[ line_len - 1 ] != '\n' ) )
     EPUTC( '\n' );
 
   EPRINTF( "%5s | ", "" );
