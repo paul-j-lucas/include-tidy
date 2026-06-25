@@ -1,3 +1,24 @@
+2026-06-24  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c, clang_util.h: Removed tidy_getCursorSpelling() -- not used.
+   * print.c: Added unlikely().
+   * symbols.c: Don't need tidy_Cursor_isInvalid() check.
+   * includes.c: Added calls to clang_disposeString().
+   * clang_util.c: Added CXFileUniqueID_data_t.
+   * clang_util.c, clang_util.h, symbols.c: Moved tidy_Cursor_isInFile to
+     cursor_in_file in symbols.c.
+   * cli_options.c: Now using tmp_include_paths.
+
+2026-06-23  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c: Set opterr = 0.
+   * cli_options.c: Now changing directory earlier.
+   * cli_options.c: Added check_optarg().
+   * util.h: Put () around FN.
+   * print.c: No longer printing leading ':' in error message.
+   * clang_util.c, clang_util.h: Now returning an invalid cursor for not found.
+   * includes.c, print.c: Moved path_no_dot_slash() into fl_print_impl().
+
 2026-06-22  Paul J. Lucas <paul@lucasmail.org>
 
    * options.c: Now using static array in opt_error_parse().
