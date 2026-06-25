@@ -190,16 +190,6 @@ NODISCARD
 char const* tidy_getCursorScopedName( CXCursor cursor );
 
 /**
- * Calls `clang_getCursorSpelling()` and `clang_getCString()`.
- *
- * @param cursor The cursor to use.
- * @return Returns the C string version of \a cursor.  The caller is
- * responsible for freeing it.
- */
-NODISCARD
-char* tidy_getCursorSpelling( CXCursor cursor );
-
-/**
  * Gets the "underlying" cursor for \a cursor, if any.
  *
  * @remarks
