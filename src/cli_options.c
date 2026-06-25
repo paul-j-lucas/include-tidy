@@ -1115,8 +1115,8 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   if ( opt_directory != NULL ) {
     if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )
       verbose_printf( "change directory: \"%s\"\n", opt_directory );
-     if ( chdir( opt_directory ) != 0 )
-        fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
+    if ( chdir( opt_directory ) != 0 )
+      fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
     if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )
       verbose_printf( "\n" );
   }
