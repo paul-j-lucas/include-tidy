@@ -1151,7 +1151,7 @@ invalid_opt:;
     EPRINTF( "\"%s\"", invalid_opt + STRLITLEN( "--" ) );
   else
     EPRINTF( "'%c'", optopt );
-  EPRINTF( ": invalid option; use --help for help\n" );
+  EPRINTF( ": invalid option; use --help or -h for help\n" );
   exit( EX_USAGE );
 
 missing_arg:

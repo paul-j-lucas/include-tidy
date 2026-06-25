@@ -112,7 +112,7 @@ include-tidy home page: https://github.com/paul-j-lucas/include-tidy
 Report bugs to: https://github.com/paul-j-lucas/include-tidy/issues
 
 $ include-tidy --help=X
-include-tidy: "help=X": invalid option; use --help for help
+include-tidy: "help=X": invalid option; use --help or -h for help
 
 $ include-tidy --help --version
 include-tidy: error: --help/-h can be given only by itself
@@ -150,5 +150,5 @@ include-tidy home page: https://github.com/paul-j-lucas/include-tidy
 Report bugs to: https://github.com/paul-j-lucas/include-tidy/issues
 
 $ include-tidy --version=X
-include-tidy: "version=X": invalid option; use --help for help
+include-tidy: "version=X": invalid option; use --help or -h for help
 
