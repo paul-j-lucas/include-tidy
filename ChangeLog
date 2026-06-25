@@ -1,3 +1,7 @@
+2026-06-25  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c, cli-options-error.out: Added "or -h".
+
 2026-06-24  Paul J. Lucas <paul@lucasmail.org>
 
    * clang_util.c, clang_util.h: Removed tidy_getCursorSpelling() -- not used.
