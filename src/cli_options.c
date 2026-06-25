@@ -1147,10 +1147,10 @@ invalid_opt:;
   // Determine whether the invalid option was short or long.
   char const *const invalid_opt = tidy_argv[ optind - 1 ];
   EPRINTF( "%s: ", prog_name );
-  if ( invalid_opt != NULL && strncmp( invalid_opt, "--", 2 ) == 0 )
-    EPRINTF( "\"%s\"", invalid_opt + 2/*skip over "--"*/ );
+  if ( invalid_opt != NULL && STRNCMPLIT( invalid_opt, "--" ) == 0 )
+    EPRINTF( "\"%s\"", invalid_opt + STRLITLEN( "--" ) );
   else
-    EPRINTF( "'%c'", STATIC_CAST( char, optopt ) );
+    EPRINTF( "'%c'", optopt );
   EPRINTF( ": invalid option; use --help for help\n" );
   exit( EX_USAGE );
 
