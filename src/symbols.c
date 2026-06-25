@@ -94,9 +94,6 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
 static bool cursor_in_file( CXCursor cursor, CXFile file ) {
   assert( file != NULL );
 
-  if ( tidy_Cursor_isInvalid( cursor ) )
-    return false;
-
   CXFile const cursor_file = tidy_getCursorLocation_File( cursor );
   return cursor_file != NULL && clang_File_isEqual( cursor_file, file );
 }
