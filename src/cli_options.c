@@ -834,8 +834,8 @@ static void print_usage( int status ) {
       case COPT(HELP):
       case COPT(VERSION):
         // These are special in that they are allowed directly rather than
-        // following -Xtidy.  Consequently, they don't have short options and
-        // also must be printed seperately (below).
+        // following -Xtidy.  Consequently, they must be printed seperately
+        // (below).
         continue;
     } // switch
     fprintf( fout, "  --%s", option->name );
@@ -861,13 +861,16 @@ static void print_usage( int status ) {
     switch ( option->val ) {
       case COPT(HELP):
       case COPT(VERSION):
-        assert( option->has_arg == no_argument );
-        fprintf( fout, "  --%s", option->name );
-        size_t const long_opt_len = strlen( option->name );
-        assert( long_opt_len <= longest_opt_len );
-        FPUTNSP( longest_opt_len - long_opt_len + STRLITLEN( " (-?) " ), fout );
-        fprintf( fout, "%s.\n", get_opt_help( option->val ) );
+        break;
+      default:
+        continue;
     } // switch
+    fprintf( fout, "  --%s", option->name );
+    size_t const long_opt_len = strlen( option->name );
+    assert( option->has_arg == no_argument );
+    assert( long_opt_len <= longest_opt_len );
+    FPUTNSP( longest_opt_len - long_opt_len, fout );
+    fprintf( fout, " (-%c) %s.\n", option->val, get_opt_help( option->val ) );
   } // for
 
   fputs(

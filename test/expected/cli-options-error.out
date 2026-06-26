@@ -105,8 +105,8 @@ tidy options:
   --verbose=ARG         (-V) Print verbose output.
 
 other options:
-  --help                     Print this help and exit.
-  --version                  Print version and exit.
+  --help                (-h) Print this help and exit.
+  --version             (-v) Print version and exit.
 
 include-tidy home page: https://github.com/paul-j-lucas/include-tidy
 Report bugs to: https://github.com/paul-j-lucas/include-tidy/issues
@@ -143,8 +143,8 @@ tidy options:
   --verbose=ARG         (-V) Print verbose output.
 
 other options:
-  --help                     Print this help and exit.
-  --version                  Print version and exit.
+  --help                (-h) Print this help and exit.
+  --version             (-v) Print version and exit.
 
 include-tidy home page: https://github.com/paul-j-lucas/include-tidy
 Report bugs to: https://github.com/paul-j-lucas/include-tidy/issues

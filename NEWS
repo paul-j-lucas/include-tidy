@@ -5,6 +5,12 @@ See the end of the file for license conditions.
 
 -------------------------------------------------------------------------------
 
+* Changes in Include-tidy 1.2.1
+
+** `-h` and `-v`
+Added these missing short options to `--help` output.
+
+
 * Changes in Include-tidy 1.2
 
 ** Changing directory
