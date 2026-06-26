@@ -35,7 +35,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "June 22, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "June 26, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -1204,6 +1204,10 @@ I/O error.
 Configuration file error.
 .PD
 .SH ENVIRONMENT
+.TP
+.BR CPATH " | " C_INCLUDE_PATH " | " CPLUS_INCLUDE_PATH
+Same as in
+.BR clang (1).
 .TP
 .B HOME
 Used only when
