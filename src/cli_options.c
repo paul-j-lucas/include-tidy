@@ -625,8 +625,9 @@ static char const* make_short_opts( struct option const options[static const 2],
  *  + <tt>-isystem</tt><i>path</i>, <tt>-isystem=</tt><i>path</i>, or
  *    <tt>-isystem</tt> <i>path</i> copied to \a *ptidy_argv, but as
  *    <tt>-I</tt><i>path</i>.
- *  + Same as above, but for also <tt>-cxx-system</tt>, <tt>-iquote</tt>,
- *    <tt>-isystem-after</tt>, and <tt>--include-directory</tt>.
+ *  + Same as above, but for also <tt>-cxx-system</tt>, <tt>-idirafter</tt>,
+ *    <tt>-iquote</tt>, <tt>-isystem-after</tt>, <tt>--include-directory</tt>,
+ *    and <tt>--include-directory-after</tt>.
  *  + <tt>--help</tt>, <tt>-h</tt>, <tt>--version</tt>, or <tt>-v</tt> are
  *    moved to \a *ptidy_argv.
  *
