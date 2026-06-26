@@ -1,3 +1,8 @@
+2026-06-26  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c, cli-help.out, cli-options-error.out: Added missing -h and
+     -v to --help output.
+
 2026-06-25  Paul J. Lucas <paul@lucasmail.org>
 
    * cli_options.c, cli-options-error.out: Added "or -h".
