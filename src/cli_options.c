@@ -499,7 +499,7 @@ static char const* get_x_language( int argc, char const *const argv[] ) {
 }
 
 /**
- * Inserts \a args into \a *pargv after *pargv[0].
+ * Inserts \a args into \a *pargv at \a argi.
  *
  * @param pargc A pointer to the argument count from `main()`.  It is
  * incremented by 1.
