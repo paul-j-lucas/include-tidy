@@ -203,7 +203,7 @@ bool opt_line_length_parse( char const *s );
 /**
  * Marks an option as having been set.
  *
- * @param short_opt The short option character.
+ * @param short_opt The short option character.  It must be alphanumeric.
  *
  * @sa opt_is_set()
  */
