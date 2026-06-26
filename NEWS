@@ -5,10 +5,14 @@ See the end of the file for license conditions.
 
 -------------------------------------------------------------------------------
 
-* Changes in Include-tidy 1.2.1
+* Changes in Include-tidy 1.3
 
 ** `-h` and `-v`
 Added these missing short options to `--help` output.
+
+** Other include path options
+Added support for `--include-directory-after` and `-idirafter` **clang**
+options.
 
 
 * Changes in Include-tidy 1.2

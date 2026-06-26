@@ -728,7 +728,9 @@ static void move_tidy_args( int *pargc, char const *argv[],
 
     static char const *const LONG_INCLUDE_PATH_OPTIONS[] = {
       "--include-directory",
+      "--include-directory-after",
       "-cxx-isystem",
+      "-idirafter",
       "-iquote",
       "-isystem",
       "-isystem-after",
