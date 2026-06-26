@@ -76,7 +76,7 @@ char const   *tidy_source_path;
 ////////// local variables ////////////////////////////////////////////////////
 
 static array_t  opt_include_paths;      ///< Array of `-I` paths.
-static bool     opt_is_set_impl[ 256 ]; ///< Was an option set?
+static bool     opt_is_set_impl[ 128 ]; ///< Table of options that were set.
 
 /////////// local functions ///////////////////////////////////////////////////
 
@@ -289,8 +289,9 @@ char const* opt_include_paths_relativize( char const *abs_path ) {
 }
 
 bool opt_is_set( int short_opt ) {
-  assert( short_opt >= 0 && short_opt <= 255 );
-  return opt_is_set_impl[ STATIC_CAST( unsigned char, short_opt ) ];
+  assert( short_opt >= 0 );
+  assert( STATIC_CAST( unsigned, short_opt ) < ARRAY_SIZE( opt_is_set_impl ) );
+  return opt_is_set_impl[ short_opt ];
 }
 
 bool opt_line_length_parse( char const *s ) {
@@ -303,9 +304,10 @@ bool opt_line_length_parse( char const *s ) {
 }
 
 void opt_mark_set( int short_opt ) {
-  assert( short_opt >= 0 && short_opt <= 255 );
+  assert( short_opt >= 0 );
+  assert( STATIC_CAST( unsigned, short_opt ) < ARRAY_SIZE( opt_is_set_impl ) );
   assert( isalnum( short_opt ) );
-  opt_is_set_impl[ STATIC_CAST( unsigned char, short_opt ) ] = true;
+  opt_is_set_impl[ short_opt ] = true;
 }
 
 bool opt_verbose_parse( char const *verbose_format ) {

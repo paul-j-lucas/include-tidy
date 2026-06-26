@@ -232,16 +232,16 @@ error:
 }
 
 /**
- * Checks `optarg` for \a opt.
+ * Checks `optarg` for \a short_opt.
  *
- * @param opt The option to check `optarg` for.
+ * @param short_opt The option to check `optarg` for.
  * @return Returns `true` only if:
- *  + \a opt does not correspond to an option; or:
+ *  + \a short_opt does not correspond to an option; or:
  *  + The option does not require and argument; or:
  *  + The argument is not empty.
  */
-static bool check_optarg( int opt ) {
-  struct option const *const option = get_option( opt );
+static bool check_optarg( int short_opt ) {
+  struct option const *const option = get_option( short_opt );
   if ( option == NULL || option->has_arg != required_argument )
     return true;
   if ( optarg == NULL )
@@ -251,21 +251,22 @@ static bool check_optarg( int opt ) {
 }
 
 /**
- * If \a opt was given, checks that _only_ it was given and, if not, prints an
- * error message and exits; if \a opt was not given, does nothing.
+ * If \a short_opt was given, checks that _only_ it was given and, if not,
+ * prints an error message and exits; if \a short_opt was not given, does
+ * nothing.
  *
- * @param opt The option to check for.
+ * @param short_opt The option to check for.
  */
-static void check_opt_exclusive( int opt ) {
-  if ( !opt_is_set( opt ) )
+static void check_opt_exclusive( int short_opt ) {
+  if ( !opt_is_set( short_opt ) )
     return;
   for ( int curr_opt = '0'; curr_opt < 128; ++curr_opt ) {
-    if ( curr_opt == opt )
+    if ( curr_opt == short_opt )
       continue;
     if ( opt_is_set( curr_opt ) ) {
       fatal_error( EX_USAGE,
         "%s can be given only by itself\n",
-        get_opt_format( opt )
+        get_opt_format( short_opt )
       );
     }
   } // for
@@ -307,32 +308,32 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
 }
 
 /**
- * Checks whether the \a argv[\a *pargi] is a long option \a opt having an
+ * Checks whether the \a argv[\a *pargi] is a long option \a long_opt having an
  * argument: if so, returns that argument.
  *
  * @param argc The command-line argument count from `main()`.
  * @param argv The command-line argument values from `main()`.
- * @param opt The long option (without the `--`).
+ * @param long_opt The long option (without the `--`).
  * @param pargi A pointer to the current argument index variable.
  * @return Returns the value of the argument or NULL if \a argv[\a *pargi] is
- * not \a opt.
+ * not \a long_opt.
  *
  * @sa get_short_opt_value()
  */
 static char const* get_long_opt_value( int argc, char const *const argv[],
-                                       char const *opt, int *pargi ) {
-  assert(   argc > 0 );
-  assert(   argv != NULL );
-  assert(    opt != NULL );
-  assert(  pargi != NULL );
-  assert( *pargi > 0 );
+                                       char const *long_opt, int *pargi ) {
+  assert(     argc > 0 );
+  assert(     argv != NULL );
+  assert( long_opt != NULL );
+  assert(    pargi != NULL );
+  assert(   *pargi > 0 );
 
   char const *const arg = argv[ *pargi ];
 
   if ( STRNCMPLIT( arg, "--" ) != 0 )
     return NULL;
-  size_t const opt_len = strlen( opt );
-  if ( strncmp( arg + STRLITLEN( "--" ), opt, opt_len ) != 0 )
+  size_t const opt_len = strlen( long_opt );
+  if ( strncmp( arg + STRLITLEN( "--" ), long_opt, opt_len ) != 0 )
     return NULL;
   if ( arg[ STRLITLEN( "--" ) + opt_len ] == '=' ) {
     char const *const value = arg + STRLITLEN( "--" ) + opt_len + 1;
@@ -345,7 +346,7 @@ static char const* get_long_opt_value( int argc, char const *const argv[],
       return value;
   }
 
-  fatal_error( EX_USAGE, "\"--%s\" requires an argument\n", opt );
+  fatal_error( EX_USAGE, "\"--%s\" requires an argument\n", long_opt );
 }
 
 /**
@@ -356,32 +357,40 @@ static char const* get_long_opt_value( int argc, char const *const argv[],
  * to format.
  * @return Returns the formatted string.
  *
- * @warning The pointer returned is to a static buffer, so you can't do
- * something like call this twice in the same `printf()` statement.
+ * @warning The pointer returned is to one of a small number of static buffers,
+ * so you can't do something like call this more than twice in the same
+ * `printf()` statement.
  */
 NODISCARD
 static char const* get_opt_format( int short_opt ) {
-  assert( short_opt > 0 && short_opt <= 127 );
+  static strbuf_t sbufs[2];
+  static unsigned buf_index;
 
-  static strbuf_t sbuf;
-  strbuf_reset( &sbuf );
+  strbuf_t *const sbuf = &sbufs[ buf_index++ % ARRAY_SIZE( sbufs ) ];
+  strbuf_reset( sbuf );
+
   struct option const *const option = get_option( short_opt );
-  assert( option != NULL );
-  strbuf_printf( &sbuf, "--%s/-%c", option->name, short_opt );
-  return sbuf.str;
+  char const *const long_opt = option != NULL ? option->name : "";
+  return strbuf_printf(
+    sbuf, "%s%s%s-%c",
+    long_opt[0] != '\0' ? "--" : "",
+    long_opt,
+    long_opt[0] != '\0' ? "/" : "",
+    short_opt
+  );
 }
 
 /**
- * Gets the help message for \a opt.
+ * Gets the help message for \a short_opt.
  *
- * @param opt The option to get the help for.
+ * @param short_opt The option to get the help for.
  * @return Returns said help message.
  */
 NODISCARD
-static char const* get_opt_help( int opt ) {
-  assert( opt > 0 );
-  assert( STATIC_CAST( unsigned, opt ) < ARRAY_SIZE( OPTIONS_HELP ) );
-  char const *const help = OPTIONS_HELP[ opt ];
+static char const* get_opt_help( int short_opt ) {
+  assert( short_opt > 0 );
+  assert( STATIC_CAST( unsigned, short_opt ) < ARRAY_SIZE( OPTIONS_HELP ) );
+  char const *const help = OPTIONS_HELP[ short_opt ];
   assert( help != NULL );
   return help;
 }
@@ -402,26 +411,26 @@ static struct option const* get_option( int short_opt ) {
 }
 
 /**
- * Checks whether the \a argv[\a *pargi] is a short option \a opt having an
- * argument: if so, returns that argument.
+ * Checks whether the \a argv[\a *pargi] is a short option \a short_opt having
+ * an argument: if so, returns that argument.
  *
  * @param argc The command-line argument count from `main()`.
  * @param argv The command-line argument values from `main()`.
- * @param opt The short option character.
+ * @param short_opt The short option character.
  * @param pargi A pointer to the current argument index variable.
  * @return Returns the value of the argument or NULL if \a argv[\a *pargi] is
- * not \a opt.
+ * not \a short_opt.
  *
  * @sa get_long_opt_value()
  */
 static char const* get_short_opt_value( int argc, char const *const argv[],
-                                        char opt, int *pargi ) {
+                                        char short_opt, int *pargi ) {
   assert(   argc > 0 );
   assert(   argv != NULL );
   assert(  pargi != NULL );
   assert( *pargi > 0 );
 
-  if ( argv[ *pargi ][0] != '-' || argv[ *pargi ][1] != opt )
+  if ( argv[ *pargi ][0] != '-' || argv[ *pargi ][1] != short_opt )
     return NULL;
   if ( argv[ *pargi ][2] != '\0' )    // -x<arg>, not -x <arg>
     return argv[ *pargi ] + 2;
@@ -431,7 +440,7 @@ static char const* get_short_opt_value( int argc, char const *const argv[],
       return value;
   }
 
-  fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", opt );
+  fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", short_opt );
 }
 
 /**
@@ -944,10 +953,10 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   // "foo.h".
   opt_include_paths_add( "." );
 
-  int               opt;
   char const       *opt_directory = NULL;
   bool              opt_help = false;
   unsigned          opt_version = 0;
+  int               short_opt;
   char const *const short_opts = make_short_opts( OPTIONS, SOPT(INCLUDE) ":" );
   int               tidy_argc;
   char const      **tidy_argv;
@@ -958,20 +967,20 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   opterr = 0;                           // suppress default error message
   for (;;) {
-    opt = getopt_long(
+    short_opt = getopt_long(
       tidy_argc, CONST_CAST( char**, tidy_argv ), short_opts, OPTIONS,
       /*longindex=*/NULL
     );
-    if ( opt == -1 )
+    if ( short_opt == -1 )
       break;
-    if ( !check_optarg( opt ) )
+    if ( !check_optarg( short_opt ) )
       goto missing_arg;
-    switch ( opt ) {
+    switch ( short_opt ) {
       case COPT(ALIGN_COLUMN):;
         if ( !opt_align_column_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s; must be 0-%d\n",
-            optarg, get_opt_format( opt ), OPT_ALIGN_COLUMN_MAX
+            optarg, get_opt_format( short_opt ), OPT_ALIGN_COLUMN_MAX
           );
         }
         break;
@@ -984,7 +993,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         if ( !opt_color_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s\n",
-            optarg, get_opt_format( opt )
+            optarg, get_opt_format( short_opt )
           );
         }
         break;
@@ -993,7 +1002,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s;"
             " must be one of \"//\", \"/*\", or \"none\"\n",
-            optarg, get_opt_format( opt )
+            optarg, get_opt_format( short_opt )
           );
         }
         opt_all_includes = true;
@@ -1002,7 +1011,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         if ( !opt_comment_symbols_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s\n",
-            optarg, get_opt_format( opt )
+            optarg, get_opt_format( short_opt )
           );
         }
         opt_all_includes = true;
@@ -1021,7 +1030,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s;"
             " must be one of \"violations\", \"always\", or \"never\"\n",
-            optarg, get_opt_format( opt )
+            optarg, get_opt_format( short_opt )
           );
         }
         break;
@@ -1035,7 +1044,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         if ( !opt_line_length_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s; must be 1-%d\n",
-            optarg, get_opt_format( opt ), OPT_LINE_LENGTH_MAX
+            optarg, get_opt_format( short_opt ), OPT_LINE_LENGTH_MAX
           );
         }
         break;
@@ -1046,7 +1055,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         if ( !opt_verbose_parse( optarg ) ) {
           fatal_error( EX_USAGE,
             "\"%s\": invalid value for %s; must be [" OPT_VERBOSE_ALL "]+\n",
-            optarg, get_opt_format( opt )
+            optarg, get_opt_format( short_opt )
           );
         }
         break;
@@ -1060,15 +1069,15 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         goto invalid_opt;
 
       default:
-        if ( isprint( opt ) )
+        if ( isprint( short_opt ) )
           INTERNAL_ERROR(
-            "'%c': unaccounted-for getopt_long() return value\n", opt
+            "'%c': unaccounted-for getopt_long() return value\n", short_opt
           );
         INTERNAL_ERROR(
-          "%d: unaccounted-for getopt_long() return value\n", opt
+          "%d: unaccounted-for getopt_long() return value\n", short_opt
         );
     } // switch
-    opt_mark_set( opt );
+    opt_mark_set( short_opt );
   } // for
   FREE( short_opts );
 
@@ -1157,7 +1166,7 @@ invalid_opt:;
 missing_arg:
   fatal_error( EX_USAGE,
     "\"%s\" requires an argument\n",
-    get_opt_format( opt == ':' ? optopt : opt )
+    get_opt_format( short_opt == ':' ? optopt : short_opt )
   );
 }
 
