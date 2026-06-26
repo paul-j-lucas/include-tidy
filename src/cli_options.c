@@ -332,11 +332,11 @@ static char const* get_long_opt_value( int argc, char const *const argv[],
 
   if ( STRNCMPLIT( arg, "--" ) != 0 )
     return NULL;
-  size_t const opt_len = strlen( long_opt );
-  if ( strncmp( arg + STRLITLEN( "--" ), long_opt, opt_len ) != 0 )
+  size_t const long_opt_len = strlen( long_opt );
+  if ( strncmp( arg + STRLITLEN( "--" ), long_opt, long_opt_len ) != 0 )
     return NULL;
-  if ( arg[ STRLITLEN( "--" ) + opt_len ] == '=' ) {
-    char const *const value = arg + STRLITLEN( "--" ) + opt_len + 1;
+  if ( arg[ STRLITLEN( "--" ) + long_opt_len ] == '=' ) {
+    char const *const value = arg + STRLITLEN( "--" ) + long_opt_len + 1;
     if ( value[0] != '\0' )
       return value;
   }
@@ -804,19 +804,19 @@ static void print_usage( int status ) {
   // pre-flight to calculate longest long option length
   size_t longest_opt_len = 0;
   FOREACH_CLI_OPTION( option, OPTIONS ) {
-    size_t opt_len = strlen( option->name );
+    size_t long_opt_len = strlen( option->name );
     switch ( option->has_arg ) {
       case no_argument:
         break;
       case optional_argument:
-        opt_len += STRLITLEN( "[=ARG]" );
+        long_opt_len += STRLITLEN( "[=ARG]" );
         break;
       case required_argument:
-        opt_len += STRLITLEN( "=ARG" );
+        long_opt_len += STRLITLEN( "=ARG" );
         break;
     } // switch
-    if ( opt_len > longest_opt_len )
-      longest_opt_len = opt_len;
+    if ( long_opt_len > longest_opt_len )
+      longest_opt_len = long_opt_len;
   } // for
 
   FILE *const fout = status == EX_OK ? stdout : stderr;
@@ -839,19 +839,19 @@ static void print_usage( int status ) {
         continue;
     } // switch
     fprintf( fout, "  --%s", option->name );
-    size_t opt_len = strlen( option->name );
+    size_t long_opt_len = strlen( option->name );
     switch ( option->has_arg ) {
       case no_argument:
         break;
       case optional_argument:
-        opt_len += STATIC_CAST( size_t, fprintf( fout, "[=ARG]" ) );
+        long_opt_len += STATIC_CAST( size_t, fprintf( fout, "[=ARG]" ) );
         break;
       case required_argument:
-        opt_len += STATIC_CAST( size_t, fprintf( fout, "=ARG" ) );
+        long_opt_len += STATIC_CAST( size_t, fprintf( fout, "=ARG" ) );
         break;
     } // switch
-    assert( opt_len <= longest_opt_len );
-    FPUTNSP( longest_opt_len - opt_len, fout );
+    assert( long_opt_len <= longest_opt_len );
+    FPUTNSP( longest_opt_len - long_opt_len, fout );
     fprintf( fout, " (-%c) %s.\n", option->val, get_opt_help( option->val ) );
   } // for
 
@@ -863,9 +863,9 @@ static void print_usage( int status ) {
       case COPT(VERSION):
         assert( option->has_arg == no_argument );
         fprintf( fout, "  --%s", option->name );
-        size_t const opt_len = strlen( option->name );
-        assert( opt_len <= longest_opt_len );
-        FPUTNSP( longest_opt_len - opt_len + STRLITLEN( " (-?) " ), fout );
+        size_t const long_opt_len = strlen( option->name );
+        assert( long_opt_len <= longest_opt_len );
+        FPUTNSP( longest_opt_len - long_opt_len + STRLITLEN( " (-?) " ), fout );
         fprintf( fout, "%s.\n", get_opt_help( option->val ) );
     } // switch
   } // for
