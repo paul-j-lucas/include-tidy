@@ -1,5 +1,9 @@
 2026-06-26  Paul J. Lucas <paul@lucasmail.org>
 
+   * configure.ac, cli_options.c: Added support for --include-directory-after,
+     -idirafter.
+   * man/man1/include-tidy.1: Added mention of CPATH, C_INCLUDE_PATH, and
+     CPLUS_INCLUDE_PATH.
    * cli_options.c, cli-help.out, cli-options-error.out: Added missing -h and
      -v to --help output.
 
