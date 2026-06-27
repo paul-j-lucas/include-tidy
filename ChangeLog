@@ -1,5 +1,7 @@
 2026-06-27  Paul J. Lucas <paul@lucasmail.org>
 
+   * trans_unit.c: Added "else" for access() and now always exitint on
+     CXError_Failure.
    * cli_options.c, cli_options.h, options.c, options.h: Moved opt_is_set &
      opt_mark_set.
    * cli_options.c, options.c: Added assert()s; s/unsigned/size_t/
