@@ -1,3 +1,11 @@
+2026-06-27  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c, cli_options.h, options.c, options.h: Moved opt_is_set &
+     opt_mark_set.
+   * cli_options.c, options.c: Added assert()s; s/unsigned/size_t/
+   * cli_options.c: Added clang_long_opt.
+   * cli_options.c: s/char/int/
+
 2026-06-26  Paul J. Lucas <paul@lucasmail.org>
 
    * configure.ac, cli_options.c: Added support for --include-directory-after,
