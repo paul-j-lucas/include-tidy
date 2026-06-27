@@ -101,23 +101,21 @@ struct includes_print_visitor_data {
 ////////// local functions ////////////////////////////////////////////////////
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-static void         ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
-                                       CXClientData );
+static void   ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
+                                 CXClientData );
 #endif /* NEED_II_MATRIX */
 
 NODISCARD
-static char*        make_symbols_comment( tidy_include const* );
+static char*  make_symbols_comment( tidy_include const* );
 
 NODISCARD
-static char const*  tidy_File_getRelativePath( CXFile );
+static char*  tidy_File_getRelativePath( CXFile );
 
-static void         tidy_include_cleanup( tidy_include* );
+static void   tidy_include_cleanup( tidy_include* );
 
 NODISCARD
-static int          tidy_symbol_ptr_cmp_by_name_length( void const*,
-                                                        void const* ),
-                    tidy_symbol_ptr_cmp_by_ref_count( void const*,
-                                                      void const* );
+static int    tidy_symbol_ptr_cmp_by_name_length( void const*, void const* ),
+              tidy_symbol_ptr_cmp_by_ref_count( void const*, void const* );
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -817,7 +815,7 @@ static bool should_print_include( tidy_include const *include ) {
  * responsible for freeing it.
  */
 NODISCARD
-static char const* tidy_File_getRelativePath( CXFile file ) {
+static char* tidy_File_getRelativePath( CXFile file ) {
   assert( file != NULL );
 
   CXString const    path_cxs = clang_getFileName( file );
@@ -836,8 +834,7 @@ static char const* tidy_File_getRelativePath( CXFile file ) {
   //  + Therefore, strdup the relativized path (the portion within path) and
   //    free the original path now.
 
-  char const *const rel_path =
-    check_strdup( opt_include_paths_relativize( path ) );
+  char *const rel_path = check_strdup( opt_include_paths_relativize( path ) );
   FREE( path );
   return rel_path;
 }
