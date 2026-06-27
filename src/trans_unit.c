@@ -145,6 +145,10 @@ void trans_unit_init( int argc, char const *const argv[] ) {
 
   tidy_index = clang_createIndex(
     /*excludeDeclarationsFromPCH=*/false,
+    //
+    // We only want errors printed and not warnings, so set this to false and
+    // print errors ourselves.
+    //
     /*displayDisgnostics=*/false
   );
 
