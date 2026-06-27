@@ -293,13 +293,14 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
 
   struct option const *const clang_option = get_option( COPT(CLANG) );
   assert( clang_option != NULL );
+  char const *const clang_long_opt = clang_option->name;
 
   for ( int i = 1; i < argc; ++i ) {
     if ( !is_Xtidy_opt( argc, argv, &i ) )
       continue;
     char const *clang_path = get_short_opt_value( argc, argv, COPT(CLANG), &i );
     if ( clang_path == NULL )
-      clang_path = get_long_opt_value( argc, argv, clang_option->name, &i );
+      clang_path = get_long_opt_value( argc, argv, clang_long_opt, &i );
     if ( clang_path != NULL )
       return strcmp( clang_path, "none" ) == 0 ? NULL : clang_path;
   } // for
