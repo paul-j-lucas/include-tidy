@@ -892,8 +892,10 @@ static int tidy_include_cmp_for_print( void const *pi_data,
   assert( pi_data != NULL );
   assert( pj_data != NULL );
 
-  tidy_include const *const i_include = *(tidy_include const**)pi_data;
-  tidy_include const *const j_include = *(tidy_include const**)pj_data;
+  tidy_include const *const i_include =
+    *POINTER_CAST( tidy_include const**, pi_data );
+  tidy_include const *const j_include =
+    *POINTER_CAST( tidy_include const**, pj_data );
 
   if ( i_include->sort_rank < j_include->sort_rank )
     return -1;
