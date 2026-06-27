@@ -390,7 +390,7 @@ static char const* get_opt_format( int short_opt ) {
 NODISCARD
 static char const* get_opt_help( int short_opt ) {
   assert( short_opt > 0 );
-  assert( STATIC_CAST( unsigned, short_opt ) < ARRAY_SIZE( OPTIONS_HELP ) );
+  assert( STATIC_CAST( size_t, short_opt ) < ARRAY_SIZE( OPTIONS_HELP ) );
   char const *const help = OPTIONS_HELP[ short_opt ];
   assert( help != NULL );
   return help;
@@ -404,6 +404,7 @@ static char const* get_opt_help( int short_opt ) {
  */
 NODISCARD
 static struct option const* get_option( int short_opt ) {
+  assert( short_opt > 0 && short_opt < 128 );
   FOREACH_CLI_OPTION( option, OPTIONS ) {
     if ( option->val == short_opt )
       return option;
@@ -430,6 +431,7 @@ static char const* get_short_opt_value( int argc, char const *const argv[],
   assert(   argv != NULL );
   assert(  pargi != NULL );
   assert( *pargi > 0 );
+  assert( short_opt > 0 && short_opt < 128 );
 
   if ( argv[ *pargi ][0] != '-' || argv[ *pargi ][1] != short_opt )
     return NULL;

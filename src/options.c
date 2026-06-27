@@ -290,7 +290,7 @@ char const* opt_include_paths_relativize( char const *abs_path ) {
 
 bool opt_is_set( int short_opt ) {
   assert( short_opt >= 0 );
-  assert( STATIC_CAST( unsigned, short_opt ) < ARRAY_SIZE( opt_is_set_impl ) );
+  assert( STATIC_CAST( size_t, short_opt ) < ARRAY_SIZE( opt_is_set_impl ) );
   return opt_is_set_impl[ short_opt ];
 }
 
@@ -305,7 +305,7 @@ bool opt_line_length_parse( char const *s ) {
 
 void opt_mark_set( int short_opt ) {
   assert( short_opt >= 0 );
-  assert( STATIC_CAST( unsigned, short_opt ) < ARRAY_SIZE( opt_is_set_impl ) );
+  assert( STATIC_CAST( size_t, short_opt ) < ARRAY_SIZE( opt_is_set_impl ) );
   assert( isalnum( short_opt ) );
   opt_is_set_impl[ short_opt ] = true;
 }
