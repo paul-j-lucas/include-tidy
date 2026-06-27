@@ -634,13 +634,13 @@ static void includes_print_visitor( tidy_include const *include,
     if ( true_clear( &ipvd->print_blank_line ) )
       PUTC( '\n' );
 
-    unsigned const line_first = *(unsigned*)array_front_nc( &include->lines );
+    unsigned const first_line = *(unsigned*)array_front_nc( &include->lines );
     for ( unsigned i = 1; i < include->lines.len; ++i ) {
       free( comment );
       unsigned const line = *(unsigned*)array_at_nc( &include->lines, i );
       if ( is_needed ) {
         check_asprintf( &comment,
-          "DELETE LINE %u (same as line %u)", line, line_first
+          "DELETE LINE %u (same as line %u)", line, first_line
         );
       }
       else {
