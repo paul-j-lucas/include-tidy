@@ -965,12 +965,12 @@ tidy_include* get_associated_header( void ) {
   RUN_ONCE {
     char const *const ext = path_ext( tidy_source_path );
     if ( ext == NULL )
-      goto done;
+      return NULL;
     char const *const lang = get_ext_language( ext );
     if ( lang == NULL )
-      goto done;
+      return NULL;
     if ( tolower( ext[0] ) != 'c' )
-      goto done;
+      return NULL;
 
     char path_buf[ PATH_MAX ];
     char const *const source_path_no_ext =
@@ -987,7 +987,6 @@ tidy_include* get_associated_header( void ) {
     } // for
   }
 
-done:
   return assoc_include;
 }
 
