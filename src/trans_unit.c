@@ -193,7 +193,7 @@ void trans_unit_init( int argc, char const *const argv[] ) {
       //
       // We don't just check now because we have yet to parse the config file
       // to see if ignore-as-argument is true: if so, we must ignore the file
-      // completely and not print and errors for it.
+      // completely and not print any errors for it.
       //
       // We can't parse the config file before this because we need to set
       // tidy_lang (below) before parsing the config file since it needs to
