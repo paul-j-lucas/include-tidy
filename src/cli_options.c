@@ -123,7 +123,7 @@ NODISCARD
 static char const*  get_long_opt_value( int, char const *const[], char const*,
                                         int* ),
                  *  get_opt_format( int ),
-                 *  get_short_opt_value( int, char const *const[], char, int* );
+                 *  get_short_opt_value( int, char const *const[], int, int* );
 
 NODISCARD
 static struct option const*
@@ -424,7 +424,7 @@ static struct option const* get_option( int short_opt ) {
  * @sa get_long_opt_value()
  */
 static char const* get_short_opt_value( int argc, char const *const argv[],
-                                        char short_opt, int *pargi ) {
+                                        int short_opt, int *pargi ) {
   assert(   argc > 0 );
   assert(   argv != NULL );
   assert(  pargi != NULL );
