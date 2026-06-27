@@ -36,7 +36,6 @@
 
 // standard
 #include <assert.h>
-#include <ctype.h>
 #include <errno.h>
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdbool.h>
@@ -76,7 +75,6 @@ char const   *tidy_source_path;
 ////////// local variables ////////////////////////////////////////////////////
 
 static array_t  opt_include_paths;      ///< Array of `-I` paths.
-static bool     opt_is_set_impl[ 128 ]; ///< Table of options that were set.
 
 /////////// local functions ///////////////////////////////////////////////////
 
@@ -288,12 +286,6 @@ char const* opt_include_paths_relativize( char const *abs_path ) {
   return path_no_dot_slash( shortest_include_path );
 }
 
-bool opt_is_set( int short_opt ) {
-  assert( short_opt >= 0 );
-  assert( STATIC_CAST( size_t, short_opt ) < ARRAY_SIZE( opt_is_set_impl ) );
-  return opt_is_set_impl[ short_opt ];
-}
-
 bool opt_line_length_parse( char const *s ) {
   assert( s != NULL );
   unsigned long long ull = parse_ull( s );
@@ -301,13 +293,6 @@ bool opt_line_length_parse( char const *s ) {
     return false;
   opt_line_length = STATIC_CAST( unsigned, ull );
   return true;
-}
-
-void opt_mark_set( int short_opt ) {
-  assert( short_opt >= 0 );
-  assert( STATIC_CAST( size_t, short_opt ) < ARRAY_SIZE( opt_is_set_impl ) );
-  assert( isalnum( short_opt ) );
-  opt_is_set_impl[ short_opt ] = true;
 }
 
 bool opt_verbose_parse( char const *verbose_format ) {

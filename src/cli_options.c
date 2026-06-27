@@ -117,6 +117,10 @@ static char const *const OPTIONS_HELP[] = {
   [ COPT(VERSION) ] = "Print version and exit",
 };
 
+////////// local variables ////////////////////////////////////////////////////
+
+static bool is_opt_set[ 128 ];          ///< Table of options that were set.
+
 ////////// local functions ////////////////////////////////////////////////////
 
 NODISCARD
@@ -1177,6 +1181,19 @@ missing_arg:
     "\"%s\" requires an argument\n",
     get_opt_format( short_opt == ':' ? optopt : short_opt )
   );
+}
+
+bool opt_is_set( int short_opt ) {
+  assert( short_opt > 0 );
+  assert( STATIC_CAST( size_t, short_opt ) < ARRAY_SIZE( is_opt_set ) );
+  return is_opt_set[ short_opt ];
+}
+
+void opt_mark_set( int short_opt ) {
+  assert( short_opt > 0 );
+  assert( STATIC_CAST( size_t, short_opt ) < ARRAY_SIZE( is_opt_set ) );
+  assert( isalnum( short_opt ) );
+  is_opt_set[ short_opt ] = true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
