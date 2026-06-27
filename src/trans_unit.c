@@ -177,16 +177,27 @@ void trans_unit_init( int argc, char const *const argv[] ) {
       // Libclang isn't specific about the cause of a failure, so see if the
       // reason is because the source file doesn't exist or isn't readable.
       //
-      if ( access( tidy_source_path, R_OK ) == -1 ) {
+      // Yes, this is TOCTAU (well, TAUTOC since we're checking after the
+      // fact), but it's better than nothing.
+      //
+      if ( access( tidy_source_path, R_OK ) == -1 )
         print_file_error( tidy_source_path, 0, 0, "%s\n", STRERROR() );
-        exit( EX_DATAERR );
-      }
-      break;
+      else
+        print_file_error( tidy_source_path, 0, 0, "libclang failed\n" );
+      exit( EX_DATAERR );
     case CXError_Success:
       //
       // All a CXError_Success means is that clang's parser didn't crash; it
       // doesn't mean the code is valid, so we have to check for errors later
       // via trans_unit_check_for_errors().
+      //
+      // We don't just check now because we have yet to parse the config file
+      // to see if ignore-as-argument is true: if so, we must ignore the file
+      // completely and not print and errors for it.
+      //
+      // We can't parse the config file before this because we need to set
+      // tidy_lang (below) before parsing the config file since it needs to
+      // know whether to use std-cpp-includes or not.
       //
       break;
   } // switch
