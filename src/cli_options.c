@@ -514,6 +514,9 @@ static char const* get_x_language( int argc, char const *const argv[] ) {
  * @param argi The index to insert \a args into \a *pargv at.
  * @param args_len The length of \a args.
  * @param args The arguments to insert.
+ *
+ * @warning This must only be used on the `argc` and `argv` values that come
+ * from `main()`.
  */
 static void insert_argv( int *pargc, char const **pargv[], size_t argi,
                          size_t args_len, char const *const args[] ) {
