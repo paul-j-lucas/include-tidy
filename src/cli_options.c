@@ -939,21 +939,24 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   assert( *pargv != NULL );
   ASSERT_RUN_ONCE();
 
-  // The order that we have to parse command-line arguments is necessitated to
-  // be unconventional.
-  //
   // Ordinarily, a program would parse all options first, increment argv past
-  // them, then look at (the new) argv[1] for the file; but the source file may
-  // be needed before parsing options because its language (based on its
-  // filename extension) affects the list of system include files and the
-  // corresponding `-isystem` options needed by clang.
+  // them, then look at (the new) argv[1] for the file.
   //
-  // We also have to pre-scan all options looking for clang's -x<language>
-  // option because that has priority over whatever language is indicated by
-  // the source file's extension.
+  // The order that we have to parse command-line arguments is necessitated to
+  // be unconventional because:
   //
-  // Finally, we have to call **clang** and insert `-isystem` options for the
-  // include paths it would use to compile the source file.
+  // + The source file (typically the last argument) may be needed before
+  //   parsing options because its language (based on its filename extension)
+  //   affects the list of system include files and the corresponding
+  //   `-isystem` options needed by clang.
+  //
+  // + We also need to pre-scan all options looking for clang's -x<language>
+  //   option because that has priority over whatever language is indicated by
+  //   the source file's extension.
+  //
+  // + We have to call clang to get the list of include paths it uses and
+  //   insert `-isystem` options for them for libclang since it doesn't start
+  //   out with any include paths.
 
   tidy_source_path = get_source_path( *pargc, *pargv );
   char const *const clang_path = get_clang_path( *pargc, *pargv );
