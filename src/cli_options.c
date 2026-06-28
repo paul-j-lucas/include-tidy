@@ -1086,15 +1086,8 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         goto missing_arg;
       case '?':
         goto invalid_opt;
-
       default:
-        if ( isprint( short_opt ) )
-          INTERNAL_ERROR(
-            "'%c': unaccounted-for getopt_long() return value\n", short_opt
-          );
-        INTERNAL_ERROR(
-          "%d: unaccounted-for getopt_long() return value\n", short_opt
-        );
+        goto unhandled_opt;
     } // switch
     opt_mark_set( short_opt );
   } // for
@@ -1187,6 +1180,11 @@ missing_arg:
     "\"%s\" requires an argument\n",
     get_opt_format( short_opt == ':' ? optopt : short_opt )
   );
+
+unhandled_opt:
+  if ( isprint( short_opt ) )
+    INTERNAL_ERROR( "'%c': unhandled getopt_long() return value\n", short_opt );
+  INTERNAL_ERROR( "%d: unhandled getopt_long() return value\n", short_opt );
 }
 
 bool opt_is_set( int short_opt ) {
