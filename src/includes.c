@@ -69,14 +69,26 @@
 
 #define INCLUDE_VERBOSE_INDENT    2     /**< Spaces per include depth. */
 
+////////// enums //////////////////////////////////////////////////////////////
+
+/**
+ * Include files are printed in groups.
+ */
+enum print_group {
+  PRINT_LOCAL,                          ///< Local includes (with `""`).
+  PRINT_3RD_PARTY,                      ///< 3rd-party includes (with `<>`).
+  PRINT_STANDARD                        ///< Standard includes (with `<>`).
+};
+
 ////////// typedefs ///////////////////////////////////////////////////////////
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 typedef unsigned char ii_matrix_t;      ///< Element type for ii_matrix.
 #endif /* NEED_II_MATRIX */
 
-typedef struct includes_init_visitor_data   includes_init_visitor_data;
-typedef struct includes_print_visitor_data  includes_print_visitor_data;
+typedef struct  includes_init_visitor_data  includes_init_visitor_data;
+typedef struct  includes_print_visitor_data includes_print_visitor_data;
+typedef enum    print_group                 print_group;
 
 ////////// structs ////////////////////////////////////////////////////////////
 
@@ -91,11 +103,10 @@ struct includes_init_visitor_data {
  * Additional data for includes_print_visitor().
  */
 struct includes_print_visitor_data {
-  bool  print_blank_line;               ///< Print a blank line?
-  bool  print_local;                    ///< Print local includes?
-  bool  print_standard;                 ///< Print standard includes?
-  bool  printed_any_includes;           ///< Print any includes?
-  bool  printed_source_file;            ///< Printed source file name?
+  bool        print_blank_line;         ///< Print a blank line?
+  bool        printed_any_includes;     ///< Print any includes?
+  bool        printed_source_file;      ///< Printed source file name?
+  print_group want_group;               ///< Print only this include group.
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -578,9 +589,15 @@ static void includes_print_visitor( tidy_include const *include,
 
   if ( keep && !opt_all_includes )
     return;
-  if ( ipvd->print_local != include->is_local )
-    return;
-  if ( ipvd->print_standard != config_is_standard_include( include->rel_path ) )
+
+  print_group group;
+  if ( include->is_local )
+    group = PRINT_LOCAL;
+  else if ( config_is_standard_include( include->rel_path ) )
+    group = PRINT_STANDARD;
+  else
+    group = PRINT_3RD_PARTY;
+  if ( group != ipvd->want_group )
     return;
 
   if ( (opt_verbose & TIDY_VERBOSE_SOURCE_FILE) != 0 &&
@@ -1132,7 +1149,7 @@ void includes_print( void ) {
   array_qsort( &include_array, &tidy_include_cmp_for_print );
 
   // Print local includes.
-  includes_print_visitor_data ipvd = { .print_local = true };
+  includes_print_visitor_data ipvd = { 0 };
   for ( size_t i = 0; i < include_array.len; ++i ) {
     includes_print_visitor(
       *(tidy_include const**)array_at_nc( &include_array, i ), &ipvd
@@ -1142,7 +1159,7 @@ void includes_print( void ) {
   // Print non-local, non-standard includes.
   if ( opt_all_includes && true_clear( &ipvd.printed_any_includes ) )
     ipvd.print_blank_line = true;
-  ipvd.print_local = !ipvd.print_local;
+  ipvd.want_group = PRINT_3RD_PARTY;
   for ( size_t i = 0; i < include_array.len; ++i ) {
     includes_print_visitor(
       *(tidy_include const**)array_at_nc( &include_array, i ), &ipvd
@@ -1152,7 +1169,7 @@ void includes_print( void ) {
   // Print standard includes.
   if ( opt_all_includes && true_clear( &ipvd.printed_any_includes ) )
     ipvd.print_blank_line = true;
-  ipvd.print_standard = true;
+  ipvd.want_group = PRINT_STANDARD;
   for ( size_t i = 0; i < include_array.len; ++i ) {
     includes_print_visitor(
       *(tidy_include const**)array_at_nc( &include_array, i ), &ipvd
