@@ -183,9 +183,14 @@ static int fpeekc( FILE *file ) {
 static void toml_array_cleanup( toml_array *array ) {
   if ( array == NULL )
     return;
-  for ( unsigned i = 0; i < array->size; ++i )
-    toml_value_cleanup( &array->values[i] );
-  free( array->values );
+
+  // Force hoist of array-> out of loop.
+  size_t const size = array->size;
+  toml_value *const values = array->values;
+
+  for ( unsigned i = 0; i < size; ++i )
+    toml_value_cleanup( &values[i] );
+  free( values );
 }
 
 /**
