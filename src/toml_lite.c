@@ -278,21 +278,23 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
 
   size_t const bytes_want = is_t ? STRLITLEN( "true" ) : STRLITLEN( "false" );
   size_t const bytes_read = fread( buf, 1, bytes_want, toml->file );
+  if ( bytes_read < bytes_want )
+    goto error;
 
   c = fpeekc( toml->file );             // ensure not falsex or truex
-  bool const next_c_is_ok = c == EOF || !is_ident( c );
+  if ( c != EOF && is_ident( c ) )
+    goto error;
 
-  if ( bytes_read < bytes_want || !next_c_is_ok ||
-       (!is_t && STRNCMPLIT( buf, "false" ) != 0) ||
-       ( is_t && STRNCMPLIT( buf, "true"  ) != 0) ) {
-    toml_col_inc( toml, 1 );            // so col is at first char of value
-    toml->error = TOML_ERR_UNEX_VALUE;
-    return false;
+  if ( (is_t ? STRNCMPLIT( buf, "true" ) : STRNCMPLIT( buf, "false" )) == 0 ) {
+    toml_col_inc( toml, STATIC_CAST( unsigned, bytes_read ) );
+    *pb = is_t;
+    return true;
   }
 
-  toml_col_inc( toml, STATIC_CAST( unsigned, bytes_read ) );
-  *pb = is_t;
-  return true;
+error:
+  toml_col_inc( toml, 1 );              // so col is at first char of value
+  toml->error = TOML_ERR_UNEX_VALUE;
+  return false;
 }
 
 /**
