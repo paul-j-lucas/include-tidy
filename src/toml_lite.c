@@ -274,9 +274,9 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
 
   char        buf[ STRLITLEN( "false" ) ];  // not null-terminated
   int         c = fpeekc( toml->file );
-  bool const  is_f = c == 'f';
+  bool const  is_t = c == 't';
 
-  size_t const bytes_want = is_f ? STRLITLEN( "false" ) : STRLITLEN( "true" );
+  size_t const bytes_want = is_t ? STRLITLEN( "true" ) : STRLITLEN( "false" );
   size_t const bytes_read = fread( buf, 1, bytes_want, toml->file );
 
   c = fpeekc( toml->file );             // ensure not falsex or truex
@@ -284,15 +284,15 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
 
   if ( bytes_read < bytes_want ||
        !next_c_is_ok ||
-       ( is_f && strncmp( buf, "false", STRLITLEN( "false" ) ) != 0) ||
-       (!is_f && strncmp( buf, "true" , STRLITLEN( "true"  ) ) != 0) ) {
+       (!is_t && strncmp( buf, "false", STRLITLEN( "false" ) ) != 0) ||
+       ( is_t && strncmp( buf, "true" , STRLITLEN( "true"  ) ) != 0) ) {
     toml_col_inc( toml, 1 );            // so col is at first char of value
     toml->error = TOML_ERR_UNEX_VALUE;
     return false;
   }
 
   toml_col_inc( toml, STATIC_CAST( unsigned, bytes_read ) );
-  *pb = !is_f;
+  *pb = is_t;
   return true;
 }
 
