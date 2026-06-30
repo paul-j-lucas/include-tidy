@@ -272,7 +272,7 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
   assert( toml != NULL );
   assert( pb != NULL );
 
-  char        buf[ STRLITLEN( "false" ) ];
+  char        buf[ STRLITLEN( "false" ) ];  // not null-terminated
   int         c = fpeekc( toml->file );
   bool const  is_f = c == 'f';
 
