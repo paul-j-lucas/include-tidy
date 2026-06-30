@@ -282,10 +282,9 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
   c = fpeekc( toml->file );             // ensure not falsex or truex
   bool const next_c_is_ok = c == EOF || !is_ident( c );
 
-  if ( bytes_read < bytes_want ||
-       !next_c_is_ok ||
-       (!is_t && strncmp( buf, "false", STRLITLEN( "false" ) ) != 0) ||
-       ( is_t && strncmp( buf, "true" , STRLITLEN( "true"  ) ) != 0) ) {
+  if ( bytes_read < bytes_want || !next_c_is_ok ||
+       (!is_t && STRNCMPLIT( buf, "false" ) != 0) ||
+       ( is_t && STRNCMPLIT( buf, "true"  ) != 0) ) {
     toml_col_inc( toml, 1 );            // so col is at first char of value
     toml->error = TOML_ERR_UNEX_VALUE;
     return false;
