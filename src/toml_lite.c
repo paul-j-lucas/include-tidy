@@ -348,6 +348,8 @@ static void toml_comment_parse( toml_file *toml ) {
  *
  * @param toml The toml_file to get the next character from.
  * @return Returns the next character or `EOF`.
+ *
+ * @sa toml_ungetc()
  */
 NODISCARD
 static int toml_getc( toml_file *toml ) {
@@ -666,6 +668,8 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *kv ) {
  * Skips all whitespace and comments.
  *
  * @param toml The toml_file to use.
+ *
+ * @sa toml_space_skip()
  */
 static void toml_space_comments_skip( toml_file *toml ) {
   assert( toml != NULL );
@@ -687,6 +691,8 @@ static void toml_space_comments_skip( toml_file *toml ) {
  *
  * @param toml The toml_file to use.
  * @return Returns `true` only upon success.
+ *
+ * @sa toml_space_comments_skip()
  */
 NODISCARD
 static bool toml_space_skip( toml_file *toml ) {
@@ -812,6 +818,8 @@ static bool toml_table_name_parse( toml_file *toml, char **pname,
  *
  * @param toml The toml_file to unget \a c.
  * @param c The character to unget.
+ *
+ * @sa toml_getc()
  */
 static void toml_ungetc( toml_file *toml, int c ) {
   assert( toml != NULL );
