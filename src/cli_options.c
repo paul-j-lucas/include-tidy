@@ -163,70 +163,73 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
   assert(  source_lang != NULL );
   ASSERT_RUN_ONCE();
 
-  static char const CLANG_COMMAND[] =
+  static char const COMMAND[] =
     "%s"          // clang path
     " -E"         // run only the preprocessor stage
     " -v"         // show verbose output
-    " -x%s"       // set langauge: c or c++
+    " -x%s"       // set language: c or c++
     " -"          // read from stdin
     " </dev/null" // set stdin to /dev/null
     " 2>&1";      // redirect stderr to stdout
 
-  char *clang_command = NULL;
-  check_asprintf( &clang_command, CLANG_COMMAND, clang_path, source_lang );
+  char *command = NULL;
+  check_asprintf( &command, COMMAND, clang_path, source_lang );
 
-  FILE *const fclang = popen( clang_command, "r" );
-  free( clang_command );
-  if ( fclang == NULL )
+  FILE *const fcompiler = popen( command, "r" );
+  free( command );
+  if ( fcompiler == NULL )
     goto error;
 
+  bool    found_paths = false;
   char   *line_buf = NULL;
   size_t  line_cap = 0;
 
-  while ( getline( &line_buf, &line_cap, fclang ) != -1 ) {
-    if ( strcmp( line_buf, "#include <...> search starts here:\n" ) != 0 )
-      continue;
+  while ( !found_paths && getline( &line_buf, &line_cap, fcompiler ) != -1 ) {
+    if ( strcmp( line_buf, "#include <...> search starts here:\n" ) == 0 )
+      found_paths = true;
+  } // while
+  if ( !found_paths )
+    goto done;
 
-    // Find the index to insert the new -isystem option before the last argv
-    // that is not an option (the filename).
-    size_t isystem_argi = STATIC_CAST( size_t, *pargc );
-    for ( int i = *pargc - 1; i > 0; --i ) {
-      if ( (*pargv)[i][0] != '-' ) {
-        isystem_argi = STATIC_CAST( size_t, i );
-        break;
-      }
-    } // for
+  // Find the index to insert the new -isystem option before the last argv that
+  // is not an option (the filename).
+  size_t isystem_argi = STATIC_CAST( size_t, *pargc );
+  for ( int i = *pargc - 1/*NULL*/; i > 0; --i ) {
+    if ( (*pargv)[i][0] != '-' ) {
+      isystem_argi = STATIC_CAST( size_t, i );
+      break;
+    }
+  } // for
 
-    while ( getline( &line_buf, &line_cap, fclang ) != -1 ) {
-      if ( strcmp( line_buf, "End of search list.\n" ) == 0 )
-        break;
+  while ( getline( &line_buf, &line_cap, fcompiler ) != -1 ) {
+    if ( strcmp( line_buf, "End of search list.\n" ) == 0 )
+      break;
 
 #ifdef __APPLE__
-      // On macOS, clang's include search paths include frameworks directories
-      // denoted by having paths followed by " (framework directory)".  These
-      // don't contain .h file directly, so there's no point in including them.
-      if ( strstr( line_buf, "(framework directory)" ) != NULL )
-        continue;
+    // On macOS, clang's include search paths include frameworks directories
+    // denoted by having paths followed by " (framework directory)".  These
+    // don't contain .h file directly, so there's no point in including them.
+    if ( strstr( line_buf, "(framework directory)" ) != NULL )
+      continue;
 #endif /* __APPLE__ */
 
-      char const *const include_path = str_trim( line_buf );
-      if ( unlikely( path_is_relative( include_path ) ) )
-        continue;
+    char const *const include_path = str_trim( line_buf );
+    if ( unlikely( path_is_relative( include_path ) ) )
+      continue;
 
-      char *new_arg = NULL;
-      check_asprintf( &new_arg, "-isystem%s", include_path );
-      insert_argv( pargc, pargv, isystem_argi++, 1,
-                   CONST_CAST( char const**, &new_arg ) );
-    } // while
-
-    (*pargv)[ *pargc ] = NULL;
-    break;
+    char *new_arg = NULL;
+    check_asprintf( &new_arg, "-isystem%s", include_path );
+    insert_argv( pargc, pargv, isystem_argi++, 1,
+                 CONST_CAST( char const**, &new_arg ) );
   } // while
 
+  (*pargv)[ *pargc ] = NULL;
+
+done:
   free( line_buf );
-  if ( ferror( fclang ) )
+  if ( ferror( fcompiler ) )
     goto error;
-  pclose( fclang );
+  pclose( fcompiler );
   return;
 
 error:
