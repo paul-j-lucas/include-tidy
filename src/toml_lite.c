@@ -1022,6 +1022,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   rb_insert_rv_t rb_rbi =
     rb_tree_insert( &toml->table_names, table_name, table_name_len + 1 );
   if ( !rb_rbi.inserted ) {
+    free( table_name );
     toml->error = TOML_ERR_TABLE_DUPLICATE;
     toml->loc.col = table_name_col;
     return false;
