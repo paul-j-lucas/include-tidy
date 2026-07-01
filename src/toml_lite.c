@@ -89,6 +89,17 @@ static void toml_value_cleanup( toml_value* );
 ////////// inline functions ///////////////////////////////////////////////////
 
 /**
+ * Peeks at the next character from \a file.
+ *
+ * @param file The `FILE` to peek from.
+ * @return Returns the character peeked or `EOF`.
+ */
+NODISCARD
+static inline int fpeekc( FILE *file ) {
+  return ungetc( fgetc( file ), file );
+}
+
+/**
  * Gets whether \a c is a binary digit.
  *
  * @param c The character to check.
@@ -160,19 +171,6 @@ static inline void toml_newline( toml_file *toml ) {
 }
 
 ////////// local functions ////////////////////////////////////////////////////
-
-/**
- * Peeks at the next character from \a file.
- *
- * @param file The `FILE` to peek from.
- * @return Returns the character peeked or `EOF`.
- */
-NODISCARD
-static int fpeekc( FILE *file ) {
-  int const c = fgetc( file );
-  ungetc( c, file );
-  return c;
-}
 
 /**
  * Cleans-up a toml_array.
