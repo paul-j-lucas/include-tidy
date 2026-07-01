@@ -170,8 +170,7 @@ static inline void toml_newline( toml_file *toml ) {
 NODISCARD
 static int fpeekc( FILE *file ) {
   int const c = fgetc( file );
-  if ( c != EOF )
-    ungetc( c, file );
+  ungetc( c, file );
   return c;
 }
 
