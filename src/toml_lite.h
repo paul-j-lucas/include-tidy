@@ -237,12 +237,12 @@ void toml_file_init( toml_file *toml, FILE *file );
 /**
  * Initializes a toml_iterator.
  *
- * @param table The toml_table to iterate over.
  * @param iter The toml_iterator to initialize.
+ * @param table The toml_table to iterate over.
  *
  * @sa toml_iterator_next()
  */
-inline void toml_iterator_init( toml_table *table, toml_iterator *iter ) {
+inline void toml_iterator_init( toml_iterator *iter, toml_table *table ) {
   rb_iterator_init( &table->keys_values, iter );
 }
 

@@ -907,7 +907,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       TABLE_INCLUDE_TIDY : TABLE_NONE;
 
     toml_iterator iter;
-    toml_iterator_init( &table, &iter );
+    toml_iterator_init( &iter, &table );
     for ( toml_key_value const *kv;
           (kv = toml_iterator_next( &iter )) != NULL; ) {
       config_key const *const key = config_key_parse( kv->key.name );
