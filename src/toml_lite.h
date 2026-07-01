@@ -73,6 +73,7 @@
  *    // ...
  *  }
  *
+ *  toml_table_cleanup( &table );
  *  if ( toml.error )
  *    // complain
  *  toml_file_cleanup( &toml );
