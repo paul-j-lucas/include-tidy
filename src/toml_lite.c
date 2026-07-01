@@ -108,6 +108,7 @@ static inline int fpeekc( FILE *file ) {
  * @sa is_ident()
  * @sa isodigit()
  */
+NODISCARD
 static inline bool isbdigit( int c ) {
   return c == '0' || c == '1';
 }
@@ -121,6 +122,7 @@ static inline bool isbdigit( int c ) {
  * @sa is_ident()
  * @sa isbdigit()
  */
+NODISCARD
 static inline bool isodigit( int c ) {
   return c >= '0' && c <= '7';
 }
@@ -134,6 +136,7 @@ static inline bool isodigit( int c ) {
  * @sa isbdigit()
  * @sa isodigit()
  */
+NODISCARD
 static inline bool is_ident( int c ) {
   return isalnum( c ) || c == '_';
 }
@@ -144,6 +147,7 @@ static inline bool is_ident( int c ) {
  * @param c The character to check.
  * @return Returns `true` only if \a is a space.
  */
+NODISCARD
 static inline bool is_toml_space( int c ) {
   return c == ' ' || c == '\t';
 }
