@@ -784,7 +784,8 @@ error:
  * Parses a table name.
  *
  * @param toml The toml_file to use.
- * @param pname A pointer to receive the table name.
+ * @param pname A pointer to receive the table name.  The caller is responsible
+ * for freeing it.
  * @param pname_col If not NULL, a pointer to receive the name's column.
  * @param pname_len If not NULL, a pointer to receive the name's length.
  * @return Returns `true` only if a table name was parsed successfully.
