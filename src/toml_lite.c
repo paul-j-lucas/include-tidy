@@ -924,14 +924,6 @@ static bool toml_value_parse( toml_file *toml, toml_value *pv ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void toml_cleanup( toml_file *toml ) {
-  if ( toml == NULL )
-    return;
-  // Table names are copied into the nodes, so nothing to free.
-  rb_tree_cleanup( &toml->table_names, /*free_fn=*/NULL );
-  *toml = (toml_file){ 0 };
-}
-
 char const* toml_error_msg( toml_file const *toml ) {
   assert( toml != NULL );
   if ( toml->error_msg != NULL )
@@ -942,7 +934,15 @@ char const* toml_error_msg( toml_file const *toml ) {
   return msg;
 }
 
-void toml_init( toml_file *toml, FILE *file ) {
+void toml_file_cleanup( toml_file *toml ) {
+  if ( toml == NULL )
+    return;
+  // Table names are copied into the nodes, so nothing to free.
+  rb_tree_cleanup( &toml->table_names, /*free_fn=*/NULL );
+  *toml = (toml_file){ 0 };
+}
+
+void toml_file_init( toml_file *toml, FILE *file ) {
   assert( toml != NULL );
   assert( file != NULL );
 

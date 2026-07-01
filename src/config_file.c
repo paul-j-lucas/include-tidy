@@ -882,7 +882,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   assert( config_file != NULL );
 
   toml_file toml;
-  toml_init( &toml, config_file );
+  toml_file_init( &toml, config_file );
 
   toml_table table;
   toml_table_init( &table );
@@ -951,7 +951,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
     exit( EX_CONFIG );
   }
 
-  toml_cleanup( &toml );
+  toml_file_cleanup( &toml );
 }
 
 /**

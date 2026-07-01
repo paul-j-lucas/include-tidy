@@ -80,7 +80,7 @@ static void toml_test_cleanup( toml_test *test ) {
   toml_table_cleanup( test->table );
   free( test->table );
   fclose( test->toml->file );
-  toml_cleanup( test->toml );
+  toml_file_cleanup( test->toml );
   free( test->toml );
 }
 
@@ -92,7 +92,7 @@ static void toml_test_init( toml_test *test, char const *buf ) {
   if ( file == NULL )
     fatal_error( EX_SOFTWARE, "%s\n", STRERROR() );
   test->toml = MALLOC( toml_file, 1 );
-  toml_init( test->toml, file );
+  toml_file_init( test->toml, file );
   test->table = MALLOC( toml_table, 1 );
   toml_table_init( test->table );
 }

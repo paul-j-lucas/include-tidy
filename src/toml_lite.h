@@ -61,7 +61,7 @@
  *  if ( ftoml == NULL )
  *    // complain
  *  toml_file toml;
- *  toml_init( &toml, ftoml );
+ *  toml_file_init( &toml, ftoml );
  *  toml_table table;
  *  toml_table_init( &table );
  *
@@ -75,7 +75,7 @@
  *
  *  if ( toml.error )
  *    // complain
- *  toml_cleanup( &toml );
+ *  toml_file_cleanup( &toml );
  *  fclose( ftoml );
  *  ```
  *
@@ -203,18 +203,6 @@ struct toml_table {
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Cleans-up the resources of a toml_file.
- *
- * @param toml The toml_file to clean up.  If NULL, does nothing.
- *
- * @note The `FILE` that the toml_file was using is _not_ closed since
- * toml_init() didn't open it.
- *
- * @sa toml_init()
- */
-void toml_cleanup( toml_file *toml );
-
-/**
  * Gets the error message corresponding to \ref toml_file::error "error".
  *
  * @param toml The toml_file to get the error message for.
@@ -224,14 +212,26 @@ NODISCARD
 char const* toml_error_msg( toml_file const *toml );
 
 /**
+ * Cleans-up the resources of a toml_file.
+ *
+ * @param toml The toml_file to clean up.  If NULL, does nothing.
+ *
+ * @note The `FILE` that the toml_file was using is _not_ closed since
+ * toml_file_init() didn't open it.
+ *
+ * @sa toml_file_init()
+ */
+void toml_file_cleanup( toml_file *toml );
+
+/**
  * Initializes a toml_file.
  *
  * @param toml The toml_file to initialize.
  * @param file The `FILE` to read.
  *
- * @sa toml_cleanup()
+ * @sa toml_file_cleanup()
  */
-void toml_init( toml_file *toml, FILE *file );
+void toml_file_init( toml_file *toml, FILE *file );
 
 /**
  * Initializes a toml_iterator.
