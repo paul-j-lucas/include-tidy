@@ -988,6 +988,7 @@ toml_value const* toml_table_find( toml_table const *table, char const *key ) {
 void toml_table_init( toml_table *table ) {
   assert( table != NULL );
   table->name = NULL;
+  table->loc = (toml_loc){ 0 };
   rb_tree_init(
     &table->keys_values, RB_DINT,
     POINTER_CAST( rb_cmp_fn_t, toml_key_value_cmp )
