@@ -1,3 +1,18 @@
+2026-07-01  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.c: Added NODISCARD.
+   * toml_lite.c: Eliminated temporary variable; made fpeekc() inline.
+   * toml_lite.c: Eliminated "if".
+   * toml_lite.c: Now freeing table_name in case of duplicate.
+   * toml_lite.c: Explicitly initializing loc.
+   * config_file.c, toml_lite.c, toml_lite.h: Swapped toml_iterator_init()
+     parameter order.
+
+2026-06-30  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.c: Force hoist of array-> out of loop.
+   * toml_lite.c, toml_lite.h: Added "const".
+
 2026-06-29  Paul J. Lucas <paul@lucasmail.org>
 
    * includes.c: Added print_group.
