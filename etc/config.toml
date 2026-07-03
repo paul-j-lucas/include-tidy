@@ -114,9 +114,12 @@ std-c-includes = [
   "getopt.h",
   "ncurses.h",
   "term.h",
+  "termcap.h",
 
   # Popular 3rd-party libraries
+  "bzlib.h",
   "openssl/*",
+  "zlib.h",
 ]
 
 std-cpp-includes = [
