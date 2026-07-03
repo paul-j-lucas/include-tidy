@@ -1,3 +1,7 @@
+2026-07-03  Paul J. Lucas <paul@lucasmail.org>
+
+   * etc/config.toml: Added termcap.h, bzlib.h, and zlib.h.
+
 2026-07-01  Paul J. Lucas <paul@lucasmail.org>
 
    * toml_lite.c: Added NODISCARD.
