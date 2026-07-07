@@ -208,12 +208,18 @@
 #ifndef NDEBUG
 /**
  * Asserts that this line of code is run at most once --- useful in
- * initialization functions that must be called at most once.  For example:
+ * initialization functions that must be called at most once.
+ *
+ * @par Example
+ * @parblock
  *
  *      void initialize() {
  *        ASSERT_RUN_ONCE();
  *        // ...
  *      }
+ * @endparblock
+ *
+ * @warning This is _not_ thread-safe.
  *
  * @sa #RUN_ONCE
  */
@@ -625,7 +631,10 @@
 
 /**
  * Runs a statement at most once even if control passes through it more than
- * once.  For example:
+ * once.
+ *
+ * @par Examples
+ * @parblock
  *
  *      RUN_ONCE initialize();
  *
@@ -634,6 +643,9 @@
  *      RUN_ONCE {
  *        // ...
  *      }
+ * @endparblock
+ *
+ * @warning This is _not_ thread-safe.
  *
  * @sa #ASSERT_RUN_ONCE()
  */
