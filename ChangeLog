@@ -1,3 +1,11 @@
+2026-07-08  Paul J. Lucas <paul@lucasmail.org>
+
+   * pjl_unsigned_int128.m4, clang_util.c, util.c, util.h: No longer defines
+     any macro in failure case.
+   * pjl_compile.m4: Replaced "if" with "AS_IF".
+   * pjl_compile.m4: PJL_COMPILE now accepts 1st arg with whitespace (that's
+     converted to _); no longer defines any macro in failure case.
+
 2026-07-03  Paul J. Lucas <paul@lucasmail.org>
 
    * etc/config.toml: Added termcap.h, bzlib.h, and zlib.h.
