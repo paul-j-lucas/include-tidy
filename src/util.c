@@ -50,7 +50,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#if HAVE_UNSIGNED_INT128
+#ifdef HAVE_UNSIGNED_INT128
 
 /**
  * Creates a 128-bit `unsigned __int128` literal.
@@ -69,7 +69,7 @@
 
 ////////// local constants ////////////////////////////////////////////////////
 
-#if HAVE_UNSIGNED_INT128
+#ifdef HAVE_UNSIGNED_INT128
 /**
  * Initialization value for Fowler-Noll-Vo hash function.
  *

@@ -43,8 +43,6 @@ AC_DEFUN([PJL_TYPE_UNSIGNED_INT128], [
 
   AS_IF([test "x$pjl_cv_type_uint128" = xyes], [
     AC_DEFINE([HAVE_UNSIGNED_INT128], [1], [Define if the compiler supports unsigned __int128])
-  ], [
-    AC_DEFINE([HAVE_UNSIGNED_INT128], [0], [Define if the compiler supports unsigned __int128])
   ])
 ])
 
