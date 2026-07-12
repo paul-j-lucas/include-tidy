@@ -67,6 +67,10 @@
 /// Command-line option as a string literal.
 #define SOPT(X)                   STRINGIFY(OPT_##X)
 
+////////// extern variables  //////////////////////////////////////////////////
+
+extern bool tidy_is_cpp;                ///< Is source file C++?
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**

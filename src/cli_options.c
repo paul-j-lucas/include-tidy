@@ -121,6 +121,15 @@ static char const *const OPTIONS_HELP[] = {
 
 static bool is_opt_set[ 128 ];          ///< Table of options that were set.
 
+////////// extern variables ///////////////////////////////////////////////////
+
+/// @cond DOXYGEN_IGNORE
+/// Otherwise Doxygen generates two entries.
+
+bool tidy_is_cpp;
+
+/// @endcond
+
 ////////// local functions ////////////////////////////////////////////////////
 
 NODISCARD
@@ -1135,6 +1144,8 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     EPUTS( "; or use -xc[++]\n" );
     exit( EX_USAGE );
   }
+
+  tidy_is_cpp = strcmp( source_lang, "c++" ) == 0;
 
   if ( opt_directory != NULL ) {
     if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )

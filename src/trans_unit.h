@@ -40,8 +40,7 @@
  */
 
 // extern variables
-extern enum CXLanguageKind  tidy_lang;  ///< Source file language.
-extern CXTranslationUnit    tidy_tu;    ///< Translation unit.
+extern CXTranslationUnit  tidy_tu;      ///< Translation unit.
 
 ////////// extern functions ///////////////////////////////////////////////////
 

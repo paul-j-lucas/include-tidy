@@ -58,7 +58,6 @@ static CXIndex            tidy_index;   ///< Current libclang index.
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-enum CXLanguageKind       tidy_lang;
 CXTranslationUnit         tidy_tu;
 
 /// @endcond
@@ -195,15 +194,8 @@ void trans_unit_init( int argc, char const *const argv[] ) {
       // to see if ignore-as-argument is true: if so, we must ignore the file
       // completely and not print any errors for it.
       //
-      // We can't parse the config file before this because we need to set
-      // tidy_lang (below) before parsing the config file since it needs to
-      // know whether to use std-cpp-includes or not.
-      //
       break;
   } // switch
-
-  CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
-  tidy_lang = clang_getCursorLanguage( cursor );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
