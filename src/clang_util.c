@@ -110,12 +110,12 @@ static void getCursorScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
 
   CXCursor const    parent_cursor = clang_getCursorSemanticParent( cursor );
   enum CXCursorKind parent_kind = clang_getCursorKind( parent_cursor );
-  CXString          name_cxs;
 
   if ( !clang_isInvalid( parent_kind ) &&
        parent_kind != CXCursor_TranslationUnit ) {
-    name_cxs = clang_getCursorSpelling( parent_cursor );
-    bool const has_parent = clang_getCString( name_cxs ) != NULL;
+    CXString const name_cxs = clang_getCursorSpelling( parent_cursor );
+    char const *const name = null_if_empty( clang_getCString( name_cxs ) );
+    bool const has_parent = name != NULL;
     clang_disposeString( name_cxs );
     if ( has_parent ) {
       // Recurse all the way up to the outermost scope ...
@@ -126,8 +126,10 @@ static void getCursorScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
   }
 
   // ... followed by the scope name.
-  name_cxs = clang_getCursorSpelling( cursor );
-  strbuf_puts( sbuf, clang_getCString( name_cxs ) );
+  CXString const name_cxs = clang_getCursorSpelling( cursor );
+  char const *const name = null_if_empty( clang_getCString( name_cxs ) );
+  if ( name != NULL )
+    strbuf_puts( sbuf, name );
   clang_disposeString( name_cxs );
 }
 
