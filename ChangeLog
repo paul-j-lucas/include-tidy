@@ -1,3 +1,9 @@
+2026-07-12  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c, cli_options.h, config_file.c, trans_unit.c, trans_unit.h:
+     s/tidy_lang/tidy_is_cpp/
+   * clang_util.c: Now checking for an empty string.
+
 2026-07-08  Paul J. Lucas <paul@lucasmail.org>
 
    * pjl_unsigned_int128.m4, clang_util.c, util.c, util.h: No longer defines
