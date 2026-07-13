@@ -27,13 +27,11 @@
 #include "pjl_config.h"
 #include "symbols.h"
 #include "clang_util.h"
-#include "cli_options.h"
 #include "config_file.h"
 #include "includes.h"
 #include "options.h"
 #include "print.h"
 #include "red_black.h"
-#include "strbuf.h"
 #include "trans_unit.h"
 #include "util.h"
 
@@ -44,7 +42,6 @@
 
 // standard
 #include <assert.h>
-#include <ctype.h>
 #include <stdbool.h>
 #include <stddef.h>                     /* for unreachable(3) */
 #include <string.h>
@@ -155,63 +152,6 @@ static bool is_include_path( CXCursor ref_cursor, CXCursor def_cursor ) {
   return includes_include( ref_include, def_include ) > 0;
 }
 #endif /* NEED_II_MATRIX */
-
-/**
- * Gets whether \name is reserved in the current language.
- *
- * @param name The name to check.
- * @return Returns `true` only if \a name is reserved in the current language.
- *
- * @sa is_scoped_name_reserved()
- */
-NODISCARD
-static bool is_name_reserved( char const *name ) {
-  assert( name != NULL );
-
-  if ( name[0] == '_' && (isupper( name[1] ) || name[1] == '_') )
-    return true;
-  if ( tidy_is_cpp && strstr( name, "__" ) != NULL )
-    return true;
-
-  return false;
-}
-
-/**
- * Gets whether \name is reserved in the current language.
- *
- * @param name The scoped name to check.
- * @return Returns `true` only if any component of \a name is reserved in the
- * current language.
- *
- * @sa is_name_reserved()
- */
-NODISCARD
-static bool is_scoped_name_reserved( char const *name ) {
-  assert( name != NULL );
-
-  bool is_reserved = false;
-
-  if ( tidy_is_cpp ) {
-    strbuf_t sbuf;
-    strbuf_init( &sbuf );
-
-    for ( char const *end; (end = strstr( name, "::" )) != NULL; ) {
-      size_t const len = STATIC_CAST( size_t, end - name );
-      strbuf_reset( &sbuf );
-      strbuf_putsn( &sbuf, name, len );
-      is_reserved = is_name_reserved( sbuf.str );
-      if ( is_reserved )
-        break;
-      name = end + STRLITLEN( "::" );
-    } // for
-
-    strbuf_cleanup( &sbuf );
-  }
-
-  if ( !is_reserved && *name != '\0' )
-    is_reserved = is_name_reserved( name );
-  return is_reserved;
-}
 
 /**
  * Gets the cursor for the identifier given by \a token within \a scope_cursor,
@@ -370,8 +310,6 @@ static void maybe_add_symbol( CXCursor sym_cursor,
     .name = tidy_getCursorScopedName( sym_cursor )
   };
   if ( config_ignore_symbol( new_sym.name ) )
-    goto skip;
-  if ( tidy_is_cpp && is_scoped_name_reserved( new_sym.name ) )
     goto skip;
 
   rb_insert_rv_t const rv_rbi =
