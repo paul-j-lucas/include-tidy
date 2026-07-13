@@ -28,6 +28,7 @@
 #include "includes.h"
 #include "array.h"
 #include "clang_util.h"
+#include "cli_options.h"
 #include "color.h"
 #include "config_file.h"
 #include "options.h"
@@ -115,6 +116,9 @@ struct includes_print_visitor_data {
 static void   ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
                                  CXClientData );
 #endif /* NEED_II_MATRIX */
+
+NODISCARD
+static bool   is_cpp_header_of( char const*, char const* );
 
 NODISCARD
 static char*  make_symbols_comment( tidy_include const* );
@@ -306,7 +310,18 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       // standard) should be a proxy for the real one.
       //
       strcmp( path_basename( included->rel_path ),
-              path_basename( includer->rel_path ) ) == 0 ) {
+              path_basename( includer->rel_path ) ) == 0 ||
+
+      // This handles a case like:
+      //
+      //      </usr/include/cstring>
+      //        </usr/include/string.h>
+      //
+      // That is, a standard C++ header is the C++ wrapper of a C standard
+      // header.
+      //
+      (tidy_is_cpp &&
+       is_cpp_header_of( includer->rel_path, included->rel_path )) ) {
     included->proxy = includer;
   }
 
@@ -710,6 +725,42 @@ static bool is_assoc_header( tidy_include const *include,
   //      #include "b.h"
   //
   return strcmp( include_no_ext, source_file_no_ext ) == 0;
+}
+
+/**
+ * Gets whether \a cpp_name is the C++ header version of \a c_name, e.g., as
+ * `cstring` is to `string.h`.
+ *
+ * @param cpp_name The C++ header name.
+ * @param c_name The C header name.
+ * @return Returns `true` only if:
+ *  + \a cpp_name starts with a 'c'; and:
+ *  + \a cpp_name has no filename extension; and:
+ *  + \a c_name has a filename extension of `.h`;
+ *  + \a cpp_name skipping the leading 'c' equals \a c_name without its
+ *    extension.
+ */
+static bool is_cpp_header_of( char const *cpp_name, char const *c_name ) {
+  assert( cpp_name != NULL );
+  assert( c_name != NULL );
+
+  if ( cpp_name[0] != 'c' )
+    return false;
+  if ( path_ext( cpp_name ) != NULL )
+    return false;
+
+  char const *const c_ext = path_ext( c_name );
+  if ( c_ext == NULL || strcmp( c_ext, "h" ) != 0 )
+    return false;
+
+  char const *cpp = cpp_name + 1/*'c'*/;
+  for ( char const *c = c_name, *const dot = c_ext - 1; c < dot; ++c ) {
+    if ( *cpp != *c )
+      return false;
+    ++cpp;
+  } // for
+
+  return *cpp == '\0';
 }
 
 /**
