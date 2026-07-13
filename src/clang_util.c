@@ -100,7 +100,7 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
 /**
  * Given a cursor at a local name of an enumeration, class, class data member,
  * class member function, structure, union, or namespace, gets the fully scoped
- * name.
+ * name skipping inline namespaces.
  *
  * @param cursor The cursor at a symbol.
  * @param sbuf The strbuf to use.
@@ -108,8 +108,12 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
 static void getCursorScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
   assert( sbuf != NULL );
 
-  CXCursor const    parent_cursor = clang_getCursorSemanticParent( cursor );
-  enum CXCursorKind parent_kind = clang_getCursorKind( parent_cursor );
+  CXCursor parent_cursor = cursor;
+  do {
+    parent_cursor = clang_getCursorSemanticParent( parent_cursor );
+  } while ( clang_Cursor_isInlineNamespace( parent_cursor ) );
+
+  enum CXCursorKind const parent_kind = clang_getCursorKind( parent_cursor );
 
   if ( !clang_isInvalid( parent_kind ) &&
        parent_kind != CXCursor_TranslationUnit ) {
