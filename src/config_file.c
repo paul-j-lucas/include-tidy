@@ -37,7 +37,6 @@
 #include "red_black.h"
 #include "strbuf.h"
 #include "toml_lite.h"
-#include "trans_unit.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
