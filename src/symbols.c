@@ -388,7 +388,6 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       case CXCursor_FunctionDecl:
       case CXCursor_MacroExpansion:
       case CXCursor_MemberRefExpr:
-      case CXCursor_NamespaceRef:
       case CXCursor_TemplateRef:
       case CXCursor_TypedefDecl:
       case CXCursor_TypeRef:
