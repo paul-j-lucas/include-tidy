@@ -27,6 +27,7 @@
 #include "pjl_config.h"
 #include "symbols.h"
 #include "clang_util.h"
+#include "cli_options.h"
 #include "config_file.h"
 #include "includes.h"
 #include "options.h"
@@ -42,6 +43,7 @@
 
 // standard
 #include <assert.h>
+#include <ctype.h>
 #include <stdbool.h>
 #include <stddef.h>                     /* for unreachable(3) */
 #include <string.h>
@@ -152,6 +154,24 @@ static bool is_include_path( CXCursor ref_cursor, CXCursor def_cursor ) {
   return includes_include( ref_include, def_include ) > 0;
 }
 #endif /* NEED_II_MATRIX */
+
+/**
+ * Gets whether \name is reserved in the current language.
+ *
+ * @param name The name to check.
+ * @return Returns `true` only if \a name is reserved in the current language.
+ */
+NODISCARD
+static bool is_reserved_name( char const *name ) {
+  assert( name != NULL );
+
+  if ( name[0] == '_' && (isupper( name[1] ) || name[1] == '_') )
+    return true;
+  if ( tidy_is_cpp && strstr( name, "__" ) != NULL )
+    return true;
+
+  return false;
+}
 
 /**
  * Gets the cursor for the identifier given by \a token within \a scope_cursor,
@@ -304,6 +324,14 @@ static void maybe_add_symbol( CXCursor sym_cursor,
 
   // If the symbol was first declared in the file being tidied, we don't care.
   if ( clang_File_isEqual( sym_file, sivd->source_file ) )
+    return;
+
+  CXString const sym_name_cxs = clang_getCursorSpelling( sym_cursor );
+  char const *const sym_name =
+    null_if_empty( clang_getCString( sym_name_cxs ) );
+  bool const is_sym_name_ok = sym_name != NULL && !is_reserved_name( sym_name );
+  clang_disposeString( sym_name_cxs );
+  if ( !is_sym_name_ok )
     return;
 
   tidy_symbol new_sym = {
