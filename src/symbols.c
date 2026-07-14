@@ -427,7 +427,7 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
 }
 
 /**
- * Visits a `CXCursor_FieldDecl` kind of cursor
+ * Visits a `CXCursor_FieldDecl` kind of cursor.
  *
  * @param field_cursor The attribute definition's cursor to visit.
  * @param sivd The symbols_init_visitor_data to use.
