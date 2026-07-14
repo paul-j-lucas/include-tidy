@@ -117,12 +117,7 @@ static void getCursorScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
 
   if ( !clang_isInvalid( parent_kind ) &&
        parent_kind != CXCursor_TranslationUnit ) {
-    CXString const name_cxs = clang_getCursorSpelling( parent_cursor );
-    char const *const name = null_if_empty( clang_getCString( name_cxs ) );
-    bool const has_parent = name != NULL;
-    clang_disposeString( name_cxs );
-    if ( has_parent )                   // recurse up to outermost scope
-      getCursorScopedName_impl( parent_cursor, sbuf );
+    getCursorScopedName_impl( parent_cursor, sbuf );
   }
 
   CXString const name_cxs = clang_getCursorSpelling( cursor );
