@@ -379,7 +379,6 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     POINTER_CAST( symbols_init_visitor_data*, data );
 
   if ( cursor_in_file( cursor, sivd->source_file ) ) {
-    verbose_print_cursor( cursor );
     enum CXCursorKind const kind = clang_getCursorKind( cursor );
     switch ( kind ) {
       case CXCursor_CallExpr:
@@ -431,6 +430,8 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
  */
 static void visit_FieldDecl( CXCursor field_cursor,
                              symbols_init_visitor_data *sivd ) {
+  assert( sivd != NULL );
+
   CXSourceRange const range = tidy_getCursorExtent( field_cursor );
 
   CXToken *tokens;
@@ -467,6 +468,8 @@ static void visit_FieldDecl( CXCursor field_cursor,
  */
 static void visit_MacroDefinition( CXCursor macro_cursor,
                                    symbols_init_visitor_data *sivd ) {
+  assert( sivd != NULL );
+
   CXSourceRange const range = clang_getCursorExtent( macro_cursor );
 
   CXToken *tokens;
