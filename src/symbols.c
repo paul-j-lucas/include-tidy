@@ -391,6 +391,8 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     POINTER_CAST( symbols_init_visitor_data*, data );
 
   if ( cursor_in_file( cursor, sivd->source_file ) ) {
+    if ( (opt_verbose & TIDY_VERBOSE_CURSORS) != 0 )
+      verbose_print_cursor( cursor );
     enum CXCursorKind const kind = clang_getCursorKind( cursor );
     switch ( kind ) {
       case CXCursor_CallExpr:

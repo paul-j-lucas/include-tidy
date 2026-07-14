@@ -242,7 +242,7 @@ void verbose_print_cursor( CXCursor cursor ) {
   char const *const       spelling = clang_getCString( spelling_cxs );
 
   verbose_printf(
-    "  \"%s\" (%s, \"%s\":%u,%u)\n",
+    "cursor: \"%s\" (%s, \"%s\":%u,%u)\n",
     spelling, kind_cs, abs_path, line, col
   );
 
