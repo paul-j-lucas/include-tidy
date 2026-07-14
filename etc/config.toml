@@ -176,7 +176,6 @@ std-cpp-includes = [
   "inplace_vector",
   "iomanip",
   "ios",
-  "iosfwd",
   "iostream",
   "istream",
   "iterator",
