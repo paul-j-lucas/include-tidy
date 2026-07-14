@@ -1,3 +1,26 @@
+2026-07-13  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c, clang_util.h, symbols.c: Now handling CXCursor_FieldDecl
+     more like CXCursor_MacroDefinition to get scoped names right.
+   * clang_util.c: getCursorByName_visitor() will now recursr into class,
+     struct, union, etc., declarations when necessary.
+   * clang_util.c: Removed checking parent name.
+   * symbols.c: Now handling CXCursor_OverloadedDeclRef separately.
+   * symbols.c: Added assert()s.
+   * etc/config.toml: Removed iosfwd since this really is an implementation
+     detail.
+   * clang_util.c: No longer ending with "::".
+   * symbols.c: Added CXCursor_OverloadedDeclRef.
+   * symbols.c: Removed CXCursor_NamespaceRef since a namespace by itself isn't
+     interesting.
+   * clang_util.c: Now skipping inline namespaces.
+   * symbols.c: Removed is_scoped_name_reserved().
+   * symbols.c: Now skipped reserved identifiers in scoped names.
+   * symbols.c: Now skipping reserved identifiers.
+   * includes.c: For C++, now checking if includer is a C++ wrapper around its
+     corresponding C header, e.g., cstring and string.h.
+   * config_file.c: Removed #include "trans_unit.h".
+
 2026-07-12  Paul J. Lucas <paul@lucasmail.org>
 
    * cli_options.c, cli_options.h, config_file.c, trans_unit.c, trans_unit.h:
