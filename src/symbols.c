@@ -155,9 +155,12 @@ static bool is_include_path( CXCursor ref_cursor, CXCursor def_cursor ) {
 #endif /* NEED_II_MATRIX */
 
 /**
- * Gets the cursor for the identifier given by \a token within \a scope_cursor,
- * but only if \a token actually is an identifier, neither `__VA_ARGS__` nor
- * `__VA_OPT__`, nor one of the current macro's parameters.
+ * For a macro, gets the cursor for the identifier given by \a token within \a
+ * scope_cursor, but only if \a token actually is an identifier, neither
+ * `__VA_ARGS__` nor `__VA_OPT__`, nor one of the current macro's parameters.
+ *
+ * @remarks This is a variant of tidy_getCursorByNameToken(), but for a macro
+ * that additionally takes \a param_set.
  *
  * @param token The token to get the cursor for.
  * @param scope_cursor The cursor of the scope to search within.
@@ -248,7 +251,10 @@ static unsigned macro_get_params( CXToken const tokens[], unsigned token_count,
 }
 
 /**
- * Gets the cursor for the fully qualified symbol from \a tokens.
+ * For a macro, gets the cursor for the fully qualified symbol from \a tokens.
+ *
+ * @remarks This is a variant of tidy_Token_getScopedNameCursor(), but for a
+ * macro that additionally takes \a param_set.
  *
  * @param tokens The array of macro tokens.
  * @param token_count The length of \a tokens.
