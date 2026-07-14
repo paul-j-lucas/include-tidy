@@ -118,24 +118,27 @@ CXString tidy_File_getRealPathName( CXFile file );
  * @param scope_cursor The scope to look in.
  * @return Returns said cursor or an invalid cursor if not found.
  *
- * @sa tidy_getCursorByToken()
+ * @sa tidy_getCursorByNameToken()
  */
 NODISCARD
 CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor );
 
 /**
- * Attempts to get the cursor for the identifier given by \a token within \a
- * scope_cursor, but only if \a token actually is an identifier.
+ * Gets the cursor for the identifier given by \a token within \a scope_cursor,
+ * but only if \a token actually is an identifier.
  *
+ * @param tu The translation unit to use.
  * @param token The token to get the cursor for.
- * @param scope_cursor The scope to look in.
- * @return Returns said cursor, or the null cursor if \a token is not an
- * identifier, or an invalid cursor if not found.
+ * @param scope_cursor The cursor of the scope to search within.
+ * @return Returns said cursor; or an invalid cursor if \a token is an
+ * identifier, but not found; or the null cursor if \a token is not an
+ * identifier.
  *
  * @sa tidy_getCursorByName()
  */
 NODISCARD
-CXCursor tidy_getCursorByToken( CXToken token, CXCursor scope_cursor );
+CXCursor tidy_getCursorByNameToken( CXTranslationUnit tu, CXToken token,
+                                    CXCursor scope_cursor );
 
 /**
  * Similar to `clang_getCursorExtent()` except that it works better when macros

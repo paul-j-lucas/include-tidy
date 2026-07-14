@@ -167,10 +167,13 @@ static bool is_include_path( CXCursor ref_cursor, CXCursor def_cursor ) {
  *  + Not an identifier; or:
  *  + Either `__VA_ARGS__` nor `__VA_OPT__`; or:
  *  + In \a param_set.
+ *
+ * @sa tidy_getCursorByNameToken()
  */
 NODISCARD
-static CXCursor macro_get_cursor_by_name( CXToken token, CXCursor scope_cursor,
-                                          rb_tree_t const *param_set ) {
+static CXCursor macro_getCursorByNameToken( CXToken token,
+                                            CXCursor scope_cursor,
+                                            rb_tree_t const *param_set ) {
   assert( param_set != NULL );
 
   if ( clang_getTokenKind( token ) != CXToken_Identifier )
@@ -252,18 +255,19 @@ static unsigned macro_get_params( CXToken const tokens[], unsigned token_count,
  * @param ptoken_idx A pointer to the current index within \a tokens.
  * @param param_set The set of macro parameter names.
  * @return Returns said cursor or the null cursor for none.
+ *
+ * @sa tidy_Token_getScopedNameCursor()
  */
-static CXCursor macro_get_symbol_cursor( CXToken const tokens[],
-                                         unsigned token_count,
-                                         unsigned *ptoken_idx,
-                                         rb_tree_t const *param_set ) {
-  assert( ptoken_idx != NULL );
+static CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
+                                                 unsigned token_count,
+                                                 unsigned *ptoken_idx,
+                                                 rb_tree_t const *param_set ) {
   assert( param_set != NULL );
 
   CXCursor const tu_cursor = clang_getTranslationUnitCursor( tidy_tu );
 
   CXCursor rv_cursor =
-    macro_get_cursor_by_name( tokens[ *ptoken_idx ], tu_cursor, param_set );
+    macro_getCursorByNameToken( tokens[ *ptoken_idx ], tu_cursor, param_set );
 
   CXCursor loop_cursor = rv_cursor;
   unsigned i = *ptoken_idx;
@@ -282,7 +286,7 @@ static CXCursor macro_get_symbol_cursor( CXToken const tokens[],
     i = get_next_token_index( tokens, token_count, i );
     if ( i >= token_count )
       break;
-    loop_cursor = macro_get_cursor_by_name( tokens[i], rv_cursor, param_set );
+    loop_cursor = macro_getCursorByNameToken( tokens[i], rv_cursor, param_set );
   } // while
 
   return rv_cursor;
@@ -427,6 +431,47 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
 }
 
 /**
+ * Gets the cursor for the fully qualified symbol from \a tokens.
+ *
+ * @param tokens The array of macro tokens.
+ * @param token_count The length of \a tokens.
+ * @param ptoken_idx A pointer to the current index within \a tokens.
+ * @return Returns said cursor or the null cursor for none.
+ */
+static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
+                                                unsigned token_count,
+                                                unsigned *ptoken_idx ) {
+  assert( ptoken_idx != NULL );
+
+  CXCursor const tu_cursor = clang_getTranslationUnitCursor( tidy_tu );
+
+  CXCursor rv_cursor =
+    tidy_getCursorByNameToken( tidy_tu, tokens[ *ptoken_idx ], tu_cursor );
+
+  CXCursor loop_cursor = rv_cursor;
+  unsigned i = *ptoken_idx;
+
+  while ( !tidy_Cursor_isInvalid( loop_cursor ) ) {
+    rv_cursor = loop_cursor;
+    *ptoken_idx = i;
+
+    i = get_next_token_index( tokens, token_count, *ptoken_idx );
+    if ( i >= token_count )
+      break;
+    if ( clang_getTokenKind( tokens[i] ) != CXToken_Punctuation )
+      break;                            // can't be "::"
+    if ( !tidy_Token_isEqual( tidy_tu, tokens[i], "::" ) )
+      break;
+    i = get_next_token_index( tokens, token_count, i );
+    if ( i >= token_count )
+      break;
+    loop_cursor = tidy_getCursorByNameToken( tidy_tu, tokens[i], rv_cursor );
+  } // while
+
+  return rv_cursor;
+}
+
+/**
  * Visits a `CXCursor_FieldDecl` kind of cursor.
  *
  * @param field_cursor The attribute definition's cursor to visit.
@@ -443,9 +488,10 @@ static void visit_FieldDecl( CXCursor field_cursor,
   clang_tokenize( tidy_tu, range, &tokens, &token_count );
 
   for ( unsigned i = 0; i < token_count; ++i ) {
-    CXCursor const rv_cursor = tidy_getCursorByToken( tokens[i], field_cursor );
-    if ( !tidy_Cursor_isInvalid( rv_cursor ) )
-      maybe_add_symbol( rv_cursor, sivd );
+    CXCursor const sym_cursor =
+      tidy_Token_getScopedNameCursor( tokens, token_count, &i );
+    if ( !tidy_Cursor_isInvalid( sym_cursor ) )
+      maybe_add_symbol( sym_cursor, sivd );
   } // for
 
   clang_disposeTokens( tidy_tu, tokens, token_count );
@@ -495,7 +541,7 @@ static void visit_MacroDefinition( CXCursor macro_cursor,
 
   for ( ; i < token_count; ++i ) {
     CXCursor const sym_cursor =
-      macro_get_symbol_cursor( tokens, token_count, &i, &param_set );
+      macro_Token_getScopedNameCursor( tokens, token_count, &i, &param_set );
     if ( !tidy_Cursor_isInvalid( sym_cursor ) )
       maybe_add_symbol( sym_cursor, sivd );
   } // for
