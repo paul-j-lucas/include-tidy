@@ -77,6 +77,7 @@ static void     visit_FieldDecl( CXCursor, symbols_init_visitor_data* );
 static void     visit_MacroDefinition( CXCursor, symbols_init_visitor_data* );
 static void     visit_most_kinds( CXCursor, CXCursor,
                                   symbols_init_visitor_data* );
+static void     visit_OverloadedDeclRef( CXCursor, symbols_init_visitor_data* );
 
 ////////// local variables ////////////////////////////////////////////////////
 
@@ -388,7 +389,6 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       case CXCursor_FunctionDecl:
       case CXCursor_MacroExpansion:
       case CXCursor_MemberRefExpr:
-      case CXCursor_OverloadedDeclRef:
       case CXCursor_TemplateRef:
       case CXCursor_TypedefDecl:
       case CXCursor_TypeRef:
@@ -401,6 +401,10 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 
       case CXCursor_MacroDefinition:
         visit_MacroDefinition( cursor, sivd );
+        break;
+
+      case CXCursor_OverloadedDeclRef:
+        visit_OverloadedDeclRef( cursor, sivd );
         break;
 
       default:
@@ -575,6 +579,37 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     return;
 
   maybe_add_symbol( def_cursor, sivd );
+}
+
+/**
+ * Visits a `CXCursor_OverloadedDeclRef` kind of cursor.
+ *
+ * @remarks We have to iterate over all overloaded functions since calling
+ * clang_getCursorReferenced() on a CXCursor_OverloadedDeclRef returns an
+ * invalid or null cursor.
+ *
+ * @param macro_cursor The macro definition's cursor to visit.
+ * @param sivd The symbols_init_visitor_data to use.
+ */
+static void visit_OverloadedDeclRef( CXCursor overloaded_cursor,
+                                     symbols_init_visitor_data *sivd ) {
+  assert( sivd != NULL );
+
+  unsigned const num_decls = clang_getNumOverloadedDecls( overloaded_cursor );
+  for ( unsigned i = 0; i < num_decls; ++i ) {
+    CXCursor dec_cursor = clang_getOverloadedDecl( overloaded_cursor, i );
+    if ( tidy_Cursor_isInvalid( dec_cursor ) )
+      continue;
+    dec_cursor = clang_getCanonicalCursor( dec_cursor );
+    if ( tidy_Cursor_isInvalid( dec_cursor ) )
+      continue;
+    maybe_add_symbol( dec_cursor, sivd );
+    //
+    // It's possible that different overloads will be declared in different
+    // headers.  But for now, we stop after the first overload.
+    //
+    break;
+  } // for
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
