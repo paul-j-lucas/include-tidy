@@ -205,7 +205,8 @@ static CXCursor macro_getCursorByNameToken( CXToken token,
  * @param param_set The set to add the parameter names to.
  * @return Returns the index of the token one past the `)`.
  */
-static unsigned macro_get_params( CXToken const tokens[], unsigned token_count,
+static unsigned macro_get_params( CXToken const tokens[static 2],
+                                  unsigned token_count,
                                   rb_tree_t *param_set ) {
   assert( param_set != NULL );
 
