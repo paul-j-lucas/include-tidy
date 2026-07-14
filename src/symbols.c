@@ -443,17 +443,17 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
  * @param tokens The array of macro tokens.
  * @param token_count The length of \a tokens.
  * @param ptoken_idx A pointer to the current index within \a tokens.
+ * @param scope_cursor The scope to look in.
  * @return Returns said cursor or the null cursor for none.
  */
 static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
                                                 unsigned token_count,
-                                                unsigned *ptoken_idx ) {
+                                                unsigned *ptoken_idx,
+                                                CXCursor scope_cursor ) {
   assert( ptoken_idx != NULL );
 
-  CXCursor const tu_cursor = clang_getTranslationUnitCursor( tidy_tu );
-
   CXCursor rv_cursor =
-    tidy_getCursorByNameToken( tidy_tu, tokens[ *ptoken_idx ], tu_cursor );
+    tidy_getCursorByNameToken( tidy_tu, tokens[ *ptoken_idx ], scope_cursor );
 
   CXCursor loop_cursor = rv_cursor;
   unsigned i = *ptoken_idx;
@@ -494,9 +494,11 @@ static void visit_FieldDecl( CXCursor field_cursor,
   unsigned token_count;
   clang_tokenize( tidy_tu, range, &tokens, &token_count );
 
+  CXCursor const scope_cursor = clang_getCursorSemanticParent( field_cursor );
+
   for ( unsigned i = 0; i < token_count; ++i ) {
     CXCursor const sym_cursor =
-      tidy_Token_getScopedNameCursor( tokens, token_count, &i );
+      tidy_Token_getScopedNameCursor( tokens, token_count, &i, scope_cursor );
     if ( !tidy_Cursor_isInvalid( sym_cursor ) )
       maybe_add_symbol( sym_cursor, sivd );
   } // for
