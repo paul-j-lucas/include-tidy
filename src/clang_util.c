@@ -78,23 +78,39 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
   (void)parent;
   assert( data != NULL );
 
-  enum CXChildVisitResult           rv = CXChildVisit_Continue;
-  tidy_getCursorByName_data *const  tgcbnd = data;
+  tidy_getCursorByName_data *const tgcbnd = data;
 
-  if ( clang_Cursor_isNull( tgcbnd->skip_cursor ) ||
-       !clang_equalCursors( cursor, tgcbnd->skip_cursor ) ) {
-    CXString const    name_cxs = clang_getCursorSpelling( cursor );
-    char const *const name = clang_getCString( name_cxs );
-
-    if ( name != NULL && strcmp( name, tgcbnd->find_name ) == 0 ) {
-      tgcbnd->found_cursor = cursor;
-      rv = CXChildVisit_Break;
-    }
-
-    clang_disposeString( name_cxs );
+  if ( !clang_Cursor_isNull( tgcbnd->skip_cursor ) &&
+       clang_equalCursors( cursor, tgcbnd->skip_cursor ) ) {
+    goto skip;
   }
 
-  return rv;
+  CXString const    name_cxs = clang_getCursorSpelling( cursor );
+  char const *const name = clang_getCString( name_cxs );
+  bool const        found_name = strcmp( name, tgcbnd->find_name ) == 0;
+
+  clang_disposeString( name_cxs );
+
+  if ( found_name ) {
+    tgcbnd->found_cursor = cursor;
+    return CXChildVisit_Break;
+  }
+
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  switch ( kind ) {
+    case CXCursor_ClassDecl:
+    case CXCursor_ClassTemplate:
+    case CXCursor_EnumDecl:
+    case CXCursor_Namespace:
+    case CXCursor_StructDecl:
+    case CXCursor_UnionDecl:
+      return CXChildVisit_Recurse;
+    default:
+      /* suppress warning */;
+  } // switch
+
+skip:
+  return CXChildVisit_Continue;
 }
 
 /**
