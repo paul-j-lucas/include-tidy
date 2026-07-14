@@ -1200,11 +1200,13 @@ static void include_add_explicit_proxy( char const *config_path,
     if ( !path_ends_with( from_include->abs_path, value->s, rel_path_len ) )
       continue;
     if ( from_include->proxy != NULL ) {
-      print_file_warning(
-        config_path, value->loc.line, value->loc.col,
-        "\"%s\" already has proxy \"%s\"\n",
-        from_include->rel_path, from_include->proxy->rel_path
-      );
+      //
+      // At some point, we may need to store all configured proxies then later
+      // choose which of those to use based on the symbols referenced.  For
+      // now, just pick the one that's more directly included.
+      //
+      if ( to_include->depth < from_include->proxy->depth )
+        from_include->proxy = to_include;
     }
     else if ( include_proxy_would_cycle( from_include, to_include ) ) {
       print_file_warning(
