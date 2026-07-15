@@ -1,5 +1,7 @@
 2026-07-14  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c: For CXCursor_ClassDecl, etc., now recursing only after one
+     loop iteration.
    * clang_util.c: Now handling CXCursor_CXXBaseSpecifier.
    * config_file.c: For a file that already has a proxy, now picking one that's
      more directly included.
