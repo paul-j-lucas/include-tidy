@@ -1,3 +1,9 @@
+2026-07-15  Paul J. Lucas <paul@lucasmail.org>
+
+   * symbols.c: Made all visit_* functions have the same signature.
+   * clang_util.c, clang_util.h, symbols.c: Now visiting CallExpr and
+     MemberRefExpr separately.
+
 2026-07-14  Paul J. Lucas <paul@lucasmail.org>
 
    * includes.c: Now checking to see if the C++ wrapper has been included at
