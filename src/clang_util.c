@@ -48,14 +48,14 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-typedef struct tidy_getCursorByName_data tidy_getCursorByName_data;
+typedef struct getCursorByName_data getCursorByName_data;
 
 ////////// structs ////////////////////////////////////////////////////////////
 
 /**
  * Additional data passed to getCursorByName_visitor.
  */
-struct tidy_getCursorByName_data {
+struct getCursorByName_data {
   char const *find_name;                ///< The name to find.
   CXCursor    found_cursor;             ///< The name's cursor, if found.
   CXCursor    skip_cursor;              ///< Skip this cursor.
@@ -66,11 +66,11 @@ struct tidy_getCursorByName_data {
 
 /**
  * Visits each symbol within a scope attempting to find one having \ref
- * tidy_getCursorByName_data::find_name "find_name".
+ * getCursorByName_data::find_name "find_name".
  *
  * @param cursor The cursor being visited.
  * @param parent Not used.
- * @param data The tidy_getCursorByName_data to use.
+ * @param data The getCursorByName_data to use.
  * @return Returns either `CXChildVisit_Break` or `CXChildVisit_Recurse`.
  */
 static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
@@ -79,21 +79,21 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
   (void)parent;
   assert( data != NULL );
 
-  tidy_getCursorByName_data *const tgcbnd = data;
+  getCursorByName_data *const gcbnd = data;
 
-  if ( !clang_Cursor_isNull( tgcbnd->skip_cursor ) &&
-       clang_equalCursors( cursor, tgcbnd->skip_cursor ) ) {
+  if ( !clang_Cursor_isNull( gcbnd->skip_cursor ) &&
+       clang_equalCursors( cursor, gcbnd->skip_cursor ) ) {
     goto skip;
   }
 
   CXString const    name_cxs = clang_getCursorSpelling( cursor );
   char const *const name = clang_getCString( name_cxs );
-  bool const        found_name = strcmp( name, tgcbnd->find_name ) == 0;
+  bool const        found_name = strcmp( name, gcbnd->find_name ) == 0;
 
   clang_disposeString( name_cxs );
 
   if ( found_name ) {
-    tgcbnd->found_cursor = cursor;
+    gcbnd->found_cursor = cursor;
     return CXChildVisit_Break;
   }
 
@@ -105,7 +105,7 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
     case CXCursor_Namespace:
     case CXCursor_StructDecl:
     case CXCursor_UnionDecl:
-      if ( !tgcbnd->cpp_recurse_into_scope )
+      if ( !gcbnd->cpp_recurse_into_scope )
         break;
       FALLTHROUGH;
     case CXCursor_CXXBaseSpecifier:
@@ -198,16 +198,16 @@ CXString tidy_File_getRealPathName( CXFile file ) {
 CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor ) {
   assert( name != NULL );
 
-  tidy_getCursorByName_data tgcbnd = {
+  getCursorByName_data gcbnd = {
     .find_name = name,
     .found_cursor = clang_getNullCursor(),
     .skip_cursor = clang_getNullCursor()
   };
 
   while ( !clang_Cursor_isNull( scope_cursor ) ) {
-    clang_visitChildren( scope_cursor, &getCursorByName_visitor, &tgcbnd );
-    if ( !clang_Cursor_isNull( tgcbnd.found_cursor ) )
-      return tgcbnd.found_cursor;
+    clang_visitChildren( scope_cursor, &getCursorByName_visitor, &gcbnd );
+    if ( !clang_Cursor_isNull( gcbnd.found_cursor ) )
+      return gcbnd.found_cursor;
     if ( clang_getCursorKind( scope_cursor ) == CXCursor_TranslationUnit )
       break;
 
@@ -217,8 +217,8 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor ) {
       break;
     }
 
-    tgcbnd.cpp_recurse_into_scope = true;
-    tgcbnd.skip_cursor = scope_cursor;
+    gcbnd.cpp_recurse_into_scope = true;
+    gcbnd.skip_cursor = scope_cursor;
     scope_cursor = parent;
   } // while
 
