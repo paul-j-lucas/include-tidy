@@ -59,6 +59,7 @@ struct tidy_getCursorByName_data {
   char const *find_name;                ///< The name to find.
   CXCursor    found_cursor;             ///< The name's cursor, if found.
   CXCursor    skip_cursor;              ///< Skip this cursor.
+  bool        cpp_recurse_into_scope;   ///< C++: recurse into scope?
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -98,6 +99,15 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
+    case CXCursor_ClassDecl:
+    case CXCursor_ClassTemplate:
+    case CXCursor_EnumDecl:
+    case CXCursor_Namespace:
+    case CXCursor_StructDecl:
+    case CXCursor_UnionDecl:
+      if ( !tgcbnd->cpp_recurse_into_scope )
+        break;
+      FALLTHROUGH;
     case CXCursor_CXXBaseSpecifier:
       return CXChildVisit_Recurse;
     default:
@@ -207,6 +217,7 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor ) {
       break;
     }
 
+    tgcbnd.cpp_recurse_into_scope = true;
     tgcbnd.skip_cursor = scope_cursor;
     scope_cursor = parent;
   } // while
