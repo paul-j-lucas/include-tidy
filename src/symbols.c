@@ -516,7 +516,7 @@ static void visit_CallExpr( CXCursor call_cursor, CXCursor parent,
 /**
  * Visits a `CXCursor_FieldDecl` kind of cursor.
  *
- * @param field_cursor The attribute definition's cursor to visit.
+ * @param field_cursor The field declaration's cursor to visit.
  * @param parent Not used.
  * @param sivd The symbols_init_visitor_data to use.
  */
