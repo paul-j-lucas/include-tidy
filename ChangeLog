@@ -1,5 +1,7 @@
 2026-07-14  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c: Now checking to see if the C++ wrapper has been included at
+     all.
    * clang_util.c: For CXCursor_ClassDecl, etc., now recursing only after one
      loop iteration.
    * clang_util.c: Now handling CXCursor_CXXBaseSpecifier.
