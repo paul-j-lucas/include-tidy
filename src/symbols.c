@@ -479,6 +479,18 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
 /**
  * Visits a `CXCursor_CallExpr` kind of cursor.
  *
+ * @remarks
+ * @parblock
+ * For the case of a C++ member function call, its AST is like:
+ *
+ *      CallExpr
+ *        MemberRefExpr
+ *
+ * that is the CallExpr has a child of a MemberRefExpr for the member function.
+ * Since we handle MemberRefExpr cursors specially in visit_MemberRefExpr(), we
+ * want do do nothing for the CallExpr.
+ * @endparblock
+ *
  * @param call_cursor The call expression's cursor to visit.
  * @param parent Not used.
  * @param sivd The symbols_init_visitor_data to use.
@@ -489,8 +501,12 @@ static void visit_CallExpr( CXCursor call_cursor, CXCursor parent,
 
   CXCursor const child_cursor = tidy_Cursor_getFirstChild( call_cursor );
   enum CXCursorKind const child_kind = clang_getCursorKind( child_cursor );
-  if ( child_kind != CXCursor_MemberRefExpr )
-    visit_most_kinds( call_cursor, parent, sivd );
+  switch ( child_kind ) {
+    case CXCursor_MemberRefExpr:
+      return;
+    default:
+      visit_most_kinds( call_cursor, parent, sivd );
+  } // switch
 }
 
 /**
