@@ -90,20 +90,6 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Gets whether \a cursor is referenced from \a file.
- *
- * @param cursor The cursor to use.
- * @param file The file of interest.
- * @return Returns `true` only if the \a cursor is referenced from \a file.
- */
-static bool cursor_in_file( CXCursor cursor, CXFile file ) {
-  assert( file != NULL );
-
-  CXFile const cursor_file = tidy_getCursorLocation_File( cursor );
-  return cursor_file != NULL && clang_File_isEqual( cursor_file, file );
-}
-
-/**
  * Gets the index of the next token that is not a comment.
  *
  * @param tokens The array of tokens.
@@ -394,7 +380,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   symbols_init_visitor_data *const sivd =
     POINTER_CAST( symbols_init_visitor_data*, data );
 
-  if ( cursor_in_file( cursor, sivd->source_file ) ) {
+  if ( tidy_Cursor_isInFile( cursor, sivd->source_file ) ) {
     if ( (opt_verbose & TIDY_VERBOSE_CURSORS) != 0 )
       verbose_print_cursor( cursor );
     enum CXCursorKind const kind = clang_getCursorKind( cursor );

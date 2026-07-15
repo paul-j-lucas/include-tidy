@@ -99,6 +99,16 @@ bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_cursor,
                                             CXCursor j_cursor );
 
 /**
+ * Gets whether \a cursor is referenced from \a file.
+ *
+ * @param cursor The cursor to use.
+ * @param file The file of interest.
+ * @return Returns `true` only if the \a cursor is referenced from \a file.
+ */
+NODISCARD
+bool tidy_Cursor_isInFile( CXCursor cursor, CXFile file );
+
+/**
  * Gets whether \a cursor is either null or invalid.
  *
  * @param cursor The cursor to check.
