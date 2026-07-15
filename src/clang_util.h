@@ -49,6 +49,15 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * Gets the first child cursor of \a cursor, if any.
+ *
+ * @param cursor The cursor to get the first child cursor of, if any.
+ * @return Returns the first child cursor of \a cursor, or the null cursor if
+ * \a cursor has no child.
+ */
+CXCursor tidy_Cursor_getFirstChild( CXCursor cursor );
+
+/**
  * Gets whether \a i_cursor is before \a j_cursor in the translation unit.
  *
  * @param i_cursor The first cursor.

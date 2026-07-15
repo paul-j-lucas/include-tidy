@@ -73,8 +73,12 @@ NODISCARD
 static unsigned get_next_token_index( CXToken const[], unsigned, unsigned );
 
 static void     tidy_symbol_cleanup( tidy_symbol* );
+static void     visit_CallExpr( CXCursor, CXCursor,
+                                symbols_init_visitor_data* );
 static void     visit_FieldDecl( CXCursor, symbols_init_visitor_data* );
 static void     visit_MacroDefinition( CXCursor, symbols_init_visitor_data* );
+static void     visit_MemberRefExpr( CXCursor, CXCursor,
+                                     symbols_init_visitor_data* );
 static void     visit_most_kinds( CXCursor, CXCursor,
                                   symbols_init_visitor_data* );
 static void     visit_OverloadedDeclRef( CXCursor, symbols_init_visitor_data* );
@@ -396,12 +400,14 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     enum CXCursorKind const kind = clang_getCursorKind( cursor );
     switch ( kind ) {
       case CXCursor_CallExpr:
+        visit_CallExpr( cursor, parent, sivd );
+        break;
+
       case CXCursor_Constructor:
       case CXCursor_DeclRefExpr:
       case CXCursor_Destructor:
       case CXCursor_FunctionDecl:
       case CXCursor_MacroExpansion:
-      case CXCursor_MemberRefExpr:
       case CXCursor_TemplateRef:
       case CXCursor_TypedefDecl:
       case CXCursor_TypeRef:
@@ -414,6 +420,10 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 
       case CXCursor_MacroDefinition:
         visit_MacroDefinition( cursor, sivd );
+        break;
+
+      case CXCursor_MemberRefExpr:
+        visit_MemberRefExpr( cursor, parent, sivd );
         break;
 
       case CXCursor_OverloadedDeclRef:
@@ -478,6 +488,23 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
   } // while
 
   return rv_cursor;
+}
+
+/**
+ * Visits a `CXCursor_CallExpr` kind of cursor.
+ *
+ * @param call_cursor The call expression's cursor to visit.
+ * @param parent Not used.
+ * @param sivd The symbols_init_visitor_data to use.
+ */
+static void visit_CallExpr( CXCursor call_cursor, CXCursor parent,
+                            symbols_init_visitor_data *sivd ) {
+  assert( sivd != NULL );
+
+  CXCursor const child_cursor = tidy_Cursor_getFirstChild( call_cursor );
+  enum CXCursorKind const child_kind = clang_getCursorKind( child_cursor );
+  if ( child_kind != CXCursor_MemberRefExpr )
+    visit_most_kinds( call_cursor, parent, sivd );
 }
 
 /**
@@ -636,6 +663,37 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     return;
 
   maybe_add_symbol( def_cursor, sivd );
+}
+
+/**
+ * Visits a `CXCursor_MemberRefExpr` kind of cursor.
+ *
+ * @param member_ref_cursor The member reference's cursor to visit.
+ * @param parent Not used.
+ * @param sivd The symbols_init_visitor_data to use.
+ */
+static void visit_MemberRefExpr( CXCursor member_ref_cursor, CXCursor parent,
+                                 symbols_init_visitor_data *sivd ) {
+  (void)parent;
+  assert( sivd != NULL );
+
+  // Gets the cursor for _a_ declaration of the symbol.
+  CXCursor dec_cursor = clang_getCursorReferenced( member_ref_cursor );
+  if ( tidy_Cursor_isInvalid( dec_cursor ) )
+    return;
+
+  CXCursor const parent_cursor = clang_getCursorSemanticParent( dec_cursor );
+  enum CXCursorKind const parent_kind = clang_getCursorKind( parent_cursor );
+  switch ( parent_kind ) {
+    case CXCursor_ClassDecl:
+    case CXCursor_ClassTemplate:
+    case CXCursor_StructDecl:
+    case CXCursor_UnionDecl:
+      break;
+    default:
+      visit_most_kinds( member_ref_cursor, parent_cursor, sivd );
+      break;
+  } // switch
 }
 
 /**

@@ -151,7 +151,33 @@ static void getCursorScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
   clang_disposeString( name_cxs );
 }
 
+/**
+ * A helper function for tidy_Cursor_getFirstChild() that visits only the first
+ * child cursor, if any, of a cursor.
+ *
+ * @param cursor The child cursor being visited.
+ * @param parent Not used.
+ * @param data A pointer to receive the \a cursor, the first child cursor.
+ * @return Always returns `CXChildVisit_Break`.
+ */
+enum CXChildVisitResult getFirstChild_visitor( CXCursor cursor,
+                                               CXCursor parent,
+                                               CXClientData data ) {
+  (void)parent;
+  assert( data != NULL );
+
+  CXCursor *const first_cursor = POINTER_CAST( CXCursor*, data );
+  *first_cursor = cursor;
+  return CXChildVisit_Break;
+}
+
 ////////// extern functions ///////////////////////////////////////////////////
+
+CXCursor tidy_Cursor_getFirstChild( CXCursor cursor ) {
+  CXCursor first_cursor = clang_getNullCursor();
+  clang_visitChildren( cursor, &getFirstChild_visitor, &first_cursor );
+  return first_cursor;
+}
 
 bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_cursor,
                                             CXCursor j_cursor ) {
