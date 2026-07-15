@@ -98,12 +98,7 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
-    case CXCursor_ClassDecl:
-    case CXCursor_ClassTemplate:
-    case CXCursor_EnumDecl:
-    case CXCursor_Namespace:
-    case CXCursor_StructDecl:
-    case CXCursor_UnionDecl:
+    case CXCursor_CXXBaseSpecifier:
       return CXChildVisit_Recurse;
     default:
       /* suppress warning */;
