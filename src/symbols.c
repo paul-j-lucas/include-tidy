@@ -75,13 +75,16 @@ static unsigned get_next_token_index( CXToken const[], unsigned, unsigned );
 static void     tidy_symbol_cleanup( tidy_symbol* );
 static void     visit_CallExpr( CXCursor, CXCursor,
                                 symbols_init_visitor_data* );
-static void     visit_FieldDecl( CXCursor, symbols_init_visitor_data* );
-static void     visit_MacroDefinition( CXCursor, symbols_init_visitor_data* );
+static void     visit_FieldDecl( CXCursor, CXCursor,
+                                 symbols_init_visitor_data* );
+static void     visit_MacroDefinition( CXCursor, CXCursor,
+                                       symbols_init_visitor_data* );
 static void     visit_MemberRefExpr( CXCursor, CXCursor,
                                      symbols_init_visitor_data* );
 static void     visit_most_kinds( CXCursor, CXCursor,
                                   symbols_init_visitor_data* );
-static void     visit_OverloadedDeclRef( CXCursor, symbols_init_visitor_data* );
+static void     visit_OverloadedDeclRef( CXCursor, CXCursor,
+                                         symbols_init_visitor_data* );
 
 ////////// local variables ////////////////////////////////////////////////////
 
@@ -401,11 +404,11 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
         break;
 
       case CXCursor_FieldDecl:
-        visit_FieldDecl( cursor, sivd );
+        visit_FieldDecl( cursor, parent, sivd );
         break;
 
       case CXCursor_MacroDefinition:
-        visit_MacroDefinition( cursor, sivd );
+        visit_MacroDefinition( cursor, parent, sivd );
         break;
 
       case CXCursor_MemberRefExpr:
@@ -413,7 +416,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
         break;
 
       case CXCursor_OverloadedDeclRef:
-        visit_OverloadedDeclRef( cursor, sivd );
+        visit_OverloadedDeclRef( cursor, parent, sivd );
         break;
 
       default:
@@ -498,6 +501,7 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
 static void visit_CallExpr( CXCursor call_cursor, CXCursor parent,
                             symbols_init_visitor_data *sivd ) {
   assert( sivd != NULL );
+  (void)parent;
 
   CXCursor const child_cursor = tidy_Cursor_getFirstChild( call_cursor );
   enum CXCursorKind const child_kind = clang_getCursorKind( child_cursor );
@@ -513,17 +517,19 @@ static void visit_CallExpr( CXCursor call_cursor, CXCursor parent,
  * Visits a `CXCursor_FieldDecl` kind of cursor.
  *
  * @param field_cursor The attribute definition's cursor to visit.
+ * @param parent Not used.
  * @param sivd The symbols_init_visitor_data to use.
  */
-static void visit_FieldDecl( CXCursor field_cursor,
+static void visit_FieldDecl( CXCursor field_cursor, CXCursor parent,
                              symbols_init_visitor_data *sivd ) {
+  (void)parent;
   assert( sivd != NULL );
 
-  CXSourceRange const range = tidy_getCursorExtent( field_cursor );
+  CXSourceRange const field_range = tidy_getCursorExtent( field_cursor );
 
   CXToken *tokens;
   unsigned token_count;
-  clang_tokenize( tidy_tu, range, &tokens, &token_count );
+  clang_tokenize( tidy_tu, field_range, &tokens, &token_count );
 
   CXCursor const scope_cursor = clang_getCursorSemanticParent( field_cursor );
 
@@ -554,17 +560,19 @@ static void visit_FieldDecl( CXCursor field_cursor,
  * @endparblock
  *
  * @param macro_cursor The macro definition's cursor to visit.
+ * @param parent Not used.
  * @param sivd The symbols_init_visitor_data to use.
  */
-static void visit_MacroDefinition( CXCursor macro_cursor,
+static void visit_MacroDefinition( CXCursor macro_cursor, CXCursor parent,
                                    symbols_init_visitor_data *sivd ) {
+  (void)parent;
   assert( sivd != NULL );
 
-  CXSourceRange const range = clang_getCursorExtent( macro_cursor );
+  CXSourceRange const macro_range = clang_getCursorExtent( macro_cursor );
 
   CXToken *tokens;
   unsigned token_count;
-  clang_tokenize( tidy_tu, range, &tokens, &token_count );
+  clang_tokenize( tidy_tu, macro_range, &tokens, &token_count );
 
   //
   // While iterating over all tokens of the macro, we have to skip identifers
@@ -706,10 +714,13 @@ static void visit_MemberRefExpr( CXCursor member_ref_cursor, CXCursor parent,
  * invalid or null cursor.
  *
  * @param macro_cursor The macro definition's cursor to visit.
+ * @param parent Not used.
  * @param sivd The symbols_init_visitor_data to use.
  */
 static void visit_OverloadedDeclRef( CXCursor overloaded_cursor,
+                                     CXCursor parent,
                                      symbols_init_visitor_data *sivd ) {
+  (void)parent;
   assert( sivd != NULL );
 
   unsigned const num_decls = clang_getNumOverloadedDecls( overloaded_cursor );
