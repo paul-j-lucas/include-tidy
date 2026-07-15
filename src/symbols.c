@@ -516,6 +516,25 @@ static void visit_CallExpr( CXCursor call_cursor, CXCursor parent,
 /**
  * Visits a `CXCursor_FieldDecl` kind of cursor.
  *
+ * @remarks
+ * @parblock
+ * Ideally, we'd call visit_most_kinds() for a FieldDecl.  The problem is that,
+ * given a field declaration like:
+ *
+ *      struct rb_node {
+ *        // ...
+ *        alignas( max_align_t ) char data[];
+ *      };
+ *
+ * libclang's AST does _not_ include the `alignas` part, so we can't check that
+ * the header that declares either `alignas` (for C &lt; C23) or `max_align_t`
+ * has been included.
+ *
+ * Therefore, we have to fall back to iterating over all tokens of the field's
+ * declaration looking for identifiers to see whether the header that declares
+ * them has been included.
+ * @endparblock
+ *
  * @param field_cursor The field declaration's cursor to visit.
  * @param parent Not used.
  * @param sivd The symbols_init_visitor_data to use.
@@ -549,13 +568,13 @@ static void visit_FieldDecl( CXCursor field_cursor, CXCursor parent,
  * @remarks
  * @parblock
  * We have to iterate over all tokens of the macro's definition looking for
- * identifiers to see whether the file being tidied includes the headers
- * defining those identifiers.  For example, if a header contains:
+ * identifiers to see whether the header that declares them has been included.
+ * For example, if a header contains:
  *
  *      #define POINTER_CAST(T,EXPR)    ((T)(uintptr_t)(EXPR))
  *
  * it should also `#include <stdint.h>` because `uintptr_t` is used.  The user
- * of the macro shouldn't have to know or care about the definition, nor be
+ * of the macro shouldn't have to know or care about the declaration, nor be
  * forced to `#include <stdint.h>` explicitly.
  * @endparblock
  *
@@ -713,7 +732,7 @@ static void visit_MemberRefExpr( CXCursor member_ref_cursor, CXCursor parent,
  * clang_getCursorReferenced() on a CXCursor_OverloadedDeclRef returns an
  * invalid or null cursor.
  *
- * @param macro_cursor The macro definition's cursor to visit.
+ * @param overloaded_cursor The overloaded definition's cursor to visit.
  * @param parent Not used.
  * @param sivd The symbols_init_visitor_data to use.
  */
