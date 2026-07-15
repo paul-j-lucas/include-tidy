@@ -118,9 +118,6 @@ static void   ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
 #endif /* NEED_II_MATRIX */
 
 NODISCARD
-static bool   is_cpp_header_of( char const*, char const* );
-
-NODISCARD
 static char*  make_symbols_comment( tidy_include const* );
 
 NODISCARD
@@ -172,6 +169,42 @@ static ii_matrix_t  **ii_matrix;
 #endif /* NEED_II_MATRIX */
 
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Gets the corresponding C++ header name of \a c_name, e.g., given `string.h`,
+ * returns `cstring`.
+ *
+ * @param c_name The C header name.
+ * @param path_buf A path buffer to receive the C++ header name, if any.
+ * @return
+ * @parblock
+ * Returns \a path_buf containing the corresponding C++ header name of \a
+ * c_name only if \a c_name:
+ *  + Has a filename extension of `.h`; and:
+ *  + \a path_buf is big enough to hold the result.
+ *
+ * Otherwise returns NULL.
+ * @endparblock
+ */
+PJL_DISCARD
+static char const* get_cpp_header( char const *c_name,
+                                   char path_buf[static PATH_MAX] ) {
+  assert( c_name != NULL );
+
+  char const *const c_ext = path_ext( c_name );
+  if ( c_ext == NULL || strcmp( c_ext, "h" ) != 0 )
+    return NULL;
+
+  char const *const dot = c_ext - 1;
+  size_t const base_len = STATIC_CAST( size_t, dot - c_name );
+  if ( base_len + 1/*'c'*/ + 1/*'\0'*/ > PATH_MAX )
+    return NULL;
+
+  path_buf[0] = 'c';
+  memcpy( path_buf + 1, c_name, base_len );
+  path_buf[ base_len + 1 ] = '\0';
+  return path_buf;
+}
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
@@ -269,7 +302,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   (void)data;
 
   if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
-    goto done;
+    goto skip;
 
   CXFile const included_file = clang_getIncludedFile( cursor );
   assert( included_file != NULL );
@@ -277,16 +310,18 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   assert( included != NULL );
 
   if ( included->proxy != NULL )
-    goto done;
+    goto skip;
   if ( included->depth == 0 )           // directly included: no proxy
-    goto done;
+    goto skip;
   if ( included->is_local )             // only non-local can have a proxy
-    goto done;
+    goto skip;
 
   tidy_include *const includer = included->includer;
   assert( includer != NULL );           // since directly included
   if ( includer->is_local )             // only non-local can be a proxy
-    goto done;
+    goto skip;
+
+  tidy_include *proxy = NULL;
 
   if (// This handles a case like:
       //
@@ -310,8 +345,23 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       // standard) should be a proxy for the real one.
       //
       strcmp( path_basename( included->rel_path ),
-              path_basename( includer->rel_path ) ) == 0 ||
+              path_basename( includer->rel_path ) ) == 0 ) {
+    proxy = includer;
+    goto done;
+  }
 
+  // Remaining cases are valid only for C++.
+  if ( !tidy_is_cpp )
+    goto skip;
+
+  // Remaining cases are valid only for paths not in subdirectories.
+  if ( strchr( included->rel_path, '/' ) != NULL )
+    goto skip;
+
+  char cpp_path[ PATH_MAX ];
+  if ( get_cpp_header( included->rel_path, cpp_path ) != NULL ) {
+    if ( strcmp( includer->rel_path, cpp_path ) == 0 ) {
+      //
       // This handles a case like:
       //
       //      </usr/include/cstring>
@@ -320,12 +370,25 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       // That is, a standard C++ header is the C++ wrapper of a C standard
       // header.
       //
-      (tidy_is_cpp &&
-       is_cpp_header_of( includer->rel_path, included->rel_path )) ) {
-    included->proxy = includer;
+      proxy = includer;
+    }
+    else {
+      //
+      // This handles a case similar to the above except check to see if the
+      // standard C++ wrapper has been included at all.
+      //
+      proxy = include_find_by_rel_path( cpp_path );
+    }
   }
 
 done:
+  if ( proxy != NULL ) {
+    while ( proxy->proxy != NULL )
+      proxy = proxy->proxy;
+    included->proxy = proxy;
+  }
+
+skip:
   return CXChildVisit_Continue;
 }
 
@@ -725,42 +788,6 @@ static bool is_assoc_header( tidy_include const *include,
   //      #include "b.h"
   //
   return strcmp( include_no_ext, source_file_no_ext ) == 0;
-}
-
-/**
- * Gets whether \a cpp_name is the C++ header version of \a c_name, e.g., as
- * `cstring` is to `string.h`.
- *
- * @param cpp_name The C++ header name.
- * @param c_name The C header name.
- * @return Returns `true` only if:
- *  + \a cpp_name starts with a 'c'; and:
- *  + \a cpp_name has no filename extension; and:
- *  + \a c_name has a filename extension of `.h`;
- *  + \a cpp_name skipping the leading 'c' equals \a c_name without its
- *    extension.
- */
-static bool is_cpp_header_of( char const *cpp_name, char const *c_name ) {
-  assert( cpp_name != NULL );
-  assert( c_name != NULL );
-
-  if ( cpp_name[0] != 'c' )
-    return false;
-  if ( path_ext( cpp_name ) != NULL )
-    return false;
-
-  char const *const c_ext = path_ext( c_name );
-  if ( c_ext == NULL || strcmp( c_ext, "h" ) != 0 )
-    return false;
-
-  char const *cpp = cpp_name + 1/*'c'*/;
-  for ( char const *c = c_name, *const dot = c_ext - 1; c < dot; ++c ) {
-    if ( *cpp != *c )
-      return false;
-    ++cpp;
-  } // for
-
-  return *cpp == '\0';
 }
 
 /**
