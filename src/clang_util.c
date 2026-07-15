@@ -179,6 +179,24 @@ CXCursor tidy_Cursor_getFirstChild( CXCursor cursor ) {
   return first_cursor;
 }
 
+CXCursor tidy_Cursor_getUnderlying( CXCursor cursor ) {
+  if ( clang_getCursorKind( cursor ) != CXCursor_TypeRef )
+    return clang_getNullCursor();
+
+  CXType type = clang_getCanonicalType( clang_getCursorType( cursor ) );
+  for (;;) {
+    switch ( type.kind ) {
+      case CXType_Pointer:
+      case CXType_LValueReference:
+      case CXType_RValueReference:
+        type = clang_getPointeeType( type );
+        break;
+      default:
+        return clang_getTypeDeclaration( type );
+    } // switch
+  } // for
+}
+
 bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_cursor,
                                             CXCursor j_cursor ) {
   if ( tidy_Cursor_isInvalid( i_cursor ) || tidy_Cursor_isInvalid( j_cursor ) )
@@ -192,7 +210,7 @@ bool tidy_Cursor_isInvalid( CXCursor cursor ) {
   return clang_Cursor_isNull( cursor ) || clang_isInvalid( cursor.kind );
 }
 
-int tidy_File_cmp_by_name( CXFile i_file, CXFile j_file ) {
+int tidy_File_CompareByName( CXFile i_file, CXFile j_file ) {
   assert( i_file != NULL );
   assert( j_file != NULL );
 
@@ -311,24 +329,6 @@ char const* tidy_getCursorScopedName( CXCursor cursor ) {
   strbuf_init( &sbuf );
   getCursorScopedName_impl( cursor, &sbuf );
   return strbuf_take( &sbuf );
-}
-
-CXCursor tidy_getCursorUnderlying( CXCursor cursor ) {
-  if ( clang_getCursorKind( cursor ) != CXCursor_TypeRef )
-    return clang_getNullCursor();
-
-  CXType type = clang_getCanonicalType( clang_getCursorType( cursor ) );
-  for (;;) {
-    switch ( type.kind ) {
-      case CXType_Pointer:
-      case CXType_LValueReference:
-      case CXType_RValueReference:
-        type = clang_getPointeeType( type );
-        break;
-      default:
-        return clang_getTypeDeclaration( type );
-    } // switch
-  } // for
 }
 
 CXFile tidy_getFileLocation_File( CXSourceLocation loc ) {

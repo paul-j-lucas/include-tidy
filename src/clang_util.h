@@ -58,6 +58,35 @@
 CXCursor tidy_Cursor_getFirstChild( CXCursor cursor );
 
 /**
+ * Gets the "underlying" cursor for \a cursor, if any.
+ *
+ * @remarks
+ * @parblock
+ * For a case like:
+ *
+ *      typedef struct foo foo_t;
+ *      // ...
+ *      foo_t x;                        // cursor is at foo_t here
+ *
+ * where \a cursor is at a use of `foo_t`, we want to get the cursor for the
+ * underlying type, in this case for `foo`.
+ *
+ * Additionally, for a case like:
+ *
+ *      typedef struct foo *foo_ptr_t;
+ *
+ * we have to traverse through all pointers (and references for C++) to get to
+ * the cursor for the underlying type.
+ * @endparblock
+ *
+ * @param cursor The original cursor to get the underlying cursor for.
+ * @return Returns the underlying cursor for \a cursor, if necessary, or the
+ * null cursor if not or none.
+ */
+NODISCARD
+CXCursor tidy_Cursor_getUnderlying( CXCursor cursor );
+
+/**
  * Gets whether \a i_cursor is before \a j_cursor in the translation unit.
  *
  * @param i_cursor The first cursor.
@@ -90,7 +119,7 @@ bool tidy_Cursor_isInvalid( CXCursor cursor );
  * @sa tidy_FileUniqueID_cmp()
  */
 NODISCARD
-int tidy_File_cmp_by_name( CXFile i_file, CXFile j_file );
+int tidy_File_CompareByName( CXFile i_file, CXFile j_file );
 
 /**
  * Compares two CXFileUniqueID objects.
@@ -100,7 +129,7 @@ int tidy_File_cmp_by_name( CXFile i_file, CXFile j_file );
  * @return Returns a number less than 0, 0, or greater than 0 if \a i_id is
  * less than, equal to, or greater than \a j_id, respectively.
  *
- * @sa tidy_File_cmp_by_name()
+ * @sa tidy_File_CompareByName()
  */
 NODISCARD
 inline int tidy_FileUniqueID_cmp( CXFileUniqueID const *i_id,
@@ -200,35 +229,6 @@ CXFile tidy_getCursorLocation_File( CXCursor cursor );
  */
 NODISCARD
 char const* tidy_getCursorScopedName( CXCursor cursor );
-
-/**
- * Gets the "underlying" cursor for \a cursor, if any.
- *
- * @remarks
- * @parblock
- * For a case like:
- *
- *      typedef struct foo foo_t;
- *      // ...
- *      foo_t x;                        // cursor is at foo_t here
- *
- * where \a cursor is at a use of `foo_t`, we want to get the cursor for the
- * underlying type, in this case for `foo`.
- *
- * Additionally, for a case like:
- *
- *      typedef struct foo *foo_ptr_t;
- *
- * we have to traverse through all pointers (and references for C++) to get to
- * the cursor for the underlying type.
- * @endparblock
- *
- * @param cursor The original cursor to get the underlying cursor for.
- * @return Returns the underlying cursor for \a cursor, if necessary, or the
- * null cursor if not or none.
- */
-NODISCARD
-CXCursor tidy_getCursorUnderlying( CXCursor cursor );
 
 /**
  * Calls `clang_getFileLocation()` and returns the `CXFile`.

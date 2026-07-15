@@ -654,7 +654,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
       return;
   }
   else {
-    def_cursor = tidy_getCursorUnderlying( cursor );
+    def_cursor = tidy_Cursor_getUnderlying( cursor );
   }
 
   if ( tidy_Cursor_isInvalid( def_cursor ) )
