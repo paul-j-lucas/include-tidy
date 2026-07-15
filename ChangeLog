@@ -1,3 +1,13 @@
+2026-07-14  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c: Now handling CXCursor_CXXBaseSpecifier.
+   * config_file.c: For a file that already has a proxy, now picking one that's
+     more directly included.
+   * man/man1/include-tidy.1, print.c, symbols.c: Added verbose option to print
+     libclang cursors.
+   * symbols.c: Fixed scope look-up in tidy_Token_getScopedNameCursor().
+   * symbols.c: Added "static 2".
+
 2026-07-13  Paul J. Lucas <paul@lucasmail.org>
 
    * clang_util.c, clang_util.h, symbols.c: Now handling CXCursor_FieldDecl
