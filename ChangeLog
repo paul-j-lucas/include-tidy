@@ -1,5 +1,7 @@
 2026-07-15  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c: Now skipping either anonymous or unnamed names when
+     fully-scoping names.
    * symbols.c: Made all visit_* functions have the same signature.
    * clang_util.c, clang_util.h, symbols.c: Now visiting CallExpr and
      MemberRefExpr separately.
