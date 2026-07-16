@@ -143,7 +143,8 @@ static void getCursorScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
 
   CXString const name_cxs = clang_getCursorSpelling( cursor );
   char const *const name = null_if_empty( clang_getCString( name_cxs ) );
-  if ( name != NULL ) {
+  // Skip "(anonymous ...)" and "(unnamed ...)".
+  if ( name != NULL && name[0] != '(' ) {
     if ( sbuf->len > 0 )
       strbuf_putsn( sbuf, "::", STRLITLEN( "::" ) );
     strbuf_puts( sbuf, name );
