@@ -55,6 +55,7 @@
  * @return Returns the first child cursor of \a cursor, or the null cursor if
  * \a cursor has no child.
  */
+NODISCARD
 CXCursor tidy_Cursor_getFirstChild( CXCursor cursor );
 
 /**
