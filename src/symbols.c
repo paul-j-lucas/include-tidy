@@ -123,6 +123,7 @@ static unsigned get_next_token_index( CXToken const tokens[],
  * @param def_cursor A cursor defining a symbol.
  * @return Returns `true` only if it's possible.
  */
+NODISCARD
 static bool is_include_path( CXCursor ref_cursor, CXCursor def_cursor ) {
   if ( tidy_Cursor_isInvalid( def_cursor ) )
     return false;
