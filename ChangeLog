@@ -1,3 +1,10 @@
+2026-07-16  Paul J. Lucas <paul@lucasmail.org>
+
+   * symbols.c: No longer calling clang_getCanonicalCursor() -- makes things
+     better.
+   * includes.c, includes.h: Added distinct is_needed member -- no longer using
+     symbol_set.size.
+
 2026-07-15  Paul J. Lucas <paul@lucasmail.org>
 
    * clang_util.c: Now skipping either anonymous or unnamed names when
