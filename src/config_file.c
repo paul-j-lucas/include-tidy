@@ -1046,7 +1046,7 @@ static void first_parse( char const *config_path, toml_table const *table,
   rb_iterator_t iter;
   size_t const  rel_path_len = strlen( table->name );
 
-  rb_iterator_init( &tidy_include_set, &iter );
+  rb_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
     if ( path_ends_with( include->abs_path, table->name, rel_path_len ) )
@@ -1194,7 +1194,7 @@ static void include_add_explicit_proxy( char const *config_path,
   rb_iterator_t iter;
   size_t const  rel_path_len = strlen( value->s );
 
-  rb_iterator_init( &tidy_include_set, &iter );
+  rb_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *from_include;
         (from_include = rb_iterator_next( &iter )) != NULL; ) {
     if ( !path_ends_with( from_include->abs_path, value->s, rel_path_len ) )
@@ -1234,7 +1234,7 @@ static void include_handle( char const *rel_path, tidy_handling handling ) {
   rb_iterator_t iter;
   size_t const  rel_path_len = strlen( rel_path );
 
-  rb_iterator_init( &tidy_include_set, &iter );
+  rb_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
     if ( path_ends_with( include->abs_path, rel_path, rel_path_len ) )
@@ -1526,14 +1526,14 @@ static void symbol_includes_dump( void ) {
     return;
   verbose_printf( "configuration symbols:\n" );
   rb_iterator_t si_iter;
-  rb_iterator_init( &symbol_includes_map, &si_iter );
+  rb_iterator_init( &si_iter, &symbol_includes_map );
   for ( symbol_includes const *si;
         (si = rb_iterator_next( &si_iter )) != NULL; ) {
     verbose_printf( "  \"%s\" -> [ ", si->from_symbol_name );
 
     bool comma = false;
     rb_iterator_t ti_iter;
-    rb_iterator_init( &si->to_include_set, &ti_iter );
+    rb_iterator_init( &ti_iter, &si->to_include_set );
     for ( tidy_include *to_include;
           (to_include = rb_iterator_next( &ti_iter )) != NULL; ) {
       char delims[2];
@@ -1624,7 +1624,7 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
     return NULL;
 
   rb_iterator_t iter;
-  rb_iterator_init( &found_si->to_include_set, &iter );
+  rb_iterator_init( &iter, &found_si->to_include_set );
 
   tidy_include const *best_include = NULL;
   for ( tidy_include const *include;

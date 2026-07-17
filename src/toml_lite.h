@@ -243,7 +243,7 @@ void toml_file_init( toml_file *toml, FILE *file );
  * @sa toml_iterator_next()
  */
 inline void toml_iterator_init( toml_iterator *iter, toml_table *table ) {
-  rb_iterator_init( &table->keys_values, iter );
+  rb_iterator_init( iter, &table->keys_values );
 }
 
 /**

@@ -403,7 +403,7 @@ static void include_proxies_dump( bool want_explicit ) {
   bool printed_any = false;
 
   rb_iterator_t iter;
-  rb_iterator_init( &tidy_include_set, &iter );
+  rb_iterator_init( &iter, &tidy_include_set );
 
   for ( tidy_include const *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
@@ -808,7 +808,7 @@ static char* make_symbols_comment( tidy_include const *include ) {
   array_reserve( &symbols_array, include->symbol_set.size );
 
   rb_iterator_t iter;
-  rb_iterator_init( &include->symbol_set, &iter );
+  rb_iterator_init( &iter, &include->symbol_set );
   for ( tidy_symbol const *sym; (sym = rb_iterator_next( &iter )) != NULL; )
     *(tidy_symbol const**)array_push_back( &symbols_array ) = sym;
 
@@ -1069,7 +1069,7 @@ tidy_include* get_associated_header( void ) {
       path_no_ext( tidy_source_path, path_buf );
 
     rb_iterator_t iter;
-    rb_iterator_init( &tidy_include_set, &iter );
+    rb_iterator_init( &iter, &tidy_include_set );
     for ( tidy_include *include;
           (include = rb_iterator_next( &iter )) != NULL; ) {
       if ( is_assoc_header( include, source_path_no_ext ) ) {
@@ -1127,7 +1127,7 @@ tidy_include* include_find_by_rel_path( char const *rel_path ) {
   rb_iterator_t iter;
   size_t const  rel_path_len = strlen( rel_path );
 
-  rb_iterator_init( &tidy_include_set, &iter );
+  rb_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
     if ( !path_ends_with( include->abs_path, rel_path, rel_path_len ) )
@@ -1208,7 +1208,7 @@ void includes_print( void ) {
   }
 
   rb_iterator_t iter;
-  rb_iterator_init( &tidy_include_set, &iter );
+  rb_iterator_init( &iter, &tidy_include_set );
   while ( (include = rb_iterator_next( &iter )) != NULL ) {
     if ( should_print_include( include ) ) {
       *(tidy_include const**)array_push_back( &include_array ) = include;
