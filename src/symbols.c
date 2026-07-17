@@ -642,47 +642,24 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   CXCursor def_cursor;
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
-  if ( kind == CXCursor_TypeRef ) {
-    CXType type = clang_getCursorType( parent );
-
-    switch ( type.kind ) {
-      case CXType_Invalid:
+  switch ( kind ) {
+    case CXCursor_TypeRef:;
+      CXType type = clang_getCursorType( parent );
+      type = clang_getCanonicalType( type );
+      if ( type.kind != CXType_Record ) // class, struct, or union
         return;
-      case CXType_Pointer:
-      case CXType_LValueReference:
-      case CXType_RValueReference:
-        //
-        // This handles a case like:
-        //
-        //      typedef struct c_type c_type_t;
-        //
-        //      void c_type_dump( c_type_t const *type );
-        //
-        // Even if c_type is incomplete at the time c_type_t was defined, it
-        // doesn't matter since the parameter is using a pointer, so the
-        // definition of c_type (and whatever include file it's declared in)
-        // isn't needed.
-        //
+      CXCursor const type_cursor = clang_getTypeDeclaration( type );
+      def_cursor = clang_getCursorDefinition( type_cursor );
+      if ( clang_Cursor_isNull( def_cursor ) )
         return;
-      default:
-        /* suppress warning */;
-    } // switch
-
-    type = clang_getCanonicalType( type );
-    if ( type.kind != CXType_Record )   // class, struct, or union
+      if ( tidy_Cursor_isBeforeInTranslationUnit( def_cursor, dec_cursor ) )
+        return;
+      break;
+    default:
       return;
+  } // swich
 
-    CXCursor const type_cursor = clang_getTypeDeclaration( type );
-    def_cursor = clang_getCursorDefinition( type_cursor );
-
-    if ( tidy_Cursor_isBeforeInTranslationUnit( def_cursor, dec_cursor ) )
-      return;
-  }
-  else {
-    def_cursor = clang_getNullCursor();
-  }
-
-  if ( tidy_Cursor_isInvalid( def_cursor ) )
+  if ( clang_Cursor_isNull( def_cursor ) )
     return;
   if ( clang_equalCursors( def_cursor, dec_cursor ) )
     return;
