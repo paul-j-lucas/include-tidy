@@ -255,7 +255,6 @@ static void ii_matrix_visitor( CXFile included_file,
                                CXSourceLocation *inclusion_stack,
                                unsigned inclusion_len, CXClientData data ) {
   assert( data != NULL );
-  CXFile const source_file = POINTER_CAST( CXFile, data );
 
   if ( included_file == NULL || inclusion_len == 0 )
     return;
@@ -271,7 +270,9 @@ static void ii_matrix_visitor( CXFile included_file,
   if ( includer_file == NULL )
     return;
 
-  unsigned includer_instance_id;
+  unsigned      includer_instance_id;
+  CXFile const  source_file = data;
+
   if ( clang_File_isEqual( includer_file, source_file ) ) {
     includer_instance_id = 0;
   }
@@ -460,8 +461,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
     goto skip;
 
-  includes_init_visitor_data *const iivd =
-    POINTER_CAST( includes_init_visitor_data*, data );
+  includes_init_visitor_data *const iivd = data;
 
   unsigned          include_line, include_col;
   CXSourceLocation  includer_loc = clang_getCursorLocation( cursor );

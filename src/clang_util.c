@@ -133,7 +133,7 @@ enum CXChildVisitResult getFirstChild_visitor( CXCursor cursor,
   (void)parent;
   assert( data != NULL );
 
-  CXCursor *const first_cursor = POINTER_CAST( CXCursor*, data );
+  CXCursor *const first_cursor = data;
   *first_cursor = cursor;
   return CXChildVisit_Break;
 }

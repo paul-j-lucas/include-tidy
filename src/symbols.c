@@ -382,8 +382,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
                                                      CXClientData data ) {
   (void)parent;
   assert( data != NULL );
-  symbols_init_visitor_data *const sivd =
-    POINTER_CAST( symbols_init_visitor_data*, data );
+  symbols_init_visitor_data *const sivd = data;
 
   if ( tidy_Cursor_isInFile( cursor, sivd->source_file ) ) {
     if ( (opt_verbose & TIDY_VERBOSE_CURSORS) != 0 )
