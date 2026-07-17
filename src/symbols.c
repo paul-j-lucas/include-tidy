@@ -628,13 +628,8 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
                               symbols_init_visitor_data *sivd ) {
   assert( sivd != NULL );
 
-  // Gets the cursor for _a_ declaration of the symbol.
+  // Gets the cursor for the declaration of the symbol.
   CXCursor dec_cursor = clang_getCursorReferenced( cursor );
-  if ( tidy_Cursor_isInvalid( dec_cursor ) )
-    return;
-
-  // Gets the cursor for the _the_ declaration of the symbol.
-  dec_cursor = clang_getCanonicalCursor( dec_cursor );
   if ( tidy_Cursor_isInvalid( dec_cursor ) )
     return;
 
