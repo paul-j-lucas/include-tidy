@@ -644,10 +644,10 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   if ( kind == CXCursor_TypeRef ) {
     CXType type = clang_getCursorType( parent );
-    if ( type.kind == CXType_Invalid )
-      return;
 
     switch ( type.kind ) {
+      case CXType_Invalid:
+        return;
       case CXType_Pointer:
       case CXType_LValueReference:
       case CXType_RValueReference:
