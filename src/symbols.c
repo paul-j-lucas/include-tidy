@@ -107,7 +107,8 @@ static unsigned get_next_token_index( CXToken const tokens[],
                                       unsigned token_idx ) {
   unsigned i;
   for ( i = token_idx + 1; i < token_count; ++i ) {
-    if ( clang_getTokenKind( tokens[i] ) != CXToken_Comment )
+    CXTokenKind const kind = clang_getTokenKind( tokens[i] );
+    if ( kind != CXToken_Comment )
       break;
   } // for
   return i;
