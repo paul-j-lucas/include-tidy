@@ -187,24 +187,6 @@ char const* tidy_Cursor_getScopedName( CXCursor cursor ) {
   return strbuf_take( &sbuf );
 }
 
-CXCursor tidy_Cursor_getUnderlying( CXCursor cursor ) {
-  if ( clang_getCursorKind( cursor ) != CXCursor_TypeRef )
-    return clang_getNullCursor();
-
-  CXType type = clang_getCanonicalType( clang_getCursorType( cursor ) );
-  for (;;) {
-    switch ( type.kind ) {
-      case CXType_Pointer:
-      case CXType_LValueReference:
-      case CXType_RValueReference:
-        type = clang_getPointeeType( type );
-        break;
-      default:
-        return clang_getTypeDeclaration( type );
-    } // switch
-  } // for
-}
-
 bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_cursor,
                                             CXCursor j_cursor ) {
   if ( tidy_Cursor_isInvalid( i_cursor ) || tidy_Cursor_isInvalid( j_cursor ) )

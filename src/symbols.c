@@ -679,7 +679,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
       return;
   }
   else {
-    def_cursor = tidy_Cursor_getUnderlying( cursor );
+    def_cursor = clang_getNullCursor();
   }
 
   if ( tidy_Cursor_isInvalid( def_cursor ) )
