@@ -687,11 +687,10 @@ static void includes_print_visitor( tidy_include const *include,
   char        delims[2];
   bool        do_print_include = false;
   bool const  is_direct = include->depth == 0;
-  bool const  is_needed = include->symbol_set.size > 0;
   bool        reset_opt_comment_style = false;
   char const *sgr_color = NULL;
 
-  if ( is_needed || keep ) {
+  if ( include->is_needed || keep ) {
     if ( is_direct || keep ) {
       do_print_include = opt_all_includes;
     }
@@ -733,7 +732,7 @@ static void includes_print_visitor( tidy_include const *include,
     for ( unsigned i = 1; i < include->lines.len; ++i ) {
       free( comment );
       unsigned const line = *(unsigned*)array_at_nc( &include->lines, i );
-      if ( is_needed ) {
+      if ( include->is_needed ) {
         check_asprintf( &comment,
           "DELETE LINE %u (same as line %u)", line, first_line
         );
@@ -888,14 +887,13 @@ static bool should_print_include( tidy_include const *include ) {
   if ( include->lines.len > 1 )
     return true;
 
-  bool const is_needed = include->symbol_set.size > 0;
   if ( opt_all_includes &&
-       (is_needed || include->handling == TIDY_HANDLE_KEEP) ) {
+       (include->is_needed || include->handling == TIDY_HANDLE_KEEP) ) {
     return true;
   }
 
   bool const is_direct = include->depth == 0;
-  if ( is_needed != is_direct )
+  if ( include->is_needed != is_direct )
     return true;
 
   return false;
@@ -1107,6 +1105,7 @@ tidy_include const* include_add_symbol( CXFile include_file,
   while ( include->proxy != NULL )
     include = include->proxy;
   PJL_DISCARD_RV( rb_tree_insert( &include->symbol_set, sym, 0 ) );
+  include->is_needed = true;
   return include;
 }
 
@@ -1202,14 +1201,19 @@ void includes_print( void ) {
   array_init( &include_array, sizeof(tidy_include*) );
   array_reserve( &include_array, tidy_include_set.size );
 
-  tidy_include *include;
+  tidy_include *include = get_associated_header();
+  if ( include != NULL ) {
+    include->is_needed = true;
+    include->sort_rank = TIDY_SORT_ASSOCIATED;
+  }
+
   rb_iterator_t iter;
   rb_iterator_init( &tidy_include_set, &iter );
   while ( (include = rb_iterator_next( &iter )) != NULL ) {
     if ( should_print_include( include ) ) {
       *(tidy_include const**)array_push_back( &include_array ) = include;
       if ( include->handling != TIDY_HANDLE_KEEP ) {
-        if ( include->symbol_set.size == 0 )
+        if ( !include->is_needed )
           ++tidy_includes_unnecessary;
         else if ( include->depth > 0 )
           ++tidy_includes_missing;
@@ -1221,9 +1225,6 @@ void includes_print( void ) {
     }
   } // while
 
-  include = get_associated_header();
-  if ( include != NULL )
-    include->sort_rank = TIDY_SORT_ASSOCIATED;
   array_qsort( &include_array, &tidy_include_cmp_for_print );
 
   // Print local includes.

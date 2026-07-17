@@ -99,6 +99,7 @@ struct tidy_include {
   tidy_handling   handling;             ///< Handle specially?
   tidy_sort_rank  sort_rank;            ///< Sorting rank.
   bool            is_local;             ///< Local include file?
+  bool            is_needed;            ///< Is this include needed?
   bool            is_proxy_explicit;    ///< Was \ref proxy explicitly added?
   rb_tree_t       symbol_set;           ///< Symbols referenced from this file.
 };
