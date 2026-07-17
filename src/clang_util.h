@@ -220,7 +220,7 @@ NODISCARD
 CXSourceRange tidy_getCursorExtent( CXCursor cursor );
 
 /**
- * Gets the file the given cursor is in, if any.
+ * Calls `clang_getCursorLocation()` and returns only the file.
  *
  * @param cursor The cursor to use.
  * @return Returns the file \a cursor is in, if any.
@@ -263,7 +263,7 @@ NODISCARD
 CXFileUniqueID tidy_getFileUniqueID( CXFile file );
 
 /**
- * Calls `clang_getSpellingLocation()` and returns the `CXFile`.
+ * Calls `clang_getSpellingLocation()` and returns only the file.
  *
  * @param loc The location to use.
  * @return Returns the file of \a loc.
