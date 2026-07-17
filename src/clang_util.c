@@ -87,12 +87,12 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
   }
 
   CXString const    name_cxs = clang_getCursorSpelling( cursor );
-  char const *const name = clang_getCString( name_cxs );
-  bool const        found_name = strcmp( name, gcbnd->find_name ) == 0;
+  char const *const name_cs = clang_getCString( name_cxs );
+  bool const        is_found = strcmp( name_cs, gcbnd->find_name ) == 0;
 
   clang_disposeString( name_cxs );
 
-  if ( found_name ) {
+  if ( is_found ) {
     gcbnd->found_cursor = cursor;
     return CXChildVisit_Break;
   }
