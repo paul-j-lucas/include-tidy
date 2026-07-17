@@ -312,7 +312,7 @@ static void maybe_add_symbol( CXCursor sym_cursor,
     return;
 
   tidy_symbol new_sym = {
-    .name = tidy_getCursorScopedName( sym_cursor )
+    .name = tidy_Cursor_getScopedName( sym_cursor )
   };
   if ( config_ignore_symbol( new_sym.name ) )
     goto skip;

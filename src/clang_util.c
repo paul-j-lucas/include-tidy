@@ -119,40 +119,6 @@ skip:
 }
 
 /**
- * Given a cursor at a local name of an enumeration, class, class data member,
- * class member function, structure, union, or namespace, gets the fully scoped
- * name skipping inline namespaces.
- *
- * @param cursor The cursor at a symbol.
- * @param sbuf The strbuf to use.
- */
-static void getCursorScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
-  assert( sbuf != NULL );
-
-  CXCursor parent_cursor = cursor;
-  do {
-    parent_cursor = clang_getCursorSemanticParent( parent_cursor );
-  } while ( clang_Cursor_isInlineNamespace( parent_cursor ) );
-
-  enum CXCursorKind const parent_kind = clang_getCursorKind( parent_cursor );
-
-  if ( !clang_isInvalid( parent_kind ) &&
-       parent_kind != CXCursor_TranslationUnit ) {
-    getCursorScopedName_impl( parent_cursor, sbuf );
-  }
-
-  CXString const name_cxs = clang_getCursorSpelling( cursor );
-  char const *const name = null_if_empty( clang_getCString( name_cxs ) );
-  // Skip "(anonymous ...)" and "(unnamed ...)".
-  if ( name != NULL && name[0] != '(' ) {
-    if ( sbuf->len > 0 )
-      strbuf_putsn( sbuf, "::", STRLITLEN( "::" ) );
-    strbuf_puts( sbuf, name );
-  }
-  clang_disposeString( name_cxs );
-}
-
-/**
  * A helper function for tidy_Cursor_getFirstChild() that visits only the first
  * child cursor, if any, of a cursor.
  *
@@ -172,12 +138,53 @@ enum CXChildVisitResult getFirstChild_visitor( CXCursor cursor,
   return CXChildVisit_Break;
 }
 
+/**
+ * Given a cursor at a local name of an enumeration, class, class data member,
+ * class member function, structure, union, or namespace, gets the fully scoped
+ * name skipping inline namespaces.
+ *
+ * @param cursor The cursor at a symbol.
+ * @param sbuf The strbuf to use.
+ */
+static void getScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
+  assert( sbuf != NULL );
+
+  CXCursor parent_cursor = cursor;
+  do {
+    parent_cursor = clang_getCursorSemanticParent( parent_cursor );
+  } while ( clang_Cursor_isInlineNamespace( parent_cursor ) );
+
+  enum CXCursorKind const parent_kind = clang_getCursorKind( parent_cursor );
+
+  if ( !clang_isInvalid( parent_kind ) &&
+       parent_kind != CXCursor_TranslationUnit ) {
+    getScopedName_impl( parent_cursor, sbuf );
+  }
+
+  CXString const name_cxs = clang_getCursorSpelling( cursor );
+  char const *const name = null_if_empty( clang_getCString( name_cxs ) );
+  // Skip "(anonymous ...)" and "(unnamed ...)".
+  if ( name != NULL && name[0] != '(' ) {
+    if ( sbuf->len > 0 )
+      strbuf_putsn( sbuf, "::", STRLITLEN( "::" ) );
+    strbuf_puts( sbuf, name );
+  }
+  clang_disposeString( name_cxs );
+}
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 CXCursor tidy_Cursor_getFirstChild( CXCursor cursor ) {
   CXCursor first_cursor = clang_getNullCursor();
   clang_visitChildren( cursor, &getFirstChild_visitor, &first_cursor );
   return first_cursor;
+}
+
+char const* tidy_Cursor_getScopedName( CXCursor cursor ) {
+  strbuf_t sbuf;
+  strbuf_init( &sbuf );
+  getScopedName_impl( cursor, &sbuf );
+  return strbuf_take( &sbuf );
 }
 
 CXCursor tidy_Cursor_getUnderlying( CXCursor cursor ) {
@@ -330,13 +337,6 @@ CXFile tidy_getCursorLocation_File( CXCursor cursor ) {
   }
 
   return file;
-}
-
-char const* tidy_getCursorScopedName( CXCursor cursor ) {
-  strbuf_t sbuf;
-  strbuf_init( &sbuf );
-  getCursorScopedName_impl( cursor, &sbuf );
-  return strbuf_take( &sbuf );
 }
 
 CXFile tidy_getFileLocation_File( CXSourceLocation loc ) {

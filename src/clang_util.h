@@ -59,6 +59,18 @@ NODISCARD
 CXCursor tidy_Cursor_getFirstChild( CXCursor cursor );
 
 /**
+ * Given a cursor at a local name of an enumeration, class, class data member,
+ * class member function, structure, union, or namespace, gets its fully scoped
+ * name.
+ *
+ * @param cursor The cursor for a symbol.
+ * @return Returns the fully scoped name.  The caller is responsible for
+ * freeing it.
+ */
+NODISCARD
+char const* tidy_Cursor_getScopedName( CXCursor cursor );
+
+/**
  * Gets the "underlying" cursor for \a cursor, if any.
  *
  * @remarks
@@ -228,18 +240,6 @@ CXSourceRange tidy_getCursorExtent( CXCursor cursor );
  */
 NODISCARD
 CXFile tidy_getCursorLocation_File( CXCursor cursor );
-
-/**
- * Given a cursor at a local name of an enumeration, class, class data member,
- * class member function, structure, union, or namespace, gets its fully scoped
- * name.
- *
- * @param cursor The cursor for a symbol.
- * @return Returns the fully scoped name.  The caller is responsible for
- * freeing it.
- */
-NODISCARD
-char const* tidy_getCursorScopedName( CXCursor cursor );
 
 /**
  * Calls `clang_getFileLocation()` and returns the `CXFile`.
