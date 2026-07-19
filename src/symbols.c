@@ -647,8 +647,10 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   if ( type.kind != CXType_Record )     // class, struct, or union
     return;
   CXCursor const type_cursor = clang_getTypeDeclaration( type );
+  if ( tidy_Cursor_isInvalid( type_cursor ) )
+    return;
   CXCursor const def_cursor = clang_getCursorDefinition( type_cursor );
-  if ( clang_Cursor_isNull( def_cursor ) )
+  if ( tidy_Cursor_isInvalid( def_cursor ) )
     return;
   if ( tidy_Cursor_isBeforeInTranslationUnit( def_cursor, dec_cursor ) )
     return;
