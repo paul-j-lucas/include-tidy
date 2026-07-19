@@ -639,27 +639,18 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   // Now we have to determine whether the definition of a symbol is also
   // necessary in addition to its declaration.
 
-  CXCursor def_cursor;
-
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
-  switch ( kind ) {
-    case CXCursor_TypeRef:;
-      CXType type = clang_getCursorType( parent );
-      type = clang_getCanonicalType( type );
-      if ( type.kind != CXType_Record ) // class, struct, or union
-        return;
-      CXCursor const type_cursor = clang_getTypeDeclaration( type );
-      def_cursor = clang_getCursorDefinition( type_cursor );
-      if ( clang_Cursor_isNull( def_cursor ) )
-        return;
-      if ( tidy_Cursor_isBeforeInTranslationUnit( def_cursor, dec_cursor ) )
-        return;
-      break;
-    default:
-      return;
-  } // swich
+  if ( kind != CXCursor_TypeRef )
+    return;
 
+  CXType const type = clang_getCanonicalType( clang_getCursorType( parent ) );
+  if ( type.kind != CXType_Record )     // class, struct, or union
+    return;
+  CXCursor const type_cursor = clang_getTypeDeclaration( type );
+  CXCursor const def_cursor = clang_getCursorDefinition( type_cursor );
   if ( clang_Cursor_isNull( def_cursor ) )
+    return;
+  if ( tidy_Cursor_isBeforeInTranslationUnit( def_cursor, dec_cursor ) )
     return;
   if ( clang_equalCursors( def_cursor, dec_cursor ) )
     return;
