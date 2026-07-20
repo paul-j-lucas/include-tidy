@@ -503,13 +503,13 @@ static void visit_CallExpr( CXCursor call_cursor, CXCursor parent,
   (void)parent;
 
   CXCursor const child_cursor = tidy_Cursor_getFirstChild( call_cursor );
-  enum CXCursorKind const child_kind = clang_getCursorKind( child_cursor );
-  switch ( child_kind ) {
-    case CXCursor_MemberRefExpr:
+  if ( !tidy_Cursor_isInvalid( child_cursor ) ) {
+    enum CXCursorKind const child_kind = clang_getCursorKind( child_cursor );
+    if ( child_kind == CXCursor_MemberRefExpr )
       return;
-    default:
-      visit_most_kinds( call_cursor, parent, sivd );
-  } // switch
+  }
+
+  visit_most_kinds( call_cursor, parent, sivd );
 }
 
 /**
