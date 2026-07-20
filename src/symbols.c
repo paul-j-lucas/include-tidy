@@ -393,9 +393,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
         visit_CallExpr( cursor, parent, sivd );
         break;
 
-      case CXCursor_Constructor:
       case CXCursor_DeclRefExpr:
-      case CXCursor_Destructor:
       case CXCursor_FunctionDecl:
       case CXCursor_MacroExpansion:
       case CXCursor_TemplateRef:
