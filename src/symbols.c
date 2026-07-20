@@ -305,6 +305,26 @@ static void maybe_add_symbol( CXCursor sym_cursor,
                               symbols_init_visitor_data *sivd ) {
   assert( sivd != NULL );
 
+  enum CXCursorKind const kind = clang_getCursorKind( sym_cursor );
+  switch ( kind ) {
+    case CXCursor_Constructor:
+    case CXCursor_Destructor:
+      //
+      // Even though the switch in symbols_init_visitor() doesn't include cases
+      // for these, the referenced cursor obtained in visit_most_kinds() may
+      // turn out to be either of these.
+      //
+      // However, adding the symbol for either of these doesn't add anything of
+      // value since the file being tidied has to include the declaration for
+      // the type anyway to call either the constructor or destructor on.
+      //
+      // Therefore, skip them.
+      //
+      return;
+    default:
+      /* suppress warning */;
+  } // switch
+
   CXFile const sym_file = tidy_getCursorLocation_File( sym_cursor );
   if ( sym_file == NULL )
     return;
