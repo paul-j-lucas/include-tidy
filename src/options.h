@@ -32,6 +32,7 @@
 #include "color.h"
 
 // standard
+#include <limits.h>                     /* for PATH_MAX */
 #include <stdbool.h>
 
 /**
@@ -162,6 +163,17 @@ bool opt_error_parse( char const *s );
  * @param include_path The include path to add.
  */
 void opt_include_paths_add( char const *include_path );
+
+/**
+ * Attempts to find \a rel_path among the include paths.
+ *
+ * @param rel_path The relative path to find.
+ * @param abs_path If found, the absolute path of \a rel_path is copied here.
+ * @return Returns `true` only if \a rel_path is found.
+ */
+NODISCARD
+bool opt_include_paths_find( char const *rel_path,
+                             char abs_path[static PATH_MAX] );
 
 /**
  * Relativizes \a abs_path against one of the `-I` absolute paths.

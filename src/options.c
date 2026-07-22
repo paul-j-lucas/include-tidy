@@ -30,6 +30,7 @@
 #include "array.h"
 #include "color.h"
 #include "path_util.h"
+#include "strbuf.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -43,6 +44,7 @@
 #include <string.h>                     /* for str...() */
 #include <strings.h>                    /* for strcasecmp() */
 #include <sysexits.h>
+#include <unistd.h>                     /* for access() */
 
 /// @endcond
 
@@ -260,6 +262,32 @@ void opt_include_paths_add( char const *include_path ) {
       return;
   } // for
   *(char**)array_push_back( &opt_include_paths ) = check_strdup( include_path );
+}
+
+bool opt_include_paths_find( char const *rel_path,
+                             char abs_path[static PATH_MAX] ) {
+  assert( rel_path != NULL );
+  assert( path_is_relative( rel_path ) );
+
+  bool is_found = false;
+  strbuf_t sbuf;
+  strbuf_init( &sbuf );
+
+  for ( size_t i = 0; i < opt_include_paths.len; ++i ) {
+    char const *const *const ppath = array_at_nc( &opt_include_paths, i );
+    char const *const include_path_i = *ppath;
+    strbuf_puts( &sbuf, include_path_i );
+    strbuf_paths( &sbuf, rel_path );
+    if ( access( sbuf.str, F_OK ) == 0 ) {
+      strncpy_0( abs_path, sbuf.str, PATH_MAX );
+      is_found = true;
+      break;
+    }
+    strbuf_reset( &sbuf );
+  } // for
+
+  strbuf_cleanup( &sbuf );
+  return is_found;
 }
 
 char const* opt_include_paths_relativize( char const *abs_path ) {

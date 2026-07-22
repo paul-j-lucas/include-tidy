@@ -1124,20 +1124,12 @@ tidy_include* include_find_by_rel_path( char const *rel_path ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
-  rb_iterator_t iter;
-  size_t const  rel_path_len = strlen( rel_path );
-
-  rb_iterator_init( &iter, &tidy_include_set );
-  for ( tidy_include *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( !path_ends_with( include->abs_path, rel_path, rel_path_len ) )
-      continue;
-    for ( ; include->proxy != NULL; include = include->proxy ) {
-      if ( !path_ends_with( include->proxy->abs_path, rel_path, rel_path_len ) )
-        break;
-    } // for
-    return include;
-  } // for
+  char abs_path[ PATH_MAX ];
+  if ( opt_include_paths_find( rel_path, abs_path ) ) {
+    CXFile const file = clang_getFile( tidy_tu, abs_path );
+    if ( file != NULL )
+      return include_find_by_File( file );
+  }
 
   return NULL;
 }
