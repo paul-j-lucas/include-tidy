@@ -100,7 +100,8 @@ void trans_unit_check_for_errors( void ) {
 
   for ( unsigned i = 0; i < diag_count; ++i ) {
     CXDiagnostic const diag = clang_getDiagnostic( tidy_tu, i );
-    switch ( clang_getDiagnosticSeverity( diag ) ) {
+    enum CXDiagnosticSeverity const sev = clang_getDiagnosticSeverity( diag );
+    switch ( sev ) {
       case CXDiagnostic_Error:
       case CXDiagnostic_Fatal:
         ++error_count;
