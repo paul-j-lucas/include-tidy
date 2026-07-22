@@ -467,49 +467,54 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     case CXCursor_TypedefDecl:
       typedef_add( cursor );
       break;
+    case CXCursor_UnexposedExpr:
+      goto skip;
     default:
       /* suppress warning */;
   } // switch
 
-  if ( tidy_Cursor_isInFile( cursor, sivd->source_file ) ) {
-    if ( (opt_verbose & TIDY_VERBOSE_CURSORS) != 0 )
-      verbose_print_cursor( cursor );
-    switch ( kind ) {
-      case CXCursor_CallExpr:
-        visit_CallExpr( cursor, parent, sivd );
-        break;
+  if ( !tidy_Cursor_isInFile( cursor, sivd->source_file ) )
+    goto skip;
 
-      case CXCursor_DeclRefExpr:
-      case CXCursor_FunctionDecl:
-      case CXCursor_MacroExpansion:
-      case CXCursor_TemplateRef:
-      case CXCursor_TypeAliasDecl:
-      case CXCursor_TypedefDecl:
-      case CXCursor_TypeRef:
-        visit_most_kinds( cursor, parent, sivd );
-        break;
+  if ( (opt_verbose & TIDY_VERBOSE_CURSORS) != 0 )
+    verbose_print_cursor( cursor );
 
-      case CXCursor_FieldDecl:
-        visit_FieldDecl( cursor, parent, sivd );
-        break;
+  switch ( kind ) {
+    case CXCursor_CallExpr:
+      visit_CallExpr( cursor, parent, sivd );
+      break;
 
-      case CXCursor_MacroDefinition:
-        visit_MacroDefinition( cursor, parent, sivd );
-        break;
+    case CXCursor_DeclRefExpr:
+    case CXCursor_FunctionDecl:
+    case CXCursor_MacroExpansion:
+    case CXCursor_TemplateRef:
+    case CXCursor_TypeAliasDecl:
+    case CXCursor_TypedefDecl:
+    case CXCursor_TypeRef:
+      visit_most_kinds( cursor, parent, sivd );
+      break;
 
-      case CXCursor_MemberRefExpr:
-        visit_MemberRefExpr( cursor, parent, sivd );
-        break;
+    case CXCursor_FieldDecl:
+      visit_FieldDecl( cursor, parent, sivd );
+      break;
 
-      case CXCursor_OverloadedDeclRef:
-        visit_OverloadedDeclRef( cursor, parent, sivd );
-        break;
+    case CXCursor_MacroDefinition:
+      visit_MacroDefinition( cursor, parent, sivd );
+      break;
 
-      default:
-        /* suppress warning */;
-    } // switch
-  }
+    case CXCursor_MemberRefExpr:
+      visit_MemberRefExpr( cursor, parent, sivd );
+      break;
 
+    case CXCursor_OverloadedDeclRef:
+      visit_OverloadedDeclRef( cursor, parent, sivd );
+      break;
+
+    default:
+      /* suppress warning */;
+  } // switch
+
+skip:
   return CXChildVisit_Recurse;
 }
 
