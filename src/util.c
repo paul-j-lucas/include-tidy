@@ -173,7 +173,7 @@ void perror_exit( int status ) {
   exit( status );
 }
 
-char const* strchr_null( char const *s, int c ) {
+char const* strchr_nul( char const *s, int c ) {
   assert( s != NULL );
   while ( *s != '\0' && *s != (char)c )
     ++s;

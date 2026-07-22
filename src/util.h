@@ -1012,12 +1012,12 @@ inline size_t round_up_pow_2( size_t n, size_t multiple ) {
  * terminating null byte in \a s if \c is not in \a s.
  */
 NODISCARD
-char const* strchr_null( char const *s, int c );
+char const* strchr_nul( char const *s, int c );
 
 /// @cond DOXYGEN_IGNORE
 NODISCARD
-inline char* nonconst_strchr_null( char *s, int c ) {
-  return CONST_CAST( char*, strchr_null( s, c ) );
+inline char* nonconst_strchr_nul( char *s, int c ) {
+  return CONST_CAST( char*, strchr_nul( s, c ) );
 }
 
 #define null_if_empty(S)          NONCONST_OVERLOAD( null_if_empty, (S) )
