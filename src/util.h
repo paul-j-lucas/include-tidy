@@ -1003,6 +1003,27 @@ inline size_t round_up_pow_2( size_t n, size_t multiple ) {
 #endif /* NEED_II_MATRIX */
 
 /**
+ * A variant of **strchr**(3) that returns a pointer to the terminating `\0`
+ * instead of NULL if \a c is not in \a s.
+ *
+ * @param s The string to find \a c in.
+ * @param c The character to find.
+ * @return Returns a pointer to the first occurrence of \a c in \a s or to the
+ * terminating null byte in \a s if \c is not in \a s.
+ */
+NODISCARD
+char const* strchr_null( char const *s, int c );
+
+/// @cond DOXYGEN_IGNORE
+NODISCARD
+inline char* nonconst_strchr_null( char *s, int c ) {
+  return CONST_CAST( char*, strchr_null( s, c ) );
+}
+
+#define null_if_empty(S)          NONCONST_OVERLOAD( null_if_empty, (S) )
+/// @endcond
+
+/**
  * A variant of **strncpy**(3) that always null-terminates \a dst.
  *
  * @param dst A pointer to receive the copy of \a src.  It _must_ be at least
