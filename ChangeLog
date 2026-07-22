@@ -1,5 +1,12 @@
+2026-07-22  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c: Fixed inserting of "-I.".
+
 2026-07-21  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c, options.c, options.h: Much better implementation of
+     include_find_by_rel_path().
+   * associated-header.out: Changed test result.
    * clang_util.c, clang_util.h, symbols.c: Now keeping track of type alias
      declarations.
 
