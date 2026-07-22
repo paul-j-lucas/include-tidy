@@ -1006,6 +1006,9 @@ inline size_t round_up_pow_2( size_t n, size_t multiple ) {
  * A variant of **strchr**(3) that returns a pointer to the terminating `\0`
  * instead of NULL if \a c is not in \a s.
  *
+ * @remarks There is a **strchrnul**(3) function in GNU libc, but it's non-
+ * standard.
+ *
  * @param s The string to find \a c in.
  * @param c The character to find.
  * @return Returns a pointer to the first occurrence of \a c in \a s or to the
