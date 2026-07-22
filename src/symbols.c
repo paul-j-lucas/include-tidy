@@ -56,6 +56,7 @@
 ////////// typedefs ///////////////////////////////////////////////////////////
 
 typedef struct symbols_init_visitor_data  symbols_init_visitor_data;
+typedef struct tidy_typedef               tidy_typedef;
 
 ////////// structs ////////////////////////////////////////////////////////////
 
@@ -67,12 +68,58 @@ struct symbols_init_visitor_data {
   bool    verbose_printed;              ///< Printed any verbose output?
 };
 
+/**
+ * Maps a cursor for either a `TypedefDecl` or a `TypeAliasDecl` to its scoped
+ * alias name.
+ *
+ * @remarks
+ * @parblock
+ * It's necessary to keep a map of cursors for type aliases to their "pretty"
+ * scoped alias names.
+ * @endparblock
+ *
+ * @par Example
+ * @parblock
+ * Given:
+ *
+ *      namespace std {
+ *        // ...
+ *        using ostream = basic_ostream<char>;
+ *        // ...
+ *      }
+ *
+ * the \ref type_cursor is the entire `using` declaration and \ref alias_name
+ * is `"std::ostream"`.  This mapping is needed to include the "pretty" names
+ * in include comments.
+ *
+ * If the file being tidied uses `std::ostream` like:
+ *
+ *      void f( std::ostream& );
+ *
+ * then the symbol in the comment
+ * will be `std::ostream` and not `std::basic_ostream`:
+ *
+ *      #include <ostream>              // std::ostream
+ *
+ * @endparblock
+ */
+struct tidy_typedef {
+  CXCursor    type_cursor;              ///< `TypedefDecl` or `TypeAliasDecl`.
+  char const *alias_name;               ///< Scoped alias name.
+};
+
 ////////// local functions ////////////////////////////////////////////////////
 
 NODISCARD
 static unsigned get_next_token_index( CXToken const[], unsigned, unsigned );
 
 static void     tidy_symbol_cleanup( tidy_symbol* );
+static void     tidy_typedef_cleanup( tidy_typedef* );
+static void     typedef_add( CXCursor );
+
+NODISCARD
+static tidy_typedef const* typedef_find( CXCursor );
+
 static void     visit_CallExpr( CXCursor, CXCursor,
                                 symbols_init_visitor_data* );
 static void     visit_FieldDecl( CXCursor, CXCursor,
@@ -89,6 +136,7 @@ static void     visit_OverloadedDeclRef( CXCursor, CXCursor,
 ////////// local variables ////////////////////////////////////////////////////
 
 static rb_tree_t symbol_set;            ///< Set of symbols.
+static rb_tree_t typedef_map;           ///< Map of typedefs.
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -247,7 +295,7 @@ static unsigned macro_get_params( CXToken const tokens[static 2],
 }
 
 /**
- * For a macro, gets the cursor for the fully qualified symbol from \a tokens.
+ * For a macro, gets the cursor for the scoped symbol from \a tokens.
  *
  * @remarks This is a variant of tidy_Token_getScopedNameCursor(), but for a
  * macro that additionally takes \a param_set.
@@ -298,10 +346,11 @@ static CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
  * Helper function for symbols_init_visitor that maybe adds a symbol to the
  * global set.
  *
+ * @param name_cursor The cursor to use for the name of the symbol.
  * @param sym_cursor The cursor for the symbol.
  * @param sivd The symbols_init_visitor_data to use.
  */
-static void maybe_add_symbol( CXCursor sym_cursor,
+static void maybe_add_symbol( CXCursor name_cursor, CXCursor sym_cursor,
                               symbols_init_visitor_data *sivd ) {
   assert( sivd != NULL );
 
@@ -334,9 +383,12 @@ static void maybe_add_symbol( CXCursor sym_cursor,
   if ( clang_File_isEqual( sym_file, sivd->source_file ) )
     return;
 
-  tidy_symbol new_sym = {
-    .name = tidy_Cursor_getScopedName( sym_cursor )
-  };
+  tidy_typedef const *const found_tdef = typedef_find( sym_cursor );
+  char const *const name = found_tdef != NULL ?
+    check_strdup( found_tdef->alias_name ) :
+    tidy_Cursor_getScopedName( name_cursor );
+
+  tidy_symbol new_sym = { .name = name };
   if ( config_ignore_symbol( new_sym.name ) )
     goto skip;
 
@@ -344,14 +396,15 @@ static void maybe_add_symbol( CXCursor sym_cursor,
     rb_tree_insert( &symbol_set, &new_sym, sizeof new_sym );
   tidy_symbol *const sym = RB_DINT( rv_rbi.node );
   ++sym->ref_count;
-  if ( !rv_rbi.inserted )
-    goto skip;
 
   CXFile include_file = config_get_symbol_include( sym->name );
   if ( include_file == NULL )
     include_file = sym_file;
   tidy_include const *const include_added_to =
     include_add_symbol( include_file, sym );
+
+  if ( !rv_rbi.inserted )
+    goto skip;
 
   if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
     if ( false_set( &sivd->verbose_printed ) )
@@ -388,6 +441,9 @@ static void symbols_cleanup( void ) {
   rb_tree_cleanup(
     &symbol_set, POINTER_CAST( rb_free_fn_t, &tidy_symbol_cleanup )
   );
+  rb_tree_cleanup(
+    &typedef_map, POINTER_CAST( rb_free_fn_t, &tidy_typedef_cleanup )
+  );
 }
 
 /**
@@ -405,10 +461,19 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   assert( data != NULL );
   symbols_init_visitor_data *const sivd = data;
 
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  switch ( kind ) {
+    case CXCursor_TypeAliasDecl:
+    case CXCursor_TypedefDecl:
+      typedef_add( cursor );
+      break;
+    default:
+      /* suppress warning */;
+  } // switch
+
   if ( tidy_Cursor_isInFile( cursor, sivd->source_file ) ) {
     if ( (opt_verbose & TIDY_VERBOSE_CURSORS) != 0 )
       verbose_print_cursor( cursor );
-    enum CXCursorKind const kind = clang_getCursorKind( cursor );
     switch ( kind ) {
       case CXCursor_CallExpr:
         visit_CallExpr( cursor, parent, sivd );
@@ -418,6 +483,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       case CXCursor_FunctionDecl:
       case CXCursor_MacroExpansion:
       case CXCursor_TemplateRef:
+      case CXCursor_TypeAliasDecl:
       case CXCursor_TypedefDecl:
       case CXCursor_TypeRef:
         visit_most_kinds( cursor, parent, sivd );
@@ -459,7 +525,7 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
 }
 
 /**
- * Gets the cursor for the fully qualified symbol from \a tokens.
+ * Gets the cursor for the scoped symbol from \a tokens.
  *
  * @param tokens The array of macro tokens.
  * @param token_count The length of \a tokens.
@@ -497,6 +563,100 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
   } // while
 
   return rv_cursor;
+}
+
+/**
+ * Cleans-up a tidy_typedef.
+ *
+ * @param tdef The tidy_typedef to clean up.  If NULL, does nothing.
+ */
+static void tidy_typedef_cleanup( tidy_typedef *tdef ) {
+  if ( tdef == NULL )
+    return;
+  FREE( tdef->alias_name );
+}
+
+/**
+ * Compares two tidy_typedef objects.
+ *
+ * @param i_tdef The first tidy_typedef.
+ * @param j_tdef The second tidy_typedef.
+ * @return Returns a number less than 0, 0, or greater than 0 if \a i_tdef is
+ * less than, equal to, or greater than \a j_tdef, respectively.
+ */
+NODISCARD
+static int tidy_typedef_cmp( tidy_typedef const *i_tdef,
+                             tidy_typedef const *j_tdef ) {
+  assert( i_tdef != NULL );
+  assert( j_tdef != NULL );
+  return tidy_Cursor_Compare( i_tdef->type_cursor, j_tdef->type_cursor );
+}
+
+/**
+ * Adds either a `TypedefDecl` or `TypeAliasDecl` to a global map where \a
+ * cursor is the key and its scoped alias name is its value.
+ *
+ * @param cursor The type cursor to add.
+ *
+ * @sa typedef_find()
+ */
+static void typedef_add( CXCursor cursor ) {
+  CXType const type = clang_getTypedefDeclUnderlyingType( cursor );
+  CXType const canonical_type = clang_getCanonicalType( type );
+  CXCursor const type_cursor = clang_getTypeDeclaration( canonical_type );
+
+  if ( tidy_Cursor_isInvalid( type_cursor ) )
+    return;
+
+  CXString const    alias_name_cxs = clang_getCursorSpelling( cursor );
+  char const *const alias_name = clang_getCString( alias_name_cxs );
+  CXString const    type_name_cxs = clang_getCursorSpelling( type_cursor );
+  char const *const type_name = clang_getCString( type_name_cxs );
+
+  //
+  // There can be declarations like:
+  //
+  //      using reverse_iterator = std::reverse_iterator<iterator>;
+  //
+  // i.e., the alias name is the same as the type name.  There's no point in
+  // mapping these.
+  //
+  bool const is_same =
+    (alias_name == NULL && type_name == NULL) ||
+    (alias_name != NULL && type_name != NULL &&
+     strcmp( alias_name, type_name ) == 0);
+
+  clang_disposeString( alias_name_cxs );
+  clang_disposeString( type_name_cxs );
+
+  if ( is_same )
+    return;
+
+  tidy_typedef new_tdef = { .type_cursor = type_cursor };
+  rb_insert_rv_t const rv_rbi =
+    rb_tree_insert( &typedef_map, &new_tdef, sizeof new_tdef );
+  tidy_typedef *const tdef = RB_DINT( rv_rbi.node );
+  //
+  // We intentionally don't check rv_rbi.inserted because we want to allow
+  // later typedefs to replace earlier ones.
+  //
+  FREE( tdef->alias_name );
+  tdef->alias_name = tidy_Cursor_getScopedName( cursor );
+}
+
+/**
+ * Attempts to find the type \a cursor in the global map of typedefs.
+ *
+ * @param cursor The type cursor to find.
+ * @return Returns a pointer to the corresponding tidy_typedef or NULL if not
+ * found.
+ *
+ * @sa typedef_add()
+ */
+static tidy_typedef const* typedef_find( CXCursor cursor ) {
+  tidy_typedef const find_tdef = { .type_cursor = cursor };
+  rb_node_t const *const found_rb = rb_tree_find( &typedef_map, &find_tdef );
+  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }
 
 /**
@@ -576,7 +736,7 @@ static void visit_FieldDecl( CXCursor field_cursor, CXCursor parent,
     CXCursor const sym_cursor =
       tidy_Token_getScopedNameCursor( tokens, token_count, &i, scope_cursor );
     if ( !tidy_Cursor_isInvalid( sym_cursor ) )
-      maybe_add_symbol( sym_cursor, sivd );
+      maybe_add_symbol( sym_cursor, sym_cursor, sivd );
   } // for
 
   clang_disposeTokens( tidy_tu, tokens, token_count );
@@ -630,7 +790,7 @@ static void visit_MacroDefinition( CXCursor macro_cursor, CXCursor parent,
     CXCursor const sym_cursor =
       macro_Token_getScopedNameCursor( tokens, token_count, &i, &param_set );
     if ( !tidy_Cursor_isInvalid( sym_cursor ) )
-      maybe_add_symbol( sym_cursor, sivd );
+      maybe_add_symbol( sym_cursor, sym_cursor, sivd );
   } // for
 
   rb_tree_cleanup( &param_set, /*free_fn=*/NULL );
@@ -653,7 +813,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   if ( tidy_Cursor_isInvalid( dec_cursor ) )
     return;
 
-  maybe_add_symbol( dec_cursor, sivd );
+  maybe_add_symbol( dec_cursor, dec_cursor, sivd );
 
   // Now we have to determine whether the definition of a symbol is also
   // necessary in addition to its declaration.
@@ -676,7 +836,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   if ( clang_equalCursors( def_cursor, dec_cursor ) )
     return;
 
-  maybe_add_symbol( def_cursor, sivd );
+  maybe_add_symbol( dec_cursor, def_cursor, sivd );
 }
 
 /**
@@ -735,7 +895,7 @@ static void visit_OverloadedDeclRef( CXCursor overloaded_cursor,
     dec_cursor = clang_getCanonicalCursor( dec_cursor );
     if ( tidy_Cursor_isInvalid( dec_cursor ) )
       continue;
-    maybe_add_symbol( dec_cursor, sivd );
+    maybe_add_symbol( dec_cursor, dec_cursor, sivd );
     //
     // It's possible that different overloads will be declared in different
     // headers.  But for now, we stop after the first overload.
@@ -750,6 +910,9 @@ void symbols_init( void ) {
   ASSERT_RUN_ONCE();
   rb_tree_init(
     &symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
+  );
+  rb_tree_init(
+    &typedef_map, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_typedef_cmp )
   );
   ATEXIT( &symbols_cleanup );
 

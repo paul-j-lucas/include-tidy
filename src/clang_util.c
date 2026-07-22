@@ -37,6 +37,7 @@
 // standard
 #include <assert.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
 /// @endcond
@@ -173,6 +174,33 @@ static void getScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
+
+int tidy_Cursor_Compare( CXCursor i_cursor, CXCursor j_cursor ) {
+  if ( i_cursor.kind < j_cursor.kind )
+    return -1;
+  if ( i_cursor.kind > j_cursor.kind )
+    return 1;
+
+  if ( i_cursor.xdata < j_cursor.xdata )
+    return -1;
+  if ( i_cursor.xdata > j_cursor.xdata )
+    return 1;
+
+  // See <https://github.com/llvm/llvm-project/blob/4f5675a0500f9ccc60dcbabb57e1c4dc88c40a84/clang/tools/libclang/CIndex.cpp#L6706>.
+  if ( clang_isDeclaration( i_cursor.kind ) )
+    i_cursor.data[1] = j_cursor.data[1] = NULL;
+
+  for ( unsigned i = 0; i < ARRAY_SIZE( ((CXCursor*)0)->data ); ++i ) {
+    uintptr_t const i_uint = STATIC_CAST( uintptr_t, i_cursor.data[i] );
+    uintptr_t const j_uint = STATIC_CAST( uintptr_t, j_cursor.data[i] );
+    if ( i_uint < j_uint )
+      return -1;
+    if ( i_uint > j_uint )
+      return 1;
+  } // for
+
+  return 0;
+}
 
 CXCursor tidy_Cursor_getFirstChild( CXCursor cursor ) {
   CXCursor first_cursor = clang_getNullCursor();
