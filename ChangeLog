@@ -1,5 +1,11 @@
+2026-07-21  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c, clang_util.h, symbols.c: Now keeping track of type alias
+     declarations.
+
 2026-07-20  Paul J. Lucas <paul@lucasmail.org>
 
+   * symbols.c: Now also filtering out CXCursor_CXXMethod.
    * symbols.c: Now skipping constructors and destructors.
    * symbols.c: Added tidy_Cursor_isInvalid().
    * symbols.c: Removed CXCursor_Constructor & CXCursor_Destructor.
