@@ -1,5 +1,5 @@
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --all-includes -Xtidy --config=associated-header.toml associated-header.c
 #include "z-associated-header.h"        // associated_int
-#include "c_type.h"                     // c_type
+#include "c_type.h"                     // c_type_t
 #include "types.h"                      // c_type_t
 
