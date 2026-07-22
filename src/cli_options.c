@@ -966,9 +966,12 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   //   option because that has priority over whatever language is indicated by
   //   the source file's extension.
   //
-  // + We have to call clang to get the list of include paths it uses and
-  //   insert `-isystem` options for them for libclang since it doesn't start
-  //   out with any include paths.
+  // + We have to add -I. manually since libclang doesn't start out with any
+  //   include paths.
+  //
+  // + We have to call clang to get the list of system include paths it uses
+  //   and insert `-isystem` options for them since, again, libclang doesn't
+  //   start out with any include paths.
 
   tidy_source_path = get_source_path( *pargc, *pargv );
   char const *const clang_path = get_clang_path( *pargc, *pargv );
@@ -977,12 +980,9 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   char const *source_lang = get_x_language( *pargc, *pargv );
   if ( source_lang == NULL && source_ext != NULL )
     source_lang = get_ext_language( source_ext );
+  insert_argv( pargc, pargv, 1, 1, (char const *const []){ "-I." } );
   if ( clang_path != NULL && source_lang != NULL )
     add_clang_include_paths( pargc, pargv, clang_path, source_lang );
-
-  // So #include "/path/to/current/directory/foo.h" will get relativized to
-  // "foo.h".
-  opt_include_paths_add( "." );
 
   char const       *opt_directory = NULL;
   bool              opt_help = false;
