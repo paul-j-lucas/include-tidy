@@ -258,7 +258,8 @@ void opt_include_paths_add( char const *include_path ) {
 
   for ( size_t i = 0; i < opt_include_paths.len; ++i ) {
     char const *const *const ppath = array_at_nc( &opt_include_paths, i );
-    if ( strcmp( include_path, *ppath ) == 0 )
+    char const *const path = *ppath;
+    if ( strcmp( include_path, path ) == 0 )
       return;
   } // for
   *(char**)array_push_back( &opt_include_paths ) = check_strdup( include_path );
