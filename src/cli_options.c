@@ -966,12 +966,9 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   //   option because that has priority over whatever language is indicated by
   //   the source file's extension.
   //
-  // + We have to add -I. manually since libclang doesn't start out with any
-  //   include paths.
-  //
   // + We have to call clang to get the list of system include paths it uses
-  //   and insert `-isystem` options for them since, again, libclang doesn't
-  //   start out with any include paths.
+  //   and insert `-isystem` options for them since libclang doesn't start out
+  //   with any include paths.
 
   tidy_source_path = get_source_path( *pargc, *pargv );
   char const *const clang_path = get_clang_path( *pargc, *pargv );
@@ -980,7 +977,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   char const *source_lang = get_x_language( *pargc, *pargv );
   if ( source_lang == NULL && source_ext != NULL )
     source_lang = get_ext_language( source_ext );
-  insert_argv( pargc, pargv, 1, 1, (char const *const []){ "-I." } );
   if ( clang_path != NULL && source_lang != NULL )
     add_clang_include_paths( pargc, pargv, clang_path, source_lang );
 
@@ -1156,15 +1152,21 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       verbose_printf( "\n" );
   }
 
+  // We have to add -I. manually since libclang doesn't start out with any
+  // include paths.  We also have to do this after --help and --version have
+  // been checked.
+  insert_argv( pargc, pargv, 1, 1, (char const *const []){ "-I." } );
+
   // tmp_include_paths is needed because we have to defer calling
-  // opt_include_paths_add() until after chrdir() (if at all).
+  // opt_include_paths_add() until after chdir() (if called).
+  opt_include_paths_add( "." );
   for ( size_t i = 0; i < tmp_include_paths.len; ++i ) {
     char const *const *const ppath = array_at_nc( &tmp_include_paths, i );
     opt_include_paths_add( *ppath );
   } // for
   array_cleanup( &tmp_include_paths, /*free_fn=*/NULL );
 
-  // We have do do this after --help and --version have been checked.
+  // We have to do this after --help and --version have been checked.
   char const *const CLANG_ARGS[] = {
     "-D__include_tidy__",
     "-Qunused-arguments",
