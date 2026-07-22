@@ -1,5 +1,8 @@
 2026-07-22  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c, util.c, util.h: Now using clang_getCursorDisplayName();
+     added strchr_null().
+   * cli_options.c: Fixed fix of inserting "-I.".
    * cli_options.c: Fixed inserting of "-I.".
 
 2026-07-21  Paul J. Lucas <paul@lucasmail.org>
