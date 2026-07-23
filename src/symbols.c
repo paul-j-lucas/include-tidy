@@ -384,7 +384,7 @@ static void maybe_add_symbol( CXCursor name_cursor, CXCursor sym_cursor,
     return;
 
   tidy_typedef const *const found_tdef = typedef_find( sym_cursor );
-  char const *const name = found_tdef != NULL ?
+  char *const name = found_tdef != NULL ?
     check_strdup( found_tdef->alias_name ) :
     tidy_Cursor_getScopedName( name_cursor );
 

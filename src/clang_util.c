@@ -211,7 +211,7 @@ CXCursor tidy_Cursor_getFirstChild( CXCursor cursor ) {
   return first_cursor;
 }
 
-char const* tidy_Cursor_getScopedName( CXCursor cursor ) {
+char* tidy_Cursor_getScopedName( CXCursor cursor ) {
   CXCursor const ref_cursor = clang_getCursorReferenced( cursor );
   if ( !tidy_Cursor_isInvalid( ref_cursor ) )
     cursor = ref_cursor;

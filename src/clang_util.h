@@ -83,7 +83,7 @@ CXCursor tidy_Cursor_getFirstChild( CXCursor cursor );
  * freeing it.
  */
 NODISCARD
-char const* tidy_Cursor_getScopedName( CXCursor cursor );
+char* tidy_Cursor_getScopedName( CXCursor cursor );
 
 /**
  * Gets whether \a i_cursor is before \a j_cursor in the translation unit.
