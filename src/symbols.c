@@ -862,17 +862,8 @@ static void visit_MemberRefExpr( CXCursor member_ref_cursor, CXCursor parent,
     return;
 
   CXCursor const parent_cursor = clang_getCursorSemanticParent( dec_cursor );
-  enum CXCursorKind const parent_kind = clang_getCursorKind( parent_cursor );
-  switch ( parent_kind ) {
-    case CXCursor_ClassDecl:
-    case CXCursor_ClassTemplate:
-    case CXCursor_StructDecl:
-    case CXCursor_UnionDecl:
-      break;
-    default:
-      visit_most_kinds( member_ref_cursor, parent_cursor, sivd );
-      break;
-  } // switch
+  if ( !tidy_Cursor_isClassDecl( parent_cursor ) )
+    visit_most_kinds( member_ref_cursor, parent_cursor, sivd );
 }
 
 /**

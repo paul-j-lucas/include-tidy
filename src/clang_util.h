@@ -98,6 +98,17 @@ bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_cursor,
                                             CXCursor j_cursor );
 
 /**
+ * Gets whether \a cursor is a class, class template, structure, or union
+ * declaration.
+ *
+ * @param cursor The cursor to check.
+ * @return Returns `true` only if \a cursor is a class, class template,
+ * structure, or union declaration.
+ */
+NODISCARD
+bool tidy_Cursor_isClassDecl( CXCursor cursor );
+
+/**
  * Gets whether \a cursor is referenced from \a file.
  *
  * @param cursor The cursor to use.
