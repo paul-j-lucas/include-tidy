@@ -212,6 +212,10 @@ CXCursor tidy_Cursor_getFirstChild( CXCursor cursor ) {
 }
 
 char const* tidy_Cursor_getScopedName( CXCursor cursor ) {
+  CXCursor const ref_cursor = clang_getCursorReferenced( cursor );
+  if ( !tidy_Cursor_isInvalid( ref_cursor ) )
+    cursor = ref_cursor;
+
   strbuf_t sbuf;
   strbuf_init( &sbuf );
   getScopedName_impl( cursor, &sbuf );
