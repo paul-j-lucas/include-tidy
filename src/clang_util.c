@@ -155,12 +155,8 @@ static void getScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
     parent_cursor = clang_getCursorSemanticParent( parent_cursor );
   } while ( clang_Cursor_isInlineNamespace( parent_cursor ) );
 
-  enum CXCursorKind const parent_kind = clang_getCursorKind( parent_cursor );
-
-  if ( !clang_isInvalid( parent_kind ) &&
-       parent_kind != CXCursor_TranslationUnit ) {
+  if ( tidy_Cursor_isScopeDecl( parent_cursor ) )
     getScopedName_impl( parent_cursor, sbuf );
-  }
 
   CXString const name_cxs = clang_getCursorDisplayName( cursor );
   char const *const name = null_if_empty( clang_getCString( name_cxs ) );
@@ -237,6 +233,22 @@ bool tidy_Cursor_isClassDecl( CXCursor cursor ) {
     case CXCursor_ClassDecl:
     case CXCursor_StructDecl:
     case CXCursor_ClassTemplate:
+    case CXCursor_UnionDecl:
+      return true;
+    default:
+      return false;
+  } // switch
+}
+
+bool tidy_Cursor_isScopeDecl( CXCursor cursor ) {
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  switch ( kind ) {
+    case CXCursor_ClassDecl:
+    case CXCursor_ClassTemplate:
+    case CXCursor_ClassTemplatePartialSpecialization:
+    case CXCursor_EnumDecl:
+    case CXCursor_Namespace:
+    case CXCursor_StructDecl:
     case CXCursor_UnionDecl:
       return true;
     default:

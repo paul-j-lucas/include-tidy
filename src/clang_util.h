@@ -104,6 +104,8 @@ bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_cursor,
  * @param cursor The cursor to check.
  * @return Returns `true` only if \a cursor is a class, class template,
  * structure, or union declaration.
+ *
+ * @sa tidy_Cursor_isScopeDecl()
  */
 NODISCARD
 bool tidy_Cursor_isClassDecl( CXCursor cursor );
@@ -126,6 +128,19 @@ bool tidy_Cursor_isInFile( CXCursor cursor, CXFile file );
  */
 NODISCARD
 bool tidy_Cursor_isInvalid( CXCursor cursor );
+
+/**
+ * Gets whether \a cursor is a class, class template, enumeration, namespace,
+ * structure, or union declaration.
+ *
+ * @param cursor The cursor to check.
+ * @return Returns `true` only if \a cursor is a class, class template,
+ * enumeration, namespace, structure, or union.
+ *
+ * @sa tidy_Cursor_isClassDecl()
+ */
+NODISCARD
+bool tidy_Cursor_isScopeDecl( CXCursor cursor );
 
 /**
  * Compares two CXFile objects by name.
