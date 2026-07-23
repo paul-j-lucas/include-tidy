@@ -289,18 +289,16 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor ) {
     .skip_cursor = clang_getNullCursor()
   };
 
-  while ( !clang_Cursor_isNull( scope_cursor ) ) {
+  while ( !tidy_Cursor_isInvalid( scope_cursor ) ) {
     clang_visitChildren( scope_cursor, &getCursorByName_visitor, &gcbnd );
     if ( !clang_Cursor_isNull( gcbnd.found_cursor ) )
       return gcbnd.found_cursor;
-    if ( clang_getCursorKind( scope_cursor ) == CXCursor_TranslationUnit )
+    enum CXCursorKind const kind = clang_getCursorKind( scope_cursor );
+    if ( kind == CXCursor_TranslationUnit )
       break;
-
     CXCursor const parent = clang_getCursorSemanticParent( scope_cursor );
-    if ( tidy_Cursor_isInvalid( parent ) ||
-         clang_equalCursors( parent, scope_cursor ) ) {
+    if ( clang_equalCursors( parent, scope_cursor ) )
       break;
-    }
 
     gcbnd.cpp_recurse_into_scope = true;
     gcbnd.skip_cursor = scope_cursor;
