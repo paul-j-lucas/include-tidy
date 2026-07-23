@@ -240,7 +240,7 @@ void verbose_print_cursor( CXCursor cursor ) {
 
   verbose_printf(
     "cursor: \"%s\" (%s, \"%s\":%u,%u)\n",
-    name, kind_cs, abs_path, line, col
+    name != NULL ? name : "n/a", kind_cs, abs_path, line, col
   );
 
   clang_disposeString( abs_path_cxs );
