@@ -1,5 +1,12 @@
 2026-07-22  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c, clang_util.h, print.c, symbols.c:
+     tidy_Cursor_getScopedNameI() now correctly returns non-const char*.
+   * print.c: Now using tidy_Cursor_getScopedName() in verbose_print_cursor().
+   * clang_util.c: Now calling clang_getCursorReferenced() in
+     tidy_Cursor_getScopedName().
+   * clang_util.c, clang_util.h, symbols.c: Added tidy_Cursor_isClassDecl().
+   * symbols.c: Now skipping CXCursor_UnexposedExpr.
    * clang_util.c, util.c, util.h: Now using clang_getCursorDisplayName();
      added strchr_null().
    * cli_options.c: Fixed fix of inserting "-I.".
