@@ -271,6 +271,9 @@ static bool tidy_Cursor_isInheritable( CXCursor cursor ) {
     case CXCursor_CXXMethod:
     case CXCursor_ConversionFunction:
     case CXCursor_FunctionTemplate:
+    // types
+    case CXCursor_TypeAliasDecl:
+    case CXCursor_TypedefDecl:
       return true;
     default:
       return false;
