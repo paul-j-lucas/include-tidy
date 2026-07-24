@@ -76,14 +76,30 @@ CXCursor tidy_Cursor_getFirstChild( CXCursor cursor );
 /**
  * Given a cursor at a local name of an enumeration, class, class data member,
  * class member function, structure, union, or namespace, gets its fully scoped
- * name.
+ * "display" name that includes template parameters (if any).
  *
  * @param cursor The cursor for a symbol.
  * @return Returns the fully scoped name.  The caller is responsible for
  * freeing it.
+ *
+ * @sa tidy_Cursor_getScopedSimpleName()
  */
 NODISCARD
-char* tidy_Cursor_getScopedName( CXCursor cursor );
+char* tidy_Cursor_getScopedDisplayName( CXCursor cursor );
+
+/**
+ * Given a cursor at a local name of an enumeration, class, class data member,
+ * class member function, structure, union, or namespace, gets its fully scoped
+ * "simple" name that does _not_ include template parameters (if any).
+ *
+ * @param cursor The cursor for a symbol.
+ * @return Returns the fully scoped name.  The caller is responsible for
+ * freeing it.
+ *
+ * @sa tidy_Cursor_getScopedDisplayName()
+ */
+NODISCARD
+char* tidy_Cursor_getScopedSimpleName( CXCursor cursor );
 
 /**
  * Gets whether \a i_cursor is before \a j_cursor in the translation unit.

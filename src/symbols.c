@@ -45,6 +45,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>                     /* for unreachable(3) */
+#include <stdlib.h>
 #include <string.h>
 
 /// @endcond
@@ -385,27 +386,31 @@ static void maybe_add_symbol( CXCursor name_cursor, CXCursor sym_cursor,
     return;
 
   tidy_typedef const *const found_tdef = typedef_find( sym_cursor );
-  char *const name = found_tdef != NULL ?
+  char *const simple_name = found_tdef != NULL ?
     check_strdup( found_tdef->alias_name ) :
-    tidy_Cursor_getScopedName( name_cursor );
+    tidy_Cursor_getScopedSimpleName( name_cursor );
 
-  tidy_symbol new_sym = { .name = name };
-  if ( config_ignore_symbol( new_sym.name ) )
-    goto skip;
+  if ( config_ignore_symbol( simple_name ) )
+    goto done;
 
+  tidy_symbol new_sym = {
+    .name = tidy_Cursor_getScopedDisplayName( name_cursor )
+  };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_set, &new_sym, sizeof new_sym );
   tidy_symbol *const sym = RB_DINT( rv_rbi.node );
   ++sym->ref_count;
 
-  CXFile include_file = config_get_symbol_include( sym->name );
+  CXFile include_file = config_get_symbol_include( simple_name );
   if ( include_file == NULL )
     include_file = sym_file;
   tidy_include const *const include_added_to =
     include_add_symbol( include_file, sym );
 
-  if ( !rv_rbi.inserted )
-    goto skip;
+  if ( !rv_rbi.inserted ) {
+    tidy_symbol_cleanup( &new_sym );
+    goto done;
+  }
 
   if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
     if ( false_set( &sivd->verbose_printed ) )
@@ -429,10 +434,8 @@ static void maybe_add_symbol( CXCursor name_cursor, CXCursor sym_cursor,
     }
   }
 
-  return;
-
-skip:
-  tidy_symbol_cleanup( &new_sym );
+done:
+  free( simple_name );
 }
 
 /**
@@ -643,7 +646,7 @@ static void typedef_add( CXCursor cursor ) {
     rb_tree_insert( &typedef_map, &new_tdef, sizeof new_tdef );
   if ( rv_rbi.inserted ) {
     tidy_typedef *const tdef = RB_DINT( rv_rbi.node );
-    tdef->alias_name = tidy_Cursor_getScopedName( cursor );
+    tdef->alias_name = tidy_Cursor_getScopedSimpleName( cursor );
   }
 }
 

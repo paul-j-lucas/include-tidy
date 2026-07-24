@@ -236,7 +236,7 @@ void verbose_print_cursor( CXCursor cursor ) {
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   CXString const          kind_cxs = clang_getCursorKindSpelling( kind );
   char const *const       kind_cs = clang_getCString( kind_cxs );
-  char       *const       name = tidy_Cursor_getScopedName( cursor );
+  char       *const       name = tidy_Cursor_getScopedDisplayName( cursor );
 
   verbose_printf(
     "cursor: \"%s\" (%s, \"%s\":%u,%u)\n",

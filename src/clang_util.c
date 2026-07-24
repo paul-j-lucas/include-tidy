@@ -49,8 +49,9 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-typedef struct getCursorByName_data getCursorByName_data;
-typedef struct isBaseClass_data     isBaseClass_data;
+typedef struct      getCursorByName_data getCursorByName_data;
+typedef CXString  (*getCursorName_fn)( CXCursor );
+typedef struct      isBaseClass_data     isBaseClass_data;
 
 ////////// structs ////////////////////////////////////////////////////////////
 
@@ -164,9 +165,12 @@ enum CXChildVisitResult getFirstChild_visitor( CXCursor cursor,
  * name skipping inline namespaces.
  *
  * @param cursor The cursor at a symbol.
+ * @param name_fn TODO.
  * @param sbuf The strbuf to use.
  */
-static void getScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
+static void getScopedName_impl( CXCursor cursor, getCursorName_fn name_fn,
+                                strbuf_t *sbuf ) {
+  assert( name_fn != NULL );
   assert( sbuf != NULL );
 
   CXCursor parent_cursor = cursor;
@@ -175,9 +179,9 @@ static void getScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
   } while ( clang_Cursor_isInlineNamespace( parent_cursor ) );
 
   if ( tidy_Cursor_isScopeDecl( parent_cursor ) )
-    getScopedName_impl( parent_cursor, sbuf );
+    getScopedName_impl( parent_cursor, name_fn, sbuf );
 
-  CXString const name_cxs = clang_getCursorDisplayName( cursor );
+  CXString const name_cxs = (*name_fn)( cursor );
   char const *const name = null_if_empty( clang_getCString( name_cxs ) );
   // Skip "(anonymous ...)" and "(unnamed ...)".
   if ( name != NULL && name[0] != '(' ) {
@@ -192,6 +196,26 @@ static void getScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
     strbuf_putsn( sbuf, name, name_len );
   }
   clang_disposeString( name_cxs );
+}
+
+/**
+ * Helper function for both tidy_Cursor_getScopedDisplayName() and
+ * tidy_Cursor_getScopedSimpleName().
+ *
+ * @param cursor The cursor at a symbol.
+ * @param name_fn The libclang function to use.
+ */
+static char* getScopedName_thunk( CXCursor cursor, getCursorName_fn name_fn ) {
+  assert( name_fn != NULL );
+
+  CXCursor const ref_cursor = clang_getCursorReferenced( cursor );
+  if ( !tidy_Cursor_isInvalid( ref_cursor ) )
+    cursor = ref_cursor;
+
+  strbuf_t sbuf;
+  strbuf_init( &sbuf );
+  getScopedName_impl( cursor, name_fn, &sbuf );
+  return strbuf_take( &sbuf );
 }
 
 /**
@@ -309,15 +333,12 @@ CXCursor tidy_Cursor_getFirstChild( CXCursor cursor ) {
   return first_cursor;
 }
 
-char* tidy_Cursor_getScopedName( CXCursor cursor ) {
-  CXCursor const ref_cursor = clang_getCursorReferenced( cursor );
-  if ( !tidy_Cursor_isInvalid( ref_cursor ) )
-    cursor = ref_cursor;
+char* tidy_Cursor_getScopedDisplayName( CXCursor cursor ) {
+  return getScopedName_thunk( cursor, &clang_getCursorDisplayName );
+}
 
-  strbuf_t sbuf;
-  strbuf_init( &sbuf );
-  getScopedName_impl( cursor, &sbuf );
-  return strbuf_take( &sbuf );
+char* tidy_Cursor_getScopedSimpleName( CXCursor cursor ) {
+  return getScopedName_thunk( cursor, &clang_getCursorSpelling );
 }
 
 bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_cursor,
