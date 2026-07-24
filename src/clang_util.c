@@ -185,7 +185,10 @@ static void getScopedName_impl( CXCursor cursor, strbuf_t *sbuf ) {
       strbuf_putsn( sbuf, "::", STRLITLEN( "::" ) );
     // Don't include function signatures.
     char const *const lparen = strchr_nul( name, '(' );
-    size_t const name_len = STATIC_CAST( size_t, lparen - name );
+    size_t name_len = STATIC_CAST( size_t, lparen - name );
+    // Don't include empty "<>".
+    if ( name_len >= 2 && STRNCMPLIT( name + name_len - 2, "<>" ) == 0 )
+      name_len -= 2;
     strbuf_putsn( sbuf, name, name_len );
   }
   clang_disposeString( name_cxs );
