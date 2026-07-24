@@ -27,6 +27,7 @@
 #include "pjl_config.h"
 #include "symbols.h"
 #include "clang_util.h"
+#include "cli_options.h"
 #include "config_file.h"
 #include "includes.h"
 #include "options.h"
@@ -814,8 +815,45 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   assert( sivd != NULL );
 
   // Gets the cursor for the declaration of the symbol.
-  CXCursor dec_cursor = clang_getCursorReferenced( cursor );
+  CXCursor const dec_cursor = clang_getCursorReferenced( cursor );
   if ( tidy_Cursor_isInvalid( dec_cursor ) )
+    return;
+
+  //
+  // For C++, things are more complicated.  Given something like:
+  //
+  //      // base.h
+  //      class Base {
+  //      public:
+  //        Base( int );
+  //        // ...
+  //      };
+  //
+  //      // derived.h
+  //      #include "base.h"
+  //      class Derived : public Base {
+  //      public:
+  //        Derived( int );
+  //        // ...
+  //      };
+  //
+  //      // derived.cpp
+  //      #include "derived.h"
+  //      Derived::Derived( int n ) : Base{ n } { }
+  //
+  // Here, derived.cpp correctly includes derived.h that correctly includes
+  // base.h.  But derived.cpp references Base::Base(int).  According to the
+  // include-what-you-use rule, derived.cpp should therefore include base.h.
+  //
+  // However, since Derived is derived from Base, that means that the
+  // definition of Base was available via derived.h including base.h; and since
+  // derived.cpp includes derived.h, that should be sufficient -- an exception
+  // to the include-what-you-use rule.
+  //
+  // The exception applies to any referenced symbol that's inherited: data
+  // members, constructors, destructors, or member functions.
+  //
+  if ( tidy_is_cpp && tidy_Cursor_isInheritedFrom( parent, dec_cursor ) )
     return;
 
   maybe_add_symbol( dec_cursor, dec_cursor, sivd );

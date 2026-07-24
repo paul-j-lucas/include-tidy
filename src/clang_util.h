@@ -121,6 +121,17 @@ NODISCARD
 bool tidy_Cursor_isInFile( CXCursor cursor, CXFile file );
 
 /**
+ * Gets whether a class, data member, or member function given by \a cursor is
+ * derived, inherited, or specialized from the class given by \a base_cursor.
+ *
+ * @param cursor The candidate cursor.
+ * @param base_cursor The candidate base class cursor.
+ * @return Returns `true` only if \a cursor is inherited from \a base_cursor.
+ */
+NODISCARD
+bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_cursor );
+
+/**
  * Gets whether \a cursor is either null or invalid.
  *
  * @param cursor The cursor to check.
