@@ -638,16 +638,13 @@ static void typedef_add( CXCursor cursor ) {
   if ( is_same )
     return;
 
-  tidy_typedef new_tdef = { .type_cursor = type_cursor };
+  tidy_typedef new_tdef = { .type_cursor = cursor };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &typedef_map, &new_tdef, sizeof new_tdef );
-  tidy_typedef *const tdef = RB_DINT( rv_rbi.node );
-  //
-  // We intentionally don't check rv_rbi.inserted because we want to allow
-  // later typedefs to replace earlier ones.
-  //
-  FREE( tdef->alias_name );
-  tdef->alias_name = tidy_Cursor_getScopedName( cursor );
+  if ( rv_rbi.inserted ) {
+    tidy_typedef *const tdef = RB_DINT( rv_rbi.node );
+    tdef->alias_name = tidy_Cursor_getScopedName( cursor );
+  }
 }
 
 /**
