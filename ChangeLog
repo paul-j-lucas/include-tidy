@@ -1,5 +1,15 @@
+2026-07-23  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c: Now removing "<>" from scoped names.
+   * clang_util.c: Added tidy_Cursor_isInheritable().
+   * clang_util.c, clang_util.h, symbols.c: Now filtering out inherited C++
+     members.
+
 2026-07-22  Paul J. Lucas <paul@lucasmail.org>
 
+   * print.c: Handling NULL name.
+   * clang_util.c, clang_util.h: Added tidy_Cursor_isScopeDecl();
+     getScopedName_impl() now uses it.
    * clang_util.c, clang_util.h, print.c, symbols.c:
      tidy_Cursor_getScopedNameI() now correctly returns non-const char*.
    * print.c: Now using tidy_Cursor_getScopedName() in verbose_print_cursor().
