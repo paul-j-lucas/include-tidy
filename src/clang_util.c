@@ -228,6 +228,29 @@ static enum CXChildVisitResult isBaseClass_visitor( CXCursor cursor,
 }
 
 /**
+ * Gets whether \a cursor is inherited from a base class into a derived class.
+ *
+ * @param cursor The cursor to check.
+ * @return Returns `true` only if \a cursor is inheritable.
+ */
+NODISCARD
+static bool tidy_Cursor_isInheritable( CXCursor cursor ) {
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  switch ( kind ) {
+    // data members
+    case CXCursor_FieldDecl:
+    case CXCursor_VarDecl:
+    // member functions
+    case CXCursor_CXXMethod:
+    case CXCursor_ConversionFunction:
+    case CXCursor_FunctionTemplate:
+      return true;
+    default:
+      return false;
+  } // switch
+}
+
+/**
  * Gets whether \a cursor is a template specialization of \a template_cursor.
  *
  * @param cursor The candicate template class specialization cursor.
@@ -343,17 +366,8 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_cursor ) {
   if ( tidy_Cursor_isInvalid( cursor ) || tidy_Cursor_isInvalid( base_cursor ) )
     return false;
 
-  enum CXCursorKind const base_kind = clang_getCursorKind( base_cursor );
-  switch ( base_kind ) {
-    case CXCursor_CXXMethod:
-    case CXCursor_FieldDecl:            // non-static data members
-    case CXCursor_FunctionTemplate:
-    case CXCursor_VarDecl:              // static data members
-      base_cursor = clang_getCursorSemanticParent( base_cursor );
-      break;
-    default:
-      /* suppress warning */;
-  } // switch
+  if ( tidy_Cursor_isInheritable( base_cursor ) )
+    base_cursor = clang_getCursorSemanticParent( base_cursor );
 
   if ( !tidy_Cursor_isClassDecl( base_cursor ) )
     return false;
