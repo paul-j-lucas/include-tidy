@@ -1,3 +1,9 @@
+2026-07-24  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c, clang_util.h, print.c, symbols.c: Now (re)using a cursor's
+     spelling name for the typedef_map key.
+   * symbols.c: Now using original cursor in typedef_add().
+
 2026-07-23  Paul J. Lucas <paul@lucasmail.org>
 
    * clang_util.c: Now removing "<>" from scoped names.
