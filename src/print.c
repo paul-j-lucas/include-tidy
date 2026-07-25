@@ -221,8 +221,10 @@ done:
 }
 
 void verbose_print_cursor( CXCursor cursor ) {
-  if ( tidy_Cursor_isInvalid( cursor ) )
+  if ( clang_Cursor_isNull( cursor ) ) {
+    verbose_printf( "cursor: \"\" (Null)\n" );
     return;
+  }
 
   CXSourceLocation const loc = clang_getCursorLocation( cursor );
   CXFile file;
