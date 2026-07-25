@@ -255,7 +255,8 @@ static enum CXChildVisitResult isBaseClass_visitor( CXCursor cursor,
 }
 
 /**
- * Gets whether \a cursor is inherited from a base class into a derived class.
+ * Gets whether the kind of \a cursor can be inherited from a base class into a
+ * derived class.
  *
  * @param cursor The cursor to check.
  * @return Returns `true` only if \a cursor is inheritable.
@@ -395,7 +396,6 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_cursor ) {
 
   if ( tidy_Cursor_isInheritable( base_cursor ) )
     base_cursor = clang_getCursorSemanticParent( base_cursor );
-
   if ( !tidy_Cursor_isClassDecl( base_cursor ) )
     return false;
   base_cursor = clang_getCanonicalCursor( base_cursor );
