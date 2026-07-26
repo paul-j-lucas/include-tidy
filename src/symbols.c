@@ -219,8 +219,7 @@ static bool is_include_path( CXCursor ref_cursor, CXCursor def_cursor ) {
  * @sa tidy_getCursorByNameToken()
  */
 NODISCARD
-static CXCursor macro_getCursorByNameToken( CXToken token,
-                                            CXCursor scope_cursor,
+static CXCursor macro_getCursorByNameToken( CXToken token, CXCursor scope_cursor,
                                             rb_tree_t const *param_set ) {
   assert( param_set != NULL );
 
