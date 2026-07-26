@@ -66,8 +66,72 @@ typedef struct tidy_typedef               tidy_typedef;
  * Additional data passed to symbols_init_visitor.
  */
 struct symbols_init_visitor_data {
-  CXFile  source_file;                  ///< The file being tidied.
-  bool    verbose_printed;              ///< Printed any verbose output?
+  CXFile    source_file;                ///< The file being tidied.
+  bool      verbose_printed;            ///< Printed any verbose output?
+
+  /**
+   * The cursor of the current C++ scope (class, structure, union, enumeration,
+   * or namespace), if any.
+   *
+   * @remarks
+   * @parblock
+   * For C++, things are more complicated.  Given something like:
+   *
+   *      // Base.h
+   *      class Base {
+   *      public:
+   *        using value_type = int;
+   *        Base( int );
+   *        // ...
+   *      };
+   *
+   *      // Derived.h
+   *      #include "Base.h"
+   *      class Derived : public Base {
+   *        Derived( int );
+   *        // ...
+   *      };
+   *
+   *      // Derived.cpp
+   *      #include "Derived.h"
+   *      using global_type = Derived::value_type;
+   *      Derived::Derived( int n ) : Base{ n } { }
+   *
+   * Here, `Derived.cpp` correctly includes `Derived.h` that correctly includes
+   * `Base.h`. `Derived.cpp` references both `Base::Base(int)` and
+   * `Derived::value_type`.  Additionally for `value_type`:
+   *
+   *  + `Derived` doesn't declare it --- it's inherited from `Base`.
+   *  + The reference to it is from the global scope, not a class scope.
+   *
+   * For all of these reasons, `Derived.cpp` should include `Base.h` according
+   * to the include-what-you-use rule (IWYU).
+   *
+   * However, since `Derived` is derived from `Base`, that means the definition
+   * of `Base` was available via `Derived.h` including `Base.h`; and since
+   * `Derived.cpp` includes `Derived.h`, that should be sufficient --- an
+   * exception to IWYU.  Furthermore, `value_type` has to be looked up via the
+   * `Derived` scope, not the global scope.
+   *
+   * The exception applies to any referenced symbol that's inherited: data
+   * members, constructors, destructors, or member functions.
+   *
+   * This needs to be maintained inside <code>%symbols_init_visitor_data</code>
+   * rather than just a local variable inside \ref symbols_init_visitor() is
+   * because of the way libclang handles type aliases.  For one like
+   * `global_type`, the AST is like:
+   *
+   *      global_type (TypeAliasDecl)
+   *        |
+   *        +-- Derived (TypeRef)
+   *        +-- value_type (TypeRef)
+   *
+   * i.e., `value_type` is a sibling of `Derived`, not a child of it, so we
+   * have to remember the scope of `Derived` between calls of \ref
+   * symbols_init_visitor().
+   * @endparblock
+   */
+  CXCursor cpp_scope_cursor;
 };
 
 /**
@@ -464,6 +528,9 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   assert( data != NULL );
   symbols_init_visitor_data *const sivd = data;
 
+  bool is_scope_boundary = false;
+  CXCursor const prev_cpp_scope_cursor = sivd->cpp_scope_cursor;
+
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
     case CXCursor_TypeAliasDecl:
@@ -479,6 +546,15 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   if ( !tidy_Cursor_isInFile( cursor, sivd->source_file ) )
     goto skip;
 
+  //
+  // Since a non-null value of cpp_scope_cursor must span across multiple calls
+  // to symbols_init_visitor for siblings, we have to know when to reset it.
+  // Once way to do it is whenever the declaration or statement changes.
+  //
+  is_scope_boundary = clang_isDeclaration( kind ) || clang_isStatement( kind );
+  if ( is_scope_boundary )
+    sivd->cpp_scope_cursor = clang_getNullCursor();
+
   if ( (opt_verbose & TIDY_VERBOSE_CURSORS) != 0 )
     verbose_print_cursor( cursor );
 
@@ -487,13 +563,19 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       visit_CallExpr( cursor, parent, sivd );
       break;
 
+    case CXCursor_NamespaceRef:
+    case CXCursor_TemplateRef:
+    case CXCursor_TypeRef:;
+      CXCursor const ref_cursor = clang_getCursorReferenced( cursor );
+      if ( tidy_Cursor_isScopeDecl( ref_cursor ) )
+        sivd->cpp_scope_cursor = ref_cursor;
+      FALLTHROUGH;
+
     case CXCursor_DeclRefExpr:
     case CXCursor_FunctionDecl:
     case CXCursor_MacroExpansion:
-    case CXCursor_TemplateRef:
     case CXCursor_TypeAliasDecl:
     case CXCursor_TypedefDecl:
-    case CXCursor_TypeRef:
       visit_most_kinds( cursor, parent, sivd );
       break;
 
@@ -518,7 +600,15 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   } // switch
 
 skip:
-  return CXChildVisit_Recurse;
+  //
+  // Returning CXChildVisit_Recurse causes clang_visitChildren() to do only
+  // pre-order traversal, but we need to reset cpp_scope_cursor after visiting
+  // a child node. Therefore, recurse manually.
+  //
+  clang_visitChildren( cursor, &symbols_init_visitor, data );
+  if ( is_scope_boundary )
+    sivd->cpp_scope_cursor = prev_cpp_scope_cursor;
+  return CXChildVisit_Continue;
 }
 
 /**
@@ -818,42 +908,15 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   if ( tidy_Cursor_isInvalid( dec_cursor ) )
     return;
 
-  //
-  // For C++, things are more complicated.  Given something like:
-  //
-  //      // Base.h
-  //      class Base {
-  //      public:
-  //        Base( int );
-  //        // ...
-  //      };
-  //
-  //      // Derived.h
-  //      #include "Base.h"
-  //      class Derived : public Base {
-  //      public:
-  //        Derived( int );
-  //        // ...
-  //      };
-  //
-  //      // Derived.cpp
-  //      #include "Derived.h"
-  //      Derived::Derived( int n ) : Base{ n } { }
-  //
-  // Here, Derived.cpp correctly includes Derived.h that correctly includes
-  // Base.h.  But Derived.cpp references Base::Base(int).  According to the
-  // include-what-you-use rule (IWYU), Derived.cpp should include Base.h.
-  //
-  // However, since Derived is derived from Base, that means that the
-  // definition of Base was available via Derived.h including Base.h; and since
-  // Derived.cpp includes Derived.h, that should be sufficient -- an exception
-  // to IWYU.
-  //
-  // The exception applies to any referenced symbol that's inherited: data
-  // members, constructors, destructors, or member functions.
-  //
-  if ( tidy_is_cpp && tidy_Cursor_isInheritedFrom( parent, dec_cursor ) )
-    return;
+  // See the comment for symbols_init_visitor_data::cpp_scope_cursor.
+  if ( tidy_is_cpp && !tidy_Cursor_isScopeDecl( dec_cursor ) ) {
+    CXCursor const base_cursor = clang_getCursorSemanticParent( dec_cursor );
+    CXCursor const scope_cursor = !clang_Cursor_isNull( sivd->cpp_scope_cursor ) ?
+      sivd->cpp_scope_cursor :
+      parent;
+    if ( tidy_Cursor_isInheritedFrom( scope_cursor, base_cursor ) )
+      return;
+  }
 
   maybe_add_symbol( dec_cursor, dec_cursor, sivd );
 
@@ -951,7 +1014,8 @@ void symbols_init( void ) {
 
   CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
   symbols_init_visitor_data sivd = {
-    .source_file = clang_getFile( tidy_tu, tidy_source_path )
+    .source_file = clang_getFile( tidy_tu, tidy_source_path ),
+    .cpp_scope_cursor = clang_getNullCursor()
   };
   clang_visitChildren( cursor, &symbols_init_visitor, &sivd );
   if ( sivd.verbose_printed )
