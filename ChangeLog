@@ -1,5 +1,14 @@
+2026-07-26  Paul J. Lucas <paul@lucasmail.org>
+
+   * symbols.c: Now handling global scope C++ inheritance.
+
+2026-07-25  Paul J. Lucas <paul@lucasmail.org>
+
+   * print.c: Now printing null cursors.
+
 2026-07-24  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c: Added type aliases to tidy_Cursor_isInheritable().
    * clang_util.c, clang_util.h, print.c, symbols.c: Now (re)using a cursor's
      spelling name for the typedef_map key.
    * symbols.c: Now using original cursor in typedef_add().
