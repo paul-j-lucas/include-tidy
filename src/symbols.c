@@ -822,33 +822,33 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   //
   // For C++, things are more complicated.  Given something like:
   //
-  //      // base.h
+  //      // Base.h
   //      class Base {
   //      public:
   //        Base( int );
   //        // ...
   //      };
   //
-  //      // derived.h
-  //      #include "base.h"
+  //      // Derived.h
+  //      #include "Base.h"
   //      class Derived : public Base {
   //      public:
   //        Derived( int );
   //        // ...
   //      };
   //
-  //      // derived.cpp
-  //      #include "derived.h"
+  //      // Derived.cpp
+  //      #include "Derived.h"
   //      Derived::Derived( int n ) : Base{ n } { }
   //
-  // Here, derived.cpp correctly includes derived.h that correctly includes
-  // base.h.  But derived.cpp references Base::Base(int).  According to the
-  // include-what-you-use rule, derived.cpp should therefore include base.h.
+  // Here, Derived.cpp correctly includes Derived.h that correctly includes
+  // Base.h.  But Derived.cpp references Base::Base(int).  According to the
+  // include-what-you-use rule (IWYU), Derived.cpp should include Base.h.
   //
   // However, since Derived is derived from Base, that means that the
-  // definition of Base was available via derived.h including base.h; and since
-  // derived.cpp includes derived.h, that should be sufficient -- an exception
-  // to the include-what-you-use rule.
+  // definition of Base was available via Derived.h including Base.h; and since
+  // Derived.cpp includes Derived.h, that should be sufficient -- an exception
+  // to IWYU.
   //
   // The exception applies to any referenced symbol that's inherited: data
   // members, constructors, destructors, or member functions.
