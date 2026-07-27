@@ -528,7 +528,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   assert( data != NULL );
   symbols_init_visitor_data *const sivd = data;
 
-  bool is_scope_boundary = false;
+  bool is_scope_change = false;
   CXCursor const prev_cpp_scope_cursor = sivd->cpp_scope_cursor;
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
@@ -546,36 +546,58 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   if ( !tidy_Cursor_isInFile( cursor, sivd->source_file ) )
     goto skip;
 
-  //
-  // Since a non-null value of cpp_scope_cursor must span across multiple calls
-  // to symbols_init_visitor for siblings, we have to know when to reset it.
-  // Once way to do it is whenever the declaration or statement changes.
-  //
-  is_scope_boundary = clang_isDeclaration( kind ) || clang_isStatement( kind );
-  if ( is_scope_boundary )
-    sivd->cpp_scope_cursor = clang_getNullCursor();
-
   if ( (opt_verbose & TIDY_VERBOSE_CURSORS) != 0 )
     verbose_print_cursor( cursor );
+
+  if ( tidy_is_cpp ) {
+    //
+    // Since a non-null value of cpp_scope_cursor must span across multiple
+    // calls to symbols_init_visitor() for siblings, we have to know when to
+    // reset it.  Once way to do it is whenever the declaration or statement
+    // changes.
+    //
+    is_scope_change = clang_isDeclaration( kind ) || clang_isStatement( kind );
+    if ( is_scope_change ) {
+      sivd->cpp_scope_cursor = clang_getNullCursor();
+    }
+    else {
+      //
+      // If it's a scope, set cpp_scope_cursor.
+      //
+      // These cursor kinds aren't part of the main switch statement below
+      // because NamespaceRef needs to be here, but not there since we don't
+      // add namespaces to symbol_set.
+      //
+      // Unlike every other scope in C++, a namespace doesn't obey the one
+      // definition rule, so it can appear in multiple headers; hence there is
+      // no way to choose which is _the_ header for it.
+      //
+      switch ( kind ) {
+        case CXCursor_NamespaceRef:
+        case CXCursor_TemplateRef:
+        case CXCursor_TypeRef:;
+          CXCursor const ref_cursor = clang_getCursorReferenced( cursor );
+          if ( tidy_Cursor_isScopeDecl( ref_cursor ) )
+            sivd->cpp_scope_cursor = ref_cursor;
+          break;
+        default:
+          /* suppress warning */;
+      } // switch
+    }
+  }
 
   switch ( kind ) {
     case CXCursor_CallExpr:
       visit_CallExpr( cursor, parent, sivd );
       break;
 
-    case CXCursor_NamespaceRef:
-    case CXCursor_TemplateRef:
-    case CXCursor_TypeRef:;
-      CXCursor const ref_cursor = clang_getCursorReferenced( cursor );
-      if ( tidy_Cursor_isScopeDecl( ref_cursor ) )
-        sivd->cpp_scope_cursor = ref_cursor;
-      FALLTHROUGH;
-
     case CXCursor_DeclRefExpr:
     case CXCursor_FunctionDecl:
     case CXCursor_MacroExpansion:
+    case CXCursor_TemplateRef:
     case CXCursor_TypeAliasDecl:
     case CXCursor_TypedefDecl:
+    case CXCursor_TypeRef:
       visit_most_kinds( cursor, parent, sivd );
       break;
 
@@ -606,7 +628,7 @@ skip:
   // a child node. Therefore, recurse manually.
   //
   clang_visitChildren( cursor, &symbols_init_visitor, data );
-  if ( is_scope_boundary )
+  if ( is_scope_change )
     sivd->cpp_scope_cursor = prev_cpp_scope_cursor;
   return CXChildVisit_Continue;
 }
