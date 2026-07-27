@@ -557,33 +557,8 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     // changes.
     //
     is_scope_change = clang_isDeclaration( kind ) || clang_isStatement( kind );
-    if ( is_scope_change ) {
+    if ( is_scope_change )
       sivd->cpp_scope_cursor = clang_getNullCursor();
-    }
-    else {
-      //
-      // If it's a scope, set cpp_scope_cursor.
-      //
-      // These cursor kinds aren't part of the main switch statement below
-      // because NamespaceRef needs to be here, but not there since we don't
-      // add namespaces to symbol_set.
-      //
-      // Unlike every other scope in C++, a namespace doesn't obey the one
-      // definition rule, so it can appear in multiple headers; hence there is
-      // no way to choose which is _the_ header for it.
-      //
-      switch ( kind ) {
-        case CXCursor_NamespaceRef:
-        case CXCursor_TemplateRef:
-        case CXCursor_TypeRef:;
-          CXCursor const ref_cursor = clang_getCursorReferenced( cursor );
-          if ( tidy_Cursor_isScopeDecl( ref_cursor ) )
-            sivd->cpp_scope_cursor = ref_cursor;
-          break;
-        default:
-          /* suppress warning */;
-      } // switch
-    }
   }
 
   switch ( kind ) {
@@ -628,6 +603,23 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     default:
       /* suppress warning */;
   } // switch
+
+  if ( tidy_is_cpp ) {
+    //
+    // If it's a scope, set cpp_scope_cursor.
+    //
+    switch ( kind ) {
+      case CXCursor_NamespaceRef:
+      case CXCursor_TemplateRef:
+      case CXCursor_TypeRef:;
+        CXCursor const ref_cursor = clang_getCursorReferenced( cursor );
+        if ( tidy_Cursor_isScopeDecl( ref_cursor ) )
+          sivd->cpp_scope_cursor = ref_cursor;
+        break;
+      default:
+        /* suppress warning */;
+    } // switch
+  }
 
 skip:
   //
@@ -939,7 +931,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     return;
 
   // See the comment for symbols_init_visitor_data::cpp_scope_cursor.
-  if ( tidy_is_cpp && !tidy_Cursor_isScopeDecl( dec_cursor ) ) {
+  if ( tidy_is_cpp ) {
     CXCursor const base_cursor = clang_getCursorSemanticParent( dec_cursor );
     CXCursor const scope_cursor =
       !clang_Cursor_isNull( sivd->cpp_scope_cursor ) ?
