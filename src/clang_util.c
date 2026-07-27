@@ -148,9 +148,9 @@ skip:
  * @param data A pointer to receive the \a cursor, the first child cursor.
  * @return Always returns `CXChildVisit_Break`.
  */
-enum CXChildVisitResult getFirstChild_visitor( CXCursor cursor,
-                                               CXCursor parent,
-                                               CXClientData data ) {
+static enum CXChildVisitResult getFirstChild_visitor( CXCursor cursor,
+                                                      CXCursor parent,
+                                                      CXClientData data ) {
   (void)parent;
   assert( data != NULL );
 
@@ -165,7 +165,7 @@ enum CXChildVisitResult getFirstChild_visitor( CXCursor cursor,
  * name skipping inline namespaces.
  *
  * @param cursor The cursor at a symbol.
- * @param name_fn TODO.
+ * @param name_fn The libclang function to use to get the name of \a cursor.
  * @param sbuf The strbuf to use.
  */
 static void getScopedName_impl( CXCursor cursor, getCursorName_fn name_fn,
@@ -203,7 +203,9 @@ static void getScopedName_impl( CXCursor cursor, getCursorName_fn name_fn,
  * tidy_Cursor_getScopedSimpleName().
  *
  * @param cursor The cursor at a symbol.
- * @param name_fn The libclang function to use.
+ * @param name_fn The libclang function to use to get the name of \a cursor.
+ * @return Returns the fully scoped name.  The caller is responsible for
+ * freeing it.
  */
 static char* getScopedName_thunk( CXCursor cursor, getCursorName_fn name_fn ) {
   assert( name_fn != NULL );
