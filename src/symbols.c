@@ -613,6 +613,14 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       visit_MemberRefExpr( cursor, parent, sivd );
       break;
 
+    case CXCursor_NamespaceRef:
+      //
+      // Unlike most things in C++, a namespace can appear in multiple headers,
+      // so there is no way to choose which is _the_ header for it.  Therefore,
+      // we don't add namespaces to symbol_set.
+      //
+      break;
+
     case CXCursor_OverloadedDeclRef:
       visit_OverloadedDeclRef( cursor, parent, sivd );
       break;
