@@ -1,3 +1,10 @@
+2026-07-27  Paul J. Lucas <paul@lucasmail.org>
+
+   * symbols.c: Now handling scope-change correctly.
+   * symbols.c: Added case for CXCursor_NamespaceRef.
+   * symbols.c: Moved clang_equalCursors() check earlier.
+   * symbols.c: Now mostly ignoring C++ namespaces.
+
 2026-07-26  Paul J. Lucas <paul@lucasmail.org>
 
    * symbols.c: Now handling global scope C++ inheritance.
