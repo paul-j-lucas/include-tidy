@@ -959,9 +959,9 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   CXCursor const def_cursor = clang_getCursorDefinition( type_cursor );
   if ( tidy_Cursor_isInvalid( def_cursor ) )
     return;
-  if ( tidy_Cursor_isBeforeInTranslationUnit( def_cursor, dec_cursor ) )
-    return;
   if ( clang_equalCursors( def_cursor, dec_cursor ) )
+    return;
+  if ( tidy_Cursor_isBeforeInTranslationUnit( def_cursor, dec_cursor ) )
     return;
 
   maybe_add_symbol( dec_cursor, def_cursor, sivd );
