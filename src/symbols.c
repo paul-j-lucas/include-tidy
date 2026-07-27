@@ -933,9 +933,10 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   // See the comment for symbols_init_visitor_data::cpp_scope_cursor.
   if ( tidy_is_cpp && !tidy_Cursor_isScopeDecl( dec_cursor ) ) {
     CXCursor const base_cursor = clang_getCursorSemanticParent( dec_cursor );
-    CXCursor const scope_cursor = !clang_Cursor_isNull( sivd->cpp_scope_cursor ) ?
-      sivd->cpp_scope_cursor :
-      parent;
+    CXCursor const scope_cursor =
+      !clang_Cursor_isNull( sivd->cpp_scope_cursor ) ?
+        sivd->cpp_scope_cursor :
+        parent;
     if ( tidy_Cursor_isInheritedFrom( scope_cursor, base_cursor ) )
       return;
   }
