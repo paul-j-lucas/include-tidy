@@ -334,9 +334,9 @@ int tidy_Cursor_Compare( CXCursor i_cursor, CXCursor j_cursor ) {
 }
 
 CXCursor tidy_Cursor_getFirstChild( CXCursor cursor ) {
-  CXCursor first_cursor = clang_getNullCursor();
-  clang_visitChildren( cursor, &getFirstChild_visitor, &first_cursor );
-  return first_cursor;
+  CXCursor child_cursor = clang_getNullCursor();
+  clang_visitChildren( cursor, &getFirstChild_visitor, &child_cursor );
+  return child_cursor;
 }
 
 char* tidy_Cursor_getScopedDisplayName( CXCursor cursor ) {
