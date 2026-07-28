@@ -39,8 +39,8 @@ include_tidy_SOURCES =	array.c array.h \
 			cli_options.c cli_options.h \
 			color.c color.h \
 			config_file.c config_file.h \
-			include-tidy.c include-tidy.h \
 			includes.c includes.h \
+			include-tidy.c include-tidy.h \
 			options.c options.h \
 			path_util.c path_util.h \
 			pjl_config.h config.h \
@@ -51,6 +51,7 @@ include_tidy_SOURCES =	array.c array.h \
 			tidy_util.c tidy_util.h \
 			toml_lite.c toml_lite.h \
 			trans_unit.c trans_unit.h \
+			typedefs.c typedefs.h \
 			type_traits.h \
 			util.c util.h
 
