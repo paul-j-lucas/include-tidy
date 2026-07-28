@@ -220,9 +220,12 @@ done:
   fclose( fsource );
 }
 
-void verbose_print_cursor( CXCursor cursor ) {
+void verbose_print_cursor( char const *label, CXCursor cursor ) {
+  label = empty_if_null( label );
+  char const *const space = label[0] != '\0' ? " " : "";
+
   if ( clang_Cursor_isNull( cursor ) ) {
-    verbose_printf( "cursor: \"\" (Null)\n" );
+    verbose_printf( "%s%scursor: \"\" (Null)\n", label, space );
     return;
   }
 
@@ -241,8 +244,8 @@ void verbose_print_cursor( CXCursor cursor ) {
   char       *const       name = tidy_Cursor_getScopedDisplayName( cursor );
 
   verbose_printf(
-    "cursor: \"%s\" (%s, \"%s\":%u,%u)\n",
-    name != NULL ? name : "n/a", kind_cs, abs_path, line, col
+    "%s%scursor: \"%s\" (%s, \"%s\":%u,%u)\n",
+    label, space, name != NULL ? name : "n/a", kind_cs, abs_path, line, col
   );
 
   clang_disposeString( abs_path_cxs );
