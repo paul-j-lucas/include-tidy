@@ -184,7 +184,7 @@ static ii_matrix_t  **ii_matrix;
  * @endparblock
  */
 PJL_DISCARD
-static char const* get_cpp_header( char const *c_name,
+static char const* get_cxx_header( char const *c_name,
                                    char path_buf[static PATH_MAX] ) {
   assert( c_name != NULL );
 
@@ -349,16 +349,16 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   }
 
   // Remaining cases are valid only for C++.
-  if ( !tidy_is_cpp )
+  if ( !tidy_is_cxx )
     goto skip;
 
   // Remaining cases are valid only for paths not in subdirectories.
   if ( strchr( included->rel_path, '/' ) != NULL )
     goto skip;
 
-  char cpp_path[ PATH_MAX ];
-  if ( get_cpp_header( included->rel_path, cpp_path ) != NULL ) {
-    if ( strcmp( includer->rel_path, cpp_path ) == 0 ) {
+  char cxx_path[ PATH_MAX ];
+  if ( get_cxx_header( included->rel_path, cxx_path ) != NULL ) {
+    if ( strcmp( includer->rel_path, cxx_path ) == 0 ) {
       //
       // This handles a case like:
       //
@@ -375,7 +375,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       // This handles a case similar to the above except check to see if the
       // standard C++ wrapper has been included at all.
       //
-      proxy = include_find_by_rel_path( cpp_path );
+      proxy = include_find_by_rel_path( cxx_path );
     }
   }
 

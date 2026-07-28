@@ -122,7 +122,7 @@ std-c-includes = [
   "zlib.h",
 ]
 
-std-cpp-includes = [
+std-cxx-includes = [
   "algorithm",
   "any",
   "array",

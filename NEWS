@@ -10,6 +10,10 @@ See the end of the file for license conditions.
 ** `-h` and `-v`
 Added these missing short options to `--help` output.
 
+** Renamed `cpp` to `cxx` in TOML keys
+The keys `std-cpp-includes` and `add-cpp-includes` have been renamed to
+`std-cxx-includes` and `add-cxx-includes`.
+
 ** Other include path options
 Added support for `--include-directory-after` and `-idirafter` **clang**
 options.

@@ -35,7 +35,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "July 14, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "July 28, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -271,7 +271,7 @@ For system headers,
 all headers given via both
 .B std-c-includes
 and
-.B std-cpp-includes
+.B std-cxx-includes
 (see
 .BR "include-tidy Table" )
 are considered implicit proxies
@@ -775,16 +775,16 @@ are
 .I cumulative
 from all configuration files.
 .TP
-.BI add-cpp-includes " \f1=\fP " [ s " \f1[,\fP " s "\f1]*\fP ]"
+.BI add-cxx-includes " \f1=\fP " [ s " \f1[,\fP " s "\f1]*\fP ]"
 Like
-.BR std-cpp-includes ,
+.BR std-cxx-includes ,
 but these are
 .I additionally
 to be considered ``standard'' C++ include files.
 .IP
 As one of only two special cases to configuration file layering,
 the include files given for
-.B add-cpp-includes
+.B add-cxx-includes
 are
 .I cumulative
 from all configuration files.
@@ -846,7 +846,7 @@ that matches within
 .I any
 subdirectory.
 .TP
-.BI std-cpp-includes " \f1=\fP " [ s " \f1[,\fP " s "\f1]*\fP ]"
+.BI std-cxx-includes " \f1=\fP " [ s " \f1[,\fP " s "\f1]*\fP ]"
 Like
 .BR std-c-includes ,
 but only for C++ include files.

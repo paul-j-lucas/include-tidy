@@ -69,7 +69,7 @@
 
 ////////// extern variables  //////////////////////////////////////////////////
 
-extern bool tidy_is_cpp;                ///< Is source file C++?
+extern bool tidy_is_cxx;                ///< Is source file C++?
 
 ////////// extern functions ///////////////////////////////////////////////////
 

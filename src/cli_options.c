@@ -126,7 +126,7 @@ static bool is_opt_set[ 128 ];          ///< Table of options that were set.
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-bool tidy_is_cpp;
+bool tidy_is_cxx;
 
 /// @endcond
 
@@ -1141,7 +1141,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     exit( EX_USAGE );
   }
 
-  tidy_is_cpp = strcmp( source_lang, "c++" ) == 0;
+  tidy_is_cxx = strcmp( source_lang, "c++" ) == 0;
 
   if ( opt_directory != NULL ) {
     if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )

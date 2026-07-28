@@ -131,7 +131,7 @@ struct symbols_init_data {
    * symbols_init_visitor().
    * @endparblock
    */
-  CXCursor cpp_scope_cursor;
+  CXCursor cxx_scope_cursor;
 };
 
 /**
@@ -525,7 +525,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   symbols_init_data *const sid = data;
 
   bool is_scope_change = false;
-  CXCursor const prev_cpp_scope_cursor = sid->cpp_scope_cursor;
+  CXCursor const prev_cxx_scope_cursor = sid->cxx_scope_cursor;
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
@@ -545,16 +545,16 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   if ( (opt_verbose & TIDY_VERBOSE_CURSORS) != 0 )
     verbose_print_cursor( "", cursor );
 
-  if ( tidy_is_cpp ) {
+  if ( tidy_is_cxx ) {
     //
-    // Since a non-null value of cpp_scope_cursor must span across multiple
+    // Since a non-null value of cxx_scope_cursor must span across multiple
     // calls to symbols_init_visitor() for siblings, we have to know when to
     // reset it.  Once way to do it is whenever the declaration or statement
     // changes.
     //
     is_scope_change = clang_isDeclaration( kind ) || clang_isStatement( kind );
     if ( is_scope_change )
-      sid->cpp_scope_cursor = clang_getNullCursor();
+      sid->cxx_scope_cursor = clang_getNullCursor();
   }
 
   switch ( kind ) {
@@ -600,9 +600,9 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       /* suppress warning */;
   } // switch
 
-  if ( tidy_is_cpp ) {
+  if ( tidy_is_cxx ) {
     //
-    // If it's a scope, set cpp_scope_cursor.
+    // If it's a scope, set cxx_scope_cursor.
     //
     switch ( kind ) {
       case CXCursor_NamespaceRef:
@@ -610,7 +610,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       case CXCursor_TypeRef:;
         CXCursor const ref_cursor = clang_getCursorReferenced( cursor );
         if ( tidy_Cursor_isScopeDecl( ref_cursor ) )
-          sid->cpp_scope_cursor = ref_cursor;
+          sid->cxx_scope_cursor = ref_cursor;
         break;
       default:
         /* suppress warning */;
@@ -620,12 +620,12 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 skip:
   //
   // Returning CXChildVisit_Recurse causes clang_visitChildren() to do only
-  // pre-order traversal, but we need to reset cpp_scope_cursor after visiting
+  // pre-order traversal, but we need to reset cxx_scope_cursor after visiting
   // a child node. Therefore, recurse manually.
   //
   clang_visitChildren( cursor, &symbols_init_visitor, data );
   if ( is_scope_change )
-    sid->cpp_scope_cursor = prev_cpp_scope_cursor;
+    sid->cxx_scope_cursor = prev_cxx_scope_cursor;
   return CXChildVisit_Continue;
 }
 
@@ -926,12 +926,12 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   if ( tidy_Cursor_isInvalid( dec_cursor ) )
     return;
 
-  // See the comment for symbols_init_data::cpp_scope_cursor.
-  if ( tidy_is_cpp ) {
+  // See the comment for symbols_init_data::cxx_scope_cursor.
+  if ( tidy_is_cxx ) {
     CXCursor const base_cursor = clang_getCursorSemanticParent( dec_cursor );
     CXCursor const scope_cursor =
-      !clang_Cursor_isNull( sid->cpp_scope_cursor ) ?
-        sid->cpp_scope_cursor :
+      !clang_Cursor_isNull( sid->cxx_scope_cursor ) ?
+        sid->cxx_scope_cursor :
         parent;
     if ( tidy_Cursor_isInheritedFrom( scope_cursor, base_cursor ) )
       return;
@@ -1034,7 +1034,7 @@ void symbols_init( void ) {
   CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
   symbols_init_data sid = {
     .source_file = clang_getFile( tidy_tu, tidy_source_path ),
-    .cpp_scope_cursor = clang_getNullCursor()
+    .cxx_scope_cursor = clang_getNullCursor()
   };
   clang_visitChildren( cursor, &symbols_init_visitor, &sid );
   if ( sid.verbose_printed )
