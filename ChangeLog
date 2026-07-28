@@ -1,5 +1,18 @@
+2026-07-28  Paul J. Lucas <paul@lucasmail.org>
+
+   * src/Makefile.am, symbols.c, typedefs.c, typedefs.h: Split out typedef
+     code.
+   * clang_util.c: Undid: tidy_Cursor_getFirstChild() now skips
+     CXCursor_UnexposedExpr.
+   * etc/config.toml, man/man1/include-tidy.1, clang_util.c, cli_options.c,
+     cli_options.h, config_file.c, includes.c, symbols.c: s/cpp/cxx/
+   * print.c, print.h, symbols.c: Added optional label parameter to
+     verbose_print_cursor.
+
 2026-07-27  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c: tidy_Cursor_getFirstChild() now skips
+     CXCursor_UnexposedExpr.
    * symbols.c: Now handling scope-change correctly.
    * symbols.c: Added case for CXCursor_NamespaceRef.
    * symbols.c: Moved clang_equalCursors() check earlier.
