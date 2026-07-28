@@ -334,8 +334,14 @@ int tidy_Cursor_Compare( CXCursor i_cursor, CXCursor j_cursor ) {
 }
 
 CXCursor tidy_Cursor_getFirstChild( CXCursor cursor ) {
-  CXCursor child_cursor = clang_getNullCursor();
-  clang_visitChildren( cursor, &getFirstChild_visitor, &child_cursor );
+  CXCursor child_cursor;
+  do {
+    child_cursor = clang_getNullCursor();
+    clang_visitChildren( cursor, &getFirstChild_visitor, &child_cursor );
+    if ( clang_Cursor_isNull( child_cursor ) )
+      break;
+    cursor = child_cursor;
+  } while ( clang_getCursorKind( cursor ) == CXCursor_UnexposedExpr );
   return child_cursor;
 }
 
