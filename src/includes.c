@@ -87,23 +87,23 @@ enum print_group {
 typedef unsigned char ii_matrix_t;      ///< Element type for ii_matrix.
 #endif /* NEED_II_MATRIX */
 
-typedef struct  includes_init_visitor_data  includes_init_visitor_data;
-typedef struct  includes_print_visitor_data includes_print_visitor_data;
-typedef enum    print_group                 print_group;
+typedef struct  includes_init_data        includes_init_data;
+typedef struct  maybe_print_include_args  maybe_print_include_args;
+typedef enum    print_group               print_group;
 
 ////////// structs ////////////////////////////////////////////////////////////
 
 /**
  * Additional data passed to includes_init_visitor().
  */
-struct includes_init_visitor_data {
+struct includes_init_data {
   bool  verbose_printed;                ///< Printed any verbose output?
 };
 
 /**
- * Additional data for includes_print_visitor().
+ * Additional arguments for maybe_print_include().
  */
-struct includes_print_visitor_data {
+struct maybe_print_include_args {
   bool        print_blank_line;         ///< Print a blank line?
   bool        printed_any_includes;     ///< Print any includes?
   bool        printed_source_file;      ///< Printed source file name?
@@ -116,9 +116,6 @@ struct includes_print_visitor_data {
 static void   ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
                                  CXClientData );
 #endif /* NEED_II_MATRIX */
-
-NODISCARD
-static char*  make_symbols_comment( tidy_include const* );
 
 NODISCARD
 static char*  tidy_File_getRelativePath( CXFile );
@@ -449,7 +446,7 @@ static void includes_cleanup( void ) {
  *
  * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent Not used.
- * @param data A pointer to a includes_init_visitor_data.
+ * @param data A pointer to a includes_init_data.
  * @return Always returns `CXChildVisit_Continue`.
  */
 static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
@@ -461,7 +458,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
     goto skip;
 
-  includes_init_visitor_data *const iivd = data;
+  includes_init_data *const iid = data;
 
   unsigned          include_line, include_col;
   CXSourceLocation  includer_loc = clang_getCursorLocation( cursor );
@@ -594,7 +591,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   }
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
-    if ( false_set( &iivd->verbose_printed ) )
+    if ( false_set( &iid->verbose_printed ) )
       verbose_printf( "includes:\n" );
 
     char delims[2];
@@ -650,105 +647,6 @@ done:
 
 skip:
   return CXChildVisit_Continue;
-}
-
-/**
- * Visits each include file that was included.
- *
- * @param include The tidy_include to visit.
- * @param ipvd The includes_print_visitor_data to use.
- */
-static void includes_print_visitor( tidy_include const *include,
-                                    includes_print_visitor_data *ipvd ) {
-  assert( include != NULL );
-  assert( ipvd != NULL );
-
-  bool const keep = include->handling == TIDY_HANDLE_KEEP;
-
-  if ( keep && !opt_all_includes )
-    return;
-
-  print_group group;
-  if ( include->is_local )
-    group = PRINT_LOCAL;
-  else if ( config_is_standard_include( include->rel_path ) )
-    group = PRINT_STANDARD;
-  else
-    group = PRINT_3RD_PARTY;
-  if ( group != ipvd->want_group )
-    return;
-
-  if ( (opt_verbose & TIDY_VERBOSE_SOURCE_FILE) != 0 &&
-       false_set( &ipvd->printed_source_file ) ) {
-    verbose_printf( "%s\n", tidy_source_path );
-  }
-
-  char       *comment = NULL;
-  char        delims[2];
-  bool        do_print_include = false;
-  bool const  is_direct = include->depth == 0;
-  bool        reset_opt_comment_style = false;
-  char const *sgr_color = NULL;
-
-  if ( include->is_needed || keep ) {
-    if ( is_direct || keep ) {
-      do_print_include = opt_all_includes;
-    }
-    else {
-      sgr_color = sgr_include_add;
-      do_print_include = true;
-    }
-    if ( do_print_include && opt_comment_style[0][0] != '\0' )
-      comment = make_symbols_comment( include );
-  }
-  else if ( is_direct ) {
-    if ( opt_comment_style[0][0] == '\0' ) {
-      opt_comment_style[0] = "// ";
-      reset_opt_comment_style = true;
-    }
-    unsigned const line = *(unsigned*)array_front_nc( &include->lines );
-    check_asprintf( &comment, "DELETE LINE %u", line );
-    sgr_color = sgr_include_del;
-    do_print_include = true;
-  }
-
-  include_get_delims( include, delims );
-  if ( do_print_include ) {
-    if ( true_clear( &ipvd->print_blank_line ) )
-      PUTC( '\n' );
-    print_include( sgr_color, delims, include->rel_path, comment );
-    ipvd->printed_any_includes = true;
-  }
-
-  if ( include->lines.len > 1 ) {
-    if ( opt_comment_style[0][0] == '\0' ) {
-      opt_comment_style[0] = "// ";
-      reset_opt_comment_style = true;
-    }
-    if ( true_clear( &ipvd->print_blank_line ) )
-      PUTC( '\n' );
-
-    unsigned const first_line = *(unsigned*)array_front_nc( &include->lines );
-    for ( unsigned i = 1; i < include->lines.len; ++i ) {
-      free( comment );
-      unsigned const line = *(unsigned*)array_at_nc( &include->lines, i );
-      if ( include->is_needed ) {
-        check_asprintf( &comment,
-          "DELETE LINE %u (same as line %u)", line, first_line
-        );
-      }
-      else {
-        check_asprintf( &comment, "DELETE LINE %u", line );
-      }
-      print_include( sgr_include_del, delims, include->rel_path, comment );
-    } // for
-
-    ipvd->printed_any_includes = true;
-  }
-
-  free( comment );
-  if ( reset_opt_comment_style )
-    opt_comment_style[0] = "";
 }
 
 /**
@@ -870,6 +768,105 @@ static char* make_symbols_comment( tidy_include const *include ) {
 done:
   array_cleanup( &symbols_array, /*free_fn=*/NULL );
   return strbuf_take( &symbols_buf );
+}
+
+/**
+ * Possibly print an include directive.
+ *
+ * @param include The tidy_include to print (possibly).
+ * @param args The maybe_print_include_args to use.
+ */
+static void maybe_print_include( tidy_include const *include,
+                                 maybe_print_include_args *args ) {
+  assert( include != NULL );
+  assert( args != NULL );
+
+  bool const keep = include->handling == TIDY_HANDLE_KEEP;
+
+  if ( keep && !opt_all_includes )
+    return;
+
+  print_group group;
+  if ( include->is_local )
+    group = PRINT_LOCAL;
+  else if ( config_is_standard_include( include->rel_path ) )
+    group = PRINT_STANDARD;
+  else
+    group = PRINT_3RD_PARTY;
+  if ( group != args->want_group )
+    return;
+
+  if ( (opt_verbose & TIDY_VERBOSE_SOURCE_FILE) != 0 &&
+       false_set( &args->printed_source_file ) ) {
+    verbose_printf( "%s\n", tidy_source_path );
+  }
+
+  char       *comment = NULL;
+  char        delims[2];
+  bool        do_print_include = false;
+  bool const  is_direct = include->depth == 0;
+  bool        reset_opt_comment_style = false;
+  char const *sgr_color = NULL;
+
+  if ( include->is_needed || keep ) {
+    if ( is_direct || keep ) {
+      do_print_include = opt_all_includes;
+    }
+    else {
+      sgr_color = sgr_include_add;
+      do_print_include = true;
+    }
+    if ( do_print_include && opt_comment_style[0][0] != '\0' )
+      comment = make_symbols_comment( include );
+  }
+  else if ( is_direct ) {
+    if ( opt_comment_style[0][0] == '\0' ) {
+      opt_comment_style[0] = "// ";
+      reset_opt_comment_style = true;
+    }
+    unsigned const line = *(unsigned*)array_front_nc( &include->lines );
+    check_asprintf( &comment, "DELETE LINE %u", line );
+    sgr_color = sgr_include_del;
+    do_print_include = true;
+  }
+
+  include_get_delims( include, delims );
+  if ( do_print_include ) {
+    if ( true_clear( &args->print_blank_line ) )
+      PUTC( '\n' );
+    print_include( sgr_color, delims, include->rel_path, comment );
+    args->printed_any_includes = true;
+  }
+
+  if ( include->lines.len > 1 ) {
+    if ( opt_comment_style[0][0] == '\0' ) {
+      opt_comment_style[0] = "// ";
+      reset_opt_comment_style = true;
+    }
+    if ( true_clear( &args->print_blank_line ) )
+      PUTC( '\n' );
+
+    unsigned const first_line = *(unsigned*)array_front_nc( &include->lines );
+    for ( unsigned i = 1; i < include->lines.len; ++i ) {
+      free( comment );
+      unsigned const line = *(unsigned*)array_at_nc( &include->lines, i );
+      if ( include->is_needed ) {
+        check_asprintf( &comment,
+          "DELETE LINE %u (same as line %u)", line, first_line
+        );
+      }
+      else {
+        check_asprintf( &comment, "DELETE LINE %u", line );
+      }
+      print_include( sgr_include_del, delims, include->rel_path, comment );
+    } // for
+
+    args->printed_any_includes = true;
+  }
+
+  free( comment );
+  if ( reset_opt_comment_style )
+    opt_comment_style[0] = "";
 }
 
 /**
@@ -1178,10 +1175,10 @@ void includes_init( void ) {
   );
   ATEXIT( &includes_cleanup );
 
-  includes_init_visitor_data iivd = { 0 };
+  includes_init_data iid = { 0 };
   CXCursor cursor = clang_getTranslationUnitCursor( tidy_tu );
-  clang_visitChildren( cursor, &includes_init_visitor, &iivd );
-  if ( iivd.verbose_printed )
+  clang_visitChildren( cursor, &includes_init_visitor, &iid );
+  if ( iid.verbose_printed )
     verbose_printf( "\n" );
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
   ii_matrix_init( tidy_include_set.size + 1 );
@@ -1193,15 +1190,16 @@ void includes_print( void ) {
   array_init( &include_array, sizeof(tidy_include*) );
   array_reserve( &include_array, tidy_include_set.size );
 
-  tidy_include *include = get_associated_header();
-  if ( include != NULL ) {
-    include->is_needed = true;
-    include->sort_rank = TIDY_SORT_ASSOCIATED;
+  tidy_include *const assoc_include = get_associated_header();
+  if ( assoc_include != NULL ) {
+    assoc_include->is_needed = true;
+    assoc_include->sort_rank = TIDY_SORT_ASSOCIATED;
   }
 
   rb_iterator_t iter;
   rb_iterator_init( &iter, &tidy_include_set );
-  while ( (include = rb_iterator_next( &iter )) != NULL ) {
+  for ( tidy_include const *include;
+        (include = rb_iterator_next( &iter )) != NULL; ) {
     if ( should_print_include( include ) ) {
       *(tidy_include const**)array_push_back( &include_array ) = include;
       if ( include->handling != TIDY_HANDLE_KEEP ) {
@@ -1220,31 +1218,31 @@ void includes_print( void ) {
   array_qsort( &include_array, &tidy_include_cmp_for_print );
 
   // Print local includes.
-  includes_print_visitor_data ipvd = { 0 };
+  maybe_print_include_args args = { 0 };
   for ( size_t i = 0; i < include_array.len; ++i ) {
-    includes_print_visitor(
-      *(tidy_include const**)array_at_nc( &include_array, i ), &ipvd
-    );
+    tidy_include const *const include =
+      *(tidy_include const**)array_at_nc( &include_array, i );
+    maybe_print_include( include, &args );
   } // for
 
   // Print non-local, non-standard includes.
-  if ( opt_all_includes && true_clear( &ipvd.printed_any_includes ) )
-    ipvd.print_blank_line = true;
-  ipvd.want_group = PRINT_3RD_PARTY;
+  if ( opt_all_includes && true_clear( &args.printed_any_includes ) )
+    args.print_blank_line = true;
+  args.want_group = PRINT_3RD_PARTY;
   for ( size_t i = 0; i < include_array.len; ++i ) {
-    includes_print_visitor(
-      *(tidy_include const**)array_at_nc( &include_array, i ), &ipvd
-    );
+    tidy_include const *const include =
+      *(tidy_include const**)array_at_nc( &include_array, i );
+    maybe_print_include( include, &args );
   } // for
 
   // Print standard includes.
-  if ( opt_all_includes && true_clear( &ipvd.printed_any_includes ) )
-    ipvd.print_blank_line = true;
-  ipvd.want_group = PRINT_STANDARD;
+  if ( opt_all_includes && true_clear( &args.printed_any_includes ) )
+    args.print_blank_line = true;
+  args.want_group = PRINT_STANDARD;
   for ( size_t i = 0; i < include_array.len; ++i ) {
-    includes_print_visitor(
-      *(tidy_include const**)array_at_nc( &include_array, i ), &ipvd
-    );
+    tidy_include const *const include =
+      *(tidy_include const**)array_at_nc( &include_array, i );
+    maybe_print_include( include, &args );
   } // for
 
   array_cleanup( &include_array, /*free_fn=*/NULL );
