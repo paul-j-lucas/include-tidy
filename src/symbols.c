@@ -57,15 +57,15 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-typedef struct symbols_init_visitor_data  symbols_init_visitor_data;
-typedef struct tidy_typedef               tidy_typedef;
+typedef struct symbols_init_data  symbols_init_data;
+typedef struct tidy_typedef       tidy_typedef;
 
 ////////// structs ////////////////////////////////////////////////////////////
 
 /**
  * Additional data passed to symbols_init_visitor.
  */
-struct symbols_init_visitor_data {
+struct symbols_init_data {
   CXFile    source_file;                ///< The file being tidied.
   bool      verbose_printed;            ///< Printed any verbose output?
 
@@ -116,10 +116,10 @@ struct symbols_init_visitor_data {
    * The exception applies to any referenced symbol that's inherited: data
    * members, constructors, destructors, or member functions.
    *
-   * This needs to be maintained inside <code>%symbols_init_visitor_data</code>
-   * rather than just a local variable inside \ref symbols_init_visitor() is
-   * because of the way libclang handles type aliases.  For one like
-   * `global_type`, the AST is like:
+   * This needs to be maintained inside <code>%symbols_init_data</code> rather
+   * than just a local variable inside \ref symbols_init_visitor() is because
+   * of the way libclang handles type aliases.  For one like `global_type`, the
+   * AST is like:
    *
    *      global_type (TypeAliasDecl)
    *        |
@@ -186,18 +186,13 @@ static void     typedef_add( CXCursor );
 NODISCARD
 static tidy_typedef const* typedef_find( CXCursor );
 
-static void     visit_CallExpr( CXCursor, CXCursor,
-                                symbols_init_visitor_data* );
-static void     visit_FieldDecl( CXCursor, CXCursor,
-                                 symbols_init_visitor_data* );
-static void     visit_MacroDefinition( CXCursor, CXCursor,
-                                       symbols_init_visitor_data* );
-static void     visit_MemberRefExpr( CXCursor, CXCursor,
-                                     symbols_init_visitor_data* );
-static void     visit_most_kinds( CXCursor, CXCursor,
-                                  symbols_init_visitor_data* );
+static void     visit_CallExpr( CXCursor, CXCursor, symbols_init_data* );
+static void     visit_FieldDecl( CXCursor, CXCursor, symbols_init_data* );
+static void     visit_MacroDefinition( CXCursor, CXCursor, symbols_init_data* );
+static void     visit_MemberRefExpr( CXCursor, CXCursor, symbols_init_data* );
+static void     visit_most_kinds( CXCursor, CXCursor, symbols_init_data* );
 static void     visit_OverloadedDeclRef( CXCursor, CXCursor,
-                                         symbols_init_visitor_data* );
+                                         symbols_init_data* );
 
 ////////// local variables ////////////////////////////////////////////////////
 
@@ -413,11 +408,11 @@ static CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
  *
  * @param name_cursor The cursor to use for the name of the symbol.
  * @param sym_cursor The cursor for the symbol.
- * @param sivd The symbols_init_visitor_data to use.
+ * @param sid The symbols_init_data to use.
  */
 static void maybe_add_symbol( CXCursor name_cursor, CXCursor sym_cursor,
-                              symbols_init_visitor_data *sivd ) {
-  assert( sivd != NULL );
+                              symbols_init_data *sid ) {
+  assert( sid != NULL );
 
   enum CXCursorKind const kind = clang_getCursorKind( sym_cursor );
   switch ( kind ) {
@@ -445,7 +440,7 @@ static void maybe_add_symbol( CXCursor name_cursor, CXCursor sym_cursor,
     return;
 
   // If the symbol was first declared in the file being tidied, we don't care.
-  if ( clang_File_isEqual( sym_file, sivd->source_file ) )
+  if ( clang_File_isEqual( sym_file, sid->source_file ) )
     return;
 
   tidy_typedef const *const found_tdef = typedef_find( sym_cursor );
@@ -476,7 +471,7 @@ static void maybe_add_symbol( CXCursor name_cursor, CXCursor sym_cursor,
   }
 
   if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
-    if ( false_set( &sivd->verbose_printed ) )
+    if ( false_set( &sid->verbose_printed ) )
       verbose_printf( "symbols:\n" );
 
     if ( include_added_to != NULL ) {
@@ -518,7 +513,7 @@ static void symbols_cleanup( void ) {
  *
  * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent Not used.
- * @param data A pointer to a symbols_init_visitor_data.
+ * @param data A pointer to a symbols_init_data.
  * @return Always returns `CXChildVisit_Recurse`.
  */
 static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
@@ -526,10 +521,10 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
                                                      CXClientData data ) {
   (void)parent;
   assert( data != NULL );
-  symbols_init_visitor_data *const sivd = data;
+  symbols_init_data *const sid = data;
 
   bool is_scope_change = false;
-  CXCursor const prev_cpp_scope_cursor = sivd->cpp_scope_cursor;
+  CXCursor const prev_cpp_scope_cursor = sid->cpp_scope_cursor;
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
@@ -543,7 +538,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       /* suppress warning */;
   } // switch
 
-  if ( !tidy_Cursor_isInFile( cursor, sivd->source_file ) )
+  if ( !tidy_Cursor_isInFile( cursor, sid->source_file ) )
     goto skip;
 
   if ( (opt_verbose & TIDY_VERBOSE_CURSORS) != 0 )
@@ -558,12 +553,12 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     //
     is_scope_change = clang_isDeclaration( kind ) || clang_isStatement( kind );
     if ( is_scope_change )
-      sivd->cpp_scope_cursor = clang_getNullCursor();
+      sid->cpp_scope_cursor = clang_getNullCursor();
   }
 
   switch ( kind ) {
     case CXCursor_CallExpr:
-      visit_CallExpr( cursor, parent, sivd );
+      visit_CallExpr( cursor, parent, sid );
       break;
 
     case CXCursor_DeclRefExpr:
@@ -573,19 +568,19 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     case CXCursor_TypeAliasDecl:
     case CXCursor_TypedefDecl:
     case CXCursor_TypeRef:
-      visit_most_kinds( cursor, parent, sivd );
+      visit_most_kinds( cursor, parent, sid );
       break;
 
     case CXCursor_FieldDecl:
-      visit_FieldDecl( cursor, parent, sivd );
+      visit_FieldDecl( cursor, parent, sid );
       break;
 
     case CXCursor_MacroDefinition:
-      visit_MacroDefinition( cursor, parent, sivd );
+      visit_MacroDefinition( cursor, parent, sid );
       break;
 
     case CXCursor_MemberRefExpr:
-      visit_MemberRefExpr( cursor, parent, sivd );
+      visit_MemberRefExpr( cursor, parent, sid );
       break;
 
     case CXCursor_NamespaceRef:
@@ -597,7 +592,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       break;
 
     case CXCursor_OverloadedDeclRef:
-      visit_OverloadedDeclRef( cursor, parent, sivd );
+      visit_OverloadedDeclRef( cursor, parent, sid );
       break;
 
     default:
@@ -614,7 +609,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       case CXCursor_TypeRef:;
         CXCursor const ref_cursor = clang_getCursorReferenced( cursor );
         if ( tidy_Cursor_isScopeDecl( ref_cursor ) )
-          sivd->cpp_scope_cursor = ref_cursor;
+          sid->cpp_scope_cursor = ref_cursor;
         break;
       default:
         /* suppress warning */;
@@ -629,7 +624,7 @@ skip:
   //
   clang_visitChildren( cursor, &symbols_init_visitor, data );
   if ( is_scope_change )
-    sivd->cpp_scope_cursor = prev_cpp_scope_cursor;
+    sid->cpp_scope_cursor = prev_cpp_scope_cursor;
   return CXChildVisit_Continue;
 }
 
@@ -793,11 +788,11 @@ static tidy_typedef const* typedef_find( CXCursor cursor ) {
  *
  * @param call_cursor The call expression's cursor to visit.
  * @param parent Not used.
- * @param sivd The symbols_init_visitor_data to use.
+ * @param sid The symbols_init_data to use.
  */
 static void visit_CallExpr( CXCursor call_cursor, CXCursor parent,
-                            symbols_init_visitor_data *sivd ) {
-  assert( sivd != NULL );
+                            symbols_init_data *sid ) {
+  assert( sid != NULL );
   (void)parent;
 
   CXCursor const child_cursor = tidy_Cursor_getFirstChild( call_cursor );
@@ -807,7 +802,7 @@ static void visit_CallExpr( CXCursor call_cursor, CXCursor parent,
       return;
   }
 
-  visit_most_kinds( call_cursor, parent, sivd );
+  visit_most_kinds( call_cursor, parent, sid );
 }
 
 /**
@@ -834,12 +829,12 @@ static void visit_CallExpr( CXCursor call_cursor, CXCursor parent,
  *
  * @param field_cursor The field declaration's cursor to visit.
  * @param parent Not used.
- * @param sivd The symbols_init_visitor_data to use.
+ * @param sid The symbols_init_data to use.
  */
 static void visit_FieldDecl( CXCursor field_cursor, CXCursor parent,
-                             symbols_init_visitor_data *sivd ) {
+                             symbols_init_data *sid ) {
   (void)parent;
-  assert( sivd != NULL );
+  assert( sid != NULL );
 
   CXSourceRange const field_range = tidy_getCursorExtent( field_cursor );
 
@@ -853,7 +848,7 @@ static void visit_FieldDecl( CXCursor field_cursor, CXCursor parent,
     CXCursor const sym_cursor =
       tidy_Token_getScopedNameCursor( tokens, token_count, &i, scope_cursor );
     if ( !tidy_Cursor_isInvalid( sym_cursor ) )
-      maybe_add_symbol( sym_cursor, sym_cursor, sivd );
+      maybe_add_symbol( sym_cursor, sym_cursor, sid );
   } // for
 
   clang_disposeTokens( tidy_tu, tokens, token_count );
@@ -877,12 +872,12 @@ static void visit_FieldDecl( CXCursor field_cursor, CXCursor parent,
  *
  * @param macro_cursor The macro definition's cursor to visit.
  * @param parent Not used.
- * @param sivd The symbols_init_visitor_data to use.
+ * @param sid The symbols_init_data to use.
  */
 static void visit_MacroDefinition( CXCursor macro_cursor, CXCursor parent,
-                                   symbols_init_visitor_data *sivd ) {
+                                   symbols_init_data *sid ) {
   (void)parent;
-  assert( sivd != NULL );
+  assert( sid != NULL );
 
   CXSourceRange const macro_range = clang_getCursorExtent( macro_cursor );
 
@@ -907,7 +902,7 @@ static void visit_MacroDefinition( CXCursor macro_cursor, CXCursor parent,
     CXCursor const sym_cursor =
       macro_Token_getScopedNameCursor( tokens, token_count, &i, &param_set );
     if ( !tidy_Cursor_isInvalid( sym_cursor ) )
-      maybe_add_symbol( sym_cursor, sym_cursor, sivd );
+      maybe_add_symbol( sym_cursor, sym_cursor, sid );
   } // for
 
   rb_tree_cleanup( &param_set, /*free_fn=*/NULL );
@@ -919,29 +914,29 @@ static void visit_MacroDefinition( CXCursor macro_cursor, CXCursor parent,
  *
  * @param cursor The cursor to visit.
  * @param parent The parent cursor of \a cursor.
- * @param sivd The symbols_init_visitor_data to use.
+ * @param sid The symbols_init_data to use.
  */
 static void visit_most_kinds( CXCursor cursor, CXCursor parent,
-                              symbols_init_visitor_data *sivd ) {
-  assert( sivd != NULL );
+                              symbols_init_data *sid ) {
+  assert( sid != NULL );
 
   // Gets the cursor for the declaration of the symbol.
   CXCursor const dec_cursor = clang_getCursorReferenced( cursor );
   if ( tidy_Cursor_isInvalid( dec_cursor ) )
     return;
 
-  // See the comment for symbols_init_visitor_data::cpp_scope_cursor.
+  // See the comment for symbols_init_data::cpp_scope_cursor.
   if ( tidy_is_cpp ) {
     CXCursor const base_cursor = clang_getCursorSemanticParent( dec_cursor );
     CXCursor const scope_cursor =
-      !clang_Cursor_isNull( sivd->cpp_scope_cursor ) ?
-        sivd->cpp_scope_cursor :
+      !clang_Cursor_isNull( sid->cpp_scope_cursor ) ?
+        sid->cpp_scope_cursor :
         parent;
     if ( tidy_Cursor_isInheritedFrom( scope_cursor, base_cursor ) )
       return;
   }
 
-  maybe_add_symbol( dec_cursor, dec_cursor, sivd );
+  maybe_add_symbol( dec_cursor, dec_cursor, sid );
 
   // Now we have to determine whether the definition of a symbol is also
   // necessary in addition to its declaration.
@@ -964,7 +959,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   if ( tidy_Cursor_isBeforeInTranslationUnit( def_cursor, dec_cursor ) )
     return;
 
-  maybe_add_symbol( dec_cursor, def_cursor, sivd );
+  maybe_add_symbol( dec_cursor, def_cursor, sid );
 }
 
 /**
@@ -972,12 +967,12 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
  *
  * @param member_ref_cursor The member reference's cursor to visit.
  * @param parent Not used.
- * @param sivd The symbols_init_visitor_data to use.
+ * @param sid The symbols_init_data to use.
  */
 static void visit_MemberRefExpr( CXCursor member_ref_cursor, CXCursor parent,
-                                 symbols_init_visitor_data *sivd ) {
+                                 symbols_init_data *sid ) {
   (void)parent;
-  assert( sivd != NULL );
+  assert( sid != NULL );
 
   // Gets the cursor for _a_ declaration of the symbol.
   CXCursor dec_cursor = clang_getCursorReferenced( member_ref_cursor );
@@ -986,7 +981,7 @@ static void visit_MemberRefExpr( CXCursor member_ref_cursor, CXCursor parent,
 
   CXCursor const parent_cursor = clang_getCursorSemanticParent( dec_cursor );
   if ( !tidy_Cursor_isClassDecl( parent_cursor ) )
-    visit_most_kinds( member_ref_cursor, parent_cursor, sivd );
+    visit_most_kinds( member_ref_cursor, parent_cursor, sid );
 }
 
 /**
@@ -998,13 +993,13 @@ static void visit_MemberRefExpr( CXCursor member_ref_cursor, CXCursor parent,
  *
  * @param overloaded_cursor The overloaded definition's cursor to visit.
  * @param parent Not used.
- * @param sivd The symbols_init_visitor_data to use.
+ * @param sid The symbols_init_data to use.
  */
 static void visit_OverloadedDeclRef( CXCursor overloaded_cursor,
                                      CXCursor parent,
-                                     symbols_init_visitor_data *sivd ) {
+                                     symbols_init_data *sid ) {
   (void)parent;
-  assert( sivd != NULL );
+  assert( sid != NULL );
 
   unsigned const num_decls = clang_getNumOverloadedDecls( overloaded_cursor );
   for ( unsigned i = 0; i < num_decls; ++i ) {
@@ -1014,7 +1009,7 @@ static void visit_OverloadedDeclRef( CXCursor overloaded_cursor,
     dec_cursor = clang_getCanonicalCursor( dec_cursor );
     if ( tidy_Cursor_isInvalid( dec_cursor ) )
       continue;
-    maybe_add_symbol( dec_cursor, dec_cursor, sivd );
+    maybe_add_symbol( dec_cursor, dec_cursor, sid );
     //
     // It's possible that different overloads will be declared in different
     // headers.  But for now, we stop after the first overload.
@@ -1036,12 +1031,12 @@ void symbols_init( void ) {
   ATEXIT( &symbols_cleanup );
 
   CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
-  symbols_init_visitor_data sivd = {
+  symbols_init_data sid = {
     .source_file = clang_getFile( tidy_tu, tidy_source_path ),
     .cpp_scope_cursor = clang_getNullCursor()
   };
-  clang_visitChildren( cursor, &symbols_init_visitor, &sivd );
-  if ( sivd.verbose_printed )
+  clang_visitChildren( cursor, &symbols_init_visitor, &sid );
+  if ( sid.verbose_printed )
     verbose_printf( "\n" );
 }
 
