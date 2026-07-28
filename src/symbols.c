@@ -162,8 +162,8 @@ struct symbols_init_data {
  *
  *      void f( std::ostream& );
  *
- * then the symbol in the comment
- * will be `std::ostream` and not `std::basic_ostream`:
+ * then the symbol in the comment will be `std::ostream` and not
+ * `std::basic_ostream`:
  *
  *      #include <ostream>              // std::ostream
  *
