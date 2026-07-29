@@ -369,22 +369,6 @@ bool tidy_Cursor_isClassDecl( CXCursor cursor ) {
   } // switch
 }
 
-bool tidy_Cursor_isScopeDecl( CXCursor cursor ) {
-  enum CXCursorKind const kind = clang_getCursorKind( cursor );
-  switch ( kind ) {
-    case CXCursor_ClassDecl:
-    case CXCursor_ClassTemplate:
-    case CXCursor_ClassTemplatePartialSpecialization:
-    case CXCursor_EnumDecl:
-    case CXCursor_Namespace:
-    case CXCursor_StructDecl:
-    case CXCursor_UnionDecl:
-      return true;
-    default:
-      return false;
-  } // switch
-}
-
 bool tidy_Cursor_isInFile( CXCursor cursor, CXFile file ) {
   assert( file != NULL );
 
@@ -429,6 +413,22 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_cursor ) {
 
 bool tidy_Cursor_isInvalid( CXCursor cursor ) {
   return clang_Cursor_isNull( cursor ) || clang_isInvalid( cursor.kind );
+}
+
+bool tidy_Cursor_isScopeDecl( CXCursor cursor ) {
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  switch ( kind ) {
+    case CXCursor_ClassDecl:
+    case CXCursor_ClassTemplate:
+    case CXCursor_ClassTemplatePartialSpecialization:
+    case CXCursor_EnumDecl:
+    case CXCursor_Namespace:
+    case CXCursor_StructDecl:
+    case CXCursor_UnionDecl:
+      return true;
+    default:
+      return false;
+  } // switch
 }
 
 int tidy_File_CompareByName( CXFile i_file, CXFile j_file ) {
