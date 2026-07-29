@@ -125,14 +125,6 @@ extern unsigned tidy_includes_unnecessary;
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * For the source file being tidied, gets its associated header, if any.
- *
- * @return Returns the associated header or NULL for none.
- */
-NODISCARD
-tidy_include* get_associated_header( void );
-
-/**
  * Initializes the implicit include proxies for the translation unit.
  *
  * @sa includes_init()

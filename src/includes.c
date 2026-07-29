@@ -118,6 +118,9 @@ static void   ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
 #endif /* NEED_II_MATRIX */
 
 NODISCARD
+static bool   is_assoc_header( tidy_include const*, char const* );
+
+NODISCARD
 static char*  tidy_File_getRelativePath( CXFile );
 
 static void   tidy_include_cleanup( tidy_include* );
@@ -166,6 +169,43 @@ static ii_matrix_t  **ii_matrix;
 #endif /* NEED_II_MATRIX */
 
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * For the source file being tidied, gets its associated header, if any.
+ *
+ * @return Returns the associated header or NULL for none.
+ */
+NODISCARD
+static tidy_include* get_associated_header( void ) {
+  static tidy_include *assoc_include;
+
+  RUN_ONCE {
+    char const *const ext = path_ext( tidy_source_path );
+    if ( ext == NULL )
+      return NULL;
+    char const *const lang = get_ext_language( ext );
+    if ( lang == NULL )
+      return NULL;
+    if ( tolower( ext[0] ) != 'c' )
+      return NULL;
+
+    char path_buf[ PATH_MAX ];
+    char const *const source_path_no_ext =
+      path_no_ext( tidy_source_path, path_buf );
+
+    rb_iterator_t iter;
+    rb_iterator_init( &iter, &tidy_include_set );
+    for ( tidy_include *include;
+          (include = rb_iterator_next( &iter )) != NULL; ) {
+      if ( is_assoc_header( include, source_path_no_ext ) ) {
+        assoc_include = include;
+        break;
+      }
+    } // for
+  }
+
+  return assoc_include;
+}
 
 /**
  * Gets the corresponding C++ header name of \a c_name, e.g., given `string.h`,
@@ -1047,37 +1087,6 @@ static int tidy_symbol_ptr_cmp_by_ref_count( void const *i_pp,
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
-
-tidy_include* get_associated_header( void ) {
-  static tidy_include *assoc_include;
-
-  RUN_ONCE {
-    char const *const ext = path_ext( tidy_source_path );
-    if ( ext == NULL )
-      return NULL;
-    char const *const lang = get_ext_language( ext );
-    if ( lang == NULL )
-      return NULL;
-    if ( tolower( ext[0] ) != 'c' )
-      return NULL;
-
-    char path_buf[ PATH_MAX ];
-    char const *const source_path_no_ext =
-      path_no_ext( tidy_source_path, path_buf );
-
-    rb_iterator_t iter;
-    rb_iterator_init( &iter, &tidy_include_set );
-    for ( tidy_include *include;
-          (include = rb_iterator_next( &iter )) != NULL; ) {
-      if ( is_assoc_header( include, source_path_no_ext ) ) {
-        assoc_include = include;
-        break;
-      }
-    } // for
-  }
-
-  return assoc_include;
-}
 
 void implicit_proxies_init( void ) {
   ASSERT_RUN_ONCE();
