@@ -1,5 +1,12 @@
+2026-07-29  Paul J. Lucas <paul@lucasmail.org>
+
+   * src/Makefile.am, config_file.c, include-tidy.c, includes.c, includes.h,
+     proxies.c, proxies.h: Split implicit proxy functions into proxies.c.
+   * includes.c, includes.h: Moved get_associated_header().
+
 2026-07-28  Paul J. Lucas <paul@lucasmail.org>
 
+   * includes.c, path_util.c, path_util.h: Added path_is_file().
    * src/Makefile.am, symbols.c, typedefs.c, typedefs.h: Split out typedef
      code.
    * clang_util.c: Undid: tidy_Cursor_getFirstChild() now skips
