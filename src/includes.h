@@ -125,13 +125,6 @@ extern unsigned tidy_includes_unnecessary;
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Initializes the implicit include proxies for the translation unit.
- *
- * @sa includes_init()
- */
-void implicit_proxies_init( void );
-
-/**
  * Adds \a sym to the set of symbols that are used in the file being tidied and
  * declared in \a include_file.
  *
@@ -181,18 +174,6 @@ tidy_include* include_find_by_rel_path( char const *rel_path );
  * @param delims The 2-element array to receive the delimiters.
  */
 void include_get_delims( tidy_include const *include, char delims[static 2] );
-
-/**
- * Checks whether adding a proxy from \a from_include to \a to_include would
- * cause a cycle.
- *
- * @param from_include The tidy_include to start from.
- * @param to_include The tidy_include to end at.
- * @return Returns `true` only if adding a proxy would cause a cycle.
- */
-NODISCARD
-bool include_proxy_would_cycle( tidy_include const *from_include,
-                                tidy_include const *to_include );
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**

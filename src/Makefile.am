@@ -45,6 +45,7 @@ include_tidy_SOURCES =	array.c array.h \
 			path_util.c path_util.h \
 			pjl_config.h config.h \
 			print.c print.h \
+			proxies.c proxies.h \
 			red_black.c red_black.h \
 			strbuf.c strbuf.h \
 			symbols.c symbols.h \

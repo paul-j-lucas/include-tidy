@@ -34,6 +34,7 @@
 #include "options.h"
 #include "path_util.h"
 #include "print.h"
+#include "proxies.h"
 #include "red_black.h"
 #include "strbuf.h"
 #include "toml_lite.h"
