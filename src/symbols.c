@@ -463,7 +463,7 @@ static void symbols_cleanup( void ) {
  * Visits each symbol in a translation unit.
  *
  * @param cursor The cursor for the symbol in the AST being visited.
- * @param parent Not used.
+ * @param parent The parent cursor of \a cursor.
  * @param data A pointer to a symbols_init_data.
  * @return Always returns `CXChildVisit_Recurse`.
  */
@@ -647,7 +647,7 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
  * @endparblock
  *
  * @param call_cursor The call expression's cursor to visit.
- * @param parent Not used.
+ * @param parent The parent cursor of \a call_cursor.
  * @param sid The symbols_init_data to use.
  */
 static void visit_CallExpr( CXCursor call_cursor, CXCursor parent,
@@ -688,7 +688,7 @@ static void visit_CallExpr( CXCursor call_cursor, CXCursor parent,
  * @endparblock
  *
  * @param field_cursor The field declaration's cursor to visit.
- * @param parent Not used.
+ * @param parent The parent cursor of \a field_cursor.
  * @param sid The symbols_init_data to use.
  */
 static void visit_FieldDecl( CXCursor field_cursor, CXCursor parent,
@@ -731,7 +731,7 @@ static void visit_FieldDecl( CXCursor field_cursor, CXCursor parent,
  * @endparblock
  *
  * @param macro_cursor The macro definition's cursor to visit.
- * @param parent Not used.
+ * @param parent The parent cursor of \a macro_cursor.
  * @param sid The symbols_init_data to use.
  */
 static void visit_MacroDefinition( CXCursor macro_cursor, CXCursor parent,
