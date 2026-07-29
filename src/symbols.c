@@ -465,7 +465,7 @@ static void symbols_cleanup( void ) {
  * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent The parent cursor of \a cursor.
  * @param data A pointer to a symbols_init_data.
- * @return Always returns `CXChildVisit_Recurse`.
+ * @return Always returns `CXChildVisit_Continue`.
  */
 static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
                                                      CXCursor parent,
