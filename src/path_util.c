@@ -192,6 +192,7 @@ char* path_normalize( char const *path ) {
 /// @cond DOXYGEN_IGNORE
 
 extern inline bool path_is_absolute( char const* );
+extern inline bool path_is_file( char const* );
 extern inline bool path_is_relative( char const* );
 
 /// @endcond

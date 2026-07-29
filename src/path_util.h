@@ -34,7 +34,7 @@
 // standard
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdbool.h>
-#include <stddef.h>
+#include <string.h>
 
 /// @endcond
 
@@ -120,10 +120,25 @@ char const* path_ext( char const *path );
  * @return Returns `true` only if \a path is absolute.
  *
  * @sa path_is_relative()
+ * @sa path_is_file()
  */
 NODISCARD
 inline bool path_is_absolute( char const *path ) {
   return path[0] == '/';
+}
+
+/**
+ * Gets whether \a path is just a filename.
+ *
+ * @param path the path to check.
+ * @return Returns `true` only if \a path is just a filename.
+ *
+ * @sa path_is_absolute()
+ * @sa path_is_relative()
+ */
+NODISCARD
+inline bool path_is_file( char const *path ) {
+  return strchr( path, '/' ) == NULL;
 }
 
 /**
@@ -153,6 +168,7 @@ bool path_is_local( char const *abs_path );
  * @return Returns `true` only if \a path is relative.
  *
  * @sa path_is_absolute()
+ * @sa path_is_file()
  */
 NODISCARD
 inline bool path_is_relative( char const *path ) {

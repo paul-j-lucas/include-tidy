@@ -352,8 +352,8 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   if ( !tidy_is_cxx )
     goto skip;
 
-  // Remaining cases are valid only for paths not in subdirectories.
-  if ( strchr( included->rel_path, '/' ) != NULL )
+  // Remaining cases are valid only for paths that are just filenames.
+  if ( !path_is_file( included->rel_path ) )
     goto skip;
 
   char cxx_path[ PATH_MAX ];
