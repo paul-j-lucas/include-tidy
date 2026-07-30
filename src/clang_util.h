@@ -61,7 +61,7 @@
  * less than, equal to, or greater than \a j_cursor, respectively.
  */
 NODISCARD
-int tidy_Cursor_Compare( CXCursor i_cursor, CXCursor j_cursor );
+int tidy_Cursor_compare( CXCursor i_cursor, CXCursor j_cursor );
 
 /**
  * Gets the first child cursor of \a cursor, if any.
@@ -181,7 +181,7 @@ bool tidy_Cursor_isScopeDecl( CXCursor cursor );
  * @sa tidy_FileUniqueID_Compare()
  */
 NODISCARD
-int tidy_File_CompareByName( CXFile i_file, CXFile j_file );
+int tidy_File_compareByName( CXFile i_file, CXFile j_file );
 
 /**
  * Compares two CXFileUniqueID objects.
@@ -191,7 +191,7 @@ int tidy_File_CompareByName( CXFile i_file, CXFile j_file );
  * @return Returns a number less than 0, 0, or greater than 0 if \a i_id is
  * less than, equal to, or greater than \a j_id, respectively.
  *
- * @sa tidy_File_CompareByName()
+ * @sa tidy_File_compareByName()
  */
 NODISCARD
 inline int tidy_FileUniqueID_Compare( CXFileUniqueID const *i_id,

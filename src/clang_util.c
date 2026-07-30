@@ -56,7 +56,7 @@ typedef struct      isBaseClass_data     isBaseClass_data;
 ////////// structs ////////////////////////////////////////////////////////////
 
 /**
- * Additional data passed to getCursorByName_visitor.
+ * Additional data passed to getCursorByName_visitor().
  */
 struct getCursorByName_data {
   char const *find_name;                ///< The name to find.
@@ -66,7 +66,7 @@ struct getCursorByName_data {
 };
 
 /**
- * Additional data passed to isBaseClass_visitor.
+ * Additional data passed to isBaseClass_visitor().
  */
 struct isBaseClass_data {
   /**
@@ -306,7 +306,7 @@ static bool tidy_Cursor_isTemplateSpecializationOf( CXCursor cursor,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-int tidy_Cursor_Compare( CXCursor i_cursor, CXCursor j_cursor ) {
+int tidy_Cursor_compare( CXCursor i_cursor, CXCursor j_cursor ) {
   if ( i_cursor.kind < j_cursor.kind )
     return -1;
   if ( i_cursor.kind > j_cursor.kind )
@@ -431,7 +431,7 @@ bool tidy_Cursor_isScopeDecl( CXCursor cursor ) {
   } // switch
 }
 
-int tidy_File_CompareByName( CXFile i_file, CXFile j_file ) {
+int tidy_File_compareByName( CXFile i_file, CXFile j_file ) {
   assert( i_file != NULL );
   assert( j_file != NULL );
 

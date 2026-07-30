@@ -86,7 +86,7 @@ static int tidy_typedef_cmp( tidy_typedef const *i_tdef,
                              tidy_typedef const *j_tdef ) {
   assert( i_tdef != NULL );
   assert( j_tdef != NULL );
-  return tidy_Cursor_Compare( i_tdef->type_cursor, j_tdef->type_cursor );
+  return tidy_Cursor_compare( i_tdef->type_cursor, j_tdef->type_cursor );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
