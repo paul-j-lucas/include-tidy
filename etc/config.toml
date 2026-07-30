@@ -236,6 +236,18 @@ std-cxx-includes = [
   "version",
 ]
 
+########## C/Unix #############################################################
+
+["arpa/inet.h"]
+symbols = [
+  "htonl",
+  "htonll",
+  "htons",
+  "ntohl",
+  "ntohll",
+  "ntohs",
+]
+
 # Gnulib weirdly declares free(3) in its string.h, but C says it's in stdlib.h.
 [free]
 includes = "stdlib.h"
@@ -296,10 +308,34 @@ symbols = [
 [strcasecmp]
 includes = "strings.h"
 
+# Some platforms still use the legacy includes for these, but POSIX says
+# they're in sys/select.h.
+["sys/select.h"]
+symbols = [
+  "FD_CLR",
+  "FD_ISSET",
+  "FD_SET",
+  "FD_ZERO",
+  "fd_set",
+  "select",
+]
+
+["sys/time.h"]
+symbols = [
+  "timeval"
+]
+
+["sys/types.h"]
+symbols = [
+  "off_t",
+  "pid_t",
+  "uid_t"
+]
+
 # Without this, other headers, like stdio.h, can include sys/types.h that some
 # systems declare time_t in, but C says it's in time.h.
 [time_t]
-includes = "time.h"
+includes = [ "ctime", "time.h" ]
 
 # wchar_t is declared in all of these, so any one is sufficient.
 [wchar_t]
@@ -311,5 +347,68 @@ includes = [
 # Some platforms have this in ctype.h, but C says it's in wctype.h.
 [wint_t]
 includes = "wctype.h"
+
+########## C++ ################################################################
+
+[cctype]
+symbols = [
+  "isalnum",
+  "isalpha",
+  "isascii",
+  "iscntrl",
+  "isdigit",
+  "isgraph",
+  "islower",
+  "isprint",
+  "ispunct",
+  "isspace",
+  "isupper",
+  "isxdigit",
+  "tolower",
+  "toupper",
+]
+
+[fstream]
+symbols = [
+  "std::ifstream",
+  "std::ofstream"
+]
+
+[ios]
+symbols = [
+  "std::ios",
+  "std::streampos"
+]
+
+[iostream]
+symbols = [
+  "std::endl",
+  "std::flush"
+]
+
+[iterator]
+symbols = [
+  "std::reverse_iterator",
+]
+
+[memory]
+symbols = [
+  "std::unique_ptr"
+]
+
+[ostream]
+symbols = [
+  "std::operator<<",
+  "std::ostream"
+]
+
+["std::streambuf"]
+includes = "streambuf"
+
+["std::string"]
+includes = "string"
+
+["std::unique_ptr"]
+includes = "memory"
 
 # vim:se et sw=2 ts=2:
