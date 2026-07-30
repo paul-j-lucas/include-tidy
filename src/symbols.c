@@ -70,10 +70,70 @@ struct symbols_init_data {
   bool      verbose_printed;            ///< Printed any verbose output?
 
   /**
+   * The cursor of the current C++ function (including member functions and
+   * overloaded operators).
+   *
+   * @par Example
+   * @parblock
+   * For C++, things are more complicated.  Given something like:
+   *
+   *      // Base.h
+   *      class Base {
+   *        // ...
+   *      };
+   *
+   *      bool operator==( Base const&, Base const& );
+   *
+   *      // Derived.h
+   *      #include "Base.h"
+   *      class Derived : public Base {
+   *        // ...
+   *      };
+   *
+   *      // Derived.cpp
+   *      #include "Derived.h"
+   *
+   *      void f( Derived i, Derived j ) {
+   *        if ( i == j )
+   *          // ...
+   *
+   * Here, `Derived.cpp` correctly includes `Derived.h` that correctly includes
+   * `Base.h`. `Derived.cpp` uses `operator==()` that's declared in `Base.h`,
+   * so `Derived.cpp` should include `Base.h` according to the include-what-
+   * you-use rule (IWYU).
+   *
+   * However, since `Derived` is derived from `Base`, that means the definition
+   * of `Base` was available via `Derived.h` including `Base.h`; and since
+   * the arguments to `operator==()` are `Derived` and `Derived.cpp` includes
+   * `Derived.h`, that should be sufficient --- an exception to IWYU.
+   * @endparblock
+   *
+   * @remarks
+   * @parblock
+   * To implement this, the decision to add the symbol for the function has to
+   * be dererred until after all of its argument types are checked.
+   * Specifically, if the function or operator:
+   *
+   *  + Has zero arguments; or:
+   *  + All arguments are either of standard types (or `typedef`s thereof) or
+   *    unrelated class types.
+   *
+   * then the symbol has to be added.  However, if the function or operator:
+   *
+   *  + Has one or more arguments; and:
+   *  + At least one of those arguments' type is derived from the relevant
+   *    base.
+   *
+   * then the symbol name does not have to be added.
+   * @endparblock
+   */
+  CXCursor cxx_func_cursor;
+
+  /**
    * The cursor of the current C++ scope (class, structure, union, enumeration,
    * or namespace), if any.
    *
-   * @remarks
+   * @par Example
    * @parblock
    * For C++, things are more complicated.  Given something like:
    *
@@ -115,10 +175,13 @@ struct symbols_init_data {
    *
    * The exception applies to any referenced symbol that's inherited: data
    * members, constructors, destructors, or member functions.
+   * @endparblock
    *
+   * @remarks
+   * @parblock
    * This needs to be maintained inside <code>%symbols_init_data</code> rather
-   * than just a local variable inside \ref symbols_init_visitor() is because
-   * of the way libclang handles type aliases.  For one like `global_type`, the
+   * than just a local variable inside \ref symbols_init_visitor() because of
+   * the way libclang handles type aliases.  For one like `global_type`, the
    * AST is like:
    *
    *      global_type (TypeAliasDecl)
@@ -140,7 +203,7 @@ NODISCARD
 static unsigned get_next_token_index( CXToken const[], unsigned, unsigned );
 
 static void     tidy_symbol_cleanup( tidy_symbol* );
-static void     visit_CallExpr( CXCursor, CXCursor, symbols_init_data* );
+static bool     visit_CallExpr( CXCursor, CXCursor, symbols_init_data* );
 static void     visit_FieldDecl( CXCursor, CXCursor, symbols_init_data* );
 static void     visit_MacroDefinition( CXCursor, CXCursor, symbols_init_data* );
 static void     visit_MemberRefExpr( CXCursor, CXCursor, symbols_init_data* );
@@ -451,6 +514,59 @@ done:
 }
 
 /**
+ * Helper function for visit_CallExpr() that gets whether the symbol for a
+ * C++ function or operator should be added to the global set.
+ *
+ * @param call_cursor A CallExpr cursor.
+ * @param func_cursor The cursor of the function being called.
+ * @return Returns `true` only if the function should be added.
+ */
+NODISCARD
+static bool should_add_cxx_function( CXCursor call_cursor,
+                                     CXCursor func_cursor ) {
+  int const num_args = clang_Cursor_getNumArguments( call_cursor );
+  assert( num_args >= 0 && "call_cursor is not a function" );
+  if ( num_args == 0 )
+    return true;
+
+  verbose_print_cursor( "func_cursor", func_cursor );
+  CXCursor const base_cursor = tidy_Cursor_getFunctionScope( func_cursor );
+  verbose_print_cursor( "base_cursor", base_cursor );
+  bool const is_base_a_class = tidy_Cursor_isClassDecl( base_cursor );
+  bool const is_base_the_tu =
+    clang_getCursorKind( base_cursor ) == CXCursor_TranslationUnit;
+
+  bool has_derived_arg = false;
+
+  for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
+    CXCursor arg_cursor = clang_Cursor_getArgument( call_cursor, i );
+    arg_cursor = tidy_Cursor_getClassAsWritten( arg_cursor );
+    if ( clang_Cursor_isNull( arg_cursor ) )
+      continue;
+
+    if ( is_base_a_class ) {
+      if ( tidy_Cursor_isInheritedFrom( arg_cursor, base_cursor ) ) {
+        has_derived_arg = true;
+      }
+      else {
+        if ( clang_equalCursors( arg_cursor, base_cursor ) )
+          return true;
+        CXCursor const arg_parent = clang_getCursorSemanticParent( arg_cursor );
+        if ( clang_equalCursors( arg_parent, base_cursor ) )
+          return true;
+      }
+    }
+    else if ( !is_base_the_tu ) {
+      CXCursor const arg_parent = clang_getCursorSemanticParent( arg_cursor );
+      if ( clang_equalCursors( arg_parent, base_cursor ) )
+        has_derived_arg = true;
+    }
+  } // for
+
+  return !has_derived_arg;
+}
+
+/**
  * Cleans-up all symbols.
  */
 static void symbols_cleanup( void ) {
@@ -509,7 +625,8 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 
   switch ( kind ) {
     case CXCursor_CallExpr:
-      visit_CallExpr( cursor, parent, sid );
+      if ( visit_CallExpr( cursor, parent, sid ) )
+        goto skip_children;
       break;
 
     case CXCursor_DeclRefExpr:
@@ -574,6 +691,8 @@ skip:
   // a child node. Therefore, recurse manually.
   //
   clang_visitChildren( cursor, &symbols_init_visitor, data );
+
+skip_children:
   if ( is_scope_change )
     sid->cxx_scope_cursor = prev_cxx_scope_cursor;
   return CXChildVisit_Continue;
@@ -634,7 +753,7 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
 /**
  * Visits a `CXCursor_CallExpr` kind of cursor.
  *
- * @remarks
+ * @par Example
  * @parblock
  * For the case of a C++ member function call, its AST is like:
  *
@@ -650,19 +769,35 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
  * @param parent The parent cursor of \a call_cursor.
  * @param sid The symbols_init_data to use.
  */
-static void visit_CallExpr( CXCursor call_cursor, CXCursor parent,
+static bool visit_CallExpr( CXCursor call_cursor, CXCursor parent,
                             symbols_init_data *sid ) {
   assert( sid != NULL );
-  (void)parent;
 
-  CXCursor const child_cursor = tidy_Cursor_getFirstChild( call_cursor );
-  if ( !tidy_Cursor_isInvalid( child_cursor ) ) {
-    enum CXCursorKind const child_kind = clang_getCursorKind( child_cursor );
-    if ( child_kind == CXCursor_MemberRefExpr )
-      return;
+  if ( tidy_is_cxx ) {
+    //
+    //
+    //
+    CXCursor const child_cursor = tidy_Cursor_getFirstChild( call_cursor );
+    if ( !tidy_Cursor_isInvalid( child_cursor ) ) {
+      enum CXCursorKind const child_kind = clang_getCursorKind( child_cursor );
+      if ( child_kind == CXCursor_MemberRefExpr )
+        return false;
+    }
+
+    CXCursor const func_cursor = clang_getCursorReferenced( call_cursor );
+    bool const is_function = tidy_Cursor_isFunctionDecl( func_cursor );
+
+    CXCursor const prev_func_cursor = sid->cxx_func_cursor;
+    sid->cxx_func_cursor = is_function ? func_cursor : clang_getNullCursor();
+    clang_visitChildren( call_cursor, &symbols_init_visitor, sid );
+    sid->cxx_func_cursor = prev_func_cursor;
+
+    if ( !is_function || !should_add_cxx_function( call_cursor, func_cursor ) )
+      return true;
   }
 
   visit_most_kinds( call_cursor, parent, sid );
+  return tidy_is_cxx;
 }
 
 /**
@@ -785,8 +920,12 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   if ( tidy_Cursor_isInvalid( dec_cursor ) )
     return;
 
-  // See the comment for symbols_init_data::cxx_scope_cursor.
   if ( tidy_is_cxx ) {
+    // See the comment for symbols_init_data::cxx_func_cursor.
+    if ( clang_equalCursors( dec_cursor, sid->cxx_func_cursor ) )
+      return;
+
+    // See the comment for symbols_init_data::cxx_scope_cursor.
     CXCursor const base_cursor = clang_getCursorSemanticParent( dec_cursor );
     CXCursor const scope_cursor =
       !clang_Cursor_isNull( sid->cxx_scope_cursor ) ?
@@ -891,6 +1030,7 @@ void symbols_init( void ) {
   CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
   symbols_init_data sid = {
     .source_file = clang_getFile( tidy_tu, tidy_source_path ),
+    .cxx_func_cursor = clang_getNullCursor(),
     .cxx_scope_cursor = clang_getNullCursor()
   };
   clang_visitChildren( cursor, &symbols_init_visitor, &sid );

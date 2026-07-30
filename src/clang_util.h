@@ -64,6 +64,42 @@ NODISCARD
 int tidy_Cursor_compare( CXCursor i_cursor, CXCursor j_cursor );
 
 /**
+ * Gets the cursor for the C++ class type as written in the source file.
+ *
+ * @par Example
+ * @parblock
+ * Given something like:
+ *
+ *      class Base {
+ *      public:
+ *        class iterator {
+ *          // ...
+ *        };
+ *        // ...
+ *      };
+ *
+ *      class Derived : public Base {
+ *        // ...
+ *      };
+ *
+ *      void f() {
+ *        Derived::iterator i;
+ *        // ...
+ *      }
+ *
+ * the cursor for `i` would be of type `Base::iterator` because `Derived`
+ * doesn't contain `iterator` and instead inherits it from `Base`.  But in some
+ * cases, we really want to know that it was `Derived` as written in the source
+ * file.
+ * @endparblock
+ *
+ * @param cursor The cursor for an expression.
+ * @return Returns the cursor for its type as written in the source file.
+ */
+NODISCARD
+CXCursor tidy_Cursor_getClassAsWritten( CXCursor cursor );
+
+/**
  * Gets the first child cursor of \a cursor, if any.
  *
  * @param cursor The cursor to get the first child cursor of, if any.
@@ -72,6 +108,39 @@ int tidy_Cursor_compare( CXCursor i_cursor, CXCursor j_cursor );
  */
 NODISCARD
 CXCursor tidy_Cursor_getFirstChild( CXCursor cursor );
+
+/**
+ * Gets the scope for a function or operator.
+ *
+ * @remarks
+ * @parblock
+ * For a C++ member function or operator, this function returns the class it's
+ * a member of.
+ *
+ * For a C++ non-member function or operator, iterates over its arguments and
+ * returns the cursor for the class of the first argument that is a class; or
+ * the cursor for the translation unit if none.
+ * @endparblock
+ *
+ * @par Example
+ * @parblock
+ * Given something like:
+ *
+ *      class Base {
+ *        // ...
+ *      };
+ *
+ *      bool operator==( Base const&, Base const& );
+ *
+ * this function would return the cursor for the `Base` class.
+ * @endparblock
+ *
+ * @param func_cursor The cursor for a function or operator to get the scope
+ * of.
+ * @return Returns said scope.
+ */
+NODISCARD
+CXCursor tidy_Cursor_getFunctionScope( CXCursor func_cursor );
 
 /**
  * Given a cursor at a local name of an enumeration, class, class data member,
@@ -125,6 +194,16 @@ bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_cursor,
  */
 NODISCARD
 bool tidy_Cursor_isClassDecl( CXCursor cursor );
+
+/**
+ * Gets whether \a cursor is a function, member function, constructor,
+ * destructor, or conversion operator.
+ *
+ * @param cursor The cursor to check.
+ * @return Returns `true` only if \a cursor is a function.
+ */
+NODISCARD
+bool tidy_Cursor_isFunctionDecl( CXCursor cursor );
 
 /**
  * Gets whether \a cursor is referenced from \a file.
@@ -244,9 +323,9 @@ CXCursor tidy_getCursorByNameToken( CXTranslationUnit tu, CXToken token,
  * Similar to `clang_getCursorExtent()` except that it works better when macros
  * are involved.
  *
- * @remarks
+ * @par Example
  * @parblock
- * For example, given this code to tidy:
+ * Given something like:
  *
  *      #include <stdalign.h>           // alignas
  *      #include <stddef.h>             // max_align_t
@@ -294,7 +373,7 @@ CXFile tidy_getFileLocation_File( CXSourceLocation loc );
 /**
  * Gets a unique ID for \a file.
  *
- * @remarks Unlike `clang_getFileUniqueID()`, this function never fails.
+ * @note Unlike `clang_getFileUniqueID()`, this function never fails.
  *
  * @param file The file to get the unique ID for.
  * @return Returns said unique ID.
