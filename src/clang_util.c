@@ -608,7 +608,7 @@ bool tidy_Token_isEqual( CXTranslationUnit tu, CXToken token,
 
 /// @cond DOXYGEN_IGNORE
 
-extern inline int tidy_FileUniqueID_Compare( CXFileUniqueID const*,
+extern inline int tidy_FileUniqueID_compare( CXFileUniqueID const*,
                                              CXFileUniqueID const* );
 
 /// @endcond

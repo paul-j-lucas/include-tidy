@@ -178,7 +178,7 @@ bool tidy_Cursor_isScopeDecl( CXCursor cursor );
  * i_file is less than, equal to, or greater than the name of \a j_file,
  * respectively.
  *
- * @sa tidy_FileUniqueID_Compare()
+ * @sa tidy_FileUniqueID_compare()
  */
 NODISCARD
 int tidy_File_compareByName( CXFile i_file, CXFile j_file );
@@ -194,7 +194,7 @@ int tidy_File_compareByName( CXFile i_file, CXFile j_file );
  * @sa tidy_File_compareByName()
  */
 NODISCARD
-inline int tidy_FileUniqueID_Compare( CXFileUniqueID const *i_id,
+inline int tidy_FileUniqueID_compare( CXFileUniqueID const *i_id,
                                       CXFileUniqueID const *j_id ) {
   return memcmp( i_id, j_id, sizeof *i_id );
 }
