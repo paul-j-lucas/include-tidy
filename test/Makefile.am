@@ -45,7 +45,7 @@ TESTS+=	tests/associated-header.test \
 	tests/duplicate.test \
 	tests/header-keep.test
 
-# Real-world tests.
+# Real-world C tests.
 TESTS+=	tests/c_ast.test \
 	tests/c_type.test \
 	tests/c_typedef.test \
@@ -57,6 +57,9 @@ TESTS+=	tests/c_ast.test \
 	tests/show.test \
 	tests/slist.test \
 	tests/types.test
+
+# C++ tests.
+TESTS+=	tests/cxx.test
 
 ###############################################################################
 
