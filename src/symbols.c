@@ -529,9 +529,7 @@ static bool should_add_cxx_function( CXCursor call_cursor,
   if ( num_args == 0 )
     return true;
 
-  verbose_print_cursor( "func_cursor", func_cursor );
   CXCursor const base_cursor = tidy_Cursor_getFunctionScope( func_cursor );
-  verbose_print_cursor( "base_cursor", base_cursor );
   bool const is_base_a_class = tidy_Cursor_isClassDecl( base_cursor );
   bool const is_base_the_tu =
     clang_getCursorKind( base_cursor ) == CXCursor_TranslationUnit;
