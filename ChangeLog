@@ -1,5 +1,7 @@
 2026-07-30  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c, clang_util.h, symbols.c: Better handling of CallExprs by
+     deferring whether to add the symbol for the function.
    * etc/config.toml: Mostly C++ additions.
 
 2026-07-29  Paul J. Lucas <paul@lucasmail.org>
