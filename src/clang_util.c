@@ -143,7 +143,7 @@ skip:
  * A helper function for tidy_Cursor_getFirstChild() that visits only the first
  * child cursor, if any, of a cursor.
  *
- * @param cursor The child cursor being visited.
+ * @param cursor The cursor being visited.
  * @param parent Not used.
  * @param data A pointer to receive the \a cursor, the first child cursor.
  * @return Always returns `CXChildVisit_Break`.
@@ -224,7 +224,7 @@ static char* getScopedName_thunk( CXCursor cursor, getCursorName_fn name_fn ) {
  * A helper function for tidy_Cursor_isInheritedFrom() that visits the children
  * of a class looking for a base class.
  *
- * @param cursor The child cursor being visited.
+ * @param cursor The cursor being visited.
  * @param parent Not used.
  * @param data The isBaseClass_data to use.
  * @return Returns `CXChildVisit_Break` only if a base class is found;
