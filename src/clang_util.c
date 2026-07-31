@@ -312,13 +312,13 @@ NODISCARD
 static CXCursor tidy_Cursor_getOutermostClass( CXCursor cursor ) {
   CXCursor enclosing_cursor = clang_getNullCursor();
 
-  if ( !clang_Cursor_isNull( cursor ) ) {
-    cursor = clang_getCursorSemanticParent( cursor );
-    while ( tidy_Cursor_isClassDecl( cursor ) ) {
+  while ( !clang_Cursor_isNull( cursor ) ) {
+    if ( tidy_Cursor_isClassDecl( cursor ) )
       enclosing_cursor = cursor;
-      cursor = clang_getCursorSemanticParent( cursor );
-    } // while
-  }
+    else if ( !clang_Cursor_isNull( enclosing_cursor ) )
+      break;
+    cursor = clang_getCursorSemanticParent( cursor );
+  } // wnile
 
   return enclosing_cursor;
 }
@@ -494,7 +494,7 @@ CXCursor tidy_Cursor_getFunctionScope( CXCursor func_cursor ) {
 
   // If it's a member function, return its class directly.
   if ( tidy_Cursor_isClassDecl( parent ) )
-    return tidy_Cursor_getOutermostClass( parent );
+    return parent;
 
   // For a free function/operator, inspect parameter types for an associated
   // class.
