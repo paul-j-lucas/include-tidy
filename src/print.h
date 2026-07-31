@@ -196,7 +196,7 @@ void print_source_line( char const *path, unsigned line, unsigned col,
  * Prints a cursor's "spelling", kind, and source location.
  *
  * @param label A label to print before the cursor.  May be either NULL or the
- * empty string for none.
+ * empty string for none.  If neither, prints a space after the label.
  * @param cursor The cursor to print.
  */
 void verbose_print_cursor( char const *label, CXCursor cursor );
