@@ -85,7 +85,6 @@ int tidy_Cursor_compare( CXCursor i_csr, CXCursor j_csr );
  *      void f() {
  *        Derived::iterator i;
  *        // ...
- *      }
  *
  * the cursor for `i` would be of type `Base::iterator` because `Derived`
  * doesn't contain `iterator` and instead inherits it from `Base`.  But in some
