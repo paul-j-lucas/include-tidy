@@ -137,7 +137,7 @@ struct symbols_init_data {
    * then the symbol name does not have to be added.
    * @endparblock
    */
-  CXCursor cxx_func_cursor;
+  CXCursor cxx_fn_csr;
 
   /**
    * The cursor of the current C++ scope (class, structure, union, enumeration,
@@ -204,10 +204,13 @@ struct symbols_init_data {
    * symbols_init_visitor().
    * @endparblock
    */
-  CXCursor cxx_scope_cursor;
+  CXCursor cxx_scope_csr;
 };
 
 ////////// local functions ////////////////////////////////////////////////////
+
+NODISCARD
+static add_cxx_member_fn_rv add_cxx_member_fn( CXCursor, CXCursor );
 
 NODISCARD
 static unsigned get_next_token_index( CXToken const[], unsigned, unsigned );
@@ -228,11 +231,85 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Helper function for should_add_cxx_fn() that gets whether the symbol for a
- * C++ member function or operator should be added to the global set.
+ * Helper function for visit_CallExpr() that gets whether the symbol for a
+ * C++ function or operator should be added to the global set.
  *
- * @param call_cursor A CallExpr cursor.
- * @param fn_cursor The cursor of the function being called.
+ * @note This function should be called only for C++ files being tidied.
+ *
+ * @param call_csr A CallExpr cursor.
+ * @param fn_csr The cursor of the function being called.
+ * @return Returns `true` only if the function should be added.
+ */
+NODISCARD
+static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
+  assert( tidy_is_cxx );
+
+  enum CXCursorKind const fn_kind = clang_getCursorKind( fn_csr );
+  bool const is_member_fn = fn_kind == CXCursor_CXXMethod ||
+                            fn_kind == CXCursor_ConversionFunction;
+
+  if ( is_member_fn && !add_cxx_member_fn( call_csr, fn_csr ) )
+    return false;
+
+  int const num_args = clang_Cursor_getNumArguments( call_csr );
+  assert( num_args >= 0 && "call_csr is not a function" );
+  if ( num_args == 0 )
+    return true;
+
+  CXCursor const scope_csr = tidy_Cursor_getFunctionScope( fn_csr );
+  enum CXCursorKind const scope_kind = clang_getCursorKind( scope_csr );
+  bool const is_tu = clang_isTranslationUnit( scope_kind );
+
+  for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
+    CXCursor const arg_csr = clang_Cursor_getArgument( call_csr, i );
+    CXCursor const arg_class_csr = tidy_Cursor_getClassAsWritten( arg_csr );
+    if ( clang_Cursor_isNull( arg_class_csr ) )
+      continue;
+
+    if ( tidy_Cursor_isInheritedMemberFunctionCall( arg_csr, NULL ) )
+      return false;
+
+    // Parameter inheritance check (e.g. operator!=(Base::iterator,
+    // Base::iterator) called with Derived::iterator)
+    CXCursor const param_csr = clang_Cursor_getArgument( fn_csr, i );
+    if ( !clang_Cursor_isNull( param_csr ) ) {
+      CXCursor const arg_class =
+        tidy_Cursor_getOutermostClass( arg_class_csr );
+      CXCursor const param_type_csr =
+        tidy_Cursor_getUnderlyingType( param_csr );
+      CXCursor const param_class =
+        tidy_Cursor_getOutermostClass( param_type_csr );
+      if ( tidy_Cursor_isInheritedFrom( arg_class, param_class ) )
+        return false;
+    }
+
+    // Scope / Namespace matching
+    CXCursor const arg_parent =
+      clang_getCursorSemanticParent( arg_class_csr );
+
+    if ( is_member_fn ) {
+      // Mandate header if argument type is defined nested inside the member
+      // function's class scope
+      if ( clang_equalCursors( arg_parent, scope_csr ) )
+        return true;
+    }
+    else {
+      // Suppress header if the free function is in a namespace and the argument
+      // belongs to that same namespace
+      if ( !is_tu && clang_equalCursors( arg_parent, scope_csr ) )
+        return false;
+    }
+  } // for
+
+  return true;
+}
+
+/**
+ * Helper function for add_cxx_fn() that gets whether the symbol for a C++
+ * member function or operator should be added to the global set.
+ *
+ * @param call_csr A CallExpr cursor.
+ * @param fn_csr The cursor of the function being called.
  * @return
  *  + #ADD_CXX_MEMBER_FN_NO only if the symbol for the member function should
  *    not be added.
@@ -240,28 +317,28 @@ static rb_tree_t symbol_set;            ///< Set of symbols.
  *    symbol for the member function (further checks are needed).
  */
 NODISCARD
-static add_cxx_member_fn_rv add_cxx_member_fn( CXCursor call_cursor,
-                                               CXCursor fn_cursor ) {
-  CXCursor const callee = tidy_Cursor_getFirstExposedChild( call_cursor );
-  if ( clang_getCursorKind( callee ) != CXCursor_MemberRefExpr )
+static add_cxx_member_fn_rv add_cxx_member_fn( CXCursor call_csr,
+                                               CXCursor fn_csr ) {
+  CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( call_csr );
+  if ( clang_getCursorKind( callee_csr ) != CXCursor_MemberRefExpr )
     return ADD_CXX_MEMBER_FN_UNKNOWN;
 
-  CXCursor const obj_expr = tidy_Cursor_getFirstExposedChild( callee );
-  if ( clang_Cursor_isNull( obj_expr ) )
+  CXCursor const obj_expr_csr = tidy_Cursor_getFirstExposedChild( callee_csr );
+  if ( clang_Cursor_isNull( obj_expr_csr ) )
     return ADD_CXX_MEMBER_FN_UNKNOWN;
 
-  CXCursor const obj_class = tidy_Cursor_getUnderlyingType( obj_expr );
-  CXCursor const fn_class = clang_getCursorSemanticParent( fn_cursor );
+  CXCursor const obj_class_csr = tidy_Cursor_getUnderlyingType( obj_expr_csr );
+  CXCursor const fn_class_csr = clang_getCursorSemanticParent( fn_csr );
 
-  if ( tidy_Cursor_isInheritedFrom( obj_class, fn_class ) )
+  if ( tidy_Cursor_isInheritedFrom( obj_class_csr, fn_class_csr ) )
     return ADD_CXX_MEMBER_FN_NO;
 
-  CXCursor base_cursor = clang_getNullCursor();
-  if ( !tidy_Cursor_isInheritedMemberFunctionCall( obj_expr, &base_cursor ) )
+  CXCursor base_csr = clang_getNullCursor();
+  if ( !tidy_Cursor_isInheritedMemberFunctionCall( obj_expr_csr, &base_csr ) )
     return ADD_CXX_MEMBER_FN_NO;
 
-  if ( clang_equalCursors( base_cursor, fn_class ) ||
-        tidy_Cursor_isInheritedFrom( base_cursor, fn_class ) ) {
+  if ( clang_equalCursors( base_csr, fn_class_csr ) ||
+        tidy_Cursor_isInheritedFrom( base_csr, fn_class_csr ) ) {
     return ADD_CXX_MEMBER_FN_NO;
   }
 
@@ -295,15 +372,15 @@ static unsigned get_next_token_index( CXToken const tokens[],
  * Gets whether it's possible to go from a cursor that refernces a symbol to
  * the cursor that defines said symbol via the set of files that were included.
  *
- * @param ref_cursor A cursor referencing a symbol.
- * @param def_cursor A cursor defining a symbol.
+ * @param ref_csr A cursor referencing a symbol.
+ * @param def_csr A cursor defining a symbol.
  * @return Returns `true` only if it's possible.
  */
 NODISCARD
-static bool is_include_path( CXCursor ref_cursor, CXCursor def_cursor ) {
-  if ( tidy_Cursor_isInvalid( def_cursor ) )
+static bool is_include_path( CXCursor ref_csr, CXCursor def_csr ) {
+  if ( tidy_Cursor_isInvalid( def_csr ) )
     return false;
-  CXFile const def_file = tidy_getCursorLocation_File( def_cursor );
+  CXFile const def_file = tidy_getCursorLocation_File( def_csr );
   if ( def_file == NULL )
     return false;
   tidy_include const *const def_include = include_find_by_File( def_file );
@@ -312,9 +389,9 @@ static bool is_include_path( CXCursor ref_cursor, CXCursor def_cursor ) {
   if ( includes_include( NULL, def_include ) > 0 )
     return true;
 
-  if ( tidy_Cursor_isInvalid( ref_cursor ) )
+  if ( tidy_Cursor_isInvalid( ref_csr ) )
     return false;
-  CXFile const ref_file = tidy_getCursorLocation_File( ref_cursor );
+  CXFile const ref_file = tidy_getCursorLocation_File( ref_csr );
   if ( ref_file == NULL )
     return false;
   tidy_include const *const ref_include = include_find_by_File( ref_file );
@@ -327,14 +404,14 @@ static bool is_include_path( CXCursor ref_cursor, CXCursor def_cursor ) {
 
 /**
  * For a macro, gets the cursor for the identifier given by \a token within \a
- * scope_cursor, but only if \a token actually is an identifier, neither
+ * scope_csr, but only if \a token actually is an identifier, neither
  * `__VA_ARGS__` nor `__VA_OPT__`, nor one of the current macro's parameters.
  *
  * @remarks This is a variant of tidy_getCursorByNameToken(), but for a macro
  * that additionally takes \a param_set.
  *
  * @param token The token to get the cursor for.
- * @param scope_cursor The cursor of the scope to search within.
+ * @param scope_csr The cursor of the scope to search within.
  * @param param_set The set of macro parameter names.
  * @return Returns said cursor; or an invalid cursor if \a token is an
  * identifier, but not found; or the null cursor if \a token is:
@@ -345,8 +422,7 @@ static bool is_include_path( CXCursor ref_cursor, CXCursor def_cursor ) {
  * @sa tidy_getCursorByNameToken()
  */
 NODISCARD
-static CXCursor macro_getCursorByNameToken( CXToken token,
-                                            CXCursor scope_cursor,
+static CXCursor macro_getCursorByNameToken( CXToken token, CXCursor scope_csr,
                                             rb_tree_t const *param_set ) {
   assert( param_set != NULL );
 
@@ -356,16 +432,16 @@ static CXCursor macro_getCursorByNameToken( CXToken token,
   CXString const    token_cxs = clang_getTokenSpelling( tidy_tu, token );
   char const *const token_cs = clang_getCString( token_cxs );
 
-  CXCursor const rv_cursor =
+  CXCursor const rv_csr =
     strcmp( token_cs, "__VA_ARGS__" ) != 0 &&
     strcmp( token_cs, "__VA_OPT__" ) != 0 &&
     rb_tree_find( param_set, token_cs ) == NULL ?
-      tidy_getCursorByName( token_cs, scope_cursor )
+      tidy_getCursorByName( token_cs, scope_csr )
     :
       clang_getNullCursor();
 
   clang_disposeString( token_cxs );
-  return rv_cursor;
+  return rv_csr;
 }
 
 /**
@@ -442,16 +518,16 @@ static CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
                                                  rb_tree_t const *param_set ) {
   assert( param_set != NULL );
 
-  CXCursor const tu_cursor = clang_getTranslationUnitCursor( tidy_tu );
+  CXCursor const tu_csr = clang_getTranslationUnitCursor( tidy_tu );
 
-  CXCursor rv_cursor =
-    macro_getCursorByNameToken( tokens[ *ptoken_idx ], tu_cursor, param_set );
+  CXCursor rv_csr =
+    macro_getCursorByNameToken( tokens[ *ptoken_idx ], tu_csr, param_set );
 
-  CXCursor loop_cursor = rv_cursor;
+  CXCursor loop_csr = rv_csr;
   unsigned i = *ptoken_idx;
 
-  while ( !tidy_Cursor_isInvalid( loop_cursor ) ) {
-    rv_cursor = loop_cursor;
+  while ( !tidy_Cursor_isInvalid( loop_csr ) ) {
+    rv_csr = loop_csr;
     *ptoken_idx = i;
 
     i = get_next_token_index( tokens, token_count, *ptoken_idx );
@@ -464,25 +540,25 @@ static CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
     i = get_next_token_index( tokens, token_count, i );
     if ( i >= token_count )
       break;
-    loop_cursor = macro_getCursorByNameToken( tokens[i], rv_cursor, param_set );
+    loop_csr = macro_getCursorByNameToken( tokens[i], rv_csr, param_set );
   } // while
 
-  return rv_cursor;
+  return rv_csr;
 }
 
 /**
  * Helper function for symbols_init_visitor that maybe adds a symbol to the
  * global set.
  *
- * @param name_cursor The cursor to use for the name of the symbol.
- * @param sym_cursor The cursor for the symbol.
+ * @param name_csr The cursor to use for the name of the symbol.
+ * @param sym_csr The cursor for the symbol.
  * @param sid The symbols_init_data to use.
  */
-static void maybe_add_symbol( CXCursor name_cursor, CXCursor sym_cursor,
+static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
                               symbols_init_data *sid ) {
   assert( sid != NULL );
 
-  enum CXCursorKind const kind = clang_getCursorKind( sym_cursor );
+  enum CXCursorKind const kind = clang_getCursorKind( sym_csr );
   switch ( kind ) {
     case CXCursor_Constructor:
     case CXCursor_CXXMethod:
@@ -503,7 +579,7 @@ static void maybe_add_symbol( CXCursor name_cursor, CXCursor sym_cursor,
       /* suppress warning */;
   } // switch
 
-  CXFile const sym_file = tidy_getCursorLocation_File( sym_cursor );
+  CXFile const sym_file = tidy_getCursorLocation_File( sym_csr );
   if ( sym_file == NULL )
     return;
 
@@ -511,16 +587,16 @@ static void maybe_add_symbol( CXCursor name_cursor, CXCursor sym_cursor,
   if ( clang_File_isEqual( sym_file, sid->source_file ) )
     return;
 
-  tidy_typedef const *const found_tdef = typedef_find( sym_cursor );
+  tidy_typedef const *const found_tdef = typedef_find( sym_csr );
   char *const simple_name = found_tdef != NULL ?
     check_strdup( found_tdef->alias_name ) :
-    tidy_Cursor_getScopedSimpleName( name_cursor );
+    tidy_Cursor_getScopedSimpleName( name_csr );
 
   if ( config_ignore_symbol( simple_name ) )
     goto done;
 
   tidy_symbol new_sym = {
-    .name = tidy_Cursor_getScopedDisplayName( name_cursor )
+    .name = tidy_Cursor_getScopedDisplayName( name_csr )
   };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &symbol_set, &new_sym, sizeof new_sym );
@@ -565,81 +641,6 @@ done:
 }
 
 /**
- * Helper function for visit_CallExpr() that gets whether the symbol for a
- * C++ function or operator should be added to the global set.
- *
- * @note This function should be called only for C++ files being tidied.
- *
- * @param call_cursor A CallExpr cursor.
- * @param fn_cursor The cursor of the function being called.
- * @return Returns `true` only if the function should be added.
- */
-NODISCARD
-static bool should_add_cxx_fn( CXCursor call_cursor, CXCursor fn_cursor ) {
-  assert( tidy_is_cxx );
-
-  enum CXCursorKind const fn_kind = clang_getCursorKind( fn_cursor );
-  bool const is_member_fn = fn_kind == CXCursor_CXXMethod ||
-                            fn_kind == CXCursor_ConversionFunction;
-
-  if ( is_member_fn && !add_cxx_member_fn( call_cursor, fn_cursor ) )
-    return false;
-
-  int const num_args = clang_Cursor_getNumArguments( call_cursor );
-  assert( num_args >= 0 && "call_cursor is not a function" );
-  if ( num_args == 0 )
-    return true;
-
-  CXCursor const scope_cursor = tidy_Cursor_getFunctionScope( fn_cursor );
-  enum CXCursorKind const scope_kind = clang_getCursorKind( scope_cursor );
-  bool const is_tu = clang_isTranslationUnit( scope_kind );
-
-  for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
-    CXCursor const arg_cursor = clang_Cursor_getArgument( call_cursor, i );
-    CXCursor const arg_class_cursor =
-      tidy_Cursor_getClassAsWritten( arg_cursor );
-    if ( clang_Cursor_isNull( arg_class_cursor ) )
-      continue;
-
-    if ( tidy_Cursor_isInheritedMemberFunctionCall( arg_cursor, NULL ) )
-      return false;
-
-    // Parameter inheritance check (e.g. operator!=(Base::iterator,
-    // Base::iterator) called with Derived::iterator)
-    CXCursor const param_cursor = clang_Cursor_getArgument( fn_cursor, i );
-    if ( !clang_Cursor_isNull( param_cursor ) ) {
-      CXCursor const arg_class =
-        tidy_Cursor_getOutermostClass( arg_class_cursor );
-      CXCursor const param_type_cursor =
-        tidy_Cursor_getUnderlyingType( param_cursor );
-      CXCursor const param_class =
-        tidy_Cursor_getOutermostClass( param_type_cursor );
-      if ( tidy_Cursor_isInheritedFrom( arg_class, param_class ) )
-        return false;
-    }
-
-    // Scope / Namespace matching
-    CXCursor const arg_parent =
-      clang_getCursorSemanticParent( arg_class_cursor );
-
-    if ( is_member_fn ) {
-      // Mandate header if argument type is defined nested inside the member
-      // function's class scope
-      if ( clang_equalCursors( arg_parent, scope_cursor ) )
-        return true;
-    }
-    else {
-      // Suppress header if the free function is in a namespace and the argument
-      // belongs to that same namespace
-      if ( !is_tu && clang_equalCursors( arg_parent, scope_cursor ) )
-        return false;
-    }
-  } // for
-
-  return true;
-}
-
-/**
  * Cleans-up all symbols.
  */
 static void symbols_cleanup( void ) {
@@ -664,7 +665,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   symbols_init_data *const sid = data;
 
   bool is_scope_change = false;
-  CXCursor const prev_cxx_scope_cursor = sid->cxx_scope_cursor;
+  CXCursor const prev_cxx_scope_csr = sid->cxx_scope_csr;
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
@@ -686,14 +687,13 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 
   if ( tidy_is_cxx ) {
     //
-    // Since a non-null value of cxx_scope_cursor must span across multiple
-    // calls to symbols_init_visitor() for siblings, we have to know when to
-    // reset it.  Once way to do it is whenever the declaration or statement
-    // changes.
+    // Since a non-null value of cxx_scope_csr must span across multiple calls
+    // to symbols_init_visitor() for siblings, we have to know when to reset
+    // it.  Once way to do it is whenever the declaration or statement changes.
     //
     is_scope_change = clang_isDeclaration( kind ) || clang_isStatement( kind );
     if ( is_scope_change )
-      sid->cxx_scope_cursor = clang_getNullCursor();
+      sid->cxx_scope_csr = clang_getNullCursor();
   }
 
   switch ( kind ) {
@@ -742,15 +742,15 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 
   if ( tidy_is_cxx ) {
     //
-    // If it's a scope, set cxx_scope_cursor.
+    // If it's a scope, set cxx_scope_csr.
     //
     switch ( kind ) {
       case CXCursor_NamespaceRef:
       case CXCursor_TemplateRef:
       case CXCursor_TypeRef:;
-        CXCursor const ref_cursor = clang_getCursorReferenced( cursor );
-        if ( tidy_Cursor_isScopeDecl( ref_cursor ) )
-          sid->cxx_scope_cursor = ref_cursor;
+        CXCursor const ref_csr = clang_getCursorReferenced( cursor );
+        if ( tidy_Cursor_isScopeDecl( ref_csr ) )
+          sid->cxx_scope_csr = ref_csr;
         break;
       default:
         /* suppress warning */;
@@ -760,14 +760,14 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 skip:
   //
   // Returning CXChildVisit_Recurse causes clang_visitChildren() to do only
-  // pre-order traversal, but we need to reset cxx_scope_cursor after visiting
-  // a child node. Therefore, recurse manually.
+  // pre-order traversal, but we need to reset cxx_scope_csr after visiting a
+  // child node. Therefore, recurse manually.
   //
   clang_visitChildren( cursor, &symbols_init_visitor, data );
 
 skip_children:
   if ( is_scope_change )
-    sid->cxx_scope_cursor = prev_cxx_scope_cursor;
+    sid->cxx_scope_csr = prev_cxx_scope_csr;
   return CXChildVisit_Continue;
 }
 
@@ -788,23 +788,23 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
  * @param tokens The array of macro tokens.
  * @param token_count The length of \a tokens.
  * @param ptoken_idx A pointer to the current index within \a tokens.
- * @param scope_cursor The scope to look in.
+ * @param scope_csr The scope to look in.
  * @return Returns said cursor or the null cursor for none.
  */
 static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
                                                 unsigned token_count,
                                                 unsigned *ptoken_idx,
-                                                CXCursor scope_cursor ) {
+                                                CXCursor scope_csr ) {
   assert( ptoken_idx != NULL );
 
-  CXCursor rv_cursor =
-    tidy_getCursorByNameToken( tidy_tu, tokens[ *ptoken_idx ], scope_cursor );
+  CXCursor rv_csr =
+    tidy_getCursorByNameToken( tidy_tu, tokens[ *ptoken_idx ], scope_csr );
 
-  CXCursor loop_cursor = rv_cursor;
+  CXCursor loop_csr = rv_csr;
   unsigned i = *ptoken_idx;
 
-  while ( !tidy_Cursor_isInvalid( loop_cursor ) ) {
-    rv_cursor = loop_cursor;
+  while ( !tidy_Cursor_isInvalid( loop_csr ) ) {
+    rv_csr = loop_csr;
     *ptoken_idx = i;
 
     i = get_next_token_index( tokens, token_count, *ptoken_idx );
@@ -817,10 +817,10 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
     i = get_next_token_index( tokens, token_count, i );
     if ( i >= token_count )
       break;
-    loop_cursor = tidy_getCursorByNameToken( tidy_tu, tokens[i], rv_cursor );
+    loop_csr = tidy_getCursorByNameToken( tidy_tu, tokens[i], rv_csr );
   } // while
 
-  return rv_cursor;
+  return rv_csr;
 }
 
 /**
@@ -838,11 +838,11 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
  * want do do nothing for the CallExpr.
  * @endparblock
  *
- * @param call_cursor The call expression's cursor to visit.
- * @param parent The parent cursor of \a call_cursor.
+ * @param call_csr The call expression's cursor to visit.
+ * @param parent The parent cursor of \a call_csr.
  * @param sid The symbols_init_data to use.
  */
-static bool visit_CallExpr( CXCursor call_cursor, CXCursor parent,
+static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
                             symbols_init_data *sid ) {
   assert( sid != NULL );
 
@@ -850,26 +850,26 @@ static bool visit_CallExpr( CXCursor call_cursor, CXCursor parent,
     //
     //
     //
-    CXCursor const child_cursor = tidy_Cursor_getFirstChild( call_cursor );
-    if ( !tidy_Cursor_isInvalid( child_cursor ) ) {
-      enum CXCursorKind const child_kind = clang_getCursorKind( child_cursor );
+    CXCursor const child_csr = tidy_Cursor_getFirstChild( call_csr );
+    if ( !tidy_Cursor_isInvalid( child_csr ) ) {
+      enum CXCursorKind const child_kind = clang_getCursorKind( child_csr );
       if ( child_kind == CXCursor_MemberRefExpr )
         return false;
     }
 
-    CXCursor const func_cursor = clang_getCursorReferenced( call_cursor );
-    bool const is_function = tidy_Cursor_isFunctionDecl( func_cursor );
+    CXCursor const fn_csr = clang_getCursorReferenced( call_csr );
+    bool const is_function = tidy_Cursor_isFunctionDecl( fn_csr );
 
-    CXCursor const prev_func_cursor = sid->cxx_func_cursor;
-    sid->cxx_func_cursor = is_function ? func_cursor : clang_getNullCursor();
-    clang_visitChildren( call_cursor, &symbols_init_visitor, sid );
-    sid->cxx_func_cursor = prev_func_cursor;
+    CXCursor const prev_fn_csr = sid->cxx_fn_csr;
+    sid->cxx_fn_csr = is_function ? fn_csr : clang_getNullCursor();
+    clang_visitChildren( call_csr, &symbols_init_visitor, sid );
+    sid->cxx_fn_csr = prev_fn_csr;
 
-    if ( !is_function || !should_add_cxx_fn( call_cursor, func_cursor ) )
+    if ( !is_function || !add_cxx_fn( call_csr, fn_csr ) )
       return true;
   }
 
-  visit_most_kinds( call_cursor, parent, sid );
+  visit_most_kinds( call_csr, parent, sid );
   return tidy_is_cxx;
 }
 
@@ -895,28 +895,28 @@ static bool visit_CallExpr( CXCursor call_cursor, CXCursor parent,
  * them has been included.
  * @endparblock
  *
- * @param field_cursor The field declaration's cursor to visit.
- * @param parent The parent cursor of \a field_cursor.
+ * @param field_csr The field declaration's cursor to visit.
+ * @param parent The parent cursor of \a field_csr.
  * @param sid The symbols_init_data to use.
  */
-static void visit_FieldDecl( CXCursor field_cursor, CXCursor parent,
+static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
                              symbols_init_data *sid ) {
   (void)parent;
   assert( sid != NULL );
 
-  CXSourceRange const field_range = tidy_getCursorExtent( field_cursor );
+  CXSourceRange const field_range = tidy_getCursorExtent( field_csr );
 
   CXToken *tokens;
   unsigned token_count;
   clang_tokenize( tidy_tu, field_range, &tokens, &token_count );
 
-  CXCursor const scope_cursor = clang_getCursorSemanticParent( field_cursor );
+  CXCursor const scope_csr = clang_getCursorSemanticParent( field_csr );
 
   for ( unsigned i = 0; i < token_count; ++i ) {
-    CXCursor const sym_cursor =
-      tidy_Token_getScopedNameCursor( tokens, token_count, &i, scope_cursor );
-    if ( !tidy_Cursor_isInvalid( sym_cursor ) )
-      maybe_add_symbol( sym_cursor, sym_cursor, sid );
+    CXCursor const sym_csr =
+      tidy_Token_getScopedNameCursor( tokens, token_count, &i, scope_csr );
+    if ( !tidy_Cursor_isInvalid( sym_csr ) )
+      maybe_add_symbol( sym_csr, sym_csr, sid );
   } // for
 
   clang_disposeTokens( tidy_tu, tokens, token_count );
@@ -938,16 +938,16 @@ static void visit_FieldDecl( CXCursor field_cursor, CXCursor parent,
  * forced to `#include <stdint.h>` explicitly.
  * @endparblock
  *
- * @param macro_cursor The macro definition's cursor to visit.
- * @param parent The parent cursor of \a macro_cursor.
+ * @param macro_csr The macro definition's cursor to visit.
+ * @param parent The parent cursor of \a macro_csr.
  * @param sid The symbols_init_data to use.
  */
-static void visit_MacroDefinition( CXCursor macro_cursor, CXCursor parent,
+static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
                                    symbols_init_data *sid ) {
   (void)parent;
   assert( sid != NULL );
 
-  CXSourceRange const macro_range = clang_getCursorExtent( macro_cursor );
+  CXSourceRange const macro_range = clang_getCursorExtent( macro_csr );
 
   CXToken *tokens;
   unsigned token_count;
@@ -962,15 +962,15 @@ static void visit_MacroDefinition( CXCursor macro_cursor, CXCursor parent,
   rb_tree_t param_set;
   rb_tree_init( &param_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &strcmp ) );
 
-  unsigned i = clang_Cursor_isMacroFunctionLike( macro_cursor ) ?
+  unsigned i = clang_Cursor_isMacroFunctionLike( macro_csr ) ?
     macro_get_params( tokens, token_count, &param_set ) :
     1;                                  // tokens[0] = macro name; start at 1
 
   for ( ; i < token_count; ++i ) {
-    CXCursor const sym_cursor =
+    CXCursor const sym_csr =
       macro_Token_getScopedNameCursor( tokens, token_count, &i, &param_set );
-    if ( !tidy_Cursor_isInvalid( sym_cursor ) )
-      maybe_add_symbol( sym_cursor, sym_cursor, sid );
+    if ( !tidy_Cursor_isInvalid( sym_csr ) )
+      maybe_add_symbol( sym_csr, sym_csr, sid );
   } // for
 
   rb_tree_cleanup( &param_set, /*free_fn=*/NULL );
@@ -989,26 +989,25 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   assert( sid != NULL );
 
   // Gets the cursor for the declaration of the symbol.
-  CXCursor const dec_cursor = clang_getCursorReferenced( cursor );
-  if ( tidy_Cursor_isInvalid( dec_cursor ) )
+  CXCursor const dec_csr = clang_getCursorReferenced( cursor );
+  if ( tidy_Cursor_isInvalid( dec_csr ) )
     return;
 
   if ( tidy_is_cxx ) {
-    // See the comment for symbols_init_data::cxx_func_cursor.
-    if ( clang_equalCursors( dec_cursor, sid->cxx_func_cursor ) )
+    // See the comment for symbols_init_data::cxx_fn_csr.
+    if ( clang_equalCursors( dec_csr, sid->cxx_fn_csr ) )
       return;
 
-    // See the comment for symbols_init_data::cxx_scope_cursor.
-    CXCursor const base_cursor = clang_getCursorSemanticParent( dec_cursor );
-    CXCursor const scope_cursor =
-      !clang_Cursor_isNull( sid->cxx_scope_cursor ) ?
-        sid->cxx_scope_cursor :
-        parent;
-    if ( tidy_Cursor_isInheritedFrom( scope_cursor, base_cursor ) )
+    // See the comment for symbols_init_data::cxx_scope_csr.
+    CXCursor const base_csr = clang_getCursorSemanticParent( dec_csr );
+    CXCursor const scope_csr = !clang_Cursor_isNull( sid->cxx_scope_csr ) ?
+      sid->cxx_scope_csr :
+      parent;
+    if ( tidy_Cursor_isInheritedFrom( scope_csr, base_csr ) )
       return;
   }
 
-  maybe_add_symbol( dec_cursor, dec_cursor, sid );
+  maybe_add_symbol( dec_csr, dec_csr, sid );
 
   // Now we have to determine whether the definition of a symbol is also
   // necessary in addition to its declaration.
@@ -1020,40 +1019,40 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   CXType const type = clang_getCanonicalType( clang_getCursorType( parent ) );
   if ( type.kind != CXType_Record )     // class, struct, or union
     return;
-  CXCursor const type_cursor = clang_getTypeDeclaration( type );
-  if ( tidy_Cursor_isInvalid( type_cursor ) )
+  CXCursor const type_csr = clang_getTypeDeclaration( type );
+  if ( tidy_Cursor_isInvalid( type_csr ) )
     return;
-  CXCursor const def_cursor = clang_getCursorDefinition( type_cursor );
-  if ( tidy_Cursor_isInvalid( def_cursor ) )
+  CXCursor const def_csr = clang_getCursorDefinition( type_csr );
+  if ( tidy_Cursor_isInvalid( def_csr ) )
     return;
-  if ( clang_equalCursors( def_cursor, dec_cursor ) )
+  if ( clang_equalCursors( def_csr, dec_csr ) )
     return;
-  if ( tidy_Cursor_isBeforeInTranslationUnit( def_cursor, dec_cursor ) )
+  if ( tidy_Cursor_isBeforeInTranslationUnit( def_csr, dec_csr ) )
     return;
 
-  maybe_add_symbol( dec_cursor, def_cursor, sid );
+  maybe_add_symbol( dec_csr, def_csr, sid );
 }
 
 /**
  * Visits a `CXCursor_MemberRefExpr` kind of cursor.
  *
- * @param member_ref_cursor The member reference's cursor to visit.
+ * @param member_ref_csr The member reference's cursor to visit.
  * @param parent Not used.
  * @param sid The symbols_init_data to use.
  */
-static void visit_MemberRefExpr( CXCursor member_ref_cursor, CXCursor parent,
+static void visit_MemberRefExpr( CXCursor member_ref_csr, CXCursor parent,
                                  symbols_init_data *sid ) {
   (void)parent;
   assert( sid != NULL );
 
   // Gets the cursor for _a_ declaration of the symbol.
-  CXCursor dec_cursor = clang_getCursorReferenced( member_ref_cursor );
-  if ( tidy_Cursor_isInvalid( dec_cursor ) )
+  CXCursor dec_csr = clang_getCursorReferenced( member_ref_csr );
+  if ( tidy_Cursor_isInvalid( dec_csr ) )
     return;
 
-  CXCursor const parent_cursor = clang_getCursorSemanticParent( dec_cursor );
-  if ( !tidy_Cursor_isClassDecl( parent_cursor ) )
-    visit_most_kinds( member_ref_cursor, parent_cursor, sid );
+  CXCursor const dec_parent = clang_getCursorSemanticParent( dec_csr );
+  if ( !tidy_Cursor_isClassDecl( dec_parent ) )
+    visit_most_kinds( member_ref_csr, dec_parent, sid );
 }
 
 /**
@@ -1063,25 +1062,24 @@ static void visit_MemberRefExpr( CXCursor member_ref_cursor, CXCursor parent,
  * clang_getCursorReferenced() on a CXCursor_OverloadedDeclRef returns an
  * invalid or null cursor.
  *
- * @param overloaded_cursor The overloaded definition's cursor to visit.
+ * @param overloaded_csr The overloaded definition's cursor to visit.
  * @param parent Not used.
  * @param sid The symbols_init_data to use.
  */
-static void visit_OverloadedDeclRef( CXCursor overloaded_cursor,
-                                     CXCursor parent,
+static void visit_OverloadedDeclRef( CXCursor overloaded_csr, CXCursor parent,
                                      symbols_init_data *sid ) {
   (void)parent;
   assert( sid != NULL );
 
-  unsigned const num_decls = clang_getNumOverloadedDecls( overloaded_cursor );
+  unsigned const num_decls = clang_getNumOverloadedDecls( overloaded_csr );
   for ( unsigned i = 0; i < num_decls; ++i ) {
-    CXCursor dec_cursor = clang_getOverloadedDecl( overloaded_cursor, i );
-    if ( tidy_Cursor_isInvalid( dec_cursor ) )
+    CXCursor dec_csr = clang_getOverloadedDecl( overloaded_csr, i );
+    if ( tidy_Cursor_isInvalid( dec_csr ) )
       continue;
-    dec_cursor = clang_getCanonicalCursor( dec_cursor );
-    if ( tidy_Cursor_isInvalid( dec_cursor ) )
+    dec_csr = clang_getCanonicalCursor( dec_csr );
+    if ( tidy_Cursor_isInvalid( dec_csr ) )
       continue;
-    maybe_add_symbol( dec_cursor, dec_cursor, sid );
+    maybe_add_symbol( dec_csr, dec_csr, sid );
     //
     // It's possible that different overloads will be declared in different
     // headers.  But for now, we stop after the first overload.
@@ -1103,8 +1101,8 @@ void symbols_init( void ) {
   CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
   symbols_init_data sid = {
     .source_file = clang_getFile( tidy_tu, tidy_source_path ),
-    .cxx_func_cursor = clang_getNullCursor(),
-    .cxx_scope_cursor = clang_getNullCursor()
+    .cxx_fn_csr = clang_getNullCursor(),
+    .cxx_scope_csr = clang_getNullCursor()
   };
   clang_visitChildren( cursor, &symbols_init_visitor, &sid );
   if ( sid.verbose_printed )

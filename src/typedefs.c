@@ -86,7 +86,7 @@ static int tidy_typedef_cmp( tidy_typedef const *i_tdef,
                              tidy_typedef const *j_tdef ) {
   assert( i_tdef != NULL );
   assert( j_tdef != NULL );
-  return tidy_Cursor_compare( i_tdef->type_cursor, j_tdef->type_cursor );
+  return tidy_Cursor_compare( i_tdef->type_csr, j_tdef->type_csr );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -94,14 +94,14 @@ static int tidy_typedef_cmp( tidy_typedef const *i_tdef,
 void typedef_add( CXCursor cursor ) {
   CXType const type = clang_getTypedefDeclUnderlyingType( cursor );
   CXType const canonical_type = clang_getCanonicalType( type );
-  CXCursor const type_cursor = clang_getTypeDeclaration( canonical_type );
+  CXCursor const type_csr = clang_getTypeDeclaration( canonical_type );
 
-  if ( tidy_Cursor_isInvalid( type_cursor ) )
+  if ( tidy_Cursor_isInvalid( type_csr ) )
     return;
 
   CXString const    alias_name_cxs = clang_getCursorSpelling( cursor );
   char const *const alias_name = clang_getCString( alias_name_cxs );
-  CXString const    type_name_cxs = clang_getCursorSpelling( type_cursor );
+  CXString const    type_name_cxs = clang_getCursorSpelling( type_csr );
   char const *const type_name = clang_getCString( type_name_cxs );
 
   //
@@ -123,7 +123,7 @@ void typedef_add( CXCursor cursor ) {
   if ( is_same )
     return;
 
-  tidy_typedef new_tdef = { .type_cursor = cursor };
+  tidy_typedef new_tdef = { .type_csr = cursor };
   rb_insert_rv_t const rv_rbi =
     rb_tree_insert( &typedef_map, &new_tdef, sizeof new_tdef );
   if ( rv_rbi.inserted ) {
@@ -133,7 +133,7 @@ void typedef_add( CXCursor cursor ) {
 }
 
 tidy_typedef const* typedef_find( CXCursor cursor ) {
-  tidy_typedef const find_tdef = { .type_cursor = cursor };
+  tidy_typedef const find_tdef = { .type_csr = cursor };
   rb_node_t const *const found_rb = rb_tree_find( &typedef_map, &find_tdef );
   return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }

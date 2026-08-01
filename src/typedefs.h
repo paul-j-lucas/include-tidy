@@ -70,9 +70,9 @@ typedef struct tidy_typedef tidy_typedef;
  *        // ...
  *      }
  *
- * the \ref type_cursor is the entire `using` declaration and \ref alias_name
- * is `"std::ostream"`.  This mapping is needed to include the "pretty" names
- * in include comments.
+ * the \ref type_csr is the entire `using` declaration and \ref alias_name is
+ * `"std::ostream"`.  This mapping is needed to include the "pretty" names in
+ * include comments.
  *
  * If the file being tidied uses `std::ostream` like:
  *
@@ -86,7 +86,7 @@ typedef struct tidy_typedef tidy_typedef;
  * @endparblock
  */
 struct tidy_typedef {
-  CXCursor    type_cursor;              ///< `TypedefDecl` or `TypeAliasDecl`.
+  CXCursor    type_csr;                 ///< `TypedefDecl` or `TypeAliasDecl`.
   char const *alias_name;               ///< Scoped alias name.
 };
 

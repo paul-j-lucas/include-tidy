@@ -55,13 +55,13 @@
  * arbitrary, but consistent. Hence, this function is transitive and imposes a
  * strict total ordering.
  *
- * @param i_cursor The first cursor.
- * @param j_cursor The second cursor.
- * @return Returns a number less than 0, 0, or greater than 0 if \a i_cursor is
- * less than, equal to, or greater than \a j_cursor, respectively.
+ * @param i_csr The first cursor.
+ * @param j_csr The second cursor.
+ * @return Returns a number less than 0, 0, or greater than 0 if \a i_csr is
+ * less than, equal to, or greater than \a j_csr, respectively.
  */
 NODISCARD
-int tidy_Cursor_compare( CXCursor i_cursor, CXCursor j_cursor );
+int tidy_Cursor_compare( CXCursor i_csr, CXCursor j_csr );
 
 /**
  * Gets the cursor for the C++ class type as written in the source file.
@@ -150,12 +150,11 @@ CXCursor tidy_Cursor_getFirstExposedChild( CXCursor cursor );
  * this function would return the cursor for the `Base` class.
  * @endparblock
  *
- * @param func_cursor The cursor for a function or operator to get the scope
- * of.
+ * @param fn_csr The cursor for a function or operator to get the scope of.
  * @return Returns said scope.
  */
 NODISCARD
-CXCursor tidy_Cursor_getFunctionScope( CXCursor func_cursor );
+CXCursor tidy_Cursor_getFunctionScope( CXCursor fn_csr );
 
 /**
  * Gets the outermost C++ class for a cursor.
@@ -220,16 +219,15 @@ NODISCARD
 CXCursor tidy_Cursor_getUnderlyingType( CXCursor cursor );
 
 /**
- * Gets whether \a i_cursor is before \a j_cursor in the translation unit.
+ * Gets whether \a i_csr is before \a j_csr in the translation unit.
  *
- * @param i_cursor The first cursor.
- * @param j_cursor The second cursor.
- * @return Returns `true` only if \a i_cursor is before \a j_cursor in the
+ * @param i_csr The first cursor.
+ * @param j_csr The second cursor.
+ * @return Returns `true` only if \a i_csr is before \a j_csr in the
  * translation unit.
  */
 NODISCARD
-bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_cursor,
-                                            CXCursor j_cursor );
+bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_csr, CXCursor j_csr );
 
 /**
  * Gets whether \a cursor is a class, class template, structure, or union
@@ -266,14 +264,14 @@ bool tidy_Cursor_isInFile( CXCursor cursor, CXFile file );
 
 /**
  * Gets whether a class, data member, or member function given by \a cursor is
- * derived, inherited, or specialized from the class given by \a base_cursor.
+ * derived, inherited, or specialized from the class given by \a base_csr.
  *
  * @param cursor The candidate cursor.
- * @param base_cursor The candidate base class cursor.
- * @return Returns `true` only if \a cursor is inherited from \a base_cursor.
+ * @param base_csr The candidate base class cursor.
+ * @return Returns `true` only if \a cursor is inherited from \a base_csr.
  */
 NODISCARD
-bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_cursor );
+bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_csr );
 
 /**
  * Gets whether a C++ member function is inherited from a base class.
@@ -375,24 +373,24 @@ CXString tidy_File_getRealPathName( CXFile file );
 
 /**
  * Attempts to get the cursor for the identifier having \a name within \a
- * scope_cursor.
+ * scope_csr.
  *
  * @param name The name to get the cursor for.
- * @param scope_cursor The scope to look in.
+ * @param scope_csr The scope to look in.
  * @return Returns said cursor or an invalid cursor if not found.
  *
  * @sa tidy_getCursorByNameToken()
  */
 NODISCARD
-CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor );
+CXCursor tidy_getCursorByName( char const *name, CXCursor scope_csr );
 
 /**
- * Gets the cursor for the identifier given by \a token within \a scope_cursor,
+ * Gets the cursor for the identifier given by \a token within \a scope_csr,
  * but only if \a token actually is an identifier.
  *
  * @param tu The translation unit to use.
  * @param token The token to get the cursor for.
- * @param scope_cursor The cursor of the scope to search within.
+ * @param scope_csr The cursor of the scope to search within.
  * @return Returns said cursor; or an invalid cursor if \a token is an
  * identifier, but not found; or the null cursor if \a token is not an
  * identifier.
@@ -401,7 +399,7 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_cursor );
  */
 NODISCARD
 CXCursor tidy_getCursorByNameToken( CXTranslationUnit tu, CXToken token,
-                                    CXCursor scope_cursor );
+                                    CXCursor scope_csr );
 
 /**
  * Similar to `clang_getCursorExtent()` except that it works better when macros
