@@ -93,21 +93,21 @@ struct symbols_init_data {
    * @parblock
    * For C++, things are more complicated.  Given something like:
    *
-   *      // Base.h
+   *      // Base.hpp
    *      class Base {
    *        // ...
    *      };
    *
    *      bool operator==( Base const&, Base const& );
    *
-   *      // Derived.h
-   *      #include "Base.h"
+   *      // Derived.hpp
+   *      #include "Base.hpp"
    *      class Derived : public Base {
    *        // ...
    *      };
    *
    *      // Derived.cpp
-   *      #include "Derived.h"
+   *      #include "Derived.hpp"
    *
    *      void f( Derived i, Derived j ) {
    *        if ( i == j )
@@ -147,23 +147,22 @@ struct symbols_init_data {
    * @parblock
    * For C++, things are more complicated.  Given something like:
    *
-   *      // Base.h
-   *      class Base {
-   *      public:
+   *      // Base.hpp
+   *      struct Base {
    *        using value_type = int;
    *        Base( int );
    *        // ...
    *      };
    *
-   *      // Derived.h
-   *      #include "Base.h"
-   *      class Derived : public Base {
+   *      // Derived.hpp
+   *      #include "Base.hpp"
+   *      struct Derived : Base {
    *        Derived( int );
    *        // ...
    *      };
    *
    *      // Derived.cpp
-   *      #include "Derived.h"
+   *      #include "Derived.hpp"
    *      using global_type = Derived::value_type;
    *      Derived::Derived( int n ) : Base{ n } { }
    *
@@ -251,14 +250,18 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
   if ( is_member_fn && !add_cxx_member_fn( call_csr, fn_csr ) )
     return false;
 
+  // The function is either a non-member function or a static member function.
+
   int const num_args = clang_Cursor_getNumArguments( call_csr );
   assert( num_args >= 0 && "call_csr is not a function" );
   if ( num_args == 0 )
     return true;
 
-  CXCursor const scope_csr = tidy_Cursor_getFunctionScope( fn_csr );
-  enum CXCursorKind const scope_kind = clang_getCursorKind( scope_csr );
-  bool const is_tu = clang_isTranslationUnit( scope_kind );
+#if 0
+  CXCursor const fn_scope_csr = tidy_Cursor_getFunctionScope( fn_csr );
+  enum CXCursorKind const fn_scope_kind = clang_getCursorKind( fn_scope_csr );
+  bool const is_tu = clang_isTranslationUnit( fn_scope_kind );
+#endif
 
   for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
     CXCursor const arg_csr = clang_Cursor_getArgument( call_csr, i );
@@ -269,36 +272,67 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
     if ( tidy_Cursor_isInheritedMemberFunctionCall( arg_csr, NULL ) )
       return false;
 
-    // Parameter inheritance check (e.g. operator!=(Base::iterator,
-    // Base::iterator) called with Derived::iterator)
+    //
+    // Given:
+    //
+    //      // Base.hpp
+    //      struct Base {
+    //        // ...
+    //      };
+    //
+    //      void f( Base const& );
+    //
+    //      // Derived.hpp
+    //      struct Derived : Base {
+    //        // ...
+    //      };
+    //
+    //      // main.cpp
+    //      #include "Derived.hpp"
+    //
+    //      int main() {
+    //        Derived dobj;
+    //        f( dobj );
+    //        // ...
+    //
+    // Even though main.cpp uses f() declared in Base.hpp, it's sufficient that
+    // only Derived.hpp is included and Base.hpp isn't because:
+    //
+    //  + dobj of type Derived is an object derived from Base; and:
+    //  + In order to declare Derived, Derived.hpp must have included Base.hpp.
+    //
+    // Therefore, we allow the transitive include of Base.hpp as an exception
+    // to the include-what-you-use rule.
+    //
     CXCursor const param_csr = clang_Cursor_getArgument( fn_csr, i );
     if ( !clang_Cursor_isNull( param_csr ) ) {
-      CXCursor const arg_class =
+      CXCursor const arg_oclass_csr =
         tidy_Cursor_getOutermostClass( arg_class_csr );
       CXCursor const param_type_csr =
         tidy_Cursor_getUnderlyingType( param_csr );
-      CXCursor const param_class =
+      CXCursor const param_oclass_csr =
         tidy_Cursor_getOutermostClass( param_type_csr );
-      if ( tidy_Cursor_isInheritedFrom( arg_class, param_class ) )
+      if ( tidy_Cursor_isInheritedFrom( arg_oclass_csr, param_oclass_csr ) )
         return false;
     }
 
+#if 0
     // Scope / Namespace matching
-    CXCursor const arg_parent =
-      clang_getCursorSemanticParent( arg_class_csr );
+    CXCursor const arg_parent = clang_getCursorSemanticParent( arg_class_csr );
 
     if ( is_member_fn ) {
       // Mandate header if argument type is defined nested inside the member
       // function's class scope
-      if ( clang_equalCursors( arg_parent, scope_csr ) )
+      if ( clang_equalCursors( arg_parent, fn_scope_csr ) )
         return true;
     }
     else {
       // Suppress header if the free function is in a namespace and the argument
       // belongs to that same namespace
-      if ( !is_tu && clang_equalCursors( arg_parent, scope_csr ) )
+      if ( !is_tu && clang_equalCursors( arg_parent, fn_scope_csr ) )
         return false;
     }
+#endif
   } // for
 
   return true;
@@ -999,18 +1033,39 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
       return;
 
     // See the comment for symbols_init_data::cxx_scope_csr.
-    CXCursor const base_csr = clang_getCursorSemanticParent( dec_csr );
+    CXCursor const dec_parent = clang_getCursorSemanticParent( dec_csr );
     CXCursor const scope_csr = !clang_Cursor_isNull( sid->cxx_scope_csr ) ?
       sid->cxx_scope_csr :
       parent;
-    if ( tidy_Cursor_isInheritedFrom( scope_csr, base_csr ) )
+    if ( tidy_Cursor_isInheritedFrom( scope_csr, dec_parent ) )
       return;
   }
 
   maybe_add_symbol( dec_csr, dec_csr, sid );
 
+  //
   // Now we have to determine whether the definition of a symbol is also
-  // necessary in addition to its declaration.
+  // necessary in addition to its declaration.  Given:
+  //
+  //      // Point.h
+  //      struct point {
+  //        int x, y;
+  //      };
+  //
+  //      // Foo.c
+  //      void pass_thru( struct point *p ) {
+  //        f( p );
+  //      }
+  //
+  //      // Bar.c
+  //      void point_init( struct point *p ) {
+  //        p->x = p->y = 0;
+  //      }
+  //
+  // `Foo.c` doesn't access any member of `point`, so its declaration is
+  // sufficient whereas `Bar.c` accesses members, so its definition (and the
+  // header that defines it) is necessary.
+  //
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   if ( kind != CXCursor_TypeRef )
@@ -1027,6 +1082,8 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     return;
   if ( clang_equalCursors( def_csr, dec_csr ) )
     return;
+
+  // If we've already seen the definition, we don't need this declaration.
   if ( tidy_Cursor_isBeforeInTranslationUnit( def_csr, dec_csr ) )
     return;
 

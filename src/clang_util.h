@@ -70,15 +70,14 @@ int tidy_Cursor_compare( CXCursor i_csr, CXCursor j_csr );
  * @parblock
  * Given something like:
  *
- *      class Base {
- *      public:
- *        class iterator {
+ *      struct Base {
+ *        struct iterator {
  *          // ...
  *        };
  *        // ...
  *      };
  *
- *      class Derived : public Base {
+ *      struct Derived : Base {
  *        // ...
  *      };
  *
@@ -140,7 +139,7 @@ CXCursor tidy_Cursor_getFirstExposedChild( CXCursor cursor );
  * @parblock
  * Given something like:
  *
- *      class Base {
+ *      struct Base {
  *        // ...
  *      };
  *
@@ -279,12 +278,11 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_csr );
  * @parblock
  * Given something like:
  *
- *      class Base {
- *      public:
+ *      struct Base {
  *        void f();
  *      };
  *
- *      class Derived : public Base {
+ *      struct Derived : Base {
  *        // ...
  *      };
  *

@@ -427,7 +427,10 @@ static bool tidy_Cursor_isTemplateSpecializationOf( CXCursor cursor,
 }
 
 /**
- * If \a cursor is a LinkageSpec, gets its parent cursor.
+ * If \a cursor is a LinkageSpec, gets its parent cursor, recursively.
+ *
+ * @remarks Linkage specifications are just noise when determining include file
+ * dependencies.
  *
  * @param cursor The cursor.
  * @return If \a cursor is a LinkageSpec, returns its parent; otherwise returns
@@ -513,8 +516,8 @@ CXCursor tidy_Cursor_getFunctionScope( CXCursor fn_csr ) {
   if ( tidy_Cursor_isClassDecl( parent ) )
     return parent;
 
-  // For a free function/operator, inspect parameter types for an associated
-  // class.
+  // For a non-member function or operator, inspect parameter types for an
+  // associated class.
   int const num_args = clang_Cursor_getNumArguments( fn_csr );
   assert( num_args >= 0 && "fn_csr is not a function" );
   for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
