@@ -366,9 +366,6 @@ static CXCursor tidy_Cursor_getTypeRef( CXCursor cursor ) {
 NODISCARD
 static CXCursor tidy_Cursor_getVarInitializer( CXCursor expr_csr ) {
   expr_csr = tidy_Cursor_skipUnexposedExpr( expr_csr );
-  if ( clang_Cursor_isNull( expr_csr ) )
-    return clang_getNullCursor();
-
   enum CXCursorKind kind = clang_getCursorKind( expr_csr );
   if ( kind == CXCursor_DeclRefExpr ) {
     CXCursor const ref_csr = clang_getCursorReferenced( expr_csr );
@@ -379,7 +376,6 @@ static CXCursor tidy_Cursor_getVarInitializer( CXCursor expr_csr ) {
         return tidy_Cursor_getVarInitializer( init_csr );
     }
   }
-
   return expr_csr;
 }
 
@@ -661,44 +657,34 @@ bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
   if ( kind != CXCursor_CallExpr )
     return false;
 
-  // Inspect member call expressions (e.g. 'elements.end()')
-  CXCursor const callee = tidy_Cursor_getFirstExposedChild( expr_csr );
-  if ( clang_getCursorKind( callee ) != CXCursor_MemberRefExpr )
+  // Get the class of the member function.
+  CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( expr_csr );
+  if ( clang_getCursorKind( callee_csr ) != CXCursor_MemberRefExpr )
     return false;
-
-  // Base object expression ('elements')
-  CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( callee );
-  if ( clang_Cursor_isNull( obj_csr ) )
-    return false;
-
-  // Strip reference type & cv-qualifiers to get 'element_map'
-  CXCursor const obj_class_csr = tidy_Cursor_getUnderlyingType( obj_csr );
-  CXCursor const canon_class_csr = clang_getCanonicalCursor( obj_class_csr );
-  if ( clang_Cursor_isNull( canon_class_csr ) )
-    return false;
-
-  // Method declaration ('std::map::find' or 'std::map::end')
-  CXCursor const mbr_fn_csr = clang_getCursorReferenced( callee );
+  CXCursor const mbr_fn_csr = clang_getCursorReferenced( callee_csr );
   if ( clang_Cursor_isNull( mbr_fn_csr ) )
     return false;
-
   CXCursor mbr_fn_class_csr = clang_getCursorSemanticParent( mbr_fn_csr );
   mbr_fn_class_csr = clang_getCanonicalCursor( mbr_fn_class_csr );
   if ( clang_Cursor_isNull( mbr_fn_class_csr ) )
     return false;
 
-  if ( clang_equalCursors( canon_class_csr, mbr_fn_class_csr ) )
+  // Get the object the member function is being called on.
+  CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( callee_csr );
+  if ( clang_Cursor_isNull( obj_csr ) )
+    return false;
+  CXCursor obj_class_csr = tidy_Cursor_getUnderlyingType( obj_csr );
+  obj_class_csr = clang_getCanonicalCursor( obj_class_csr );
+  if ( clang_Cursor_isNull( obj_class_csr ) )
     return false;
 
-  // Verify that element_map != std::map AND element_map derives from
-  // std::map
-  if ( tidy_Cursor_isInheritedFrom( obj_class_csr, mbr_fn_class_csr ) ) {
-    if ( base_class_csr != NULL )
-      *base_class_csr = mbr_fn_class_csr;
-    return true;
-  }
+  // Is the object's class inherited from the member function's class?
+  if ( !tidy_Cursor_isInheritedFrom( obj_class_csr, mbr_fn_class_csr ) )
+    return false;
 
-  return false;
+  if ( base_class_csr != NULL )
+    *base_class_csr = mbr_fn_class_csr;
+  return true;
 }
 
 bool tidy_Cursor_isInvalid( CXCursor cursor ) {
