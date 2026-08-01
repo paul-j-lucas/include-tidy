@@ -535,7 +535,7 @@ static CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
       break;
     if ( clang_getTokenKind( tokens[i] ) != CXToken_Punctuation )
       break;                            // can't be "::"
-    if ( !tidy_Token_isEqual( tidy_tu, tokens[i], "::" ) )
+    if ( !tidy_Token_isEqualTo( tidy_tu, tokens[i], "::" ) )
       break;
     i = get_next_token_index( tokens, token_count, i );
     if ( i >= token_count )
@@ -812,7 +812,7 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
       break;
     if ( clang_getTokenKind( tokens[i] ) != CXToken_Punctuation )
       break;                            // can't be "::"
-    if ( !tidy_Token_isEqual( tidy_tu, tokens[i], "::" ) )
+    if ( !tidy_Token_isEqualTo( tidy_tu, tokens[i], "::" ) )
       break;
     i = get_next_token_index( tokens, token_count, i );
     if ( i >= token_count )

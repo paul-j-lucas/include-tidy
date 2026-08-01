@@ -482,8 +482,8 @@ CXFile tidy_getSpellingLocation_File( CXSourceLocation loc );
  * @return Returns `true` only if the spelling of \a token equals \a value.
  */
 NODISCARD
-bool tidy_Token_isEqual( CXTranslationUnit tu, CXToken token,
-                         char const *value );
+bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
+                           char const *value );
 
 ///////////////////////////////////////////////////////////////////////////////
 

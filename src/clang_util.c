@@ -866,8 +866,8 @@ CXFile tidy_getSpellingLocation_File( CXSourceLocation loc ) {
   return file;
 }
 
-bool tidy_Token_isEqual( CXTranslationUnit tu, CXToken token,
-                         char const *value ) {
+bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
+                           char const *value ) {
   assert( value != NULL );
 
   CXString const    token_cxs = clang_getTokenSpelling( tu, token );
