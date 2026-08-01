@@ -2,4 +2,4 @@ EXPECTED_EXIT=0
 
 test_include_tidy $TIDY_TEST_OPTIONS \
     $TIDY_TEST_CONFIG \
-    str_str_map.cpp
+    derived_map.cpp
