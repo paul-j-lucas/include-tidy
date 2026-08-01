@@ -1,5 +1,19 @@
+2026-08-01  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c, clang_util.h, symbols.c, test/Makefile.am, str_str_map.cpp,
+     str_str_map.hpp, str_str_map.out, str_str_map.test: Even better handling
+     of CallExpr for free functions/operators.
+
+2026-07-31  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c: tidy_Cursor_getOutermostClass(cursor) now returns cursor if
+     it's already the outermost class.
+
 2026-07-30  Paul J. Lucas <paul@lucasmail.org>
 
+   * test/Makefile.am, Base.hpp, Derived.hpp, exit_codes.hpp, test.cpp,
+     util.hpp, cxx.out, cxx.test: Added C++ test.
+   * symbols.c: Removed debugging verbose_print_cursor().
    * clang_util.c, clang_util.h, symbols.c: Better handling of CallExprs by
      deferring whether to add the symbol for the function.
    * etc/config.toml: Mostly C++ additions.
