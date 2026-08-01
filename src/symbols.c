@@ -56,9 +56,25 @@
  * @{
  */
 
+////////// enums //////////////////////////////////////////////////////////////
+
+/**
+ * The return value of add_cxx_member_fn().
+ *
+ * @remarks Having add_cxx_member_fn() return no/unknown is clearer than having
+ * it return `false`/`true` since `true` implies "yes, add it."
+ */
+enum add_cxx_member_fn_rv {
+  ADD_CXX_MEMBER_FN_NO,                 ///< Do not add symbol for function.
+  ADD_CXX_MEMBER_FN_UNKNOWN             ///< Unknown whether to add symbol.
+};
+
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-typedef struct symbols_init_data symbols_init_data;
+/// @cond DOXYGEN_IGNORE
+typedef enum    add_cxx_member_fn_rv  add_cxx_member_fn_rv;
+typedef struct  symbols_init_data     symbols_init_data;
+/// @endcond
 
 ////////// structs ////////////////////////////////////////////////////////////
 
@@ -113,12 +129,6 @@ struct symbols_init_data {
    * To implement this, the decision to add the symbol for the function has to
    * be dererred until after all of its argument types are checked.
    * Specifically, if the function or operator:
-   *
-   *  + Has zero arguments; or:
-   *  + All arguments are either of standard types (or `typedef`s thereof) or
-   *    unrelated class types.
-   *
-   * then the symbol has to be added.  However, if the function or operator:
    *
    *  + Has one or more arguments; and:
    *  + At least one of those arguments' type is derived from the relevant
@@ -216,6 +226,47 @@ static void     visit_OverloadedDeclRef( CXCursor, CXCursor,
 static rb_tree_t symbol_set;            ///< Set of symbols.
 
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Helper function for should_add_cxx_fn() that gets whether the symbol for a
+ * C++ member function or operator should be added to the global set.
+ *
+ * @param call_cursor A CallExpr cursor.
+ * @param fn_cursor The cursor of the function being called.
+ * @return
+ *  + #ADD_CXX_MEMBER_FN_NO only if the symbol for the member function should
+ *    not be added.
+ *  + #ADD_CXX_MEMBER_FN_UNKNOWN only if it is unknown whether to add the
+ *    symbol for the member function (further checks are needed).
+ */
+NODISCARD
+static add_cxx_member_fn_rv add_cxx_member_fn( CXCursor call_cursor,
+                                               CXCursor fn_cursor ) {
+  CXCursor const callee = tidy_Cursor_getFirstExposedChild( call_cursor );
+  if ( clang_getCursorKind( callee ) != CXCursor_MemberRefExpr )
+    return ADD_CXX_MEMBER_FN_UNKNOWN;
+
+  CXCursor const obj_expr = tidy_Cursor_getFirstExposedChild( callee );
+  if ( clang_Cursor_isNull( obj_expr ) )
+    return ADD_CXX_MEMBER_FN_UNKNOWN;
+
+  CXCursor const obj_class = tidy_Cursor_getUnderlyingType( obj_expr );
+  CXCursor const fn_class = clang_getCursorSemanticParent( fn_cursor );
+
+  if ( tidy_Cursor_isInheritedFrom( obj_class, fn_class ) )
+    return ADD_CXX_MEMBER_FN_NO;
+
+  CXCursor base_cursor = clang_getNullCursor();
+  if ( !tidy_Cursor_isInheritedMemberFunctionCall( obj_expr, &base_cursor ) )
+    return ADD_CXX_MEMBER_FN_NO;
+
+  if ( clang_equalCursors( base_cursor, fn_class ) ||
+        tidy_Cursor_isInheritedFrom( base_cursor, fn_class ) ) {
+    return ADD_CXX_MEMBER_FN_NO;
+  }
+
+  return ADD_CXX_MEMBER_FN_UNKNOWN;
+}
 
 /**
  * Gets the index of the next token that is not a comment.
@@ -517,51 +568,75 @@ done:
  * Helper function for visit_CallExpr() that gets whether the symbol for a
  * C++ function or operator should be added to the global set.
  *
+ * @note This function should be called only for C++ files being tidied.
+ *
  * @param call_cursor A CallExpr cursor.
- * @param func_cursor The cursor of the function being called.
+ * @param fn_cursor The cursor of the function being called.
  * @return Returns `true` only if the function should be added.
  */
 NODISCARD
-static bool should_add_cxx_function( CXCursor call_cursor,
-                                     CXCursor func_cursor ) {
+static bool should_add_cxx_fn( CXCursor call_cursor, CXCursor fn_cursor ) {
+  assert( tidy_is_cxx );
+
+  enum CXCursorKind const fn_kind = clang_getCursorKind( fn_cursor );
+  bool const is_member_fn = fn_kind == CXCursor_CXXMethod ||
+                            fn_kind == CXCursor_ConversionFunction;
+
+  if ( is_member_fn && !add_cxx_member_fn( call_cursor, fn_cursor ) )
+    return false;
+
   int const num_args = clang_Cursor_getNumArguments( call_cursor );
   assert( num_args >= 0 && "call_cursor is not a function" );
   if ( num_args == 0 )
     return true;
 
-  CXCursor const base_cursor = tidy_Cursor_getFunctionScope( func_cursor );
-  bool const is_base_a_class = tidy_Cursor_isClassDecl( base_cursor );
-  bool const is_base_the_tu =
-    clang_getCursorKind( base_cursor ) == CXCursor_TranslationUnit;
-
-  bool has_derived_arg = false;
+  CXCursor const scope_cursor = tidy_Cursor_getFunctionScope( fn_cursor );
+  enum CXCursorKind const scope_kind = clang_getCursorKind( scope_cursor );
+  bool const is_tu = clang_isTranslationUnit( scope_kind );
 
   for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
-    CXCursor arg_cursor = clang_Cursor_getArgument( call_cursor, i );
-    arg_cursor = tidy_Cursor_getClassAsWritten( arg_cursor );
-    if ( clang_Cursor_isNull( arg_cursor ) )
+    CXCursor const arg_cursor = clang_Cursor_getArgument( call_cursor, i );
+    CXCursor const arg_class_cursor =
+      tidy_Cursor_getClassAsWritten( arg_cursor );
+    if ( clang_Cursor_isNull( arg_class_cursor ) )
       continue;
 
-    if ( is_base_a_class ) {
-      if ( tidy_Cursor_isInheritedFrom( arg_cursor, base_cursor ) ) {
-        has_derived_arg = true;
-      }
-      else {
-        if ( clang_equalCursors( arg_cursor, base_cursor ) )
-          return true;
-        CXCursor const arg_parent = clang_getCursorSemanticParent( arg_cursor );
-        if ( clang_equalCursors( arg_parent, base_cursor ) )
-          return true;
-      }
+    if ( tidy_Cursor_isInheritedMemberFunctionCall( arg_cursor, NULL ) )
+      return false;
+
+    // Parameter inheritance check (e.g. operator!=(Base::iterator,
+    // Base::iterator) called with Derived::iterator)
+    CXCursor const param_cursor = clang_Cursor_getArgument( fn_cursor, i );
+    if ( !clang_Cursor_isNull( param_cursor ) ) {
+      CXCursor const arg_class =
+        tidy_Cursor_getOutermostClass( arg_class_cursor );
+      CXCursor const param_type_cursor =
+        tidy_Cursor_getUnderlyingType( param_cursor );
+      CXCursor const param_class =
+        tidy_Cursor_getOutermostClass( param_type_cursor );
+      if ( tidy_Cursor_isInheritedFrom( arg_class, param_class ) )
+        return false;
     }
-    else if ( !is_base_the_tu ) {
-      CXCursor const arg_parent = clang_getCursorSemanticParent( arg_cursor );
-      if ( clang_equalCursors( arg_parent, base_cursor ) )
-        has_derived_arg = true;
+
+    // Scope / Namespace matching
+    CXCursor const arg_parent =
+      clang_getCursorSemanticParent( arg_class_cursor );
+
+    if ( is_member_fn ) {
+      // Mandate header if argument type is defined nested inside the member
+      // function's class scope
+      if ( clang_equalCursors( arg_parent, scope_cursor ) )
+        return true;
+    }
+    else {
+      // Suppress header if the free function is in a namespace and the argument
+      // belongs to that same namespace
+      if ( !is_tu && clang_equalCursors( arg_parent, scope_cursor ) )
+        return false;
     }
   } // for
 
-  return !has_derived_arg;
+  return true;
 }
 
 /**
@@ -790,7 +865,7 @@ static bool visit_CallExpr( CXCursor call_cursor, CXCursor parent,
     clang_visitChildren( call_cursor, &symbols_init_visitor, sid );
     sid->cxx_func_cursor = prev_func_cursor;
 
-    if ( !is_function || !should_add_cxx_function( call_cursor, func_cursor ) )
+    if ( !is_function || !should_add_cxx_fn( call_cursor, func_cursor ) )
       return true;
   }
 

@@ -84,6 +84,14 @@ struct isBaseClass_data {
 
 ////////// local functions ////////////////////////////////////////////////////
 
+NODISCARD
+static bool     tidy_Cursor_isTemplateSpecializationOf( CXCursor, CXCursor );
+
+NODISCARD
+static CXCursor tidy_Cursor_skipUnexposedExpr( CXCursor );
+
+////////// local functions ////////////////////////////////////////////////////
+
 /**
  * A helper function for tidy_getCursorByName() that Visits each symbol within
  * a scope attempting to find one having \ref getCursorByName_data::find_name
@@ -145,8 +153,10 @@ skip:
  *
  * @param cursor The cursor being visited.
  * @param parent Not used.
- * @param data A pointer to receive the \a cursor, the first child cursor.
+ * @param data A pointer to receive the first child cursor.
  * @return Always returns `CXChildVisit_Break`.
+ *
+ * @sa getFirstExprChild_visitor()
  */
 static enum CXChildVisitResult getFirstChild_visitor( CXCursor cursor,
                                                       CXCursor parent,
@@ -157,6 +167,33 @@ static enum CXChildVisitResult getFirstChild_visitor( CXCursor cursor,
   CXCursor *const first_cursor = data;
   *first_cursor = cursor;
   return CXChildVisit_Break;
+}
+
+/**
+ * A helper function for tidy_Cursor_getFirstExprChild() that visits only the
+ * first expression child cursor, if any, of a cursor.
+ *
+ * @param cursor The cursor being visited.
+ * @param parent The parent of \a cursor.
+ * @param data A pointer to receive the first expression child cursor.
+ * @return Returns `CXChildVisit_Break` if \a cursor is an expression or
+ * `CXChildVisit_Continue` otherwise.
+ *
+ * @sa getFirstChild_visitor()
+ */
+static enum CXChildVisitResult getFirstExprChild_visitor( CXCursor cursor,
+                                                          CXCursor parent,
+                                                          CXClientData data ) {
+  (void)parent;
+
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  if ( clang_isExpression( kind ) ) {
+    assert( data != NULL );
+    CXCursor *const expr_cursor = data;
+    *expr_cursor = cursor;
+    return CXChildVisit_Break;
+  }
+  return CXChildVisit_Continue;
 }
 
 /**
@@ -280,7 +317,9 @@ static enum CXChildVisitResult isBaseClass_visitor( CXCursor cursor,
     assert( data != NULL );
     isBaseClass_data *const ibcd = data;
 
-    if ( clang_equalCursors( ref_cursor, ibcd->base_cursor ) ) {
+    if ( clang_equalCursors( ref_cursor, ibcd->base_cursor ) ||
+         tidy_Cursor_isTemplateSpecializationOf( ibcd->base_cursor,
+                                                 ref_cursor ) ) {
       ibcd->is_base = true;
       return CXChildVisit_Break;
     }
@@ -290,37 +329,19 @@ static enum CXChildVisitResult isBaseClass_visitor( CXCursor cursor,
 }
 
 /**
- * Gets the outermost C++ class for a cursor.
+ * Gets the first expression child cursor of \a cursor, if any.
  *
- * @par Example
- * @parblock
- * Given:
+ * @param cursor The cursor to get the first expression child cursor of, if
+ * any.
+ * @return Returns the first child expression cursor of \a cursor, or the null
+ * cursor if none.
  *
- *      namespace N {
- *        class A {
- *          class B {
- *            void f();
- *            // ...
- *
- * then the outermost class for `f()` would be `A`.
- * @endparblock
- *
- * @param cursor The cursor to get the outermost class of.
- * @return Returns said class cursor.
+ * @sa tidy_Cursor_getFirstChild()
  */
-NODISCARD
-static CXCursor tidy_Cursor_getOutermostClass( CXCursor cursor ) {
-  CXCursor enclosing_cursor = clang_getNullCursor();
-
-  while ( !clang_Cursor_isNull( cursor ) ) {
-    if ( tidy_Cursor_isClassDecl( cursor ) )
-      enclosing_cursor = cursor;
-    else if ( !clang_Cursor_isNull( enclosing_cursor ) )
-      break;
-    cursor = clang_getCursorSemanticParent( cursor );
-  } // wnile
-
-  return enclosing_cursor;
+static CXCursor tidy_Cursor_getFirstExprChild( CXCursor cursor ) {
+  CXCursor child_cursor = clang_getNullCursor();
+  clang_visitChildren( cursor, &getFirstExprChild_visitor, &child_cursor );
+  return child_cursor;
 }
 
 /**
@@ -338,33 +359,29 @@ static CXCursor tidy_Cursor_getTypeRef( CXCursor cursor ) {
 }
 
 /**
- * If \a cursor represents either a pointer or reference, gets the cursor for
- * the type to which it either points to or refers, respectively.
+ * Gets the initializer for a variable.
  *
- * @param cursor The cursor.
- * @return Returns the cursor for the type to which \a cursor either points to
- * or refers, respectively; or \a cursor if it's neither a pointer nor
- * reference.
+ * @param expr_csr TODO.
+ * @return Returns TODO.
  */
 NODISCARD
-static CXCursor tidy_Cursor_getUnderlyingType( CXCursor cursor ) {
-  CXType type = clang_getCursorType( cursor );
-  for ( bool done = false; !done; ) {
-    switch ( type.kind ) {
-      case CXType_Pointer:
-        type = clang_getPointeeType( type );
-        break;
-      case CXType_LValueReference:
-      case CXType_RValueReference:
-        type = clang_getNonReferenceType( type );
-        break;
-      default:
-        done = true;
-        break;
-    } // switch
-  } // for
+static CXCursor tidy_Cursor_getVarInitializer( CXCursor expr_csr ) {
+  expr_csr = tidy_Cursor_skipUnexposedExpr( expr_csr );
+  if ( clang_Cursor_isNull( expr_csr ) )
+    return clang_getNullCursor();
 
-  return clang_getTypeDeclaration( type );
+  enum CXCursorKind kind = clang_getCursorKind( expr_csr );
+  if ( kind == CXCursor_DeclRefExpr ) {
+    CXCursor const ref_csr = clang_getCursorReferenced( expr_csr );
+    kind = clang_getCursorKind( ref_csr );
+    if ( kind == CXCursor_VarDecl ) {
+      CXCursor const init_csr = tidy_Cursor_getFirstExprChild( ref_csr );
+      if ( !clang_Cursor_isNull( init_csr ) )
+        return tidy_Cursor_getVarInitializer( init_csr );
+    }
+  }
+
+  return expr_csr;
 }
 
 /**
@@ -435,10 +452,12 @@ static CXCursor tidy_Cursor_skipLinkageSpec( CXCursor cursor ) {
  * @param cursor The cursor.
  * @return If \a cursor is an UnexposedExpr, returns its first child; otherwise
  * returns \a cursor.
+ *
+ * @sa tidy_Cursor_getFirstExposedChild()
  */
 NODISCARD
 static CXCursor tidy_Cursor_skipUnexposedExpr( CXCursor cursor ) {
-  while ( clang_getCursorKind( cursor ) == CXCursor_UnexposedExpr )
+  while ( clang_isUnexposed( clang_getCursorKind( cursor ) ) )
     cursor = tidy_Cursor_getFirstChild( cursor );
   return cursor;
 }
@@ -489,8 +508,12 @@ CXCursor tidy_Cursor_getFirstChild( CXCursor cursor ) {
   return child_cursor;
 }
 
-CXCursor tidy_Cursor_getFunctionScope( CXCursor func_cursor ) {
-  CXCursor const parent = clang_getCursorSemanticParent( func_cursor );
+CXCursor tidy_Cursor_getFirstExposedChild( CXCursor cursor ) {
+  return tidy_Cursor_skipUnexposedExpr( tidy_Cursor_getFirstChild( cursor ) );
+}
+
+CXCursor tidy_Cursor_getFunctionScope( CXCursor fn_cursor ) {
+  CXCursor const parent = clang_getCursorSemanticParent( fn_cursor );
 
   // If it's a member function, return its class directly.
   if ( tidy_Cursor_isClassDecl( parent ) )
@@ -498,10 +521,10 @@ CXCursor tidy_Cursor_getFunctionScope( CXCursor func_cursor ) {
 
   // For a free function/operator, inspect parameter types for an associated
   // class.
-  int const num_args = clang_Cursor_getNumArguments( func_cursor );
-  assert( num_args >= 0 && "func_cursor is not a function" );
+  int const num_args = clang_Cursor_getNumArguments( fn_cursor );
+  assert( num_args >= 0 && "fn_cursor is not a function" );
   for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
-    CXCursor arg_cursor = clang_Cursor_getArgument( func_cursor, i );
+    CXCursor arg_cursor = clang_Cursor_getArgument( fn_cursor, i );
     arg_cursor = tidy_Cursor_getUnderlyingType( arg_cursor );
     CXCursor const class_cursor = tidy_Cursor_getOutermostClass( arg_cursor );
     if ( !clang_Cursor_isNull( class_cursor ) )
@@ -511,12 +534,46 @@ CXCursor tidy_Cursor_getFunctionScope( CXCursor func_cursor ) {
   return tidy_Cursor_skipLinkageSpec( parent );
 }
 
+CXCursor tidy_Cursor_getOutermostClass( CXCursor cursor ) {
+  CXCursor enclosing_cursor = clang_getNullCursor();
+
+  while ( !clang_Cursor_isNull( cursor ) ) {
+    if ( tidy_Cursor_isClassDecl( cursor ) )
+      enclosing_cursor = cursor;
+    else if ( !clang_Cursor_isNull( enclosing_cursor ) )
+      break;
+    cursor = clang_getCursorSemanticParent( cursor );
+  } // wnile
+
+  return enclosing_cursor;
+}
+
 char* tidy_Cursor_getScopedDisplayName( CXCursor cursor ) {
   return getScopedName_thunk( cursor, &clang_getCursorDisplayName );
 }
 
 char* tidy_Cursor_getScopedSimpleName( CXCursor cursor ) {
   return getScopedName_thunk( cursor, &clang_getCursorSpelling );
+}
+
+CXCursor tidy_Cursor_getUnderlyingType( CXCursor cursor ) {
+  CXType type = clang_getCursorType( cursor );
+  for ( bool done = false; !done; ) {
+    switch ( type.kind ) {
+      case CXType_Pointer:
+        type = clang_getPointeeType( type );
+        break;
+      case CXType_LValueReference:
+      case CXType_RValueReference:
+        type = clang_getNonReferenceType( type );
+        break;
+      default:
+        done = true;
+        break;
+    } // switch
+  } // for
+
+  return clang_getTypeDeclaration( type );
 }
 
 bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_cursor,
@@ -575,7 +632,7 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_cursor ) {
 
   while ( !tidy_Cursor_isInvalid( cursor ) ) {
     enum CXCursorKind const kind = clang_getCursorKind( cursor );
-    if ( kind == CXCursor_TranslationUnit )
+    if ( clang_isTranslationUnit( kind ) )
       break;
 
     if ( tidy_Cursor_isClassDecl( cursor ) ) {
@@ -594,6 +651,55 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_cursor ) {
     }
     cursor = parent;
   } // while
+
+  return false;
+}
+
+bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
+                                                CXCursor *base_class_csr ) {
+  expr_csr = tidy_Cursor_getVarInitializer( expr_csr );
+  expr_csr = tidy_Cursor_skipUnexposedExpr( expr_csr );
+
+  enum CXCursorKind const kind = clang_getCursorKind( expr_csr );
+  if ( kind != CXCursor_CallExpr )
+    return false;
+
+  // Inspect member call expressions (e.g. 'elements.end()')
+  CXCursor const callee = tidy_Cursor_getFirstExposedChild( expr_csr );
+  if ( clang_getCursorKind( callee ) != CXCursor_MemberRefExpr )
+    return false;
+
+  // Base object expression ('elements')
+  CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( callee );
+  if ( clang_Cursor_isNull( obj_csr ) )
+    return false;
+
+  // Strip reference type & cv-qualifiers to get 'element_map'
+  CXCursor const obj_class_csr = tidy_Cursor_getUnderlyingType( obj_csr );
+  CXCursor const canon_class_csr = clang_getCanonicalCursor( obj_class_csr );
+  if ( clang_Cursor_isNull( canon_class_csr ) )
+    return false;
+
+  // Method declaration ('std::map::find' or 'std::map::end')
+  CXCursor const mbr_fn_csr = clang_getCursorReferenced( callee );
+  if ( clang_Cursor_isNull( mbr_fn_csr ) )
+    return false;
+
+  CXCursor mbr_fn_class_csr = clang_getCursorSemanticParent( mbr_fn_csr );
+  mbr_fn_class_csr = clang_getCanonicalCursor( mbr_fn_class_csr );
+  if ( clang_Cursor_isNull( mbr_fn_class_csr ) )
+    return false;
+
+  if ( clang_equalCursors( canon_class_csr, mbr_fn_class_csr ) )
+    return false;
+
+  // Verify that element_map != std::map AND element_map derives from
+  // std::map
+  if ( tidy_Cursor_isInheritedFrom( obj_class_csr, mbr_fn_class_csr ) ) {
+    if ( base_class_csr != NULL )
+      *base_class_csr = mbr_fn_class_csr;
+    return true;
+  }
 
   return false;
 }

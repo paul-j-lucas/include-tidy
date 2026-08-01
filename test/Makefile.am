@@ -59,7 +59,8 @@ TESTS+=	tests/c_ast.test \
 	tests/types.test
 
 # C++ tests.
-TESTS+=	tests/cxx.test
+TESTS+=	tests/cxx.test \
+	tests/str_str_map.test
 
 ###############################################################################
 

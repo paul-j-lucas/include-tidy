@@ -104,10 +104,25 @@ CXCursor tidy_Cursor_getClassAsWritten( CXCursor cursor );
  *
  * @param cursor The cursor to get the first child cursor of, if any.
  * @return Returns the first child cursor of \a cursor, or the null cursor if
- * \a cursor has no child.
+ * none.
+ *
+ * @sa tidy_Cursor_getFirstExposedChild()
  */
 NODISCARD
 CXCursor tidy_Cursor_getFirstChild( CXCursor cursor );
+
+/**
+ * Gets the first exposed (i.e., not UnexposedExpr) child cursor of \a cursor,
+ * if any.
+ *
+ * @param cursor The cursor.
+ * @return Returns the first exposed child cursor of \a cursor, or the null
+ * cursor if none.
+ *
+ * @sa tidy_Cursor_getFirstChild()
+ */
+NODISCARD
+CXCursor tidy_Cursor_getFirstExposedChild( CXCursor cursor );
 
 /**
  * Gets the scope for a function or operator.
@@ -143,6 +158,28 @@ NODISCARD
 CXCursor tidy_Cursor_getFunctionScope( CXCursor func_cursor );
 
 /**
+ * Gets the outermost C++ class for a cursor.
+ *
+ * @par Example
+ * @parblock
+ * Given:
+ *
+ *      namespace N {
+ *        class A {
+ *          class B {
+ *            void f();
+ *            // ...
+ *
+ * then the outermost class for `f()` would be `A`.
+ * @endparblock
+ *
+ * @param cursor The cursor to get the outermost class of.
+ * @return Returns said class cursor.
+ */
+NODISCARD
+CXCursor tidy_Cursor_getOutermostClass( CXCursor cursor );
+
+/**
  * Given a cursor at a local name of an enumeration, class, class data member,
  * class member function, structure, union, or namespace, gets its fully scoped
  * "display" name that includes template parameters (if any).
@@ -169,6 +206,18 @@ char* tidy_Cursor_getScopedDisplayName( CXCursor cursor );
  */
 NODISCARD
 char* tidy_Cursor_getScopedSimpleName( CXCursor cursor );
+
+/**
+ * If \a cursor represents either a pointer or reference, gets the cursor for
+ * the type to which it either points to or refers, respectively.
+ *
+ * @param cursor The cursor.
+ * @return Returns the cursor for the type to which \a cursor either points to
+ * or refers, respectively; or \a cursor if it's neither a pointer nor
+ * reference.
+ */
+NODISCARD
+CXCursor tidy_Cursor_getUnderlyingType( CXCursor cursor );
 
 /**
  * Gets whether \a i_cursor is before \a j_cursor in the translation unit.
@@ -225,6 +274,41 @@ bool tidy_Cursor_isInFile( CXCursor cursor, CXFile file );
  */
 NODISCARD
 bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_cursor );
+
+/**
+ * Gets whether a C++ member function is inherited from a base class.
+ *
+ * @par Example
+ * @parblock
+ * Given something like:
+ *
+ *      class Base {
+ *      public:
+ *        void f();
+ *      };
+ *
+ *      class Derived : public Base {
+ *        // ...
+ *      };
+ *
+ *      void g() {
+ *        Derived d;
+ *        d.f();                        // f() is inherited from Base
+ *        // ...
+ *
+ * the member function `f()` isn't declared in `Derived`, but declared in and
+ * inherited from `Base`.
+ *
+ * @endparblock
+ *
+ * @param expr_csr The expression the member function is being called on.
+ * @param base_class_csr A optional pointer to receive the cursor for the base
+ * class that the function was declared in.
+ * @return Returns `true` only if the member function was inherited.
+ */
+NODISCARD
+bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
+                                                CXCursor *base_class_csr );
 
 /**
  * Gets whether \a cursor is either null or invalid.
