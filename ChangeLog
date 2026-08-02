@@ -1,5 +1,8 @@
 2026-08-02  Paul J. Lucas <paul@lucasmail.org>
 
+   * symbols.c, derived_set.cpp, derived_set.hpp: Now handle unqualified,
+     inherited types.
+   * symbols.c: Removed unnecessary initialization.
    * symbols.c: No longer need call to
      tidy_Cursor_isInheritedMemberFunctionCall here.
    * symbols.c: Removed now-useless code.
