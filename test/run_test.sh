@@ -204,7 +204,7 @@ trap "x=$?; rm -f $TMPDIR/*_$$_* 2>/dev/null; exit $x" EXIT HUP INT TERM
 DATA_DIR="$srcdir/data"
 EXPECTED_DIR="$srcdir/expected"
 
-TIDY_TEST_CFLAGS="-std=c++20"
+TIDY_TEST_CXXFLAGS="-std=c++20"
 TIDY_TEST_CONFIG="-Xtidy --config=../$TOP_SRCDIR/etc/config.toml"
 TIDY_TEST_OPTIONS="-Xtidy --directory=data -Xtidy --no-config-layers"
 
