@@ -257,12 +257,6 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
   if ( num_args == 0 )
     return true;
 
-#if 0
-  CXCursor const fn_scope_csr = tidy_Cursor_getFunctionScope( fn_csr );
-  enum CXCursorKind const fn_scope_kind = clang_getCursorKind( fn_scope_csr );
-  bool const is_tu = clang_isTranslationUnit( fn_scope_kind );
-#endif
-
   for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
     CXCursor const arg_csr = clang_Cursor_getArgument( call_csr, i );
     CXCursor const arg_class_csr = tidy_Cursor_getClassAsWritten( arg_csr );
@@ -336,24 +330,6 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
       if ( tidy_Cursor_isInheritedFrom( arg_oclass_csr, param_oclass_csr ) )
         return false;
     }
-
-#if 0
-    // Scope / Namespace matching
-    CXCursor const arg_parent = clang_getCursorSemanticParent( arg_class_csr );
-
-    if ( is_member_fn ) {
-      // Mandate header if argument type is defined nested inside the member
-      // function's class scope
-      if ( clang_equalCursors( arg_parent, fn_scope_csr ) )
-        return true;
-    }
-    else {
-      // Suppress header if the free function is in a namespace and the argument
-      // belongs to that same namespace
-      if ( !is_tu && clang_equalCursors( arg_parent, fn_scope_csr ) )
-        return false;
-    }
-#endif
   } // for
 
   return true;
