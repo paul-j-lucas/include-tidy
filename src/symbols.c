@@ -265,11 +265,6 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
 
     CXCursor const param_csr = clang_Cursor_getArgument( fn_csr, i );
     if ( !clang_Cursor_isNull( param_csr ) ) {
-      CXCursor const arg_oclass_csr =
-        tidy_Cursor_getOutermostClass( arg_class_csr );
-      CXCursor const param_type_csr =
-        tidy_Cursor_getUnderlyingType( param_csr );
-
       //
       // Given:
       //
@@ -293,6 +288,8 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
       // Therefore, we allow the transitive include of <set> as an exception to
       // the include-what-you-use rule.
       //
+      CXCursor const param_type_csr =
+        tidy_Cursor_getUnderlyingType( param_csr );
       if ( tidy_Cursor_isTypeAliasOf( arg_class_csr, param_type_csr ) )
         return false;
 
@@ -322,6 +319,8 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
       // Therefore, we allow the transitive include of <set> as an exception to
       // the include-what-you-use rule.
       //
+      CXCursor const arg_oclass_csr =
+        tidy_Cursor_getOutermostClass( arg_class_csr );
       CXCursor const param_oclass_csr =
         tidy_Cursor_getOutermostClass( param_type_csr );
       if ( tidy_Cursor_isInheritedFrom( arg_oclass_csr, param_oclass_csr ) )
