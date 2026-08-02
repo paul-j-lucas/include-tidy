@@ -263,9 +263,6 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
     if ( clang_Cursor_isNull( arg_class_csr ) )
       continue;
 
-    if ( tidy_Cursor_isInheritedMemberFunctionCall( arg_csr, NULL ) )
-      return false;
-
     CXCursor const param_csr = clang_Cursor_getArgument( fn_csr, i );
     if ( !clang_Cursor_isNull( param_csr ) ) {
       CXCursor const arg_oclass_csr =
