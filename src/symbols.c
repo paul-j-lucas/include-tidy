@@ -86,6 +86,36 @@ struct symbols_init_data {
   bool      verbose_printed;            ///< Printed any verbose output?
 
   /**
+   * The C++ class of the current function or operator we're in.
+   *
+   * @par Example
+   * @parblock
+   * Given something like:
+   *
+   *      // int_set.hpp
+   *      #include <set>
+   *      struct int_set : std::set<int> {
+   *        void f();
+   *      };
+   *
+   *      // int_set.cpp
+   *      #include "int_set.h"
+   *
+   *      void int_set::f() {
+   *        auto v = value_type{ 0 };
+   *        // ...
+   *      }
+   *
+   * For an inherited type like `value_type` (inherited from `std::set`), when
+   * unqualified, we need to know to look up the type in the function's class
+   * scope.
+   * @endparblock
+   *
+   * @note This is set while visiting any cursor _inside_ a function.
+   */
+  CXCursor cxx_current_fn_class_csr;
+
+  /**
    * The cursor of the current C++ function (including member functions and
    * overloaded operators).
    *
@@ -136,8 +166,11 @@ struct symbols_init_data {
    *
    * then the symbol name does _not_ have to be added.
    * @endparblock
+   *
+   * @note This is set only while the current cursor being visited is a
+   * function and not while _inside_ the function.
    */
-  CXCursor cxx_fn_csr;
+  CXCursor cxx_deferred_fn_csr;
 
   /**
    * The cursor of the current C++ scope (class, structure, union, enumeration,
@@ -783,13 +816,24 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     } // switch
   }
 
-skip:
+skip:;
+  // See the comment for symbols_init_data::cxx_current_fn_class_csr.
+  CXCursor const prev_cxx_current_fn_class_csr = sid->cxx_current_fn_class_csr;
+  if ( tidy_is_cxx && tidy_Cursor_isFunctionDecl( cursor ) ) {
+    CXCursor const fn_parent = clang_getCursorSemanticParent( cursor );
+    sid->cxx_current_fn_class_csr = tidy_Cursor_isClassDecl( fn_parent ) ?
+      fn_parent :
+      clang_getNullCursor();
+  }
+
   //
   // Returning CXChildVisit_Recurse causes clang_visitChildren() to do only
   // pre-order traversal, but we need to reset cxx_scope_csr after visiting a
   // child node. Therefore, recurse manually.
   //
   clang_visitChildren( cursor, &symbols_init_visitor, data );
+
+  sid->cxx_current_fn_class_csr = prev_cxx_current_fn_class_csr;
 
 skip_children:
   if ( is_scope_change )
@@ -883,10 +927,10 @@ static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
     CXCursor const fn_csr = clang_getCursorReferenced( call_csr );
     bool const is_function = tidy_Cursor_isFunctionDecl( fn_csr );
 
-    CXCursor const prev_fn_csr = sid->cxx_fn_csr;
-    sid->cxx_fn_csr = is_function ? fn_csr : clang_getNullCursor();
+    CXCursor const prev_deferred_fn_csr = sid->cxx_deferred_fn_csr;
+    sid->cxx_deferred_fn_csr = is_function ? fn_csr : clang_getNullCursor();
     clang_visitChildren( call_csr, &symbols_init_visitor, sid );
-    sid->cxx_fn_csr = prev_fn_csr;
+    sid->cxx_deferred_fn_csr = prev_deferred_fn_csr;
 
     if ( !is_function || !add_cxx_fn( call_csr, fn_csr ) )
       return true;
@@ -1017,15 +1061,21 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     return;
 
   if ( tidy_is_cxx ) {
-    // See the comment for symbols_init_data::cxx_fn_csr.
-    if ( clang_equalCursors( dec_csr, sid->cxx_fn_csr ) )
+    // See the comment for symbols_init_data::cxx_deferred_fn_csr.
+    if ( clang_equalCursors( dec_csr, sid->cxx_deferred_fn_csr ) )
       return;
 
+    CXCursor scope_csr;
     // See the comment for symbols_init_data::cxx_scope_csr.
+    if ( !clang_Cursor_isNull( sid->cxx_scope_csr ) )
+      scope_csr = sid->cxx_scope_csr;
+    // See the comment for symbols_init_data::cxx_current_fn_class_csr.
+    else if ( !clang_Cursor_isNull( sid->cxx_current_fn_class_csr ) )
+      scope_csr = sid->cxx_current_fn_class_csr;
+    else
+      scope_csr = parent;
+
     CXCursor const dec_parent = clang_getCursorSemanticParent( dec_csr );
-    CXCursor const scope_csr = !clang_Cursor_isNull( sid->cxx_scope_csr ) ?
-      sid->cxx_scope_csr :
-      parent;
     if ( tidy_Cursor_isInheritedFrom( scope_csr, dec_parent ) )
       return;
   }
@@ -1147,7 +1197,8 @@ void symbols_init( void ) {
   CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
   symbols_init_data sid = {
     .source_file = clang_getFile( tidy_tu, tidy_source_path ),
-    .cxx_fn_csr = clang_getNullCursor(),
+    .cxx_current_fn_class_csr = clang_getNullCursor(),
+    .cxx_deferred_fn_csr = clang_getNullCursor(),
     .cxx_scope_csr = clang_getNullCursor()
   };
   clang_visitChildren( cursor, &symbols_init_visitor, &sid );
