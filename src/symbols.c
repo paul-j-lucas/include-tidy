@@ -113,28 +113,28 @@ struct symbols_init_data {
    *        if ( i == j )
    *          // ...
    *
-   * Here, `Derived.cpp` correctly includes `Derived.h` that correctly includes
-   * `Base.h`. `Derived.cpp` uses `operator==()` that's declared in `Base.h`,
-   * so `Derived.cpp` should include `Base.h` according to the include-what-
-   * you-use rule (IWYU).
+   * Here, `Derived.cpp` correctly includes `Derived.hpp` that correctly
+   * includes `Base.hpp`. `Derived.cpp` uses `operator==()` that's declared in
+   * `Base.hpp`, so `Derived.cpp` should include `Base.hpp` according to the
+   * include-what-you-use rule (IWYU).
    *
    * However, since `Derived` is derived from `Base`, that means the definition
-   * of `Base` was available via `Derived.h` including `Base.h`; and since
+   * of `Base` was available via `Derived.hpp` including `Base.hpp`; and since
    * the arguments to `operator==()` are `Derived` and `Derived.cpp` includes
-   * `Derived.h`, that should be sufficient --- an exception to IWYU.
+   * `Derived.hpp`, that should be sufficient --- an exception to IWYU.
    * @endparblock
    *
    * @remarks
    * @parblock
-   * To implement this, the decision to add the symbol for the function has to
-   * be dererred until after all of its argument types are checked.
-   * Specifically, if the function or operator:
+   * To implement this, the decision to add the symbol for a function has to be
+   * dererred until after all of its argument types are checked.  Specifically,
+   * if the function or operator:
    *
    *  + Has one or more arguments; and:
    *  + At least one of those arguments' type is derived from the relevant
    *    base.
    *
-   * then the symbol name does not have to be added.
+   * then the symbol name does _not_ have to be added.
    * @endparblock
    */
   CXCursor cxx_fn_csr;
@@ -166,19 +166,19 @@ struct symbols_init_data {
    *      using global_type = Derived::value_type;
    *      Derived::Derived( int n ) : Base{ n } { }
    *
-   * Here, `Derived.cpp` correctly includes `Derived.h` that correctly includes
-   * `Base.h`. `Derived.cpp` references both `Base::Base(int)` and
+   * Here, `Derived.cpp` correctly includes `Derived.hpp` that correctly
+   * includes `Base.hpp`. `Derived.cpp` references both `Base::Base(int)` and
    * `Derived::value_type`.  Additionally for `value_type`:
    *
    *  + `Derived` doesn't declare it --- it's inherited from `Base`.
    *  + The reference to it is from the global scope, not a class scope.
    *
-   * For all of these reasons, `Derived.cpp` should include `Base.h` according
-   * to the include-what-you-use rule (IWYU).
+   * For all of these reasons, `Derived.cpp` should include `Base.hpp`
+   * according to the include-what-you-use rule (IWYU).
    *
    * However, since `Derived` is derived from `Base`, that means the definition
-   * of `Base` was available via `Derived.h` including `Base.h`; and since
-   * `Derived.cpp` includes `Derived.h`, that should be sufficient --- an
+   * of `Base` was available via `Derived.hpp` including `Base.hpp`; and since
+   * `Derived.cpp` includes `Derived.hpp`, that should be sufficient --- an
    * exception to IWYU.  Furthermore, `value_type` has to be looked up via the
    * `Derived` scope, not the global scope.
    *
