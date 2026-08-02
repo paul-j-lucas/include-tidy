@@ -359,7 +359,7 @@ static add_cxx_member_fn_rv add_cxx_member_fn( CXCursor call_csr,
   if ( tidy_Cursor_isInheritedFrom( obj_class_csr, fn_class_csr ) )
     return ADD_CXX_MEMBER_FN_NO;
 
-  CXCursor base_csr = clang_getNullCursor();
+  CXCursor base_csr;
   if ( !tidy_Cursor_isInheritedMemberFunctionCall( obj_expr_csr, &base_csr ) )
     return ADD_CXX_MEMBER_FN_NO;
 
