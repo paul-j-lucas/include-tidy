@@ -1,3 +1,10 @@
+2026-08-02  Paul J. Lucas <paul@lucasmail.org>
+
+   * symbols.c: No longer need call to
+     tidy_Cursor_isInheritedMemberFunctionCall here.
+   * symbols.c: Removed now-useless code.
+   * clang_util.c: Now checking that alias_csr really is a type alias.
+
 2026-08-01  Paul J. Lucas <paul@lucasmail.org>
 
    * slist.out, slist.test: Fixed (?) slist.test.
