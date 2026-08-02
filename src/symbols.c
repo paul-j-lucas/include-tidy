@@ -606,7 +606,7 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
   } // switch
 
   CXFile const sym_file = tidy_getCursorLocation_File( sym_csr );
-  if ( sym_file == NULL )
+  if ( unlikely( sym_file == NULL ) )
     return;
 
   // If the symbol was first declared in the file being tidied, we don't care.
@@ -852,33 +852,30 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
 /**
  * Visits a `CXCursor_CallExpr` kind of cursor.
  *
- * @par Example
- * @parblock
- * For the case of a C++ member function call, its AST is like:
- *
- *      CallExpr
- *        MemberRefExpr
- *
- * that is the CallExpr has a child of a MemberRefExpr for the member function.
- * Since we handle MemberRefExpr cursors specially in visit_MemberRefExpr(), we
- * want do do nothing for the CallExpr.
- * @endparblock
- *
  * @param call_csr The call expression's cursor to visit.
  * @param parent The parent cursor of \a call_csr.
  * @param sid The symbols_init_data to use.
+ * @return Returns `true` only if we've already visited our child AST nodes (so
+ * symbols_init_visitor() shouldn't).
  */
 static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
                             symbols_init_data *sid ) {
   assert( sid != NULL );
 
   if ( tidy_is_cxx ) {
-    //
-    //
-    //
     CXCursor const child_csr = tidy_Cursor_getFirstChild( call_csr );
     if ( !tidy_Cursor_isInvalid( child_csr ) ) {
       enum CXCursorKind const child_kind = clang_getCursorKind( child_csr );
+      //
+      // For the case of a C++ member function call, its AST is like:
+      //
+      //      CallExpr
+      //        MemberRefExpr
+      //
+      // that is the CallExpr has a child of a MemberRefExpr for the member
+      // function.  Since we handle MemberRefExpr cursors specially in
+      // visit_MemberRefExpr(), we want do do nothing for the CallExpr.
+      //
       if ( child_kind == CXCursor_MemberRefExpr )
         return false;
     }

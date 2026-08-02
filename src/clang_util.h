@@ -341,7 +341,7 @@ bool tidy_Cursor_isScopeDecl( CXCursor cursor );
  * Gets whether \a alias_csr is an alias type for \a underlying_csr.
  *
  * @param alias_csr The cursor for a type.
- * @param base_csr The cursor for an underlying type.
+ * @param underlying_csr The cursor for an underlying type.
  * @return Returns `true` only if \a alias_csr is an alias type for \a
  * underlying_csr.
  */
