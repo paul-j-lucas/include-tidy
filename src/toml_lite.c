@@ -993,7 +993,7 @@ void toml_table_init( toml_table *table ) {
   table->loc = (toml_loc){ 0 };
   rb_tree_init(
     &table->keys_values, RB_DINT,
-    POINTER_CAST( rb_cmp_fn_t, toml_key_value_cmp )
+    POINTER_CAST( rb_cmp_fn_t, &toml_key_value_cmp )
   );
 }
 
