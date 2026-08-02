@@ -60,8 +60,8 @@ TESTS+=	tests/c_ast.test \
 
 # C++ tests.
 TESTS+=	tests/cxx.test \
-	tests/derived_map.test \
-	tests/using_map.test
+	tests/derived_set.test \
+	tests/using_set.test
 
 ###############################################################################
 

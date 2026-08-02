@@ -1,0 +1,2 @@
+$ include-tidy -std=c++20 -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml using_set.cpp
+
