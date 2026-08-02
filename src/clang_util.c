@@ -716,10 +716,12 @@ bool tidy_Cursor_isScopeDecl( CXCursor cursor ) {
 }
 
 bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr ) {
-  if ( tidy_Cursor_isInvalid( alias_csr ) ||
-       tidy_Cursor_isInvalid( underlying_csr ) ) {
+  if ( tidy_Cursor_isInvalid( underlying_csr ) )
     return false;
-  }
+
+  enum CXCursorKind const kind = clang_getCursorKind( alias_csr );
+  if ( kind != CXCursor_TypedefDecl && kind != CXCursor_TypeAliasDecl )
+    return false;
 
   CXCursor canon_csr = tidy_Cursor_getCanonicalTypeDeclaration( alias_csr );
   if ( clang_Cursor_isNull( canon_csr ) )
