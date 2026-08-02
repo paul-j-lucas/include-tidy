@@ -1,5 +1,17 @@
 2026-08-01  Paul J. Lucas <paul@lucasmail.org>
 
+   * slist.out, slist.test: Fixed (?) slist.test.
+   * cxx.out, run_test.sh, cxx.test, derived_set.test, using_set.test:
+     s/TIDY_TEST_CFLAGS/TIDY_TEST_CXXFLAGS/
+   * test/Makefile.am, derived_set.cpp, derived_set.hpp, using_set.cpp,
+     using_set.hpp, derived_set.out, using_set.out, run_test.sh,
+     derived_set.test, using_set.test: Better C++ tests; added -std=c++20 to
+     test flags.
+   * clang_util.c, clang_util.h, symbols.c, typedefs.c, test/Makefile.am,
+     using_map.cpp, using_map.hpp, using_map.out, using_map.test: Now handling
+     CallExpr involving type aliases.
+   * test/Makefile.am, derived_map.cpp, derived_map.hpp: Renamed test.
+   * clang_util.c: tidy_Cursor_isInheritedMemberFunctionCall() clean-up.
    * clang_util.c, clang_util.h, symbols.c, test/Makefile.am, str_str_map.cpp,
      str_str_map.hpp, str_str_map.out, str_str_map.test: Even better handling
      of CallExpr for free functions/operators.
