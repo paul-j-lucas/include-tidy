@@ -92,10 +92,7 @@ static int tidy_typedef_cmp( tidy_typedef const *i_tdef,
 ////////// extern functions ///////////////////////////////////////////////////
 
 void typedef_add( CXCursor cursor ) {
-  CXType const type = clang_getTypedefDeclUnderlyingType( cursor );
-  CXType const canonical_type = clang_getCanonicalType( type );
-  CXCursor const type_csr = clang_getTypeDeclaration( canonical_type );
-
+  CXCursor const type_csr = tidy_Cursor_getCanonicalTypeDeclaration( cursor );
   if ( tidy_Cursor_isInvalid( type_csr ) )
     return;
 

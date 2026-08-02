@@ -488,6 +488,11 @@ int tidy_Cursor_compare( CXCursor i_csr, CXCursor j_csr ) {
   return 0;
 }
 
+CXCursor tidy_Cursor_getCanonicalTypeDeclaration( CXCursor cursor ) {
+  CXType const type = clang_getCanonicalType( clang_getCursorType( cursor ) );
+  return clang_getTypeDeclaration( type );
+}
+
 CXCursor tidy_Cursor_getClassAsWritten( CXCursor cursor ) {
   cursor = tidy_Cursor_skipUnexposedExpr( cursor );
   CXCursor const ref_csr = clang_getCursorReferenced( cursor );
@@ -708,6 +713,25 @@ bool tidy_Cursor_isScopeDecl( CXCursor cursor ) {
     default:
       return false;
   } // switch
+}
+
+bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr ) {
+  if ( tidy_Cursor_isInvalid( alias_csr ) ||
+       tidy_Cursor_isInvalid( underlying_csr ) ) {
+    return false;
+  }
+
+  CXCursor canon_csr = tidy_Cursor_getCanonicalTypeDeclaration( alias_csr );
+  if ( clang_Cursor_isNull( canon_csr ) )
+    return false;
+  alias_csr = canon_csr;
+
+  canon_csr = tidy_Cursor_getCanonicalTypeDeclaration( underlying_csr );
+  if ( !clang_Cursor_isNull( canon_csr ) )
+    underlying_csr = canon_csr;
+
+  return clang_equalCursors( alias_csr, underlying_csr ) ||
+         tidy_Cursor_isTemplateSpecializationOf( alias_csr, underlying_csr );
 }
 
 int tidy_File_compareByName( CXFile i_file, CXFile j_file ) {

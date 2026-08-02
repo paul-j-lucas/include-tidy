@@ -64,6 +64,16 @@ NODISCARD
 int tidy_Cursor_compare( CXCursor i_csr, CXCursor j_csr );
 
 /**
+ * Gets the cursor for the type declaration of the canonical type of \a cursor.
+ *
+ * @param cursor The cursor to get type declaration of the canonical type of.
+ * @return Returns the cursor for the type declaration of the canonical type of
+ * \a cursor.
+ */
+NODISCARD
+CXCursor tidy_Cursor_getCanonicalTypeDeclaration( CXCursor cursor );
+
+/**
  * Gets the cursor for the C++ class type as written in the source file.
  *
  * @par Example
@@ -326,6 +336,17 @@ bool tidy_Cursor_isInvalid( CXCursor cursor );
  */
 NODISCARD
 bool tidy_Cursor_isScopeDecl( CXCursor cursor );
+
+/**
+ * Gets whether \a alias_csr is an alias type for \a underlying_csr.
+ *
+ * @param alias_csr The cursor for a type.
+ * @param base_csr The cursor for an underlying type.
+ * @return Returns `true` only if \a alias_csr is an alias type for \a
+ * underlying_csr.
+ */
+NODISCARD
+bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr );
 
 /**
  * Compares two CXFile objects by name.

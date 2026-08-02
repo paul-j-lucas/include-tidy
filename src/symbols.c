@@ -272,44 +272,65 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
     if ( tidy_Cursor_isInheritedMemberFunctionCall( arg_csr, NULL ) )
       return false;
 
-    //
-    // Given:
-    //
-    //      // Base.hpp
-    //      struct Base {
-    //        // ...
-    //      };
-    //
-    //      void f( Base const& );
-    //
-    //      // Derived.hpp
-    //      struct Derived : Base {
-    //        // ...
-    //      };
-    //
-    //      // main.cpp
-    //      #include "Derived.hpp"
-    //
-    //      int main() {
-    //        Derived dobj;
-    //        f( dobj );
-    //        // ...
-    //
-    // Even though main.cpp uses f() declared in Base.hpp, it's sufficient that
-    // only Derived.hpp is included and Base.hpp isn't because:
-    //
-    //  + dobj of type Derived is an object derived from Base; and:
-    //  + In order to declare Derived, Derived.hpp must have included Base.hpp.
-    //
-    // Therefore, we allow the transitive include of Base.hpp as an exception
-    // to the include-what-you-use rule.
-    //
     CXCursor const param_csr = clang_Cursor_getArgument( fn_csr, i );
     if ( !clang_Cursor_isNull( param_csr ) ) {
       CXCursor const arg_oclass_csr =
         tidy_Cursor_getOutermostClass( arg_class_csr );
       CXCursor const param_type_csr =
         tidy_Cursor_getUnderlyingType( param_csr );
+
+      //
+      // Given:
+      //
+      //      // int_set.hpp
+      //      #include <set>
+      //      using int_set = std::set<int>;
+      //
+      //      // test.cpp
+      //      #include "int_set.hpp"
+      //
+      //      void erase_even( int_set &s ) {
+      //        std::erase_if( s, []( auto x ) { return x % 2 == 0; } );
+      //      }
+      //
+      // Even though test.cpp uses std::erase_if() declared in <set>, it's
+      // sufficient that only int_set.hpp is included and <set> isn't because:
+      //
+      //  + s of type int_set is an for std::set; and:
+      //  + In order to declare int_set, int_set.hpp must have included <set>.
+      //
+      // Therefore, we allow the transitive include of <set> as an exception to
+      // the include-what-you-use rule.
+      //
+      if ( tidy_Cursor_isTypeAliasOf( arg_class_csr, param_type_csr ) )
+        return false;
+
+      //
+      // Similar to the above case, but instead of one type being the alias of
+      // another, it's derived from another:
+      //
+      //      // int_set.hpp
+      //      #include <set>
+      //      struct int_set : std::set<int> {
+      //        // ...
+      //      };
+      //
+      //      // test.cpp
+      //      #include "int_set.hpp"
+      //
+      //      void erase_even( int_set &s ) {
+      //        std::erase_if( s, []( auto x ) { return x % 2 == 0; } );
+      //      }
+      //
+      // Even though test.cpp uses std::erase_if() declared in <set>, it's
+      // sufficient that only int_set.hpp is included and <set> isn't because:
+      //
+      //  + s of type int_set is derived from std::set; and:
+      //  + In order to declare int_set, int_set.hpp must have included <set>.
+      //
+      // Therefore, we allow the transitive include of <set> as an exception to
+      // the include-what-you-use rule.
+      //
       CXCursor const param_oclass_csr =
         tidy_Cursor_getOutermostClass( param_type_csr );
       if ( tidy_Cursor_isInheritedFrom( arg_oclass_csr, param_oclass_csr ) )
