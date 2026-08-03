@@ -710,21 +710,27 @@ static void symbols_cleanup( void ) {
 
 /**
  * Gets the cursor for the scope that should be used from \a sid for C++
- * inheritance look-ups.
+ * tidy_Cursor_isInheritedFrom() look-ups.
  *
  * @param sid The symbols_init_data to use.
- * @param else_csr The cursor for the scope to return if \a sid doesn't provide
+ * @param else_csr The cursor for the scope to return if \a sid doesn't have
  * one.
  * @return Returns The cursor for the scope that should be used.
  *
  * @sa symbols_init_data::cxx_current_fn_class_csr
  * @sa symbols_init_data::cxx_scope_csr
+ * @sa visit_most_kinds()
  */
 static CXCursor symbols_init_data_cxx_scope( symbols_init_data const *sid,
                                              CXCursor else_csr ) {
   assert( sid != NULL );
 
   if ( !clang_Cursor_isNull( sid->cxx_scope_csr ) ) {
+    //
+    // The namespace should be used as the current scope unless we are
+    // currently inside a class so we use the class for look-ups, not the
+    // namespace.
+    //
     if ( clang_getCursorKind( sid->cxx_scope_csr ) != CXCursor_Namespace ||
          clang_Cursor_isNull( sid->cxx_current_fn_class_csr ) ) {
       return sid->cxx_scope_csr;
