@@ -1,3 +1,11 @@
+2026-08-03  Paul J. Lucas <paul@lucasmail.org>
+
+   * symbols.c, test/Makefile.am, namespace_type.cpp, namespace_type.hpp,
+     namespace_type.out, namespace_type.test: Fixed types in namespace scopes.
+   * symbols.c, test/Makefile.am, conf_string.cpp, conf_string.hpp,
+     conf_var.hpp, conf_string.out, conf_string.test: Fixes the
+     conf<std::string>::conf( char const *name ) : conf_var{ name } case.
+
 2026-08-02  Paul J. Lucas <paul@lucasmail.org>
 
    * symbols.c, derived_set.cpp, derived_set.hpp: Now handle unqualified,
