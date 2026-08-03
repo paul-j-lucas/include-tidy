@@ -350,6 +350,11 @@ includes = "wctype.h"
 
 ########## C++ ################################################################
 
+[algorithm]
+symbols = [
+  "std::copy"
+]
+
 [cctype]
 symbols = [
   "isalnum",
