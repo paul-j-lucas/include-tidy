@@ -276,6 +276,10 @@ NODISCARD
 static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
   assert( tidy_is_cxx );
 
+  CXFile const fn_file = tidy_getCursorLocation_File( fn_csr );
+  if ( fn_file == NULL )
+    return true;
+
   enum CXCursorKind const fn_kind = clang_getCursorKind( fn_csr );
   bool const is_member_fn = fn_kind == CXCursor_CXXMethod ||
                             fn_kind == CXCursor_ConversionFunction;
@@ -291,12 +295,22 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
     return true;
 
   for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
-    CXCursor const arg_csr = clang_Cursor_getArgument( call_csr, i );
-    CXCursor const arg_class_csr = tidy_Cursor_getClassAsWritten( arg_csr );
-    if ( clang_Cursor_isNull( arg_class_csr ) )
+    CXCursor const par_csr = clang_Cursor_getArgument( fn_csr, i );
+    if ( clang_Cursor_isNull( par_csr ) )
       continue;
-    CXCursor const param_csr = clang_Cursor_getArgument( fn_csr, i );
-    if ( clang_Cursor_isNull( param_csr ) )
+    CXCursor const par_type_csr = tidy_Cursor_getUnderlyingType( par_csr );
+    CXCursor const par_ocls_csr =
+      tidy_Cursor_getOutermostClass( par_type_csr );
+    if ( clang_Cursor_isNull( par_ocls_csr ) )
+      continue;
+
+    CXFile const par_file = tidy_getCursorLocation_File( par_ocls_csr );
+    if ( par_file == NULL || !clang_File_isEqual( fn_file, par_file ) )
+      continue;
+
+    CXCursor const arg_csr = clang_Cursor_getArgument( call_csr, i );
+    CXCursor const arg_cls_csr = tidy_Cursor_getClassAsWritten( arg_csr );
+    if ( clang_Cursor_isNull( arg_cls_csr ) )
       continue;
 
     //
@@ -322,8 +336,7 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
     // Therefore, we allow the transitive include of <set> as an exception to
     // the include-what-you-use rule.
     //
-    CXCursor const param_type_csr = tidy_Cursor_getUnderlyingType( param_csr );
-    if ( tidy_Cursor_isTypeAliasOf( arg_class_csr, param_type_csr ) )
+    if ( tidy_Cursor_isTypeAliasOf( arg_cls_csr, par_type_csr ) )
       return false;
 
     //
@@ -352,11 +365,11 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
     // Therefore, we allow the transitive include of <set> as an exception to
     // the include-what-you-use rule.
     //
-    CXCursor const arg_oclass_csr =
-      tidy_Cursor_getOutermostClass( arg_class_csr );
-    CXCursor const param_oclass_csr =
-      tidy_Cursor_getOutermostClass( param_type_csr );
-    if ( tidy_Cursor_isInheritedFrom( arg_oclass_csr, param_oclass_csr ) )
+    CXCursor const arg_ocls_csr = tidy_Cursor_getOutermostClass( arg_cls_csr );
+
+    if ( tidy_Cursor_isInheritedFrom( arg_ocls_csr, par_ocls_csr ) )
+      return false;
+    if ( tidy_Cursor_isTemplateSpecializationOf( arg_ocls_csr, par_ocls_csr ) )
       return false;
   } // for
 
