@@ -709,6 +709,35 @@ static void symbols_cleanup( void ) {
 }
 
 /**
+ * Gets the cursor for the scope that should be used from \a sid for C++
+ * inheritance look-ups.
+ *
+ * @param sid The symbols_init_data to use.
+ * @param else_csr The cursor for the scope to return if \a sid doesn't provide
+ * one.
+ * @return Returns The cursor for the scope that should be used.
+ *
+ * @sa symbols_init_data::cxx_current_fn_class_csr
+ * @sa symbols_init_data::cxx_scope_csr
+ */
+static CXCursor symbols_init_data_cxx_scope( symbols_init_data const *sid,
+                                             CXCursor else_csr ) {
+  assert( sid != NULL );
+
+  if ( !clang_Cursor_isNull( sid->cxx_scope_csr ) ) {
+    if ( clang_getCursorKind( sid->cxx_scope_csr ) != CXCursor_Namespace ||
+         clang_Cursor_isNull( sid->cxx_current_fn_class_csr ) ) {
+      return sid->cxx_scope_csr;
+    }
+  }
+
+  if ( !clang_Cursor_isNull( sid->cxx_current_fn_class_csr ) )
+    return sid->cxx_current_fn_class_csr;
+
+  return else_csr;
+}
+
+/**
  * Visits each symbol in a translation unit.
  *
  * @param cursor The cursor for the symbol in the AST being visited.
@@ -1065,19 +1094,18 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     if ( clang_equalCursors( dec_csr, sid->cxx_deferred_fn_csr ) )
       return;
 
-    CXCursor scope_csr;
-    // See the comment for symbols_init_data::cxx_scope_csr.
-    if ( !clang_Cursor_isNull( sid->cxx_scope_csr ) )
-      scope_csr = sid->cxx_scope_csr;
-    // See the comment for symbols_init_data::cxx_current_fn_class_csr.
-    else if ( !clang_Cursor_isNull( sid->cxx_current_fn_class_csr ) )
-      scope_csr = sid->cxx_current_fn_class_csr;
-    else
-      scope_csr = parent;
+    CXCursor const scope_csr = symbols_init_data_cxx_scope( sid, parent );
+
+    if ( clang_equalCursors( scope_csr, dec_csr ) ||
+         tidy_Cursor_isInheritedFrom( scope_csr, dec_csr ) ) {
+      return;
+    }
 
     CXCursor const dec_parent = clang_getCursorSemanticParent( dec_csr );
-    if ( tidy_Cursor_isInheritedFrom( scope_csr, dec_parent ) )
+    if ( clang_equalCursors( scope_csr, dec_parent ) ||
+         tidy_Cursor_isInheritedFrom( scope_csr, dec_parent ) ) {
       return;
+    }
   }
 
   maybe_add_symbol( dec_csr, dec_csr, sid );
