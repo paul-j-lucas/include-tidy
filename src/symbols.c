@@ -725,20 +725,11 @@ static CXCursor symbols_init_data_cxx_scope( symbols_init_data const *sid,
                                              CXCursor else_csr ) {
   assert( sid != NULL );
 
-  if ( !clang_Cursor_isNull( sid->cxx_scope_csr ) ) {
-    //
-    // The namespace should be used as the current scope unless we are
-    // currently inside a class so we use the class for look-ups, not the
-    // namespace.
-    //
-    if ( clang_getCursorKind( sid->cxx_scope_csr ) != CXCursor_Namespace ||
-         clang_Cursor_isNull( sid->cxx_current_fn_class_csr ) ) {
-      return sid->cxx_scope_csr;
-    }
-  }
-
   if ( !clang_Cursor_isNull( sid->cxx_current_fn_class_csr ) )
     return sid->cxx_current_fn_class_csr;
+
+  if ( !clang_Cursor_isNull( sid->cxx_scope_csr ) )
+    return sid->cxx_scope_csr;
 
   return else_csr;
 }
@@ -836,10 +827,9 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 
   if ( tidy_is_cxx ) {
     //
-    // If it's a scope, set cxx_scope_csr.
+    // If it's a non-namespace scope, set cxx_scope_csr.
     //
     switch ( kind ) {
-      case CXCursor_NamespaceRef:
       case CXCursor_TemplateRef:
       case CXCursor_TypeRef:;
         CXCursor const ref_csr = clang_getCursorReferenced( cursor );
