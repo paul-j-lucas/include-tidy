@@ -85,9 +85,6 @@ struct isBaseClass_data {
 ////////// local functions ////////////////////////////////////////////////////
 
 NODISCARD
-static bool     tidy_Cursor_isTemplateSpecializationOf( CXCursor, CXCursor );
-
-NODISCARD
 static CXCursor tidy_Cursor_skipUnexposedExpr( CXCursor );
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -407,26 +404,6 @@ static bool tidy_Cursor_isInheritable( CXCursor cursor ) {
 }
 
 /**
- * Gets whether \a cursor is a template specialization of \a template_csr.
- *
- * @param cursor The candicate template class specialization cursor.
- * @param template_csr The candidate template class cursor.
- * @return Returns `true` only if \a template_csr is a template class and \a
- * cursor is a specialization of it.
- */
-NODISCARD
-static bool tidy_Cursor_isTemplateSpecializationOf( CXCursor cursor,
-                                                    CXCursor template_csr ) {
-  template_csr = clang_getSpecializedCursorTemplate( template_csr );
-  if ( !tidy_Cursor_isInvalid( template_csr ) ) {
-    template_csr = clang_getCanonicalCursor( template_csr );
-    if ( clang_equalCursors( cursor, template_csr ) )
-      return true;
-  }
-  return false;
-}
-
-/**
  * If \a cursor is a LinkageSpec, gets its parent cursor, recursively.
  *
  * @remarks Linkage specifications are just noise when determining include file
@@ -713,6 +690,17 @@ bool tidy_Cursor_isScopeDecl( CXCursor cursor ) {
     default:
       return false;
   } // switch
+}
+
+bool tidy_Cursor_isTemplateSpecializationOf( CXCursor cursor,
+                                             CXCursor template_csr ) {
+  template_csr = clang_getSpecializedCursorTemplate( template_csr );
+  if ( !tidy_Cursor_isInvalid( template_csr ) ) {
+    template_csr = clang_getCanonicalCursor( template_csr );
+    if ( clang_equalCursors( cursor, template_csr ) )
+      return true;
+  }
+  return false;
 }
 
 bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr ) {

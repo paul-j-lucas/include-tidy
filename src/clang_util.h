@@ -338,6 +338,18 @@ NODISCARD
 bool tidy_Cursor_isScopeDecl( CXCursor cursor );
 
 /**
+ * Gets whether \a cursor is a template specialization of \a template_csr.
+ *
+ * @param cursor The candicate template class specialization cursor.
+ * @param template_csr The candidate template class cursor.
+ * @return Returns `true` only if \a template_csr is a template class and \a
+ * cursor is a specialization of it.
+ */
+NODISCARD
+bool tidy_Cursor_isTemplateSpecializationOf( CXCursor cursor,
+                                             CXCursor template_csr );
+
+/**
  * Gets whether \a alias_csr is an alias type for \a underlying_csr.
  *
  * @param alias_csr The cursor for a type.
