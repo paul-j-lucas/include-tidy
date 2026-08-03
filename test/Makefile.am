@@ -62,6 +62,7 @@ TESTS+=	tests/c_ast.test \
 TESTS+=	tests/cxx.test \
 	tests/conf_string.test \
 	tests/derived_set.test \
+	tests/error_string.test \
 	tests/namespace_type.test \
 	tests/using_set.test
 
