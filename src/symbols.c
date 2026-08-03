@@ -1114,23 +1114,23 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   // Now we have to determine whether the definition of a symbol is also
   // necessary in addition to its declaration.  Given:
   //
-  //      // Point.h
+  //      // Point.hpp
   //      struct point {
   //        int x, y;
   //      };
   //
-  //      // Foo.c
-  //      void pass_thru( struct point *p ) {
+  //      // Foo.cpp
+  //      void pass_thru( point *p ) {
   //        f( p );
   //      }
   //
-  //      // Bar.c
-  //      void point_init( struct point *p ) {
+  //      // Bar.cpp
+  //      void point_init( point *p ) {
   //        p->x = p->y = 0;
   //      }
   //
-  // `Foo.c` doesn't access any member of `point`, so its declaration is
-  // sufficient whereas `Bar.c` accesses members, so its definition (and the
+  // `Foo.cpp` doesn't access any member of `point`, so its declaration is
+  // sufficient whereas `Bar.cpp` accesses members, so its definition (and the
   // header that defines it) is necessary.
   //
 
