@@ -1,3 +1,7 @@
+2026-08-04  Paul J. Lucas <paul@lucasmail.org>
+
+   * symbols.c: Now ignoring CXCursor_CXXMethod again.
+
 2026-08-03  Paul J. Lucas <paul@lucasmail.org>
 
    * clang_util.c, clang_util.h, symbols.c, test/Makefile.am, conf_var.hpp,
