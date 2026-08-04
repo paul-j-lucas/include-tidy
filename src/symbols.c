@@ -139,9 +139,10 @@ struct symbols_init_data {
    *      // Derived.cpp
    *      #include "Derived.hpp"
    *
-   *      void f( Derived i, Derived j ) {
+   *      void f( Derived const &i, Derived const &j ) {
    *        if ( i == j )
    *          // ...
+   *      }
    *
    * Here, `Derived.cpp` correctly includes `Derived.hpp` that correctly
    * includes `Base.hpp`. `Derived.cpp` uses `operator==()` that's declared in
@@ -151,7 +152,7 @@ struct symbols_init_data {
    * However, since `Derived` is derived from `Base`, that means the definition
    * of `Base` was available via `Derived.hpp` including `Base.hpp`; and since
    * the arguments to `operator==()` are `Derived` and `Derived.cpp` includes
-   * `Derived.hpp`, that should be sufficient --- an exception to IWYU.
+   * `Derived.hpp`, that's sufficient --- an exception to IWYU.
    * @endparblock
    *
    * @remarks
@@ -622,16 +623,17 @@ static CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
  * Helper function for symbols_init_visitor that maybe adds a symbol to the
  * global set.
  *
- * @param name_csr The cursor to use for the name of the symbol.
- * @param sym_csr The cursor for the symbol.
+ * @param name_csr The cursor to use for the name of the symbol.  It may be
+ * (and often is) the same as \a sym_csr.
+ * @param sym_csr The cursor for the symbol to add (maybe).
  * @param sid The symbols_init_data to use.
  */
 static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
                               symbols_init_data *sid ) {
   assert( sid != NULL );
 
-  enum CXCursorKind const kind = clang_getCursorKind( sym_csr );
-  switch ( kind ) {
+  enum CXCursorKind const sym_kind = clang_getCursorKind( sym_csr );
+  switch ( sym_kind ) {
     case CXCursor_CXXMethod:
     case CXCursor_Constructor:
     case CXCursor_ConversionFunction:
@@ -641,11 +643,34 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
       // for these, the referenced cursor obtained in visit_most_kinds() may
       // turn out to be one of these.
       //
-      // However, adding the symbol for one of these doesn't add anything of
-      // value since the file being tidied has to include the declaration for
-      // the type anyway to call one of these on.
+      // However, adding the symbol for one of these would trigger a false-
+      // positive include dependency for merely _calling_ the symbol when
+      // inherited, e.g.:
       //
-      // Therefore, skip them.
+      //      // Base.hpp
+      //      struct Base {
+      //        void f();
+      //      };
+      //
+      //      // Derived.hpp
+      //      #include "Base.hpp"
+      //      struct Derived : Base {
+      //        void g();
+      //      };
+      //
+      //      // Derived.cpp
+      //      #include "Derived.hpp"
+      //      void Derived::g() {
+      //        f();
+      //      }
+      //
+      // If these cases weren't skipped, then the call of f() in Derived.hpp
+      // would trigger a dependency on Base.hpp because that's where f() is
+      // declared.
+      //
+      // However, since Derived is derived from Base, that means the definition
+      // of Base was available via Derived.hpp including Base.hpp and that's
+      // sufficient --- an exception to IWYU.
       //
       return;
     default:
@@ -1145,12 +1170,30 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   // header that defines it) is necessary.
   //
 
+  CXCursor class_csr;
   CXCursor def_csr;
-  CXCursor sem_parent;
 
   if ( tidy_is_cxx &&
-       tidy_Cursor_isOutOfLineDefinition( cursor, parent, &sem_parent ) ) {
-    def_csr = clang_getCursorDefinition( sem_parent );
+       tidy_Cursor_isOutOfLineDefinition( cursor, parent, &class_csr ) ) {
+    //
+    // For C++ out-of-line member definitions, e.g.:
+    //
+    //      // S.hpp
+    //      struct S {
+    //        void f();
+    //      };
+    //
+    //      // S.cpp
+    //      #include "S.h"
+    //      void S::f() {
+    //        // ...
+    //      }
+    //
+    // S::f() requires the definition of S, i.e., its class, and this is what
+    // we pass to maybe_add_symbol(), not the original cursor for the member,
+    // since maybe_add_symbol() ignores C++ methods (see its comment for why).
+    //
+    def_csr = clang_getCursorDefinition( class_csr );
     if ( tidy_Cursor_isInvalid( def_csr ) )
       return;
   }
