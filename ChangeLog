@@ -1,5 +1,16 @@
 2026-08-03  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c, clang_util.h, symbols.c, test/Makefile.am, conf_var.hpp,
+     conf_var_init.cpp, conf_var_init.out, conf_var_init.test: Now handling C++
+     out-of-line definitions correctly.
+   * symbols.c: Now handling CXCursor_CXXMethod.
+   * etc/config.toml: Added std::random_access_iterator_tag.
+   * symbols.c: Fixed another test case.
+   * clang_util.c, clang_util.h: Made tidy_Cursor_isTemplateSpecializationOf()
+     non-static.
+   * test/Makefile.am, error_string.cpp, error_string.hpp, omanip.hpp,
+     error_string.out, error_string.test: Another test.
+   * etc/config.toml: Forced std::copy into <algorithm>.
    * symbols.c, test/Makefile.am, namespace_type.cpp, namespace_type.hpp,
      namespace_type.out, namespace_type.test: Fixed types in namespace scopes.
    * symbols.c, test/Makefile.am, conf_string.cpp, conf_string.hpp,
