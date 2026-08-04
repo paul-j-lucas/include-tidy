@@ -632,7 +632,9 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
 
   enum CXCursorKind const kind = clang_getCursorKind( sym_csr );
   switch ( kind ) {
+    case CXCursor_CXXMethod:
     case CXCursor_Constructor:
+    case CXCursor_ConversionFunction:
     case CXCursor_Destructor:
       //
       // Even though the switch in symbols_init_visitor() doesn't include cases
