@@ -633,7 +633,6 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
   enum CXCursorKind const kind = clang_getCursorKind( sym_csr );
   switch ( kind ) {
     case CXCursor_Constructor:
-    case CXCursor_CXXMethod:
     case CXCursor_Destructor:
       //
       // Even though the switch in symbols_init_visitor() doesn't include cases
@@ -800,6 +799,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
         goto skip_children;
       break;
 
+    case CXCursor_CXXMethod:
     case CXCursor_DeclRefExpr:
     case CXCursor_FunctionDecl:
     case CXCursor_MacroExpansion:
