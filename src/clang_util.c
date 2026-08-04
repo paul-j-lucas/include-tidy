@@ -207,13 +207,13 @@ static void getScopedName_impl( CXCursor cursor, getCursorName_fn name_fn,
   assert( name_fn != NULL );
   assert( sbuf != NULL );
 
-  CXCursor parent = cursor;
+  CXCursor sem_parent = cursor;
   do {
-    parent = clang_getCursorSemanticParent( parent );
-  } while ( clang_Cursor_isInlineNamespace( parent ) );
+    sem_parent = clang_getCursorSemanticParent( sem_parent );
+  } while ( clang_Cursor_isInlineNamespace( sem_parent ) );
 
-  if ( tidy_Cursor_isScopeDecl( parent ) )
-    getScopedName_impl( parent, name_fn, sbuf );
+  if ( tidy_Cursor_isScopeDecl( sem_parent ) )
+    getScopedName_impl( sem_parent, name_fn, sbuf );
 
   CXString const name_cxs = (*name_fn)( cursor );
   char const *const name = null_if_empty( clang_getCString( name_cxs ) );
@@ -492,11 +492,11 @@ CXCursor tidy_Cursor_getFirstExposedChild( CXCursor cursor ) {
 }
 
 CXCursor tidy_Cursor_getFunctionScope( CXCursor fn_csr ) {
-  CXCursor const parent = clang_getCursorSemanticParent( fn_csr );
+  CXCursor const sem_parent = clang_getCursorSemanticParent( fn_csr );
 
   // If it's a member function, return its class directly.
-  if ( tidy_Cursor_isClassDecl( parent ) )
-    return parent;
+  if ( tidy_Cursor_isClassDecl( sem_parent ) )
+    return sem_parent;
 
   // For a non-member function or operator, inspect parameter types for an
   // associated class.
@@ -510,7 +510,7 @@ CXCursor tidy_Cursor_getFunctionScope( CXCursor fn_csr ) {
       return class_csr;
   } // for
 
-  return tidy_Cursor_skipLinkageSpec( parent );
+  return tidy_Cursor_skipLinkageSpec( sem_parent );
 }
 
 CXCursor tidy_Cursor_getOutermostClass( CXCursor cursor ) {
@@ -792,13 +792,13 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_csr ) {
     enum CXCursorKind const kind = clang_getCursorKind( scope_csr );
     if ( kind == CXCursor_TranslationUnit )
       break;
-    CXCursor const parent = clang_getCursorSemanticParent( scope_csr );
-    if ( clang_equalCursors( parent, scope_csr ) )
+    CXCursor const sem_parent = clang_getCursorSemanticParent( scope_csr );
+    if ( clang_equalCursors( sem_parent, scope_csr ) )
       break;
 
     gcbnd.cxx_recurse_into_scope = true;
     gcbnd.skip_csr = scope_csr;
-    scope_csr = parent;
+    scope_csr = sem_parent;
   } // while
 
   return (CXCursor){ .kind = CXCursor_NoDeclFound };

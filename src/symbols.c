@@ -860,9 +860,9 @@ skip:;
   // See the comment for symbols_init_data::cxx_current_fn_class_csr.
   CXCursor const prev_cxx_current_fn_class_csr = sid->cxx_current_fn_class_csr;
   if ( tidy_is_cxx && tidy_Cursor_isFunctionDecl( cursor ) ) {
-    CXCursor const fn_parent = clang_getCursorSemanticParent( cursor );
-    sid->cxx_current_fn_class_csr = tidy_Cursor_isClassDecl( fn_parent ) ?
-      fn_parent :
+    CXCursor const fn_class_csr = clang_getCursorSemanticParent( cursor );
+    sid->cxx_current_fn_class_csr = tidy_Cursor_isClassDecl( fn_class_csr ) ?
+      fn_class_csr :
       clang_getNullCursor();
   }
 
@@ -1017,11 +1017,11 @@ static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
   unsigned token_count;
   clang_tokenize( tidy_tu, field_range, &tokens, &token_count );
 
-  CXCursor const scope_csr = clang_getCursorSemanticParent( field_csr );
+  CXCursor const class_csr = clang_getCursorSemanticParent( field_csr );
 
   for ( unsigned i = 0; i < token_count; ++i ) {
     CXCursor const sym_csr =
-      tidy_Token_getScopedNameCursor( tokens, token_count, &i, scope_csr );
+      tidy_Token_getScopedNameCursor( tokens, token_count, &i, class_csr );
     if ( !tidy_Cursor_isInvalid( sym_csr ) )
       maybe_add_symbol( sym_csr, sym_csr, sid );
   } // for
@@ -1192,13 +1192,13 @@ static void visit_MemberRefExpr( CXCursor member_ref_csr, CXCursor parent,
   assert( sid != NULL );
 
   // Gets the cursor for _a_ declaration of the symbol.
-  CXCursor dec_csr = clang_getCursorReferenced( member_ref_csr );
+  CXCursor const dec_csr = clang_getCursorReferenced( member_ref_csr );
   if ( tidy_Cursor_isInvalid( dec_csr ) )
     return;
 
-  CXCursor const dec_parent = clang_getCursorSemanticParent( dec_csr );
-  if ( !tidy_Cursor_isClassDecl( dec_parent ) )
-    visit_most_kinds( member_ref_csr, dec_parent, sid );
+  CXCursor const dec_class_csr = clang_getCursorSemanticParent( dec_csr );
+  if ( !tidy_Cursor_isClassDecl( dec_class_csr ) )
+    visit_most_kinds( member_ref_csr, dec_class_csr, sid );
 }
 
 /**
