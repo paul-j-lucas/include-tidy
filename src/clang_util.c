@@ -315,7 +315,8 @@ static enum CXChildVisitResult isBaseClass_visitor( CXCursor cursor,
     isBaseClass_data *const ibcd = data;
 
     if ( clang_equalCursors( ref_csr, ibcd->base_csr ) ||
-         tidy_Cursor_isTemplateSpecializationOf( ibcd->base_csr, ref_csr ) ) {
+         tidy_Cursor_isTemplateSpecializationOf( ibcd->base_csr, ref_csr ) ||
+         tidy_Cursor_isInheritedFrom( ref_csr, ibcd->base_csr ) ) {
       ibcd->is_base = true;
       return CXChildVisit_Break;
     }
