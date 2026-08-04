@@ -61,6 +61,7 @@ TESTS+=	tests/c_ast.test \
 # C++ tests.
 TESTS+=	tests/cxx.test \
 	tests/conf_string.test \
+	tests/conf_var_init.test \
 	tests/derived_set.test \
 	tests/error_string.test \
 	tests/namespace_type.test \

@@ -1143,25 +1143,36 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   // header that defines it) is necessary.
   //
 
-  enum CXCursorKind const kind = clang_getCursorKind( cursor );
-  if ( kind != CXCursor_TypeRef )
-    return;
+  CXCursor def_csr;
+  CXCursor sem_parent;
 
-  CXType const type = clang_getCanonicalType( clang_getCursorType( parent ) );
-  if ( type.kind != CXType_Record )     // class, struct, or union
-    return;
-  CXCursor const type_csr = clang_getTypeDeclaration( type );
-  if ( tidy_Cursor_isInvalid( type_csr ) )
-    return;
-  CXCursor const def_csr = clang_getCursorDefinition( type_csr );
-  if ( tidy_Cursor_isInvalid( def_csr ) )
-    return;
-  if ( clang_equalCursors( def_csr, dec_csr ) )
-    return;
+  if ( tidy_is_cxx &&
+       tidy_Cursor_isOutOfLineDefinition( cursor, parent, &sem_parent ) ) {
+    def_csr = clang_getCursorDefinition( sem_parent );
+    if ( tidy_Cursor_isInvalid( def_csr ) )
+      return;
+  }
+  else {
+    enum CXCursorKind const kind = clang_getCursorKind( cursor );
+    if ( kind != CXCursor_TypeRef )
+      return;
 
-  // If we've already seen the definition, we don't need this declaration.
-  if ( tidy_Cursor_isBeforeInTranslationUnit( def_csr, dec_csr ) )
-    return;
+    CXType const type = clang_getCanonicalType( clang_getCursorType( parent ) );
+    if ( type.kind != CXType_Record )     // class, struct, or union
+      return;
+    CXCursor const type_csr = clang_getTypeDeclaration( type );
+    if ( tidy_Cursor_isInvalid( type_csr ) )
+      return;
+    def_csr = clang_getCursorDefinition( type_csr );
+    if ( tidy_Cursor_isInvalid( def_csr ) )
+      return;
+    if ( clang_equalCursors( def_csr, dec_csr ) )
+      return;
+
+    // If we've already seen the definition, we don't need this declaration.
+    if ( tidy_Cursor_isBeforeInTranslationUnit( def_csr, dec_csr ) )
+      return;
+  }
 
   maybe_add_symbol( dec_csr, def_csr, sid );
 }

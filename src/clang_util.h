@@ -325,6 +325,20 @@ NODISCARD
 bool tidy_Cursor_isInvalid( CXCursor cursor );
 
 /**
+ * Gets whether \a cursor is an out-of-line definition for a C++ constructor,
+ * destructor, member function, conversion operator, or variable.
+ *
+ * @param cursor The cursor to check.
+ * @param parent The lexical parent cursor of \a cursor.
+ * @param psem_parent If not NULL and \a cursor is an out-of-line definition,
+ * the semantic parent of \a cursor is put here.
+ * @return Returns `true` only if \a cursor is an out-of-line definition.
+ */
+NODISCARD
+bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
+                                        CXCursor *psem_parent );
+
+/**
  * Gets whether \a cursor is a class, class template, enumeration, namespace,
  * structure, or union declaration.
  *

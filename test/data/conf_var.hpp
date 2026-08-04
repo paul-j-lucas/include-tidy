@@ -9,10 +9,12 @@
 #ifndef swishxx_conf_var_hpp
 #define swishxx_conf_var_hpp
 
-class conf_var {
-protected:
+struct conf_var {
   conf_var( char const *name ) { }
   virtual ~conf_var() { }
+
+  static void init();
+  static void register_var( char const *name );
 };
 
 template<typename T> class conf;

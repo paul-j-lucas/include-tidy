@@ -676,6 +676,29 @@ bool tidy_Cursor_isInvalid( CXCursor cursor ) {
   return clang_Cursor_isNull( cursor ) || clang_isInvalid( cursor.kind );
 }
 
+bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
+                                        CXCursor *psem_parent ) {
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  switch ( kind ) {
+    case CXCursor_Constructor:
+    case CXCursor_ConversionFunction:
+    case CXCursor_CXXMethod:
+    case CXCursor_Destructor:
+    case CXCursor_VarDecl:
+      if ( clang_isCursorDefinition( cursor ) ) {
+        CXCursor const sem_parent = clang_getCursorSemanticParent( cursor );
+        bool const is_out_of_line = !clang_equalCursors( parent, sem_parent );
+        if ( is_out_of_line && psem_parent != NULL )
+          *psem_parent = sem_parent;
+        return is_out_of_line;
+      }
+      break;
+    default:
+      /* suppress warning */;
+  } // switch
+  return false;
+}
+
 bool tidy_Cursor_isScopeDecl( CXCursor cursor ) {
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
