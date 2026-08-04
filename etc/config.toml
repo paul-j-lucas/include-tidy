@@ -393,6 +393,7 @@ symbols = [
 
 [iterator]
 symbols = [
+  "std::random_access_iterator_tag",
   "std::reverse_iterator",
 ]
 
