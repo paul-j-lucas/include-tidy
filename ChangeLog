@@ -1,5 +1,8 @@
 2026-08-04  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c, test/Makefile.am, auto_delete_pool.hpp, query_node.cpp,
+     query_node.hpp, query_node.out, query_node.test: Now checking base classes
+     recursively.
    * symbols.c: Now ignoring CXCursor_CXXMethod again.
 
 2026-08-03  Paul J. Lucas <paul@lucasmail.org>
