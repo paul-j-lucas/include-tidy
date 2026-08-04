@@ -664,7 +664,7 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
       //        f();
       //      }
       //
-      // If these cases weren't skipped, then the call of f() in Derived.hpp
+      // If these cases weren't skipped, then the call of f() in Derived.cpp
       // would trigger a dependency on Base.hpp because that's where f() is
       // declared.
       //
