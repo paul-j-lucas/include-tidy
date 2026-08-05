@@ -1,5 +1,12 @@
+2026-08-05  Paul J. Lucas <paul@lucasmail.org>
+
+   * print.c, util.c, util.h: verbose_print_cursor() now prints string literals
+     with quotes escaped.
+
 2026-08-04  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c: Added tidy_getCursorReferenced; reworked
+     tidy_Cursor_isTypeAliasOf().
    * clang_util.c, test/Makefile.am, auto_delete_pool.hpp, query_node.cpp,
      query_node.hpp, query_node.out, query_node.test: Now checking base classes
      recursively.
