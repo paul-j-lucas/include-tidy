@@ -1,5 +1,7 @@
 2026-08-05  Paul J. Lucas <paul@lucasmail.org>
 
+   * print.c, print.h, symbols.c: verbose_print_cursor() is now a 1-argument
+     macro; added VERBOSE_DEBUG_CURSOR().
    * print.c, util.c, util.h: verbose_print_cursor() now prints string literals
      with quotes escaped.
 
