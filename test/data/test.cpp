@@ -1,8 +1,6 @@
 #include "Derived.hpp"
-#include "exit_codes.hpp"
 #include "util.hpp"
 
-#include <cstdlib>
 #include <cstring>
 #include <sys/types.h>
 #include <unistd.h>
@@ -27,8 +25,4 @@ void f( char const *s ) {
   Derived::iterator i, j;
   if ( i != j )
     ;
-}
-
-int main() {
-  exit( Exit_OK );
 }

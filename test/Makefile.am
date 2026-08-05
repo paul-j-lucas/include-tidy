@@ -64,6 +64,7 @@ TESTS+=	tests/cxx.test \
 	tests/conf_var_init.test \
 	tests/derived_set.test \
 	tests/error_string.test \
+	tests/exit_codes.test \
 	tests/namespace_type.test \
 	tests/query_node.test \
 	tests/using_set.test
