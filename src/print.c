@@ -225,7 +225,7 @@ void verbose_print_cursor( char const *label, CXCursor cursor ) {
   char const *const space = label[0] != '\0' ? " " : "";
 
   if ( clang_Cursor_isNull( cursor ) ) {
-    verbose_printf( "%s%scursor: \"\" (Null)\n", label, space );
+    verbose_printf( "%s%scursor: null (Null)\n", label, space );
     return;
   }
 
@@ -243,10 +243,9 @@ void verbose_print_cursor( char const *label, CXCursor cursor ) {
   char const *const       kind_cs = clang_getCString( kind_cxs );
   char       *const       name = tidy_Cursor_getScopedDisplayName( cursor );
 
-  verbose_printf(
-    "%s%scursor: \"%s\" (%s, \"%s\":%u,%u)\n",
-    label, space, name != NULL ? name : "n/a", kind_cs, abs_path, line, col
-  );
+  verbose_printf( "%s%scursor: ", label, space );
+  fputs_quoted( name, '"', stdout );
+  printf( " (%s, \"%s\":%u,%u)\n", kind_cs, abs_path, line, col );
 
   clang_disposeString( abs_path_cxs );
   clang_disposeString( kind_cxs );
