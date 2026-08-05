@@ -602,6 +602,7 @@ bool tidy_Cursor_isClassDecl( CXCursor cursor ) {
     case CXCursor_ClassDecl:
     case CXCursor_StructDecl:
     case CXCursor_ClassTemplate:
+    case CXCursor_ClassTemplatePartialSpecialization:
     case CXCursor_UnionDecl:
       return true;
     default:
