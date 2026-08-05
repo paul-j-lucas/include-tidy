@@ -437,6 +437,38 @@ static CXCursor tidy_Cursor_skipUnexposedExpr( CXCursor cursor ) {
   return cursor;
 }
 
+/**
+ * Similar to `clang_getCursorReferenced()` except returns \a cursor as-is if
+ * it's not a reference rather than the null cursor.
+ *
+ * @param cursor The cursor to get the reference of.
+ * @param pkind If not NULL, receives the (referenced) kind of cursor.
+ * @return Returns the cursor referenced by \a cursor or \a cursor if it's not
+ * a reference.
+ */
+NODISCARD
+static CXCursor tidy_getCursorReferenced( CXCursor cursor,
+                                          enum CXCursorKind *pkind ) {
+  enum CXCursorKind kind = clang_getCursorKind( cursor );
+  switch ( kind ) {
+    case CXCursor_DeclRefExpr:
+    case CXCursor_MemberRefExpr:
+    case CXCursor_NamespaceRef:
+    case CXCursor_OverloadedDeclRef:
+    case CXCursor_TemplateRef:
+    case CXCursor_TypeRef:
+      cursor = clang_getCursorReferenced( cursor );
+      kind = clang_getCursorKind( cursor );
+      break;
+    default:
+      /* suppress warning */;
+  } // switch
+
+  if ( pkind != NULL )
+    *pkind = kind;
+  return cursor;
+}
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 int tidy_Cursor_compare( CXCursor i_csr, CXCursor j_csr ) {
@@ -709,6 +741,8 @@ bool tidy_Cursor_isScopeDecl( CXCursor cursor ) {
     case CXCursor_EnumDecl:
     case CXCursor_Namespace:
     case CXCursor_StructDecl:
+    case CXCursor_TypeAliasDecl:
+    case CXCursor_TypedefDecl:
     case CXCursor_UnionDecl:
       return true;
     default:
@@ -728,24 +762,33 @@ bool tidy_Cursor_isTemplateSpecializationOf( CXCursor cursor,
 }
 
 bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr ) {
-  if ( tidy_Cursor_isInvalid( underlying_csr ) )
-    return false;
-
-  enum CXCursorKind const kind = clang_getCursorKind( alias_csr );
+  enum CXCursorKind kind;
+  alias_csr = tidy_getCursorReferenced( alias_csr, &kind );
   if ( kind != CXCursor_TypedefDecl && kind != CXCursor_TypeAliasDecl )
     return false;
 
-  CXCursor canon_csr = tidy_Cursor_getCanonicalTypeDeclaration( alias_csr );
-  if ( clang_Cursor_isNull( canon_csr ) )
+  CXType alias_type = clang_getTypedefDeclUnderlyingType( alias_csr );
+  alias_type = clang_getCanonicalType( alias_type );
+
+  CXType underlying_type = clang_getCursorType( underlying_csr );
+  underlying_type = clang_getCanonicalType( underlying_type );
+
+  if ( clang_equalTypes( alias_type, underlying_type ) )
+    return true;
+
+  alias_csr = clang_getTypeDeclaration( alias_type );
+  if ( tidy_Cursor_isInvalid( alias_csr ) )
     return false;
-  alias_csr = canon_csr;
 
-  canon_csr = tidy_Cursor_getCanonicalTypeDeclaration( underlying_csr );
-  if ( !clang_Cursor_isNull( canon_csr ) )
-    underlying_csr = canon_csr;
+  CXCursor spec_csr = clang_getSpecializedCursorTemplate( alias_csr );
+  if ( !tidy_Cursor_isInvalid( spec_csr ) )
+    alias_csr = spec_csr;
 
-  return clang_equalCursors( alias_csr, underlying_csr ) ||
-         tidy_Cursor_isTemplateSpecializationOf( alias_csr, underlying_csr );
+  spec_csr = clang_getSpecializedCursorTemplate( underlying_csr );
+  if ( !tidy_Cursor_isInvalid( spec_csr ) )
+    underlying_csr = spec_csr;
+
+  return clang_equalCursors( alias_csr, underlying_csr );
 }
 
 int tidy_File_compareByName( CXFile i_file, CXFile j_file ) {
