@@ -807,7 +807,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     goto skip;
 
   if ( (opt_verbose & TIDY_VERBOSE_CURSORS) != 0 )
-    verbose_print_cursor( "", cursor );
+    verbose_print_cursor( cursor );
 
   if ( tidy_is_cxx ) {
     //

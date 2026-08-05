@@ -114,6 +114,29 @@
     VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__                                    \
   )
 
+/**
+ * Prints a cursor's "spelling", kind, and source location, preceded by a label
+ * that's the stringification of \a CURSOR.
+ *
+ * @param CURSOR The cursor to print.
+ *
+ * @sa #verbose_print_cursor()
+ * @sa verbose_print_cursor_impl()
+ */
+#define VERBOSE_DEBUG_CURSOR(CURSOR) \
+  verbose_print_cursor_impl( #CURSOR, (CURSOR) )
+
+/**
+ * Prints a cursor's "spelling", kind, and source location.
+ *
+ * @param CURSOR The cursor to print.
+ *
+ * @sa #VERBOSE_DEBUG_CURSOR()
+ * @sa verbose_print_cursor_impl()
+ */
+#define verbose_print_cursor(CURSOR) \
+  verbose_print_cursor_impl( "", (CURSOR) )
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
@@ -195,11 +218,17 @@ void print_source_line( char const *path, unsigned line, unsigned col,
 /**
  * Prints a cursor's "spelling", kind, and source location.
  *
+ * @note This function isn't normally called directly; use either the
+ * #verbose_print_cursor() or #VERBOSE_DEBUG_CURSOR() macro instead.
+ *
  * @param label A label to print before the cursor.  May be either NULL or the
  * empty string for none.  If neither, prints a space after the label.
  * @param cursor The cursor to print.
+ *
+ * @sa #VERBOSE_DEBUG_CURSOR()
+ * @sa #verbose_print_cursor()
  */
-void verbose_print_cursor( char const *label, CXCursor cursor );
+void verbose_print_cursor_impl( char const *label, CXCursor cursor );
 
 /**
  * Prints the tokens for \a cursor.

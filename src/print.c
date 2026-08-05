@@ -220,7 +220,7 @@ done:
   fclose( fsource );
 }
 
-void verbose_print_cursor( char const *label, CXCursor cursor ) {
+void verbose_print_cursor_impl( char const *label, CXCursor cursor ) {
   label = empty_if_null( label );
   char const *const space = label[0] != '\0' ? " " : "";
 
