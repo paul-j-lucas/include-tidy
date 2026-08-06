@@ -53,6 +53,19 @@
  * @{
  */
 
+////////// typedefs ///////////////////////////////////////////////////////////
+
+typedef struct include_path include_path;
+
+////////// structs ////////////////////////////////////////////////////////////
+
+/**
+ * An include path given via the `-I` command-line option.
+ */
+struct include_path {
+  char *abs_path;                       ///< The absolute path.
+};
+
 ////////// extern variables ///////////////////////////////////////////////////
 
 /// @cond DOXYGEN_IGNORE
@@ -81,12 +94,25 @@ static array_t  include_paths;          ///< Array of `-I` paths.
 /////////// local functions ///////////////////////////////////////////////////
 
 /**
+ * Cleans-up an include_path.
+ *
+ * @param ipath The include_path to clean up.  If NULL, does nothing.
+ */
+static void include_path_cleanup( include_path *ipath ) {
+  if ( ipath == NULL )
+    return;
+  free( ipath->abs_path );
+}
+
+/**
  * Cleans-up options.
  *
  * @sa options_init()
  */
 static void options_cleanup( void ) {
-  array_cleanup( &include_paths, &free_pptr );
+  array_cleanup(
+    &include_paths, POINTER_CAST( array_free_fn_t, &include_path_cleanup )
+  );
 }
 
 /**
@@ -138,20 +164,21 @@ static void set_all_or_none( char const **pformat, char const *all_value ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void include_path_add( char const *include_path ) {
-  assert( include_path != NULL );
+void include_path_add( char const *path ) {
+  assert( path != NULL );
 
   char real_path[ PATH_MAX ];
-  if ( realpath( include_path, real_path ) != NULL )
-    include_path = real_path;
+  if ( realpath( path, real_path ) != NULL )
+    path = real_path;
 
   for ( size_t i = 0; i < include_paths.len; ++i ) {
-    char const *const *const ppath = array_at_nc( &include_paths, i );
-    char const *const path = *ppath;
-    if ( strcmp( include_path, path ) == 0 )
+    include_path const *const ipath = array_at_nc( &include_paths, i );
+    if ( strcmp( path, ipath->abs_path ) == 0 )
       return;
   } // for
-  *(char**)array_push_back( &include_paths ) = check_strdup( include_path );
+  *(include_path*)array_push_back( &include_paths ) = (include_path){
+    .abs_path = check_strdup( path )
+  };
 }
 
 bool include_path_find( char const *rel_path, char abs_path[static PATH_MAX] ) {
@@ -163,9 +190,8 @@ bool include_path_find( char const *rel_path, char abs_path[static PATH_MAX] ) {
   strbuf_init( &sbuf );
 
   for ( size_t i = 0; i < include_paths.len; ++i ) {
-    char const *const *const ppath = array_at_nc( &include_paths, i );
-    char const *const include_path_i = *ppath;
-    strbuf_puts( &sbuf, include_path_i );
+    include_path const *const ipath = array_at_nc( &include_paths, i );
+    strbuf_puts( &sbuf, ipath->abs_path );
     strbuf_paths( &sbuf, rel_path );
     if ( access( sbuf.str, F_OK ) == 0 ) {
       strncpy_0( abs_path, sbuf.str, PATH_MAX );
@@ -186,14 +212,13 @@ char const* include_path_relativize( char const *abs_path ) {
   char const *shortest_include_path = abs_path;
 
   for ( size_t i = 0; i < include_paths.len; ++i ) {
-    char const *const *const ppath = array_at_nc( &include_paths, i );
-    char const *const include_path_i      = *ppath;
-    size_t const      include_path_i_len  = strlen( include_path_i );
+    include_path const *const ipath = array_at_nc( &include_paths, i );
+    size_t const              ipath_len  = strlen( ipath->abs_path );
 
-    if ( include_path_i_len > longest_include_path_len &&
-         strncmp( abs_path, include_path_i, include_path_i_len ) == 0 ) {
-      longest_include_path_len = include_path_i_len;
-      shortest_include_path = abs_path + include_path_i_len;
+    if ( ipath_len > longest_include_path_len &&
+         strncmp( abs_path, ipath->abs_path, ipath_len ) == 0 ) {
+      longest_include_path_len = ipath_len;
+      shortest_include_path = abs_path + ipath_len;
 
       if ( shortest_include_path[0] == '/' )
         ++shortest_include_path;
@@ -372,7 +397,7 @@ bool opt_verbose_parse( char const *verbose_format ) {
 
 void options_init( void ) {
   ASSERT_RUN_ONCE();
-  array_init( &include_paths, sizeof(char*) );
+  array_init( &include_paths, sizeof(include_path) );
   ATEXIT( &options_cleanup );
 }
 
