@@ -1,5 +1,15 @@
 2026-08-05  Paul J. Lucas <paul@lucasmail.org>
 
+   * symbols.c: Now checking clang_tokenize().
+   * symbols.c: Now performing scope checks only if the scope is a class
+     declaration.
+   * symbols.c: cxx_scope_csr is now cxx_class_csr and limited only to classes.
+   * test/Makefile.am, derived_map.cpp, derived_map.hpp, derived_map.out,
+     derived_map.test: New C++ test.
+   * test/Makefile.am, exit_codes.cpp, test.cpp, exit_codes.out,
+     exit_codes.test: Split out enum into its own test.
+   * clang_util.c: Added CXCursor_ClassTemplatePartialSpecialization to
+     isClassDecl().
    * print.c, print.h, symbols.c: verbose_print_cursor() is now a 1-argument
      macro; added VERBOSE_DEBUG_CURSOR().
    * print.c, util.c, util.h: verbose_print_cursor() now prints string literals
