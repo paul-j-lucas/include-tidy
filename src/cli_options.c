@@ -1158,11 +1158,11 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   insert_argv( pargc, pargv, 1, 1, (char const *const []){ "-I." } );
 
   // tmp_include_paths is needed because we have to defer calling
-  // opt_include_paths_add() until after chdir() (if called).
-  opt_include_paths_add( "." );
+  // include_path_add() until after chdir() (if called).
+  include_path_add( "." );
   for ( size_t i = 0; i < tmp_include_paths.len; ++i ) {
     char const *const *const ppath = array_at_nc( &tmp_include_paths, i );
-    opt_include_paths_add( *ppath );
+    include_path_add( *ppath );
   } // for
   array_cleanup( &tmp_include_paths, /*free_fn=*/NULL );
 

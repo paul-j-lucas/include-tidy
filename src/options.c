@@ -76,7 +76,7 @@ char const   *tidy_source_path;
 
 ////////// local variables ////////////////////////////////////////////////////
 
-static array_t  opt_include_paths;      ///< Array of `-I` paths.
+static array_t  include_paths;          ///< Array of `-I` paths.
 
 /////////// local functions ///////////////////////////////////////////////////
 
@@ -86,7 +86,7 @@ static array_t  opt_include_paths;      ///< Array of `-I` paths.
  * @sa options_init()
  */
 static void options_cleanup( void ) {
-  array_cleanup( &opt_include_paths, &free_pptr );
+  array_cleanup( &include_paths, &free_pptr );
 }
 
 /**
@@ -137,6 +137,72 @@ static void set_all_or_none( char const **pformat, char const *all_value ) {
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
+
+void include_path_add( char const *include_path ) {
+  assert( include_path != NULL );
+
+  char real_path[ PATH_MAX ];
+  if ( realpath( include_path, real_path ) != NULL )
+    include_path = real_path;
+
+  for ( size_t i = 0; i < include_paths.len; ++i ) {
+    char const *const *const ppath = array_at_nc( &include_paths, i );
+    char const *const path = *ppath;
+    if ( strcmp( include_path, path ) == 0 )
+      return;
+  } // for
+  *(char**)array_push_back( &include_paths ) = check_strdup( include_path );
+}
+
+bool include_path_find( char const *rel_path,
+                             char abs_path[static PATH_MAX] ) {
+  assert( rel_path != NULL );
+  assert( path_is_relative( rel_path ) );
+
+  bool is_found = false;
+  strbuf_t sbuf;
+  strbuf_init( &sbuf );
+
+  for ( size_t i = 0; i < include_paths.len; ++i ) {
+    char const *const *const ppath = array_at_nc( &include_paths, i );
+    char const *const include_path_i = *ppath;
+    strbuf_puts( &sbuf, include_path_i );
+    strbuf_paths( &sbuf, rel_path );
+    if ( access( sbuf.str, F_OK ) == 0 ) {
+      strncpy_0( abs_path, sbuf.str, PATH_MAX );
+      is_found = true;
+      break;
+    }
+    strbuf_reset( &sbuf );
+  } // for
+
+  strbuf_cleanup( &sbuf );
+  return is_found;
+}
+
+char const* include_path_relativize( char const *abs_path ) {
+  assert( abs_path != NULL );
+
+  size_t      longest_include_path_len = 0;
+  char const *shortest_include_path = abs_path;
+
+  for ( size_t i = 0; i < include_paths.len; ++i ) {
+    char const *const *const ppath = array_at_nc( &include_paths, i );
+    char const *const include_path_i      = *ppath;
+    size_t const      include_path_i_len  = strlen( include_path_i );
+
+    if ( include_path_i_len > longest_include_path_len &&
+         strncmp( abs_path, include_path_i, include_path_i_len ) == 0 ) {
+      longest_include_path_len = include_path_i_len;
+      shortest_include_path = abs_path + include_path_i_len;
+
+      if ( shortest_include_path[0] == '/' )
+        ++shortest_include_path;
+    }
+  } // for
+
+  return path_no_dot_slash( shortest_include_path );
+}
 
 bool opt_align_column_parse( char const *s ) {
   assert( s != NULL );
@@ -249,72 +315,6 @@ bool opt_error_parse( char const *s ) {
   return false;
 }
 
-void opt_include_paths_add( char const *include_path ) {
-  assert( include_path != NULL );
-
-  char real_path[ PATH_MAX ];
-  if ( realpath( include_path, real_path ) != NULL )
-    include_path = real_path;
-
-  for ( size_t i = 0; i < opt_include_paths.len; ++i ) {
-    char const *const *const ppath = array_at_nc( &opt_include_paths, i );
-    char const *const path = *ppath;
-    if ( strcmp( include_path, path ) == 0 )
-      return;
-  } // for
-  *(char**)array_push_back( &opt_include_paths ) = check_strdup( include_path );
-}
-
-bool opt_include_paths_find( char const *rel_path,
-                             char abs_path[static PATH_MAX] ) {
-  assert( rel_path != NULL );
-  assert( path_is_relative( rel_path ) );
-
-  bool is_found = false;
-  strbuf_t sbuf;
-  strbuf_init( &sbuf );
-
-  for ( size_t i = 0; i < opt_include_paths.len; ++i ) {
-    char const *const *const ppath = array_at_nc( &opt_include_paths, i );
-    char const *const include_path_i = *ppath;
-    strbuf_puts( &sbuf, include_path_i );
-    strbuf_paths( &sbuf, rel_path );
-    if ( access( sbuf.str, F_OK ) == 0 ) {
-      strncpy_0( abs_path, sbuf.str, PATH_MAX );
-      is_found = true;
-      break;
-    }
-    strbuf_reset( &sbuf );
-  } // for
-
-  strbuf_cleanup( &sbuf );
-  return is_found;
-}
-
-char const* opt_include_paths_relativize( char const *abs_path ) {
-  assert( abs_path != NULL );
-
-  size_t      longest_include_path_len = 0;
-  char const *shortest_include_path = abs_path;
-
-  for ( size_t i = 0; i < opt_include_paths.len; ++i ) {
-    char const *const *const ppath = array_at_nc( &opt_include_paths, i );
-    char const *const include_path_i      = *ppath;
-    size_t const      include_path_i_len  = strlen( include_path_i );
-
-    if ( include_path_i_len > longest_include_path_len &&
-         strncmp( abs_path, include_path_i, include_path_i_len ) == 0 ) {
-      longest_include_path_len = include_path_i_len;
-      shortest_include_path = abs_path + include_path_i_len;
-
-      if ( shortest_include_path[0] == '/' )
-        ++shortest_include_path;
-    }
-  } // for
-
-  return path_no_dot_slash( shortest_include_path );
-}
-
 bool opt_line_length_parse( char const *s ) {
   assert( s != NULL );
   unsigned long long ull = parse_ull( s );
@@ -373,7 +373,7 @@ bool opt_verbose_parse( char const *verbose_format ) {
 
 void options_init( void ) {
   ASSERT_RUN_ONCE();
-  array_init( &opt_include_paths, sizeof(char*) );
+  array_init( &include_paths, sizeof(char*) );
   ATEXIT( &options_cleanup );
 }
 

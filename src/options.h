@@ -113,6 +113,40 @@ extern char const  *tidy_source_path;   ///< The file being tidied.
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * Adds \a include_path to the global list of include (`-I`) paths.
+ *
+ * @param include_path The include path to add.
+ */
+void include_path_add( char const *include_path );
+
+/**
+ * Attempts to find \a rel_path among the include paths.
+ *
+ * @param rel_path The relative path to find.
+ * @param abs_path If found, the absolute path of \a rel_path is copied here.
+ * @return Returns `true` only if \a rel_path is found.
+ */
+NODISCARD
+bool include_path_find( char const *rel_path, char abs_path[static PATH_MAX] );
+
+/**
+ * Relativizes \a abs_path against one of the `-I` absolute paths.
+ *
+ * @par Example
+ * If the option `-I/opt/local/libexec/llvm-21/include` were given and \a
+ * abs_path were `/opt/local/libexec/llvm-21/include/clang-c/Index.h`, then
+ * this function would return `clang-c/Index.h`.
+ *
+ * @param abs_path The absolute path of a file being included.
+ * @return Returns the shortened path of \a abs_path relative to one of the
+ * `-I` absolute paths.
+ *
+ * @note The pointer returned points to within \a abs_path.
+ */
+NODISCARD
+char const* include_path_relativize( char const *abs_path );
+
+/**
  * Parses the alignment column number for comments.
  *
  * @param s The string to parse.
@@ -156,41 +190,6 @@ bool opt_comment_symbols_parse( char const *s );
  */
 NODISCARD
 bool opt_error_parse( char const *s );
-
-/**
- * Adds \a include_path to the global list of include (`-I`) paths.
- *
- * @param include_path The include path to add.
- */
-void opt_include_paths_add( char const *include_path );
-
-/**
- * Attempts to find \a rel_path among the include paths.
- *
- * @param rel_path The relative path to find.
- * @param abs_path If found, the absolute path of \a rel_path is copied here.
- * @return Returns `true` only if \a rel_path is found.
- */
-NODISCARD
-bool opt_include_paths_find( char const *rel_path,
-                             char abs_path[static PATH_MAX] );
-
-/**
- * Relativizes \a abs_path against one of the `-I` absolute paths.
- *
- * @par Example
- * If the option `-I/opt/local/libexec/llvm-21/include` were given and \a
- * abs_path were `/opt/local/libexec/llvm-21/include/clang-c/Index.h`, then
- * this function would return `clang-c/Index.h`.
- *
- * @param abs_path The absolute path of a file being included.
- * @return Returns the shortened path of \a abs_path relative to one of the
- * `-I` absolute paths.
- *
- * @note The pointer returned points to within \a abs_path.
- */
-NODISCARD
-char const* opt_include_paths_relativize( char const *abs_path );
 
 /**
  * Parses the line length.
