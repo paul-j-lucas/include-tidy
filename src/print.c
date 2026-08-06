@@ -245,7 +245,7 @@ void verbose_print_cursor_impl( char const *label, CXCursor cursor ) {
 
   verbose_printf( "%s%scursor: ", label, space );
   fputs_quoted( name, '"', stdout );
-  printf( " (%s, \"%s\":%u,%u)\n", kind_cs, abs_path, line, col );
+  printf( " (%s), \"%s\":%u,%u\n", kind_cs, abs_path, line, col );
 
   clang_disposeString( abs_path_cxs );
   clang_disposeString( kind_cxs );
