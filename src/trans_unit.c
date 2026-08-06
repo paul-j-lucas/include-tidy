@@ -118,7 +118,8 @@ void trans_unit_check_for_errors( void ) {
           diag_file_cs, diag_line, diag_col,
           "%s\n", clang_getCString( diag_msg_cxs )
         );
-        print_source_line( diag_file_cs, diag_line, diag_col, diag_offset );
+        if ( diag_file_cs != NULL )
+          print_source_line( diag_file_cs, diag_line, diag_col, diag_offset );
         clang_disposeString( diag_msg_cxs );
         clang_disposeString( diag_file_cxs );
         break;
