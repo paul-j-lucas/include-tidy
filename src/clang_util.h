@@ -526,10 +526,25 @@ CXFile tidy_getSpellingLocation_File( CXSourceLocation loc );
  * @param ptoken_idx A pointer to the current token index.  It is updated to be
  * either the index of the next non-comment token or \a token_count if none.
  * @return Returns a pointer to the next non-comment token or NULL for none.
+ *
+ * @sa tidy_Token_getPrev()
  */
 NODISCARD
 CXToken const* tidy_Token_getNext( CXToken const tokens[], unsigned token_count,
                                    unsigned *ptoken_idx );
+
+/**
+ * Gets a pointer to the previous non-comment token in \a tokens, if any.
+ *
+ * @param tokens The array of tokens.
+ * @param ptoken_idx A pointer to the current token index.  It is updated to be
+ * either the index of the previous non-comment token or -1 if none.
+ * @return Returns a pointer to the next non-comment token or NULL for none.
+ *
+ * @sa tidy_Token_getNext()
+ */
+NODISCARD
+CXToken const* tidy_Token_getPrev( CXToken const tokens[], int *ptoken_idx );
 
 /**
  * Gets whether the spelling of \a token equals \a value.
@@ -538,10 +553,44 @@ CXToken const* tidy_Token_getNext( CXToken const tokens[], unsigned token_count,
  * @param token The token to compare.
  * @param value The value to compare against.
  * @return Returns `true` only if the spelling of \a token equals \a value.
+ *
+ * @sa #tidy_Token_isEqualToAny()
  */
 NODISCARD
 bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
                            char const *value );
+
+/**
+ * Gets whether the spelling of \a token equals any one of \a values.
+ *
+ * @note This function isn't normally called directly; use the
+ * #tidy_Token_isEqualToAny() macro instead.
+ *
+ * @param tu The translation unit to use.
+ * @param token The token to compare.
+ * @param values The NULL terminated array of values to compare against.
+ * @return Returns the index of the matched value or -1 for none.
+ *
+ * @sa tidy_Token_isEqualTo()
+ */
+NODISCARD
+int tidy_Token_isEqualToAny_impl( CXTranslationUnit tu, CXToken token,
+                                  char const *values[] );
+
+/**
+ * Gets whether the spelling of \a token equals any one of \a values.
+ *
+ * @param TU The translation unit to use.
+ * @param TOKEN The token to compare.
+ * @param ... A comma separated list of values to compare against.  It is
+ * implicitly NULL terminated.
+ * @return Returns the index of the matched value or -1 for none.
+ *
+ * @sa tidy_Token_isEqualTo()
+ */
+#define tidy_Token_isEqualToAny(TU,TOKEN,...)   \
+  tidy_Token_isEqualToAny_impl( (TU), (TOKEN),  \
+                                (char const*[]){ __VA_ARGS__, NULL } )
 
 ///////////////////////////////////////////////////////////////////////////////
 

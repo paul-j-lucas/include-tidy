@@ -415,6 +415,142 @@ static add_cxx_member_fn_rv add_cxx_member_fn( CXCursor call_csr,
   return ADD_CXX_MEMBER_FN_UNKNOWN;
 }
 
+/**
+ * Gets whether a symbol is referenced via an explicit C++ scope qualifier that
+ * acts as its proxy.
+ *
+ * @par Example
+ * @parblock
+ * Given:
+ *
+ *      // int_set.hpp
+ *      #include <set>
+ *      using int_set = std::set<int>;
+ *
+ *      // test.cpp
+ *      #include "int_set.hpp"
+ *
+ *      void f() {
+ *        int_set::value_type v;
+ *      }
+ *
+ * where \a cursor refers to `value_type`, the actual cursor libclang resolves
+ * it to is `std::set<int>::value_type`.  The problem is that \b include-tidy
+ * will think `test.cpp` requires `<set>` explicitly even though `test.cpp`
+ * includes `int_set.hpp` that declared `int_set`.  The fact that `int_set` is
+ * a `std::set` should be irrelevant and `<set>` should not be required.
+ * @endparblock
+ *
+ * @remarks To handle this, we resort to checking the actual tokens before \a
+ * cursor to see if they comprise a C++ class qualifier.  If a qualifier is
+ * present, it serves as the "proxy" for any nested members within it.
+ *
+ * @param cursor The cursor for the the symbol.
+ * @param parent The parent of \a cursor.
+ * @param scope_csr The cursor representing the surrounding C++ class scope, if
+ * any.
+ * @return Returns `true` only if \a cursor is explicitly qualified.
+ */
+NODISCARD
+static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
+                                     CXCursor scope_csr ) {
+  assert( tidy_is_cxx );
+
+  CXSourceLocation const cursor_loc = clang_getCursorLocation( cursor );
+  unsigned cursor_offset = 0;
+  clang_getSpellingLocation(
+    cursor_loc, /*file=*/NULL, /*line=*/NULL, /*column=*/NULL, &cursor_offset
+  );
+  if ( cursor_offset == 0 )
+    return false;
+
+  CXSourceRange range = clang_getCursorExtent( parent );
+  if ( clang_Range_isNull( range ) )
+    range = clang_getCursorExtent( cursor );
+  if ( clang_Range_isNull( range ) )
+    return false;
+
+  CXTranslationUnit tu = clang_Cursor_getTranslationUnit( cursor );
+  CXToken *tokens;
+  unsigned token_count;
+  clang_tokenize( tu, range, &tokens, &token_count );
+  if ( unlikely( token_count == 0 ) )
+    return false;
+
+  // Locate the specific token index corresponding to `cursor`
+  unsigned cursor_token_idx = token_count;
+  for ( unsigned i = 0; i < token_count; ++i ) {
+    CXSourceLocation const token_loc = clang_getTokenLocation( tu, tokens[i] );
+    unsigned token_offset = 0;
+    clang_getSpellingLocation(
+      token_loc, /*file=*/NULL, /*line=*/NULL, /*column=*/NULL, &token_offset
+    );
+    if ( token_offset == cursor_offset ) {
+      cursor_token_idx = i;
+      break;
+    }
+  } // for
+
+  bool matched = false;
+
+  if ( cursor_token_idx == 0 || cursor_token_idx == token_count )
+    goto done;
+
+  int i = STATIC_CAST( int, cursor_token_idx );
+  CXToken const *ptoken = tidy_Token_getPrev( tokens, &i );
+  if ( ptoken == NULL || !tidy_Token_isEqualTo( tu, *ptoken, "::" ) )
+    goto done;
+
+  CXCursor *const cursors = MALLOC( CXCursor, token_count );
+  clang_annotateTokens( tu, tokens, token_count, cursors );
+
+  // Scan backwards past template brackets <...> to find the qualifier token
+  int angle_depth = 0;
+  while ( (ptoken = tidy_Token_getPrev( tokens, &i )) != NULL ) {
+    switch ( tidy_Token_isEqualToAny( tu, *ptoken, ">", "<" ) ) {
+      case 0:
+        ++angle_depth;
+        continue;
+      case 1:
+        --angle_depth;
+        continue;
+      default:
+        if ( angle_depth > 0 )
+          continue;
+        break;
+    } // switch
+
+    CXCursor qual_csr = clang_getCursorReferenced( cursors[i] );
+    if ( tidy_Cursor_isInvalid( qual_csr ) )
+      qual_csr = cursors[i];
+    if ( tidy_Cursor_isInvalid( qual_csr ) )
+      break;
+
+    CXCursor const qual_parent = clang_getCursorSemanticParent( qual_csr );
+    CXCursor const canon_qual_csr =
+      tidy_Cursor_getCanonicalTypeDeclaration( qual_csr );
+
+    if ( tidy_Cursor_isClassDecl( qual_csr ) ||
+         tidy_Cursor_isClassDecl( canon_qual_csr ) ) {
+      matched = true;
+    }
+    else if ( tidy_Cursor_isClassDecl( scope_csr ) ) {
+      if ( clang_equalCursors( scope_csr, qual_parent ) ||
+           clang_equalCursors( scope_csr, qual_csr ) ) {
+        matched = true;
+      }
+    }
+
+    break;
+  } // for
+
+  free( cursors );
+
+done:
+  clang_disposeTokens( tu, tokens, token_count );
+  return matched;
+}
+
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
  * Gets whether it's possible to go from a cursor that refernces a symbol to
@@ -1098,13 +1234,21 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   if ( tidy_Cursor_isInvalid( dec_csr ) )
     return;
 
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+
   if ( tidy_is_cxx ) {
     // See the comment for symbols_init_data::cxx_deferred_fn_csr.
     if ( clang_equalCursors( dec_csr, sid->cxx_deferred_fn_csr ) )
       return;
 
     CXCursor const scope_csr = symbols_init_data_cxx_scope( sid, parent );
-    if ( !tidy_Cursor_isInvalid( scope_csr ) ) {
+
+    if ( !clang_isDeclaration( kind ) &&
+         has_cxx_qualifier_proxy( cursor, parent, scope_csr ) ) {
+      return; 
+    }
+
+    if ( tidy_Cursor_isClassDecl( scope_csr ) ) {
       if ( clang_equalCursors( scope_csr, dec_csr ) ||
            tidy_Cursor_isInheritedFrom( scope_csr, dec_csr ) ) {
         return;
@@ -1172,9 +1316,13 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
       return;
   }
   else {
-    enum CXCursorKind const kind = clang_getCursorKind( cursor );
-    if ( kind != CXCursor_TypeRef )
-      return;
+    switch ( kind ) {
+      case CXCursor_TypeRef:
+      case CXCursor_TemplateRef:
+        break;
+      default:
+        return;
+    } // switch
 
     CXType const type = clang_getCanonicalType( clang_getCursorType( parent ) );
     if ( type.kind != CXType_Record )     // class, struct, or union

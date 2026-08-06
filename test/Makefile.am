@@ -60,10 +60,15 @@ TESTS+=	tests/c_ast.test \
 
 # C++ tests.
 TESTS+=	tests/cxx.test \
+	tests/conf_filter.test \
 	tests/conf_string.test \
 	tests/conf_var_init.test \
+	tests/derived_conf_string_cpp.test \
+	tests/derived_conf_string_hpp.test \
 	tests/derived_map.test \
+	tests/Derived-MI.test \
 	tests/derived_set.test \
+	tests/derived_set-2.test \
 	tests/error_string.test \
 	tests/exit_codes.test \
 	tests/namespace_type.test \

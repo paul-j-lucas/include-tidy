@@ -13,8 +13,7 @@
 #include <string>
 
 template<>
-class conf<std::string> : public conf_var {
-protected:
+struct conf<std::string> : conf_var {
   conf( char const *name );
 };
 

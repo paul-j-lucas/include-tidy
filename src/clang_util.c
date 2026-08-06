@@ -970,6 +970,24 @@ CXToken const* tidy_Token_getNext( CXToken const tokens[], unsigned token_count,
   return pnext_token;
 }
 
+CXToken const* tidy_Token_getPrev( CXToken const tokens[], int *ptoken_idx ) {
+  assert( ptoken_idx != NULL );
+
+  CXToken const *pprev_token = NULL;
+  int i;
+
+  for ( i = *ptoken_idx - 1; i >= 0; --i ) {
+    CXTokenKind const kind = clang_getTokenKind( tokens[i] );
+    if ( kind != CXToken_Comment ) {
+      pprev_token = &tokens[i];
+      break;
+    }
+  } // for
+
+  *ptoken_idx = i;
+  return pprev_token;
+}
+
 bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
                            char const *value ) {
   assert( value != NULL );
@@ -980,6 +998,26 @@ bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
 
   clang_disposeString( token_cxs );
   return cmp == 0;
+}
+
+int tidy_Token_isEqualToAny_impl( CXTranslationUnit tu, CXToken token,
+                                  char const *values[] ) {
+  assert( values != NULL );
+
+  CXString const    token_cxs = clang_getTokenSpelling( tu, token );
+  char const *const token_cs = clang_getCString( token_cxs );
+
+  int equal_idx = -1;
+
+  for ( int i = 0; values[i] != NULL; ++i ) {
+    if ( strcmp( token_cs, values[i] ) == 0 ) {
+      equal_idx = i;
+      break;
+    }
+  } // for
+
+  clang_disposeString( token_cxs );
+  return equal_idx;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
