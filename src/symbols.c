@@ -1131,16 +1131,17 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
       return;
 
     CXCursor const scope_csr = symbols_init_data_cxx_scope( sid, parent );
+    if ( !tidy_Cursor_isInvalid( scope_csr ) ) {
+      if ( clang_equalCursors( scope_csr, dec_csr ) ||
+           tidy_Cursor_isInheritedFrom( scope_csr, dec_csr ) ) {
+        return;
+      }
 
-    if ( clang_equalCursors( scope_csr, dec_csr ) ||
-         tidy_Cursor_isInheritedFrom( scope_csr, dec_csr ) ) {
-      return;
-    }
-
-    CXCursor const dec_parent = clang_getCursorSemanticParent( dec_csr );
-    if ( clang_equalCursors( scope_csr, dec_parent ) ||
-         tidy_Cursor_isInheritedFrom( scope_csr, dec_parent ) ) {
-      return;
+      CXCursor const dec_parent = clang_getCursorSemanticParent( dec_csr );
+      if ( clang_equalCursors( scope_csr, dec_parent ) ||
+           tidy_Cursor_isInheritedFrom( scope_csr, dec_parent ) ) {
+        return;
+      }
     }
   }
 
