@@ -523,8 +523,8 @@ CXFile tidy_getSpellingLocation_File( CXSourceLocation loc );
  *
  * @param tokens The array of tokens.
  * @param token_count The length of \a tokens.
- * @param token_idx The current token index.  It is updated to be either the
- * index of the next non-comment token or \a token_count if none.
+ * @param ptoken_idx A pointer to the current token index.  It is updated to be
+ * either the index of the next non-comment token or \a token_count if none.
  * @return Returns a pointer to the next non-comment token or NULL for none.
  */
 NODISCARD
