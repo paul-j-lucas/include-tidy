@@ -1041,6 +1041,8 @@ static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
   CXToken *tokens;
   unsigned token_count;
   clang_tokenize( tidy_tu, field_range, &tokens, &token_count );
+  if ( unlikely( token_count == 0 ) )
+    return;
 
   CXCursor const class_csr = clang_getCursorSemanticParent( field_csr );
 
@@ -1084,6 +1086,8 @@ static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
   CXToken *tokens;
   unsigned token_count;
   clang_tokenize( tidy_tu, macro_range, &tokens, &token_count );
+  if ( unlikely( token_count == 0 ) )
+    return;
 
   //
   // While iterating over all tokens of the macro, we have to skip identifers
