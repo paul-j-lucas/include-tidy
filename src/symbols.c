@@ -86,6 +86,72 @@ struct symbols_init_data {
   bool      verbose_printed;            ///< Printed any verbose output?
 
   /**
+   * The cursor of the current C++ class (`class`, `struct`, or `union`), if
+   * any.
+   *
+   * @par Example
+   * @parblock
+   * For C++, things are more complicated.  Given something like:
+   *
+   *      // Base.hpp
+   *      struct Base {
+   *        using value_type = int;
+   *        Base( int );
+   *        // ...
+   *      };
+   *
+   *      // Derived.hpp
+   *      #include "Base.hpp"
+   *      struct Derived : Base {
+   *        Derived( int );
+   *        // ...
+   *      };
+   *
+   *      // Derived.cpp
+   *      #include "Derived.hpp"
+   *      using global_type = Derived::value_type;
+   *      Derived::Derived( int n ) : Base{ n } { }
+   *
+   * Here, `Derived.cpp` correctly includes `Derived.hpp` that correctly
+   * includes `Base.hpp`. `Derived.cpp` references both `Base::Base(int)` and
+   * `Derived::value_type`.  Additionally for `value_type`:
+   *
+   *  + `Derived` doesn't declare it --- it's inherited from `Base`.
+   *  + The reference to it is from the global scope, not a class scope.
+   *
+   * For all of these reasons, `Derived.cpp` should include `Base.hpp`
+   * according to the include-what-you-use rule (IWYU).
+   *
+   * However, since `Derived` is derived from `Base`, that means the definition
+   * of `Base` was available via `Derived.hpp` including `Base.hpp`; and since
+   * `Derived.cpp` includes `Derived.hpp`, that should be sufficient --- an
+   * exception to IWYU.  Furthermore, `value_type` has to be looked up via the
+   * `Derived` scope, not the global scope.
+   *
+   * The exception applies to any referenced symbol that's inherited: data
+   * members, constructors, destructors, or member functions.
+   * @endparblock
+   *
+   * @remarks
+   * @parblock
+   * This needs to be maintained inside <code>%symbols_init_data</code> rather
+   * than just a local variable inside \ref symbols_init_visitor() because of
+   * the way libclang handles type aliases.  For one like `global_type`, the
+   * AST is like:
+   *
+   *      global_type (TypeAliasDecl)
+   *        |
+   *        +-- Derived (TypeRef)
+   *        +-- value_type (TypeRef)
+   *
+   * i.e., `value_type` is a sibling of `Derived`, not a child of it, so we
+   * have to remember the scope of `Derived` between calls of \ref
+   * symbols_init_visitor().
+   * @endparblock
+   */
+  CXCursor cxx_class_csr;
+
+  /**
    * The C++ class of the current function or operator we're in.
    *
    * @par Example
@@ -172,72 +238,6 @@ struct symbols_init_data {
    * function and not while _inside_ the function.
    */
   CXCursor cxx_deferred_fn_csr;
-
-  /**
-   * The cursor of the current C++ scope (class, structure, union, enumeration,
-   * or namespace), if any.
-   *
-   * @par Example
-   * @parblock
-   * For C++, things are more complicated.  Given something like:
-   *
-   *      // Base.hpp
-   *      struct Base {
-   *        using value_type = int;
-   *        Base( int );
-   *        // ...
-   *      };
-   *
-   *      // Derived.hpp
-   *      #include "Base.hpp"
-   *      struct Derived : Base {
-   *        Derived( int );
-   *        // ...
-   *      };
-   *
-   *      // Derived.cpp
-   *      #include "Derived.hpp"
-   *      using global_type = Derived::value_type;
-   *      Derived::Derived( int n ) : Base{ n } { }
-   *
-   * Here, `Derived.cpp` correctly includes `Derived.hpp` that correctly
-   * includes `Base.hpp`. `Derived.cpp` references both `Base::Base(int)` and
-   * `Derived::value_type`.  Additionally for `value_type`:
-   *
-   *  + `Derived` doesn't declare it --- it's inherited from `Base`.
-   *  + The reference to it is from the global scope, not a class scope.
-   *
-   * For all of these reasons, `Derived.cpp` should include `Base.hpp`
-   * according to the include-what-you-use rule (IWYU).
-   *
-   * However, since `Derived` is derived from `Base`, that means the definition
-   * of `Base` was available via `Derived.hpp` including `Base.hpp`; and since
-   * `Derived.cpp` includes `Derived.hpp`, that should be sufficient --- an
-   * exception to IWYU.  Furthermore, `value_type` has to be looked up via the
-   * `Derived` scope, not the global scope.
-   *
-   * The exception applies to any referenced symbol that's inherited: data
-   * members, constructors, destructors, or member functions.
-   * @endparblock
-   *
-   * @remarks
-   * @parblock
-   * This needs to be maintained inside <code>%symbols_init_data</code> rather
-   * than just a local variable inside \ref symbols_init_visitor() because of
-   * the way libclang handles type aliases.  For one like `global_type`, the
-   * AST is like:
-   *
-   *      global_type (TypeAliasDecl)
-   *        |
-   *        +-- Derived (TypeRef)
-   *        +-- value_type (TypeRef)
-   *
-   * i.e., `value_type` is a sibling of `Derived`, not a child of it, so we
-   * have to remember the scope of `Derived` between calls of \ref
-   * symbols_init_visitor().
-   * @endparblock
-   */
-  CXCursor cxx_scope_csr;
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -756,8 +756,8 @@ static void symbols_cleanup( void ) {
  * one.
  * @return Returns The cursor for the scope that should be used.
  *
+ * @sa symbols_init_data::cxx_class_csr
  * @sa symbols_init_data::cxx_current_fn_class_csr
- * @sa symbols_init_data::cxx_scope_csr
  * @sa visit_most_kinds()
  */
 static CXCursor symbols_init_data_cxx_scope( symbols_init_data const *sid,
@@ -767,8 +767,8 @@ static CXCursor symbols_init_data_cxx_scope( symbols_init_data const *sid,
   if ( !clang_Cursor_isNull( sid->cxx_current_fn_class_csr ) )
     return sid->cxx_current_fn_class_csr;
 
-  if ( !clang_Cursor_isNull( sid->cxx_scope_csr ) )
-    return sid->cxx_scope_csr;
+  if ( !clang_Cursor_isNull( sid->cxx_class_csr ) )
+    return sid->cxx_class_csr;
 
   return else_csr;
 }
@@ -789,7 +789,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   symbols_init_data *const sid = data;
 
   bool is_scope_change = false;
-  CXCursor const prev_cxx_scope_csr = sid->cxx_scope_csr;
+  CXCursor const prev_cxx_class_csr = sid->cxx_class_csr;
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
@@ -811,13 +811,13 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 
   if ( tidy_is_cxx ) {
     //
-    // Since a non-null value of cxx_scope_csr must span across multiple calls
+    // Since a non-null value of cxx_class_csr must span across multiple calls
     // to symbols_init_visitor() for siblings, we have to know when to reset
     // it.  Once way to do it is whenever the declaration or statement changes.
     //
     is_scope_change = clang_isDeclaration( kind ) || clang_isStatement( kind );
     if ( is_scope_change )
-      sid->cxx_scope_csr = clang_getNullCursor();
+      sid->cxx_class_csr = clang_getNullCursor();
   }
 
   switch ( kind ) {
@@ -867,14 +867,14 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 
   if ( tidy_is_cxx ) {
     //
-    // If it's a non-namespace scope, set cxx_scope_csr.
+    // If it's a class scope, set cxx_class_csr.
     //
     switch ( kind ) {
       case CXCursor_TemplateRef:
       case CXCursor_TypeRef:;
         CXCursor const ref_csr = clang_getCursorReferenced( cursor );
-        if ( tidy_Cursor_isScopeDecl( ref_csr ) )
-          sid->cxx_scope_csr = ref_csr;
+        if ( tidy_Cursor_isClassDecl( ref_csr ) )
+          sid->cxx_class_csr = ref_csr;
         break;
       default:
         /* suppress warning */;
@@ -893,7 +893,7 @@ skip:;
 
   //
   // Returning CXChildVisit_Recurse causes clang_visitChildren() to do only
-  // pre-order traversal, but we need to reset cxx_scope_csr after visiting a
+  // pre-order traversal, but we need to reset cxx_class_csr after visiting a
   // child node. Therefore, recurse manually.
   //
   clang_visitChildren( cursor, &symbols_init_visitor, data );
@@ -902,7 +902,7 @@ skip:;
 
 skip_children:
   if ( is_scope_change )
-    sid->cxx_scope_csr = prev_cxx_scope_csr;
+    sid->cxx_class_csr = prev_cxx_class_csr;
   return CXChildVisit_Continue;
 }
 
@@ -1290,9 +1290,9 @@ void symbols_init( void ) {
   CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
   symbols_init_data sid = {
     .source_file = clang_getFile( tidy_tu, tidy_source_path ),
+    .cxx_class_csr = clang_getNullCursor(),
     .cxx_current_fn_class_csr = clang_getNullCursor(),
-    .cxx_deferred_fn_csr = clang_getNullCursor(),
-    .cxx_scope_csr = clang_getNullCursor()
+    .cxx_deferred_fn_csr = clang_getNullCursor()
   };
   clang_visitChildren( cursor, &symbols_init_visitor, &sid );
   if ( sid.verbose_printed )
