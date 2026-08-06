@@ -28,6 +28,7 @@
 #include "cli_options.h"
 #include "array.h"
 #include "include-tidy.h"
+#include "ipaths.h"
 #include "options.h"
 #include "path_util.h"
 #include "print.h"
@@ -1157,12 +1158,12 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   // been checked.
   insert_argv( pargc, pargv, 1, 1, (char const *const []){ "-I." } );
 
-  // tmp_include_paths is needed because we have to defer calling
-  // include_path_add() until after chdir() (if called).
-  include_path_add( "." );
+  // tmp_include_paths is needed because we have to defer calling ipath_add()
+  // until after chdir() (if called).
+  ipath_add( "." );
   for ( size_t i = 0; i < tmp_include_paths.len; ++i ) {
     char const *const *const ppath = array_at_nc( &tmp_include_paths, i );
-    include_path_add( *ppath );
+    ipath_add( *ppath );
   } // for
   array_cleanup( &tmp_include_paths, /*free_fn=*/NULL );
 

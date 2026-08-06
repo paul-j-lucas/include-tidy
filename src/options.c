@@ -27,10 +27,7 @@
 // local
 #include "pjl_config.h"                 /* must go first */
 #include "options.h"
-#include "array.h"
 #include "color.h"
-#include "path_util.h"
-#include "strbuf.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -38,13 +35,11 @@
 // standard
 #include <assert.h>
 #include <errno.h>
-#include <limits.h>                     /* for PATH_MAX */
 #include <stdbool.h>
 #include <stdlib.h>                     /* for exit() */
 #include <string.h>                     /* for str...() */
 #include <strings.h>                    /* for strcasecmp() */
 #include <sysexits.h>
-#include <unistd.h>                     /* for access() */
 
 /// @endcond
 
@@ -52,19 +47,6 @@
  * @addtogroup options-group
  * @{
  */
-
-////////// typedefs ///////////////////////////////////////////////////////////
-
-typedef struct include_path include_path;
-
-////////// structs ////////////////////////////////////////////////////////////
-
-/**
- * An include path given via the `-I` command-line option.
- */
-struct include_path {
-  char *abs_path;                       ///< The absolute path.
-};
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -87,33 +69,7 @@ char const   *tidy_source_path;
 
 /// @endcond
 
-////////// local variables ////////////////////////////////////////////////////
-
-static array_t  include_paths;          ///< Array of `-I` paths.
-
 /////////// local functions ///////////////////////////////////////////////////
-
-/**
- * Cleans-up an include_path.
- *
- * @param ipath The include_path to clean up.  If NULL, does nothing.
- */
-static void include_path_cleanup( include_path *ipath ) {
-  if ( ipath == NULL )
-    return;
-  free( ipath->abs_path );
-}
-
-/**
- * Cleans-up options.
- *
- * @sa options_init()
- */
-static void options_cleanup( void ) {
-  array_cleanup(
-    &include_paths, POINTER_CAST( array_free_fn_t, &include_path_cleanup )
-  );
-}
 
 /**
  * Parses a string into an `unsigned long long`.
@@ -163,70 +119,6 @@ static void set_all_or_none( char const **pformat, char const *all_value ) {
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
-
-void include_path_add( char const *path ) {
-  assert( path != NULL );
-
-  char real_path[ PATH_MAX ];
-  if ( realpath( path, real_path ) != NULL )
-    path = real_path;
-
-  for ( size_t i = 0; i < include_paths.len; ++i ) {
-    include_path const *const ipath = array_at_nc( &include_paths, i );
-    if ( strcmp( path, ipath->abs_path ) == 0 )
-      return;
-  } // for
-  *(include_path*)array_push_back( &include_paths ) = (include_path){
-    .abs_path = check_strdup( path )
-  };
-}
-
-bool include_path_find( char const *rel_path, char abs_path[static PATH_MAX] ) {
-  assert( rel_path != NULL );
-  assert( path_is_relative( rel_path ) );
-
-  bool is_found = false;
-  strbuf_t sbuf;
-  strbuf_init( &sbuf );
-
-  for ( size_t i = 0; i < include_paths.len; ++i ) {
-    include_path const *const ipath = array_at_nc( &include_paths, i );
-    strbuf_puts( &sbuf, ipath->abs_path );
-    strbuf_paths( &sbuf, rel_path );
-    if ( access( sbuf.str, F_OK ) == 0 ) {
-      strncpy_0( abs_path, sbuf.str, PATH_MAX );
-      is_found = true;
-      break;
-    }
-    strbuf_reset( &sbuf );
-  } // for
-
-  strbuf_cleanup( &sbuf );
-  return is_found;
-}
-
-char const* include_path_relativize( char const *abs_path ) {
-  assert( abs_path != NULL );
-
-  size_t      longest_include_path_len = 0;
-  char const *shortest_include_path = abs_path;
-
-  for ( size_t i = 0; i < include_paths.len; ++i ) {
-    include_path const *const ipath = array_at_nc( &include_paths, i );
-    size_t const              ipath_len  = strlen( ipath->abs_path );
-
-    if ( ipath_len > longest_include_path_len &&
-         strncmp( abs_path, ipath->abs_path, ipath_len ) == 0 ) {
-      longest_include_path_len = ipath_len;
-      shortest_include_path = abs_path + ipath_len;
-
-      if ( shortest_include_path[0] == '/' )
-        ++shortest_include_path;
-    }
-  } // for
-
-  return path_no_dot_slash( shortest_include_path );
-}
 
 bool opt_align_column_parse( char const *s ) {
   assert( s != NULL );
@@ -393,12 +285,6 @@ bool opt_verbose_parse( char const *verbose_format ) {
 
   opt_verbose = verbose;
   return true;
-}
-
-void options_init( void ) {
-  ASSERT_RUN_ONCE();
-  array_init( &include_paths, sizeof(include_path) );
-  ATEXIT( &options_cleanup );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

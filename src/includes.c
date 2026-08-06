@@ -30,6 +30,7 @@
 #include "clang_util.h"
 #include "color.h"
 #include "config_file.h"
+#include "ipaths.h"
 #include "options.h"
 #include "path_util.h"
 #include "print.h"
@@ -363,10 +364,9 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     included->is_local = path_is_local( included->abs_path );
 
     //
-    // We don't call include_path_relativize( included->abs_path ) because that
-    // would relativize the real path with symlinks, if any, resolved.  That
-    // might be surprising to the user if the linked-to file has a different
-    // name.
+    // We don't call ipath_relativize( included->abs_path ) because that would
+    // relativize the real path with symlinks, if any, resolved.  That might be
+    // surprising to the user if the linked-to file has a different name.
     //
     // For example, on macOS, Readline is just a wrapper around Editline and
     // has this:
@@ -776,14 +776,14 @@ static char* tidy_File_getRelativePath( CXFile file ) {
   //
   //  + At this point, path is a string we're responsible for.
   //
-  //  + include_path_relativize() returns a pointer within path.
+  //  + ipath_relativize() returns a pointer within path.
   //
   //  + But at clean-up time, we would have to free the original path.
   //
   //  + Therefore, strdup the relativized path (the portion within path) and
   //    free the original path now.
 
-  char *const rel_path = check_strdup( include_path_relativize( path ) );
+  char *const rel_path = check_strdup( ipath_relativize( path ) );
   FREE( path );
   return rel_path;
 }
@@ -938,7 +938,7 @@ tidy_include* include_find_by_rel_path( char const *rel_path ) {
   assert( path_is_relative( rel_path ) );
 
   char abs_path[ PATH_MAX ];
-  if ( include_path_find( rel_path, abs_path ) ) {
+  if ( ipath_find( rel_path, abs_path ) ) {
     CXFile const file = clang_getFile( tidy_tu, abs_path );
     if ( file != NULL )
       return include_find_by_File( file );
