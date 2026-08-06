@@ -1,5 +1,6 @@
 2026-08-06  Paul J. Lucas <paul@lucasmail.org>
 
+   * trans_unit.c: Fixed assert on NULL diag_file_cs.
    * clang_util.c, clang_util.h, symbols.c, test/Makefile.am, Base-MI.hpp,
      Derived-MI.hpp, conf_filter.cpp, conf_filter.hpp, conf_string.hpp,
      derived_conf_string.cpp, derived_conf_string.hpp, derived_set-2.cpp,
