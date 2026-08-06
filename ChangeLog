@@ -1,5 +1,19 @@
+2026-08-06  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c, clang_util.h, symbols.c, test/Makefile.am, Base-MI.hpp,
+     Derived-MI.hpp, conf_filter.cpp, conf_filter.hpp, conf_string.hpp,
+     derived_conf_string.cpp, derived_conf_string.hpp, derived_set-2.cpp,
+     pattern_map.hpp, Derived-MI.out, conf_filter.out,
+     derived_conf_string_cpp.out, derived_conf_string_hpp.out,
+     derived_set-2.out, Derived-MI.test, conf_filter.test,
+     derived_conf_string_cpp.test, derived_conf_string_hpp.test,
+     derived_set-2.test: Much better handling of nested types in C++.
+   * clang_util.c, clang_util.h, symbols.c:
+     s/get_next_token_index/tidy_Token_getNext/
+
 2026-08-05  Paul J. Lucas <paul@lucasmail.org>
 
+   * etc/config.toml: Added utility.
    * symbols.c: Now checking clang_tokenize().
    * symbols.c: Now performing scope checks only if the scope is a class
      declaration.
