@@ -154,8 +154,7 @@ void include_path_add( char const *include_path ) {
   *(char**)array_push_back( &include_paths ) = check_strdup( include_path );
 }
 
-bool include_path_find( char const *rel_path,
-                             char abs_path[static PATH_MAX] ) {
+bool include_path_find( char const *rel_path, char abs_path[static PATH_MAX] ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
