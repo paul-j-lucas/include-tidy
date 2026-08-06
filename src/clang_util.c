@@ -951,6 +951,25 @@ CXFile tidy_getSpellingLocation_File( CXSourceLocation loc ) {
   return file;
 }
 
+CXToken const* tidy_Token_getNext( CXToken const tokens[], unsigned token_count,
+                                   unsigned *ptoken_idx ) {
+  assert( ptoken_idx != NULL );
+
+  CXToken const *pnext_token = NULL;
+  unsigned i;
+
+  for ( i = *ptoken_idx + 1; i < token_count; ++i ) {
+    CXTokenKind const kind = clang_getTokenKind( tokens[i] );
+    if ( kind != CXToken_Comment ) {
+      pnext_token = &tokens[i];
+      break;
+    }
+  } // for
+
+  *ptoken_idx = i;
+  return pnext_token;
+}
+
 bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
                            char const *value ) {
   assert( value != NULL );

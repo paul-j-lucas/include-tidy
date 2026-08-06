@@ -519,6 +519,19 @@ NODISCARD
 CXFile tidy_getSpellingLocation_File( CXSourceLocation loc );
 
 /**
+ * Gets a pointer to the next non-comment token in \a tokens, if any.
+ *
+ * @param tokens The array of tokens.
+ * @param token_count The length of \a tokens.
+ * @param token_idx The current token index.  It is updated to be either the
+ * index of the next non-comment token or \a token_count if none.
+ * @return Returns a pointer to the next non-comment token or NULL for none.
+ */
+NODISCARD
+CXToken const* tidy_Token_getNext( CXToken const tokens[], unsigned token_count,
+                                   unsigned *ptoken_idx );
+
+/**
  * Gets whether the spelling of \a token equals \a value.
  *
  * @param tu The translation unit to use.

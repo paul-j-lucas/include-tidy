@@ -245,9 +245,6 @@ struct symbols_init_data {
 NODISCARD
 static add_cxx_member_fn_rv add_cxx_member_fn( CXCursor, CXCursor );
 
-NODISCARD
-static unsigned get_next_token_index( CXToken const[], unsigned, unsigned );
-
 static void     tidy_symbol_cleanup( tidy_symbol* );
 static bool     visit_CallExpr( CXCursor, CXCursor, symbols_init_data* );
 static void     visit_FieldDecl( CXCursor, CXCursor, symbols_init_data* );
@@ -418,28 +415,6 @@ static add_cxx_member_fn_rv add_cxx_member_fn( CXCursor call_csr,
   return ADD_CXX_MEMBER_FN_UNKNOWN;
 }
 
-/**
- * Gets the index of the next token that is not a comment.
- *
- * @param tokens The array of tokens.
- * @param token_count The length of \a tokens.
- * @param token_idx The current token index.
- * @return Returns the index of the next non-comment token or an integer &ge;
- * \a token_count for none.
- */
-NODISCARD
-static unsigned get_next_token_index( CXToken const tokens[],
-                                      unsigned token_count,
-                                      unsigned token_idx ) {
-  unsigned i;
-  for ( i = token_idx + 1; i < token_count; ++i ) {
-    CXTokenKind const kind = clang_getTokenKind( tokens[i] );
-    if ( kind != CXToken_Comment )
-      break;
-  } // for
-  return i;
-}
-
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
  * Gets whether it's possible to go from a cursor that refernces a symbol to
@@ -597,23 +572,20 @@ static CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
     macro_getCursorByNameToken( tokens[ *ptoken_idx ], tu_csr, param_set );
 
   CXCursor loop_csr = rv_csr;
-  unsigned i = *ptoken_idx;
 
   while ( !tidy_Cursor_isInvalid( loop_csr ) ) {
     rv_csr = loop_csr;
-    *ptoken_idx = i;
 
-    i = get_next_token_index( tokens, token_count, *ptoken_idx );
-    if ( i >= token_count )
+    CXToken const *t;
+    if ( (t = tidy_Token_getNext( tokens, token_count, ptoken_idx )) == NULL )
       break;
-    if ( clang_getTokenKind( tokens[i] ) != CXToken_Punctuation )
+    if ( clang_getTokenKind( *t ) != CXToken_Punctuation )
       break;                            // can't be "::"
-    if ( !tidy_Token_isEqualTo( tidy_tu, tokens[i], "::" ) )
+    if ( !tidy_Token_isEqualTo( tidy_tu, *t, "::" ) )
       break;
-    i = get_next_token_index( tokens, token_count, i );
-    if ( i >= token_count )
+    if ( (t = tidy_Token_getNext( tokens, token_count, ptoken_idx )) == NULL )
       break;
-    loop_csr = macro_getCursorByNameToken( tokens[i], rv_csr, param_set );
+    loop_csr = macro_getCursorByNameToken( *t, rv_csr, param_set );
   } // while
 
   return rv_csr;
@@ -936,23 +908,20 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
     tidy_getCursorByNameToken( tidy_tu, tokens[ *ptoken_idx ], scope_csr );
 
   CXCursor loop_csr = rv_csr;
-  unsigned i = *ptoken_idx;
 
   while ( !tidy_Cursor_isInvalid( loop_csr ) ) {
     rv_csr = loop_csr;
-    *ptoken_idx = i;
 
-    i = get_next_token_index( tokens, token_count, *ptoken_idx );
-    if ( i >= token_count )
+    CXToken const *t;
+    if ( (t = tidy_Token_getNext( tokens, token_count, ptoken_idx )) == NULL )
       break;
-    if ( clang_getTokenKind( tokens[i] ) != CXToken_Punctuation )
+    if ( clang_getTokenKind( *t ) != CXToken_Punctuation )
       break;                            // can't be "::"
-    if ( !tidy_Token_isEqualTo( tidy_tu, tokens[i], "::" ) )
+    if ( !tidy_Token_isEqualTo( tidy_tu, *t, "::" ) )
       break;
-    i = get_next_token_index( tokens, token_count, i );
-    if ( i >= token_count )
+    if ( (t = tidy_Token_getNext( tokens, token_count, ptoken_idx )) == NULL )
       break;
-    loop_csr = tidy_getCursorByNameToken( tidy_tu, tokens[i], rv_csr );
+    loop_csr = tidy_getCursorByNameToken( tidy_tu, *t, rv_csr );
   } // while
 
   return rv_csr;
