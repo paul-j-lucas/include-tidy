@@ -417,4 +417,10 @@ includes = "string"
 ["std::unique_ptr"]
 includes = "memory"
 
+[utility]
+symbols = [
+  "std::make_pair",
+  "std::pair",
+]
+
 # vim:se et sw=2 ts=2:
