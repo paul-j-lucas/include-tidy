@@ -925,6 +925,7 @@ _Noreturn void fatal_error( int status, char const *format, ... );
  *
  * @sa [The FNV Non-Cryptographic Hash Algorithm](https://datatracker.ietf.org/doc/html/draft-eastlake-fnv-17.html)
  */
+NODISCARD
 fnv1a_t fnv1a_s( char const *s );
 
 /**
