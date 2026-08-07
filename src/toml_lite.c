@@ -213,13 +213,12 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
   toml_array  array = { .values = MALLOC( toml_value, array_cap ) };
   int         c = '\0';
   bool        ok = false;
-  char        c_prev;
+  bool        need_comma = false;
 
   ++toml->array_depth;
 
   for (;;) {
     PJL_DISCARD_RV( toml_space_skip( toml ) );
-    c_prev = STATIC_CAST( char, c );
     c = toml_getc( toml );
     switch ( c ) {
       case EOF:
@@ -229,15 +228,20 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
         toml_comment_parse( toml );
         continue;
       case ',':
-        if ( array.size == 0 || c_prev == ',' ) {
+        if ( !need_comma ) {
           toml->error = TOML_ERR_UNEX_CHAR;
           goto done;
         }
+        need_comma = false;
         continue;
       case ']':
         ok = true;
         goto done;
       default:
+        if ( need_comma ) {
+          toml->error = TOML_ERR_UNEX_CHAR;
+          goto done;
+        }
         toml_ungetc( toml, c );
         break;
     } // switch
@@ -250,6 +254,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
       REALLOC( array.values, array_cap );
     }
     array.values[ array.size++ ] = value;
+    need_comma = true;
   } // for
 
 done:
