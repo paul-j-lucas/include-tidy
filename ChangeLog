@@ -1,5 +1,12 @@
 2026-08-06  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c, test/Makefile.am, Base-02.hpp, Derived-02.cpp,
+     Derived-02.out, Derived-02.test: Fixed another test case.
+   * ipaths.c: Now ensuring ipath_add strips trailing /.
+   * src/Makefile.am, cli_options.c, include-tidy.c, includes.c, ipaths.c,
+     ipaths.h, options.c, options.h: Split include paths into ipaths.[ch].
+   * options.c: Put include paths into a new include_path struct for
+     expandability.
    * trans_unit.c: Fixed assert on NULL diag_file_cs.
    * clang_util.c, clang_util.h, symbols.c, test/Makefile.am, Base-MI.hpp,
      Derived-MI.hpp, conf_filter.cpp, conf_filter.hpp, conf_string.hpp,
