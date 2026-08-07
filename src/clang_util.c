@@ -125,17 +125,19 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
-    case CXCursor_ClassDecl:
-    case CXCursor_ClassTemplate:
-    case CXCursor_EnumDecl:
+    case CXCursor_CXXBaseSpecifier:;
+      CXCursor base_csr = clang_getCursorReferenced( cursor );
+      if ( tidy_Cursor_isInvalid( base_csr ) )
+        base_csr = clang_getTypeDeclaration( clang_getCursorType( cursor ) );
+      if ( !tidy_Cursor_isInvalid( base_csr ) )
+        clang_visitChildren( base_csr, &getCursorByName_visitor, data );
+      break;
+
     case CXCursor_Namespace:
-    case CXCursor_StructDecl:
-    case CXCursor_UnionDecl:
-      if ( !gcbnd->cxx_recurse_into_scope )
-        break;
-      FALLTHROUGH;
-    case CXCursor_CXXBaseSpecifier:
-      return CXChildVisit_Recurse;
+      if ( gcbnd->cxx_recurse_into_scope )
+        return CXChildVisit_Recurse;
+      break;
+
     default:
       /* suppress warning */;
   } // switch
