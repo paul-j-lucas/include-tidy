@@ -79,17 +79,26 @@ static void ipaths_cleanup( void ) {
 void ipath_add( char const *path ) {
   assert( path != NULL );
 
-  char real_path[ PATH_MAX ];
-  if ( realpath( path, real_path ) != NULL )
-    path = real_path;
+  char path_buf[ PATH_MAX ];
+  if ( realpath( path, path_buf ) == NULL ) {
+    //
+    // Upon success, realpath() never includes a trailing '/' on directories;
+    // upon failure, fall back to using the given path, but ensure it doesn't
+    // include a trailing '/' either.
+    //
+    strncpy_0( path_buf, path, PATH_MAX-1 );
+    size_t path_len = strlen( path_buf );
+    while ( path_len > 1 && path_buf[ path_len - 1 ] == '/' )
+      path_buf[ --path_len ] = '\0';
+  }
 
   for ( size_t i = 0; i < ipaths.len; ++i ) {
     tidy_ipath const *const ipath = array_at_nc( &ipaths, i );
-    if ( strcmp( path, ipath->abs_path ) == 0 )
+    if ( strcmp( path_buf, ipath->abs_path ) == 0 )
       return;
   } // for
   *(tidy_ipath*)array_push_back( &ipaths ) = (tidy_ipath){
-    .abs_path = check_strdup( path )
+    .abs_path = check_strdup( path_buf )
   };
 }
 
