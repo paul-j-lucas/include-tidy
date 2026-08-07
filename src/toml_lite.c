@@ -450,6 +450,15 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
           goto error;
         goto done;
       case '_':
+        switch ( c_prev ) {
+          case '+':
+          case '-':
+          case '_':
+          case 'b':
+          case 'o':
+          case 'x':
+            goto error;
+        } // switch
         continue;
     } // switch
 

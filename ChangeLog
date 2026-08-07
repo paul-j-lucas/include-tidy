@@ -1,5 +1,11 @@
+2026-08-07  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.c: Now checking for missing comma between array elements.
+   * util.h: Added NODISCARD.
+
 2026-08-06  Paul J. Lucas <paul@lucasmail.org>
 
+   * configure.ac: Updated version to 2.0.
    * clang_util.c, test/Makefile.am, Base-02.hpp, Derived-02.cpp,
      Derived-02.out, Derived-02.test: Fixed another test case.
    * ipaths.c: Now ensuring ipath_add strips trailing /.
