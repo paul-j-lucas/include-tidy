@@ -362,8 +362,7 @@ static long int_value_parse( char const *config_path, char const *key_name,
  * @param config_path The full path to the configurarion file.
  * @param key_name The key name.
  * @param value The toml_value to parse.
- * @return Returns a pointer to the first element of a null-terminated string
- * array or NULL if the array is empty.
+ * @return Returns an array of the parsed string values.
  *
  * @sa string_or_string_array_parse()
  * @sa string_value_parse()
