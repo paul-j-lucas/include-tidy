@@ -1,3 +1,7 @@
+2026-08-08  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.c: Improved performance by eliminating ungetc().
+
 2026-08-07  Paul J. Lucas <paul@lucasmail.org>
 
    * toml_lite.c: Now checking for consecutive __.
