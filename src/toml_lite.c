@@ -49,6 +49,12 @@
 #define TOML_ARRAY_CAP_MIN        4     /**< Minimum array capacity. */
 #define TOML_STRING_LEN_MAX       1024  /**< Maximum string length. */
 
+/**
+ * Rather than use a separate `bool is_newline_pending` in toml_file, we use a
+ * special value in \ref toml_file::c_last "c_last".
+ */
+#define TOML_CHAR_PENDING_NEWLINE -2
+
 ////////// local constants ////////////////////////////////////////////////////
 
 /**
@@ -83,21 +89,9 @@ static int  toml_getc( toml_file* );
 
 static void toml_comment_parse( toml_file* );
 static void toml_space_comments_skip( toml_file* );
-static void toml_ungetc( toml_file*, int );
 static void toml_value_cleanup( toml_value* );
 
 ////////// inline functions ///////////////////////////////////////////////////
-
-/**
- * Peeks at the next character from \a file.
- *
- * @param file The `FILE` to peek from.
- * @return Returns the character peeked or `EOF`.
- */
-NODISCARD
-static inline int fpeekc( FILE *file ) {
-  return ungetc( fgetc( file ), file );
-}
 
 /**
  * Gets whether \a c is a binary digit.
@@ -172,6 +166,36 @@ static inline void toml_newline( toml_file *toml ) {
   ++toml->loc.line;
   toml->col_prev = toml->loc.col;
   toml->loc.col = 0;
+}
+
+/**
+ * Ungets \a c.
+ *
+ * @param toml The toml_file to unget \a c.
+ * @param c The character to unget.
+ *
+ * @sa toml_getc()
+ * @sa toml_peekc()
+ */
+static inline void toml_ungetc( toml_file *toml, int c ) {
+  toml->c_last = c;
+  toml->loc.col = toml->col_prev;
+}
+
+/**
+ * Peeks at the next character, if any.
+ *
+ * @param toml The toml_file to peek the next character from.
+ * @return Returns the next character or `EOF`.
+ *
+ * @sa toml_getc()
+ * @sa toml_ungetc()
+ */
+static inline int toml_peekc( toml_file *toml ) {
+  int const c = toml_getc( toml );
+  if ( c != EOF )
+    toml_ungetc( toml, c );
+  return c;
 }
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -278,27 +302,28 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
   assert( toml != NULL );
   assert( pb != NULL );
 
-  char        buf[ STRLITLEN( "false" ) ];  // not null-terminated
-  int         c = fpeekc( toml->file );
+  toml_loc const start_loc = toml->loc;
+
+  int         c = toml_getc( toml );
   bool const  is_t = c == 't';
+  char const *want = is_t ? "rue" : "alse";
 
-  size_t const bytes_want = is_t ? STRLITLEN( "true" ) : STRLITLEN( "false" );
-  size_t const bytes_read = fread( buf, 1, bytes_want, toml->file );
-  if ( bytes_read < bytes_want )
-    goto error;
+  for ( ; *want != '\0'; ++want ) {
+    if ( toml_getc( toml ) != *want )
+      goto error;
+  } // for
 
-  c = fpeekc( toml->file );             // ensure not falsex or truex
+  // Ensure it's not part of a longer identifier (e.g., "truex").
+  c = toml_peekc( toml );
   if ( c != EOF && is_ident( c ) )
     goto error;
 
-  if ( (is_t ? STRNCMPLIT( buf, "true" ) : STRNCMPLIT( buf, "false" )) == 0 ) {
-    toml_col_inc( toml, STATIC_CAST( unsigned, bytes_read ) );
-    *pb = is_t;
-    return true;
-  }
+  *pb = is_t;
+  return true;
 
 error:
-  toml_col_inc( toml, 1 );              // so col is at first char of value
+  toml->loc = start_loc;
+  toml_col_inc( toml, 1 );
   toml->error = TOML_ERR_UNEX_VALUE;
   return false;
 }
@@ -355,19 +380,28 @@ static void toml_comment_parse( toml_file *toml ) {
  * @param toml The toml_file to get the next character from.
  * @return Returns the next character or `EOF`.
  *
+ * @sa toml_peekc()
  * @sa toml_ungetc()
  */
 NODISCARD
 static int toml_getc( toml_file *toml ) {
   assert( toml != NULL );
 
-  int const c = fgetc( toml->file );
+  bool const is_newline_pending = toml->c_last == TOML_CHAR_PENDING_NEWLINE;
+  int const c = !is_newline_pending && toml->c_last != EOF ?
+    toml->c_last : fgetc( toml->file );
+
+  toml->c_last = EOF;
+
   if ( c != EOF ) {
-    if ( toml->c_last == '\n' )
+    if ( is_newline_pending )
       toml_newline( toml );
+    if ( c == '\n' )
+      toml->c_last = TOML_CHAR_PENDING_NEWLINE;
+    toml->col_prev = toml->loc.col;
     toml_col_inc( toml, 1 );
-    toml->c_last = c;
   }
+
   return c;
 }
 
@@ -830,24 +864,6 @@ static bool toml_table_name_parse( toml_file *toml, char **pname,
 }
 
 /**
- * Ungets \a c.
- *
- * @param toml The toml_file to unget \a c.
- * @param c The character to unget.
- *
- * @sa toml_getc()
- */
-static void toml_ungetc( toml_file *toml, int c ) {
-  assert( toml != NULL );
-  ungetc( c, toml->file );
-  if ( c == '\n' ) {
-    assert( toml->loc.line > 0 );
-    --toml->loc.line;
-  }
-  toml->loc.col = toml->col_prev;
-}
-
-/**
  * Cleans-up a toml_value.
  *
  * @param pv The toml_value to clean-up.  If NULL, does nothing.
@@ -963,6 +979,7 @@ void toml_file_init( toml_file *toml, FILE *file ) {
   assert( file != NULL );
 
   *toml = (toml_file){
+    .c_last = EOF,
     .file = file,
     .loc = {
       .line = 1,
@@ -1049,7 +1066,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
 
   for (;;) {
     toml_space_comments_skip( toml );
-    c = fpeekc( toml->file );
+    c = toml_peekc( toml );
     if ( c == EOF || c == '[' )
       return true;
 
