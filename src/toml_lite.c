@@ -398,7 +398,6 @@ static int toml_getc( toml_file *toml ) {
       toml_newline( toml );
     if ( c == '\n' )
       toml->c_last = TOML_CHAR_PENDING_NEWLINE;
-    toml->col_prev = toml->loc.col;
     toml_col_inc( toml, 1 );
   }
 
