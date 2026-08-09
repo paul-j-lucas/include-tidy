@@ -88,7 +88,6 @@ PJL_COMPILE([__VA_OPT__],
   ],
   [int x1 = VA_OPT_TEST() 1; VA_OPT_TEST(x2 = 2);]
 )
-PJL_TYPE_UNSIGNED_INT128
 
 # Checks for library functions.
 AC_CHECK_FUNCS([geteuid getpwuid perror strerror strndup])

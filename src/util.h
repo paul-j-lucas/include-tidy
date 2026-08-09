@@ -814,11 +814,7 @@
  *
  * @sa fnv1a_s()
  */
-#ifdef HAVE_UNSIGNED_INT128
-typedef unsigned __int128 fnv1a_t;
-#else
 typedef uint64_t fnv1a_t;
-#endif /* HAVE_UNSIGNED_INT128 */
 
 ////////// extern constants ///////////////////////////////////////////////////
 

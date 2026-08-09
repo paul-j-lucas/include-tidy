@@ -946,12 +946,7 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
 #endif /* HAVE_TYPEOF */
 
     id = (CXFileUniqueID){
-      .data = {
-#ifdef HAVE_UNSIGNED_INT128
-        STATIC_CAST( CXFileUniqueID_data_t, hash >> 64 ),
-#endif /* HAVE_UNSIGNED_INT128 */
-        STATIC_CAST( CXFileUniqueID_data_t, hash )
-      }
+      .data = { STATIC_CAST( CXFileUniqueID_data_t, hash ) }
     };
   }
   return id;
