@@ -1,3 +1,8 @@
+2026-08-09  Paul J. Lucas <paul@lucasmail.org>
+
+   * configure.ac, clang_util.c, util.c, util.h: Removed __int128 -- not really
+     needed.
+
 2026-08-08  Paul J. Lucas <paul@lucasmail.org>
 
    * symbols.c: Eliminated "not added" case.
