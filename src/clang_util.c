@@ -358,10 +358,22 @@ static CXCursor tidy_Cursor_getTypeRef( CXCursor cursor ) {
 }
 
 /**
- * Gets the initializer for a variable.
+ * Gets the root initializer for a variable.
  *
- * @param expr_csr TODO.
- * @return Returns TODO.
+ * @par Example
+ * @parblock
+ * Given:
+ *
+ *      int a = 42;
+ *      int b = a;
+ *      int c = b;
+ *
+ * If passed the cursor for the DeclRefExpr for `b`, will return `42`.
+ * @endparblock
+ *
+ * @param expr_csr The cursor for the initializing expression.
+ * @return Returns the root initializer expression or \a expr_csr (without
+ * UnexposedExpr) if no other initializer expressions exist.
  */
 NODISCARD
 static CXCursor tidy_Cursor_getVarInitializer( CXCursor expr_csr ) {
