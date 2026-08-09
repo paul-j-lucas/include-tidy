@@ -822,27 +822,18 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
     tidy_symbol_cleanup( &new_sym );
     goto done;
   }
+  if ( include_added_to == NULL )
+    goto done;
 
   if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
     if ( false_set( &sid->verbose_printed ) )
       verbose_printf( "symbols:\n" );
-
-    if ( include_added_to != NULL ) {
-      char delims[2];
-      include_get_delims( include_added_to, delims );
-      verbose_printf(
-        "  \"%s\" -> %c%s%c\n",
-        sym->name, delims[0], include_added_to->abs_path, delims[1]
-      );
-    }
-    else {
-      CXString const abs_path_cxs = tidy_File_getRealPathName( include_file );
-      char const *const abs_path = clang_getCString( abs_path_cxs );
-      verbose_printf(
-        "  \"%s\" -> \"%s\" (NOT added)\n", sym->name, abs_path
-      );
-      clang_disposeString( abs_path_cxs );
-    }
+    char delims[2];
+    include_get_delims( include_added_to, delims );
+    verbose_printf(
+      "  \"%s\" -> %c%s%c\n",
+      sym->name, delims[0], include_added_to->abs_path, delims[1]
+    );
   }
 
 done:
