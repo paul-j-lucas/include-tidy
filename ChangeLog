@@ -1,5 +1,6 @@
 2026-08-08  Paul J. Lucas <paul@lucasmail.org>
 
+   * symbols.c: Eliminated "not added" case.
    * toml_lite.c: Eliminated pointless toml->col_prev = toml->loc.col
    * toml_lite.c: Improved performance by eliminating ungetc().
 
