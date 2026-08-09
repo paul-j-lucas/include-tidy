@@ -996,8 +996,9 @@ skip:;
 
   //
   // Returning CXChildVisit_Recurse causes clang_visitChildren() to do only
-  // pre-order traversal, but we need to reset cxx_statement_class_csr after
-  // visiting a child node. Therefore, recurse manually.
+  // pre-order traversal, but we need to reset both cxx_current_fn_class_csr
+  // and cxx_statement_class_csr after visiting a child node. Therefore,
+  // recurse manually.
   //
   clang_visitChildren( cursor, &symbols_init_visitor, data );
 
