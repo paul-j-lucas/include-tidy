@@ -79,6 +79,7 @@ static void ipaths_cleanup( void ) {
 void ipath_add( char const *path ) {
   assert( path != NULL );
 
+  size_t path_len;
   char path_buf[ PATH_MAX ];
   if ( realpath( path, path_buf ) == NULL ) {
     //
@@ -87,9 +88,12 @@ void ipath_add( char const *path ) {
     // include a trailing '/' either.
     //
     strncpy_0( path_buf, path, PATH_MAX-1 );
-    size_t path_len = strlen( path_buf );
+    path_len = strlen( path_buf );
     while ( path_len > 1 && path_buf[ path_len - 1 ] == '/' )
       path_buf[ --path_len ] = '\0';
+  }
+  else {
+    path_len = strlen( path_buf );
   }
 
   for ( size_t i = 0; i < ipaths.len; ++i ) {
@@ -98,7 +102,8 @@ void ipath_add( char const *path ) {
       return;
   } // for
   *(tidy_ipath*)array_push_back( &ipaths ) = (tidy_ipath){
-    .abs_path = check_strdup( path_buf )
+    .abs_path = check_strdup( path_buf ),
+    .abs_path_len = path_len
   };
 }
 
@@ -112,7 +117,7 @@ bool ipath_find( char const *rel_path, char abs_path[static PATH_MAX] ) {
 
   for ( size_t i = 0; i < ipaths.len; ++i ) {
     tidy_ipath const *const ipath = array_at_nc( &ipaths, i );
-    strbuf_puts( &sbuf, ipath->abs_path );
+    strbuf_putsn( &sbuf, ipath->abs_path, ipath->abs_path_len );
     strbuf_paths( &sbuf, rel_path );
     if ( access( sbuf.str, F_OK ) == 0 ) {
       strncpy_0( abs_path, sbuf.str, PATH_MAX );
@@ -134,12 +139,11 @@ char const* ipath_relativize( char const *abs_path ) {
 
   for ( size_t i = 0; i < ipaths.len; ++i ) {
     tidy_ipath const *const ipath = array_at_nc( &ipaths, i );
-    size_t const            ipath_len  = strlen( ipath->abs_path );
 
-    if ( ipath_len > longest_include_path_len &&
-         strncmp( abs_path, ipath->abs_path, ipath_len ) == 0 ) {
-      longest_include_path_len = ipath_len;
-      shortest_include_path = abs_path + ipath_len;
+    if ( ipath->abs_path_len > longest_include_path_len &&
+         strncmp( abs_path, ipath->abs_path, ipath->abs_path_len ) == 0 ) {
+      longest_include_path_len = ipath->abs_path_len;
+      shortest_include_path = abs_path + ipath->abs_path_len;
 
       if ( shortest_include_path[0] == '/' )
         ++shortest_include_path;

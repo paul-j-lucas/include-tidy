@@ -34,6 +34,7 @@
 // standard
 #include <limits.h>                     /* for PATH_MAX */
 #include <stdbool.h>
+#include <stddef.h>
 
 /// @endcond
 
@@ -53,7 +54,8 @@ typedef struct  tidy_ipath  tidy_ipath;
  * An include path given via the `-I` command-line option.
  */
 struct tidy_ipath {
-  char *abs_path;                       ///< The absolute path.
+  char   *abs_path;                     ///< The absolute path.
+  size_t  abs_path_len;                 ///< Length of \ref abs_path.
 };
 
 ////////// extern functions ///////////////////////////////////////////////////
