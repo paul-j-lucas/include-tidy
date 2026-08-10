@@ -79,6 +79,9 @@ static void ipaths_cleanup( void ) {
 void ipath_add( char const *path ) {
   assert( path != NULL );
 
+  if ( access( path, X_OK ) != 0 )
+    return;
+
   size_t path_len;
   char path_buf[ PATH_MAX ];
   if ( realpath( path, path_buf ) == NULL ) {
