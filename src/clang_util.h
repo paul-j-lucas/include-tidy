@@ -71,7 +71,10 @@ int tidy_Cursor_compare( CXCursor i_csr, CXCursor j_csr );
  * \a cursor.
  */
 NODISCARD
-CXCursor tidy_Cursor_getCanonicalTypeDeclaration( CXCursor cursor );
+inline CXCursor tidy_Cursor_getCanonicalTypeDeclaration( CXCursor cursor ) {
+  CXType const type = clang_getCanonicalType( clang_getCursorType( cursor ) );
+  return clang_getTypeDeclaration( type );
+}
 
 /**
  * Gets the cursor for the C++ class type as written in the source file.
@@ -478,7 +481,13 @@ CXFile tidy_getCursorLocation_File( CXCursor cursor );
  * @sa tidy_getSpellingLocation_File()
  */
 NODISCARD
-CXFile tidy_getFileLocation_File( CXSourceLocation loc );
+inline CXFile tidy_getFileLocation_File( CXSourceLocation loc ) {
+  CXFile file;
+  clang_getFileLocation(
+    loc, &file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
+  );
+  return file;
+}
 
 /**
  * Gets a unique ID for \a file.
@@ -500,7 +509,13 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file );
  * @sa tidy_getFileLocation_File()
  */
 NODISCARD
-CXFile tidy_getSpellingLocation_File( CXSourceLocation loc );
+inline CXFile tidy_getSpellingLocation_File( CXSourceLocation loc ) {
+  CXFile file;
+  clang_getSpellingLocation(
+    loc, &file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
+  );
+  return file;
+}
 
 /**
  * Gets a pointer to the next non-comment token in \a tokens, if any.

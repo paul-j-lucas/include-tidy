@@ -512,11 +512,6 @@ int tidy_Cursor_compare( CXCursor i_csr, CXCursor j_csr ) {
   return 0;
 }
 
-CXCursor tidy_Cursor_getCanonicalTypeDeclaration( CXCursor cursor ) {
-  CXType const type = clang_getCanonicalType( clang_getCursorType( cursor ) );
-  return clang_getTypeDeclaration( type );
-}
-
 CXCursor tidy_Cursor_getClassAsWritten( CXCursor cursor ) {
   cursor = tidy_Cursor_skipUnexposedDown( cursor );
   CXCursor const ref_csr = clang_getCursorReferenced( cursor );
@@ -903,14 +898,6 @@ CXFile tidy_getCursorLocation_File( CXCursor cursor ) {
   return file;
 }
 
-CXFile tidy_getFileLocation_File( CXSourceLocation loc ) {
-  CXFile file;
-  clang_getFileLocation(
-    loc, &file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
-  );
-  return file;
-}
-
 CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
   assert( file != NULL );
 
@@ -935,14 +922,6 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
     };
   }
   return id;
-}
-
-CXFile tidy_getSpellingLocation_File( CXSourceLocation loc ) {
-  CXFile file;
-  clang_getSpellingLocation(
-    loc, &file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
-  );
-  return file;
 }
 
 CXToken const* tidy_Token_getNext( CXToken const tokens[], unsigned token_count,
@@ -1020,8 +999,11 @@ int tidy_Token_isEqualToAny_impl( CXTranslationUnit tu, CXToken token,
 
 /// @cond DOXYGEN_IGNORE
 
+extern inline CXCursor tidy_Cursor_getCanonicalTypeDeclaration( CXCursor );
 extern inline int tidy_FileUniqueID_compare( CXFileUniqueID const*,
                                              CXFileUniqueID const* );
+extern inline CXFile tidy_getFileLocation_File( CXSourceLocation );
+extern inline CXFile tidy_getSpellingLocation_File( CXSourceLocation );
 
 /// @endcond
 
