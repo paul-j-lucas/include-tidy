@@ -112,18 +112,21 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
     goto skip;
   }
 
-  CXString const    name_cxs = clang_getCursorSpelling( cursor );
-  char const *const name_cs = clang_getCString( name_cxs );
-  bool const        is_found = strcmp( name_cs, gcbnd->find_name ) == 0;
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
 
-  clang_disposeString( name_cxs );
+  if ( clang_isDeclaration( kind ) ) {
+    CXString const    name_cxs = clang_getCursorSpelling( cursor );
+    char const *const name_cs = clang_getCString( name_cxs );
+    bool const        is_found = strcmp( name_cs, gcbnd->find_name ) == 0;
 
-  if ( is_found ) {
-    gcbnd->found_csr = cursor;
-    return CXChildVisit_Break;
+    clang_disposeString( name_cxs );
+
+    if ( is_found ) {
+      gcbnd->found_csr = cursor;
+      return CXChildVisit_Break;
+    }
   }
 
-  enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
     case CXCursor_CXXBaseSpecifier:;
       CXCursor base_csr = clang_getCursorReferenced( cursor );
