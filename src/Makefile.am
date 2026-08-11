@@ -22,7 +22,11 @@
 .MAKE.JOB.PREFIX=
 
 bin_PROGRAMS =		include-tidy
-check_PROGRAMS =	path_util_test red_black_test strbuf_test toml_test
+check_PROGRAMS =	hash_table_test \
+			path_util_test \
+			red_black_test \
+			strbuf_test \
+			toml_test
 
 AM_CFLAGS =		$(INCLUDE_TIDY_CFLAGS) $(LIBCLANG_CPPFLAGS)
 AM_CPPFLAGS =		-I$(top_srcdir)/lib -I$(top_builddir)/lib
@@ -39,6 +43,7 @@ include_tidy_SOURCES =	array.c array.h \
 			cli_options.c cli_options.h \
 			color.c color.h \
 			config_file.c config_file.h \
+			hash_table.c hash_table.h \
 			includes.c includes.h \
 			include-tidy.c include-tidy.h \
 			ipaths.c ipaths.h \
@@ -65,6 +70,10 @@ BASE_TEST_SOURCES =	pjl_config.h config.h \
 			util.c util.h \
 			unit_test.c unit_test.h
 
+hash_table_test_SOURCES=$(BASE_TEST_SOURCES) \
+			hash_table.c hash_table.h \
+			hash_table_test.c
+
 path_util_test_SOURCES=	$(BASE_TEST_SOURCES) \
 			path_util_test.c
 
@@ -76,7 +85,7 @@ strbuf_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 			strbuf_test.c
 
 toml_test_SOURCES = 	$(BASE_TEST_SOURCES) \
-			red_black.c red_black.h \
+			hash_table.c hash_table.h \
 			toml_lite.c toml_lite.h \
 			toml_test.c
 

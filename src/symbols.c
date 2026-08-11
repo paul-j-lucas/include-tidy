@@ -29,10 +29,10 @@
 #include "clang_util.h"
 #include "cli_options.h"
 #include "config_file.h"
+#include "hash_table.h"
 #include "includes.h"
 #include "options.h"
 #include "print.h"
-#include "red_black.h"
 #include "trans_unit.h"
 #include "typedefs.h"
 #include "util.h"
@@ -259,7 +259,7 @@ static void     visit_OverloadedDeclRef( CXCursor, CXCursor,
 
 ////////// local variables ////////////////////////////////////////////////////
 
-static rb_tree_t symbol_set;            ///< Set of symbols.
+static hash_table_t symbol_set;         ///< Set of symbols.
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -610,7 +610,7 @@ static bool is_include_path( CXCursor ref_csr, CXCursor def_csr ) {
  */
 NODISCARD
 static CXCursor macro_getCursorByNameToken( CXToken token, CXCursor scope_csr,
-                                            rb_tree_t const *param_set ) {
+                                            hash_table_t const *param_set ) {
   assert( param_set != NULL );
 
   if ( clang_getTokenKind( token ) != CXToken_Identifier )
@@ -622,7 +622,7 @@ static CXCursor macro_getCursorByNameToken( CXToken token, CXCursor scope_csr,
   CXCursor const rv_csr =
     strcmp( token_cs, "__VA_ARGS__" ) != 0 &&
     strcmp( token_cs, "__VA_OPT__" ) != 0 &&
-    rb_tree_find( param_set, token_cs ) == NULL ?
+    ht_find( param_set, token_cs ) == NULL ?
       tidy_getCursorByName( token_cs, scope_csr )
     :
       clang_getNullCursor();
@@ -641,7 +641,7 @@ static CXCursor macro_getCursorByNameToken( CXToken token, CXCursor scope_csr,
  */
 static unsigned macro_get_params( CXToken const tokens[static 2],
                                   unsigned token_count,
-                                  rb_tree_t *param_set ) {
+                                  hash_table_t *param_set ) {
   assert( param_set != NULL );
 
   unsigned rv_idx = 1;
@@ -661,13 +661,16 @@ static unsigned macro_get_params( CXToken const tokens[static 2],
     char const *const token_cs = clang_getCString( token_cxs );
 
     switch ( kind ) {
-      case CXToken_Identifier:
-        PJL_DISCARD_RV(
-          rb_tree_insert(
+      case CXToken_Identifier:;
+        ht_insert_rv_t const rv_hti =
+          ht_insert(
             param_set, CONST_CAST( char*, token_cs ),
             strlen( token_cs ) + 1/*\0*/
-          )
-        );
+          );
+        if ( rv_hti.inserted ) {
+          char *const ht_token_cs = HT_DINT( rv_hti.entry );
+          strcpy( ht_token_cs, token_cs );
+        }
         break;
       case CXToken_Punctuation:
         if ( strcmp( token_cs, ")" ) == 0 ) {
@@ -699,10 +702,11 @@ static unsigned macro_get_params( CXToken const tokens[static 2],
  *
  * @sa tidy_Token_getScopedNameCursor()
  */
-static CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
-                                                 unsigned token_count,
-                                                 unsigned *ptoken_idx,
-                                                 rb_tree_t const *param_set ) {
+static
+CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
+                                          unsigned token_count,
+                                          unsigned *ptoken_idx,
+                                          hash_table_t const *param_set ) {
   assert( param_set != NULL );
 
   CXCursor const tu_csr = clang_getTranslationUnitCursor( tidy_tu );
@@ -807,9 +811,11 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
   tidy_symbol new_sym = {
     .name = tidy_Cursor_getScopedDisplayName( name_csr )
   };
-  rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &symbol_set, &new_sym, sizeof new_sym );
-  tidy_symbol *const sym = RB_DINT( rv_rbi.node );
+  ht_insert_rv_t const rv_hti =
+    ht_insert( &symbol_set, &new_sym, sizeof new_sym );
+  tidy_symbol *const sym = HT_DINT( rv_hti.entry );
+  if ( rv_hti.inserted )
+    *sym = new_sym;
   ++sym->ref_count;
 
   CXFile include_file = config_get_symbol_include( simple_name );
@@ -818,7 +824,7 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
   tidy_include const *const include_added_to =
     include_add_symbol( include_file, sym );
 
-  if ( !rv_rbi.inserted ) {
+  if ( !rv_hti.inserted ) {
     tidy_symbol_cleanup( &new_sym );
     goto done;
   }
@@ -844,9 +850,7 @@ done:
  * Cleans-up all symbols.
  */
 static void symbols_cleanup( void ) {
-  rb_tree_cleanup(
-    &symbol_set, POINTER_CAST( rb_free_fn_t, &tidy_symbol_cleanup )
-  );
+  ht_cleanup( &symbol_set, POINTER_CAST( ht_free_fn_t, &tidy_symbol_cleanup ) );
 }
 
 /**
@@ -1019,6 +1023,17 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
   if ( sym == NULL )
     return;
   FREE( sym->name );
+}
+
+/**
+ * Calculates the hash of \a sym.
+ *
+ * @param sym The tidy_symbol to calculate the hash for.
+ * @return Returns said hash.
+ */
+NODISCARD
+static ht_hash_val_t tidy_symbol_hash( tidy_symbol const *sym ) {
+  return fnv1a_s( sym->name );
 }
 
 /**
@@ -1197,8 +1212,12 @@ static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
   // defined by the macro itself.  To skip them, we first have to collect the
   // set of them.
   //
-  rb_tree_t param_set;
-  rb_tree_init( &param_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &strcmp ) );
+  hash_table_t param_set;
+  ht_init(
+    &param_set, 2.0, 10,
+    POINTER_CAST( ht_cmp_fn_t, &strcmp ),
+    POINTER_CAST( ht_hash_fn_t, &fnv1a_s )
+  );
 
   unsigned i = clang_Cursor_isMacroFunctionLike( macro_csr ) ?
     macro_get_params( tokens, token_count, &param_set ) :
@@ -1211,7 +1230,7 @@ static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
       maybe_add_symbol( sym_csr, sym_csr, sid );
   } // for
 
-  rb_tree_cleanup( &param_set, /*free_fn=*/NULL );
+  ht_cleanup( &param_set, /*free_fn=*/NULL );
   clang_disposeTokens( tidy_tu, tokens, token_count );
 }
 
@@ -1452,8 +1471,10 @@ static void visit_OverloadedDeclRef( CXCursor overloaded_csr, CXCursor parent,
 
 void symbols_init( void ) {
   ASSERT_RUN_ONCE();
-  rb_tree_init(
-    &symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
+  ht_init(
+    &symbol_set, 3.0, 1024,
+    POINTER_CAST( ht_cmp_fn_t, &tidy_symbol_cmp ),
+    POINTER_CAST( ht_hash_fn_t, &tidy_symbol_hash )
   );
   ATEXIT( &symbols_cleanup );
   typedefs_init();

@@ -51,15 +51,10 @@
 ////////// local constants ////////////////////////////////////////////////////
 
 /**
- * Initialization value for Fowler-Noll-Vo hash function.
- *
- * @sa fnv1a_s()
- */
-static fnv1a_t const FNV1A_INIT  = 14695981039346656037UL;
-
-/**
  * Prime value for Fowler-Noll-Vo hash function.
  *
+ * @sa #FNV1A_INIT
+ * @sa fnv1a_mem()
  * @sa fnv1a_s()
  */
 static fnv1a_t const FNV1A_PRIME = 1099511628211UL;
@@ -114,9 +109,13 @@ void fatal_error( int status, char const *format, ... ) {
   _Exit( status );
 }
 
-fnv1a_t fnv1a_s( char const *s ) {
-  assert( s != NULL );
+fnv1a_t fnv1a64_mem( fnv1a_t hash, void const *data, size_t n ) {
+  for ( size_t i = 0; i < n; ++i )
+    hash = FNV1A_PRIME * (hash ^ STATIC_CAST( uint8_t const*, data )[i]);
+  return hash;
+}
 
+fnv1a_t fnv1a_s( char const *s ) {
   fnv1a_t hash = FNV1A_INIT;
   for ( ; *s != '\0'; ++s )
     hash = FNV1A_PRIME * (hash ^ STATIC_CAST( uint8_t, *s ));

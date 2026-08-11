@@ -26,7 +26,7 @@
 // local
 #include "pjl_config.h"
 #include "toml_lite.h"
-#include "red_black.h"
+#include "hash_table.h"
 #include "strbuf.h"
 #include "util.h"
 
@@ -667,6 +667,17 @@ static int toml_key_value_cmp( toml_key_value *i_kv, toml_key_value *j_kv ) {
 }
 
 /**
+ * Calculates the hash of \a kv.
+ *
+ * @param kv The toml_key_value to hash.
+ * @return Returns said hash.
+ */
+NODISCARD
+static ht_hash_val_t toml_key_value_hash( toml_key_value const *kv ) {
+  return fnv1a_s( kv->key.name );
+}
+
+/**
  * Parses a TOML _key_ `=` _value_.
  *
  * @param toml The toml_file to use.
@@ -968,8 +979,8 @@ char const* toml_error_msg( toml_file const *toml ) {
 void toml_file_cleanup( toml_file *toml ) {
   if ( toml == NULL )
     return;
-  // Table names are copied into the nodes, so nothing to free.
-  rb_tree_cleanup( &toml->table_names, /*free_fn=*/NULL );
+  // Table names are copied into the entries, so nothing to free.
+  ht_cleanup( &toml->table_names, /*free_fn=*/NULL );
   *toml = (toml_file){ 0 };
 }
 
@@ -988,9 +999,10 @@ void toml_file_init( toml_file *toml, FILE *file ) {
     }
   };
 
-  rb_tree_init(
-    &toml->table_names, RB_DINT,
-    POINTER_CAST( rb_cmp_fn_t, &strcmp )
+  ht_init(
+    &toml->table_names, 3.0, 32,
+    POINTER_CAST( ht_cmp_fn_t, &strcmp ),
+    POINTER_CAST( ht_hash_fn_t, &fnv1a_s )
   );
 }
 
@@ -999,9 +1011,9 @@ void toml_table_cleanup( toml_table *table ) {
     return;
   FREE( table->name );
   table->name = NULL;
-  rb_tree_cleanup(
+  ht_cleanup(
     &table->keys_values,
-    POINTER_CAST( rb_free_fn_t, &toml_key_value_cleanup )
+    POINTER_CAST( ht_free_fn_t, &toml_key_value_cleanup )
   );
 }
 
@@ -1010,10 +1022,10 @@ toml_value const* toml_table_find( toml_table const *table, char const *key ) {
   assert( key != NULL );
 
   toml_key_value const kv = { .key = { .name = key } };
-  rb_node_t const *const found_rb = rb_tree_find( &table->keys_values, &kv );
-  if ( found_rb == NULL )
+  ht_entry_t const *const found_ht = ht_find( &table->keys_values, &kv );
+  if ( found_ht == NULL )
     return NULL;
-  toml_key_value const *const found_kv = RB_DINT( found_rb );
+  toml_key_value const *const found_kv = HT_DINT( found_ht );
   return &found_kv->value;
 }
 
@@ -1021,9 +1033,10 @@ void toml_table_init( toml_table *table ) {
   assert( table != NULL );
   table->name = NULL;
   table->loc = (toml_loc){ 0 };
-  rb_tree_init(
-    &table->keys_values, RB_DINT,
-    POINTER_CAST( rb_cmp_fn_t, &toml_key_value_cmp )
+  ht_init(
+    &table->keys_values, 3.0, 64,
+    POINTER_CAST( ht_cmp_fn_t, &toml_key_value_cmp ),
+    POINTER_CAST( ht_hash_fn_t, &toml_key_value_hash )
   );
 }
 
@@ -1050,14 +1063,16 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
 
   toml_table_cleanup( table );
 
-  rb_insert_rv_t rb_rbi =
-    rb_tree_insert( &toml->table_names, table_name, table_name_len + 1 );
-  if ( !rb_rbi.inserted ) {
+  ht_insert_rv_t rv_hti =
+    ht_insert( &toml->table_names, table_name, table_name_len + 1 );
+  if ( !rv_hti.inserted ) {
     free( table_name );
     toml->error = TOML_ERR_TABLE_DUPLICATE;
     toml->loc.col = table_name_col;
     return false;
   }
+  char *const ht_table_name = HT_DINT( rv_hti.entry );
+  strcpy( ht_table_name, table_name );
 
   toml_table_init( table );
   table->name = table_name;
@@ -1073,12 +1088,13 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
     if ( !toml_key_value_parse( toml, &kv ) )
       break;
 
-    rb_rbi = rb_tree_insert( &table->keys_values, &kv, sizeof kv );
-    if ( !rb_rbi.inserted ) {
+    rv_hti = ht_insert( &table->keys_values, &kv, sizeof kv );
+    if ( !rv_hti.inserted ) {
       toml_key_value_cleanup( &kv );
       toml->error = TOML_ERR_KEY_DUPLICATE;
       break;
     }
+    *(toml_key_value*)HT_DINT( rv_hti.entry ) = kv;
   } // for
 
   toml_table_cleanup( table );

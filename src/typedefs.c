@@ -27,7 +27,7 @@
 #include "pjl_config.h"
 #include "typedefs.h"
 #include "clang_util.h"
-#include "red_black.h"
+#include "hash_table.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -49,7 +49,7 @@
 
 ////////// local variables ////////////////////////////////////////////////////
 
-static rb_tree_t typedef_map;           ///< Map of typedefs.
+static hash_table_t typedef_map;        ///< Map of typedefs.
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -68,8 +68,8 @@ static void tidy_typedef_cleanup( tidy_typedef *tdef ) {
  * Cleans-up all symbols.
  */
 static void typedefs_cleanup( void ) {
-  rb_tree_cleanup(
-    &typedef_map, POINTER_CAST( rb_free_fn_t, &tidy_typedef_cleanup )
+  ht_cleanup(
+    &typedef_map, POINTER_CAST( ht_free_fn_t, &tidy_typedef_cleanup )
   );
 }
 
@@ -87,6 +87,17 @@ static int tidy_typedef_cmp( tidy_typedef const *i_tdef,
   assert( i_tdef != NULL );
   assert( j_tdef != NULL );
   return tidy_Cursor_compare( i_tdef->type_csr, j_tdef->type_csr );
+}
+
+/**
+ * Gets the hash of \a tdef.
+ *
+ * @param tdef The tidy_typedef to get the hash of.
+ * @return Returns said hash.
+ */
+NODISCARD
+static fnv1a_t tidy_typedef_hash( tidy_typedef const *tdef ) {
+  return clang_hashCursor( tdef->type_csr );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -121,24 +132,29 @@ void typedef_add( CXCursor cursor ) {
     return;
 
   tidy_typedef new_tdef = { .type_csr = cursor };
-  rb_insert_rv_t const rv_rbi =
-    rb_tree_insert( &typedef_map, &new_tdef, sizeof new_tdef );
-  if ( rv_rbi.inserted ) {
-    tidy_typedef *const tdef = RB_DINT( rv_rbi.node );
-    tdef->alias_name = tidy_Cursor_getScopedSimpleName( cursor );
+  ht_insert_rv_t const rv_hti =
+    ht_insert( &typedef_map, &new_tdef, sizeof new_tdef );
+  if ( rv_hti.inserted ) {
+    tidy_typedef *const tdef = HT_DINT( rv_hti.entry );
+    *tdef = (tidy_typedef){
+      .type_csr = cursor,
+      .alias_name = tidy_Cursor_getScopedSimpleName( cursor )
+    };
   }
 }
 
 tidy_typedef const* typedef_find( CXCursor cursor ) {
   tidy_typedef const find_tdef = { .type_csr = cursor };
-  rb_node_t const *const found_rb = rb_tree_find( &typedef_map, &find_tdef );
-  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
+  ht_entry_t const *const found_ht = ht_find( &typedef_map, &find_tdef );
+  return found_ht != NULL ? HT_DINT( found_ht ) : NULL;
 }
 
 void typedefs_init( void ) {
   ASSERT_RUN_ONCE();
-  rb_tree_init(
-    &typedef_map, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &tidy_typedef_cmp )
+  ht_init(
+    &typedef_map, 3.0, 769,
+    POINTER_CAST( ht_cmp_fn_t, &tidy_typedef_cmp ),
+    POINTER_CAST( ht_hash_fn_t, &tidy_typedef_hash )
   );
   ATEXIT( &typedefs_cleanup );
 }

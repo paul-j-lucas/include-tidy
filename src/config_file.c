@@ -30,6 +30,7 @@
 #include "array.h"
 #include "bit_util.h"
 #include "cli_options.h"
+#include "hash_table.h"
 #include "includes.h"
 #include "options.h"
 #include "path_util.h"
@@ -146,7 +147,14 @@ struct config_key {
  */
 struct symbol_includes {
   char const *from_symbol_name;         ///< Symbol name.
-  rb_tree_t   to_include_set;           ///< Include file(s).
+
+  /**
+   * The set of include file(s) that declare \ref from_symbol_name.
+   *
+   * @remarks This is a red-black tree and not a hash table because, when we
+   * iterate over it, we want it to be in sorted order.
+   */
+  rb_tree_t   to_include_set;
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -280,10 +288,10 @@ bool              tidy_ignore_source_path;
 
 ////////// local variables ////////////////////////////////////////////////////
 
-static rb_tree_t  ignore_symbol_set;    ///< Set of symbols to ignore.
-static array_t    std_c_includes;       ///< Standard-ish C include files.
-static array_t    std_cxx_includes;     ///< Standard C++ include files.
-static bool       verbose_printed_any;  ///< Print any configuration files?
+static hash_table_t ignore_symbol_set;    ///< Set of symbols to ignore.
+static array_t      std_c_includes;       ///< Standard-ish C include files.
+static array_t      std_cxx_includes;     ///< Standard C++ include files.
+static bool         verbose_printed_any;  ///< Print any configuration files?
 
 /**
  * Mapping from symbols to the include file(s) they're declared in.
@@ -628,7 +636,7 @@ static void config_cleanup( void ) {
   FREE( tidy_associated_header_rel_path );
   array_cleanup( &std_c_includes, &free_pptr );
   array_cleanup( &std_cxx_includes, &free_pptr );
-  rb_tree_cleanup( &ignore_symbol_set, /*free_fn=*/NULL );
+  ht_cleanup( &ignore_symbol_set, /*free_fn=*/NULL );
   rb_tree_cleanup(
     &symbol_includes_map,
     POINTER_CAST( rb_free_fn_t, &symbol_includes_cleanup )
@@ -1112,12 +1120,15 @@ static void ignore_parse( char const *config_path, toml_table const *table,
 
   if ( !bool_value_parse( config_path, "ignore", value ) )
     return;
-  PJL_DISCARD_RV(
-    rb_tree_insert(
+  ht_insert_rv_t const rv_hti =
+    ht_insert(
       &ignore_symbol_set, CONST_CAST( char*, table->name ),
       strlen( table->name ) + 1/*\0*/
-    )
-  );
+    );
+  if ( rv_hti.inserted ) {
+    char *const ht_table_name = HT_DINT( rv_hti.entry );
+    strcpy( ht_table_name, table->name );
+  }
 }
 
 /**
@@ -1160,11 +1171,15 @@ static void ignore_symbols_parse_string( char const *config_path,
   assert( value != NULL );
   assert( value->type == TOML_STRING );
 
-  rb_insert_rv_t const rv_rbi = rb_tree_insert(
+  ht_insert_rv_t const rv_hti = ht_insert(
     &ignore_symbol_set, CONST_CAST( char*, value->s ),
     strlen( value->s ) + 1/*\0*/
   );
-  if ( !rv_rbi.inserted ) {
+  if ( rv_hti.inserted ) {
+    char *const ht_sym_name = HT_DINT( rv_hti.entry );
+    strcpy( ht_sym_name, value->s );
+  }
+  else {
     print_file_warning(
       config_path, value->loc.line, value->loc.col,
       "\"%s\" already ignored\n",
@@ -1641,14 +1656,16 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
 }
 
 bool config_ignore_symbol( char const *sym_name ) {
-  return rb_tree_find( &ignore_symbol_set, sym_name ) != NULL;
+  return ht_find( &ignore_symbol_set, sym_name ) != NULL;
 }
 
 void config_init( void ) {
   ASSERT_RUN_ONCE();
 
-  rb_tree_init(
-    &ignore_symbol_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &strcmp )
+  ht_init(
+    &ignore_symbol_set, 2.0, 10,
+    POINTER_CAST( ht_cmp_fn_t, &strcmp ),
+    POINTER_CAST( ht_hash_fn_t, &fnv1a_s )
   );
   rb_tree_init(
     &symbol_includes_map, RB_DINT,

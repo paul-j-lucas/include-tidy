@@ -28,7 +28,7 @@
 
 // local
 #include "pjl_config.h"
-#include "red_black.h"
+#include "hash_table.h"
 
 /// @cond DOXYGEN_IGNORE
 
@@ -121,7 +121,7 @@ enum toml_type {
 typedef struct  toml_array      toml_array;
 typedef enum    toml_error      toml_error;
 typedef struct  toml_file       toml_file;
-typedef rb_iterator_t           toml_iterator;
+typedef ht_iterator_t           toml_iterator;
 typedef struct  toml_key        toml_key;
 typedef struct  toml_key_value  toml_key_value;
 typedef struct  toml_loc        toml_loc;
@@ -151,15 +151,15 @@ struct toml_loc {
  * TOML file.
  */
 struct toml_file {
-  FILE       *file;                     ///< `FILE` to read.
-  toml_error  error;                    ///< Error code, if any.
-  char const *error_msg;                ///< Error message, if any.
-  unsigned    array_depth;              ///< Array depth.
-  int         c_last;                   ///< Last character read, if any.
-  unsigned    col_prev;                 ///< Previous column within file.
-  toml_loc    loc;                      ///< Current source location.
-  bool        in_key_value;             ///< Started parsing _key_ = _value_?
-  rb_tree_t   table_names;              ///< Table names seen so far.
+  FILE         *file;                   ///< `FILE` to read.
+  toml_error    error;                  ///< Error code, if any.
+  char const   *error_msg;              ///< Error message, if any.
+  unsigned      array_depth;            ///< Array depth.
+  int           c_last;                 ///< Last character read, if any.
+  unsigned      col_prev;               ///< Previous column within file.
+  toml_loc      loc;                    ///< Current source location.
+  bool          in_key_value;           ///< Started parsing _key_ = _value_?
+  hash_table_t  table_names;            ///< Table names seen so far.
 };
 
 /**
@@ -196,9 +196,9 @@ struct toml_key_value {
  * TOML table.
  */
 struct toml_table {
-  char const *name;                     ///< Table name, if any.
-  toml_loc    loc;                      ///< Table's source location.
-  rb_tree_t   keys_values;              ///< Keys & values.
+  char const   *name;                   ///< Table name, if any.
+  toml_loc      loc;                    ///< Table's source location.
+  hash_table_t  keys_values;            ///< Keys & values.
 };
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -243,7 +243,7 @@ void toml_file_init( toml_file *toml, FILE *file );
  * @sa toml_iterator_next()
  */
 inline void toml_iterator_init( toml_iterator *iter, toml_table *table ) {
-  rb_iterator_init( iter, &table->keys_values );
+  ht_iterator_init( iter, &table->keys_values );
 }
 
 /**
@@ -257,7 +257,8 @@ inline void toml_iterator_init( toml_iterator *iter, toml_table *table ) {
  */
 NODISCARD
 inline toml_key_value const* toml_iterator_next( toml_iterator *iter ) {
-  return rb_iterator_next( iter );
+  ht_entry_t const *const entry = ht_iterator_next( iter );
+  return entry != NULL ? HT_DINT( entry ) : NULL;
 }
 
 /**
@@ -277,7 +278,7 @@ void toml_table_cleanup( toml_table *table );
  */
 NODISCARD
 inline bool toml_table_empty( toml_table const *table ) {
-  return rb_tree_empty( &table->keys_values );
+  return ht_empty( &table->keys_values );
 }
 
 /**
