@@ -1,3 +1,10 @@
+2026-08-11  Paul J. Lucas <paul@lucasmail.org>
+
+   * src/Makefile.am, config_file.c, hash_table.c, hash_table.h,
+     hash_table_test.c, symbols.c, toml_lite.c, toml_lite.h, typedefs.c,
+     util.c, util.h: Now using a hash table instead of a red-black tree in most
+     places.
+
 2026-08-10  Paul J. Lucas <paul@lucasmail.org>
 
    * clang_util.c, clang_util.h: Made some functions inline.
