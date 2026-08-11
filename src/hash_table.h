@@ -35,7 +35,7 @@
 /// @endcond
 
 /**
- * @defgroup hash-table-group Red-Black Tree
+ * @defgroup hash-table-group Hash Table
  * Types for defining and functions for manipulating hash tables.
  *
  * @sa [Hash Table](https://en.wikipedia.org/wiki/Hash_table)
