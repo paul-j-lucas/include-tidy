@@ -662,13 +662,13 @@ static unsigned macro_get_params( CXToken const tokens[static 2],
 
     switch ( kind ) {
       case CXToken_Identifier:;
-        ht_insert_rv_t const rv_hti =
+        ht_insert_rv_t const hti =
           ht_insert(
             param_set, CONST_CAST( char*, token_cs ),
             strlen( token_cs ) + 1/*\0*/
           );
-        if ( rv_hti.inserted ) {
-          char *const ht_token_cs = HT_DINT( rv_hti.entry );
+        if ( hti.inserted ) {
+          char *const ht_token_cs = HT_DINT( hti.entry );
           strcpy( ht_token_cs, token_cs );
         }
         break;
@@ -811,10 +811,9 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
   tidy_symbol new_sym = {
     .name = tidy_Cursor_getScopedDisplayName( name_csr )
   };
-  ht_insert_rv_t const rv_hti =
-    ht_insert( &symbol_set, &new_sym, sizeof new_sym );
-  tidy_symbol *const sym = HT_DINT( rv_hti.entry );
-  if ( rv_hti.inserted )
+  ht_insert_rv_t const hti = ht_insert( &symbol_set, &new_sym, sizeof new_sym );
+  tidy_symbol *const sym = HT_DINT( hti.entry );
+  if ( hti.inserted )
     *sym = new_sym;
   ++sym->ref_count;
 
@@ -824,7 +823,7 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
   tidy_include const *const include_added_to =
     include_add_symbol( include_file, sym );
 
-  if ( !rv_hti.inserted ) {
+  if ( !hti.inserted ) {
     tidy_symbol_cleanup( &new_sym );
     goto done;
   }

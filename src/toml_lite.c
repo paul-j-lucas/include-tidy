@@ -1063,15 +1063,15 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
 
   toml_table_cleanup( table );
 
-  ht_insert_rv_t rv_hti =
+  ht_insert_rv_t hti =
     ht_insert( &toml->table_names, table_name, table_name_len + 1 );
-  if ( !rv_hti.inserted ) {
+  if ( !hti.inserted ) {
     free( table_name );
     toml->error = TOML_ERR_TABLE_DUPLICATE;
     toml->loc.col = table_name_col;
     return false;
   }
-  char *const ht_table_name = HT_DINT( rv_hti.entry );
+  char *const ht_table_name = HT_DINT( hti.entry );
   strcpy( ht_table_name, table_name );
 
   toml_table_init( table );
@@ -1088,13 +1088,13 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
     if ( !toml_key_value_parse( toml, &kv ) )
       break;
 
-    rv_hti = ht_insert( &table->keys_values, &kv, sizeof kv );
-    if ( !rv_hti.inserted ) {
+    hti = ht_insert( &table->keys_values, &kv, sizeof kv );
+    if ( !hti.inserted ) {
       toml_key_value_cleanup( &kv );
       toml->error = TOML_ERR_KEY_DUPLICATE;
       break;
     }
-    *(toml_key_value*)HT_DINT( rv_hti.entry ) = kv;
+    *(toml_key_value*)HT_DINT( hti.entry ) = kv;
   } // for
 
   toml_table_cleanup( table );

@@ -1120,13 +1120,13 @@ static void ignore_parse( char const *config_path, toml_table const *table,
 
   if ( !bool_value_parse( config_path, "ignore", value ) )
     return;
-  ht_insert_rv_t const rv_hti =
+  ht_insert_rv_t const hti =
     ht_insert(
       &ignore_symbol_set, CONST_CAST( char*, table->name ),
       strlen( table->name ) + 1/*\0*/
     );
-  if ( rv_hti.inserted ) {
-    char *const ht_table_name = HT_DINT( rv_hti.entry );
+  if ( hti.inserted ) {
+    char *const ht_table_name = HT_DINT( hti.entry );
     strcpy( ht_table_name, table->name );
   }
 }
@@ -1171,12 +1171,12 @@ static void ignore_symbols_parse_string( char const *config_path,
   assert( value != NULL );
   assert( value->type == TOML_STRING );
 
-  ht_insert_rv_t const rv_hti = ht_insert(
+  ht_insert_rv_t const hti = ht_insert(
     &ignore_symbol_set, CONST_CAST( char*, value->s ),
     strlen( value->s ) + 1/*\0*/
   );
-  if ( rv_hti.inserted ) {
-    char *const ht_sym_name = HT_DINT( rv_hti.entry );
+  if ( hti.inserted ) {
+    char *const ht_sym_name = HT_DINT( hti.entry );
     strcpy( ht_sym_name, value->s );
   }
   else {
@@ -1520,10 +1520,10 @@ static void symbol_include_add( char const *from_symbol_name,
   assert( to_include != NULL );
 
   symbol_includes new_si = { .from_symbol_name = from_symbol_name };
-  rb_insert_rv_t const rv_rbi =
+  rb_insert_rv_t const rbi =
     rb_tree_insert( &symbol_includes_map, &new_si, sizeof new_si );
-  symbol_includes *const si = RB_DINT( rv_rbi.node );
-  if ( rv_rbi.inserted ) {
+  symbol_includes *const si = RB_DINT( rbi.node );
+  if ( rbi.inserted ) {
     si->from_symbol_name = check_strdup( from_symbol_name );
     rb_tree_init(
       &si->to_include_set, RB_DPTR,

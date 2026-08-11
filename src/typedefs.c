@@ -132,10 +132,10 @@ void typedef_add( CXCursor cursor ) {
     return;
 
   tidy_typedef new_tdef = { .type_csr = cursor };
-  ht_insert_rv_t const rv_hti =
+  ht_insert_rv_t const hti =
     ht_insert( &typedef_map, &new_tdef, sizeof new_tdef );
-  if ( rv_hti.inserted ) {
-    tidy_typedef *const tdef = HT_DINT( rv_hti.entry );
+  if ( hti.inserted ) {
+    tidy_typedef *const tdef = HT_DINT( hti.entry );
     *tdef = (tidy_typedef){
       .type_csr = cursor,
       .alias_name = tidy_Cursor_getScopedSimpleName( cursor )
