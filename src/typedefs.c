@@ -152,7 +152,7 @@ tidy_typedef const* typedef_find( CXCursor cursor ) {
 void typedefs_init( void ) {
   ASSERT_RUN_ONCE();
   ht_init(
-    &typedef_map, 3.0, 769,
+    &typedef_map, 2.0, 769,
     POINTER_CAST( ht_cmp_fn_t, &tidy_typedef_cmp ),
     POINTER_CAST( ht_hash_fn_t, &tidy_typedef_hash )
   );

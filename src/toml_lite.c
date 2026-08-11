@@ -1000,7 +1000,7 @@ void toml_file_init( toml_file *toml, FILE *file ) {
   };
 
   ht_init(
-    &toml->table_names, 3.0, 32,
+    &toml->table_names, 2.0, 32,
     POINTER_CAST( ht_cmp_fn_t, &strcmp ),
     POINTER_CAST( ht_hash_fn_t, &fnv1a_s )
   );
@@ -1034,7 +1034,7 @@ void toml_table_init( toml_table *table ) {
   table->name = NULL;
   table->loc = (toml_loc){ 0 };
   ht_init(
-    &table->keys_values, 3.0, 64,
+    &table->keys_values, 2.0, 64,
     POINTER_CAST( ht_cmp_fn_t, &toml_key_value_cmp ),
     POINTER_CAST( ht_hash_fn_t, &toml_key_value_hash )
   );
