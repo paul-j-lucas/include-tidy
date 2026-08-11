@@ -145,6 +145,10 @@ void ht_init( hash_table_t *table, double max_lf, unsigned est_size,
 }
 
 ht_insert_rv_t ht_insert( hash_table_t *table, void *data, size_t data_size ) {
+  assert( table != NULL );
+  assert( data != NULL );
+  assert( data_size > 0 );
+
   ht_hash_val_t const hash = (*table->hash_fn)( data );
 
   unsigned n_buckets = HT_PRIME[ table->prime_idx ];
