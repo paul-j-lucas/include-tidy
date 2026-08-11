@@ -1093,6 +1093,7 @@ static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
     CXCursor const fn_csr = clang_getCursorReferenced( call_csr );
     bool const is_function = tidy_Cursor_isFunctionDecl( fn_csr );
 
+    // See the comment for symbols_init_data::cxx_deferred_fn_csr.
     CXCursor const prev_deferred_fn_csr = sid->cxx_deferred_fn_csr;
     sid->cxx_deferred_fn_csr = is_function ? fn_csr : clang_getNullCursor();
     clang_visitChildren( call_csr, &symbols_init_visitor, sid );
@@ -1245,14 +1246,66 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     }
 
     if ( tidy_Cursor_isClassDecl( scope_csr ) ) {
+      //
+      // The folling exceptions to IWYU apply only within a C++ class scope.
+      //
       if ( clang_equalCursors( scope_csr, dec_csr ) ||
            tidy_Cursor_isInheritedFrom( scope_csr, dec_csr ) ) {
+        //
+        // Don't add the symbol (and the header that declares it) if it's
+        // either the current class or one of its base classes.  Given:
+        //
+        //      // Base.hpp
+        //      struct Base {
+        //        Base( int );
+        //      };
+        //
+        //      // Derived.hpp
+        //      #include "Base.hpp"
+        //      struct Derived : Base {
+        //        Derived( int n ) : Base{ n } { }
+        //      };
+        //
+        // Here, where scope_csr is Derived and dec_csr is Base, despite
+        // referencing Base (declared in Base.hpp) inside Derived's
+        // implementation, Base (and Base.hpp) is not needed because
+        // Derived.hpp includes Base.hpp, and that's sufficient --- an
+        // exception to IWYU.
+        //
         return;
       }
 
       CXCursor const dec_parent = clang_getCursorSemanticParent( dec_csr );
       if ( clang_equalCursors( scope_csr, dec_parent ) ||
            tidy_Cursor_isInheritedFrom( scope_csr, dec_parent ) ) {
+        //
+        // Don't add the symbol (and the header that declares it) if it's a
+        // member (e.g., typedef, data member, etc.) declared within the
+        // current class or inherited from a base class.  Given:
+        //
+        //      // Base.hpp
+        //      struct Base {
+        //        using value_type = int;
+        //      };
+        //
+        //      // Derived.hpp
+        //      #include "Base.hpp"
+        //      struct Derived : Base {
+        //        void f();
+        //      };
+        //
+        //      // Derived.cpp
+        //      #include "Derived.hpp"
+        //      void Derived::f() {
+        //        value_type v = 42;
+        //      }
+        //
+        // Here, where scope_csr is Derived and dec_parent is Base, despite
+        // referencing value_type (declared in Base.hpp) inside Derived, Base
+        // (and Base.hpp) is not needed because Derived.cpp includes
+        // Derived.hpp that includes Base.hpp, and that's sufficient --- an
+        // exception to IWYU.
+        //
         return;
       }
     }
