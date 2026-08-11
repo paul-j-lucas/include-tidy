@@ -1,3 +1,15 @@
+2026-08-10  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c, clang_util.h: Made some functions inline.
+   * clang_util.c, clang_util.h, includes.c: Eliminated
+     tidy_File_compareByName().
+   * clang_util.c: Revert "Added clang_isDeclaration()."
+   * clang_util.c: Added clang_isDeclaration().
+   * strbuf.c: Added STRBUF_DIRECT_PUTSN().
+   * ipaths.c: Now calling access() in ipath_add() to exclude paths that don't
+     exist.
+   * ipaths.c, ipaths.h: Added abs_path_len.
+
 2026-08-09  Paul J. Lucas <paul@lucasmail.org>
 
    * configure.ac, clang_util.c, util.c, util.h: Removed __int128 -- not really
