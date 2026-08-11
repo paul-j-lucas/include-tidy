@@ -473,8 +473,9 @@ done:
   // it was included to an array of such lines.  If the array ends up having
   // more than one line in it, then all but the first are duplicate includes.
   //
-  if ( (!rv_rbi.inserted &&
-       tidy_File_compareByName( included_file, included->file ) != 0 ) ) {
+  // Note: in libclang, it's OK to compare CXFile pointers directly.
+  //
+  if ( !rv_rbi.inserted && included_file != included->file ) {
     //
     // However, if the file wasn't inserted (because it's a duplicate by file
     // ID), but its original name is NOT the same, it means it was either a

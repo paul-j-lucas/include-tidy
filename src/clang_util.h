@@ -375,28 +375,12 @@ NODISCARD
 bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr );
 
 /**
- * Compares two CXFile objects by name.
- *
- * @param i_file The first CXFile.
- * @param j_file The second CXFile.
- * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
- * i_file is less than, equal to, or greater than the name of \a j_file,
- * respectively.
- *
- * @sa tidy_FileUniqueID_compare()
- */
-NODISCARD
-int tidy_File_compareByName( CXFile i_file, CXFile j_file );
-
-/**
  * Compares two CXFileUniqueID objects.
  *
  * @param i_id The first CXFileUniqueID.
  * @param j_id The second CXFileUniqueID.
  * @return Returns a number less than 0, 0, or greater than 0 if \a i_id is
  * less than, equal to, or greater than \a j_id, respectively.
- *
- * @sa tidy_File_compareByName()
  */
 NODISCARD
 inline int tidy_FileUniqueID_compare( CXFileUniqueID const *i_id,

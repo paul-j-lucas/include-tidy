@@ -806,21 +806,6 @@ bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr ) {
   return clang_equalCursors( alias_csr, underlying_csr );
 }
 
-int tidy_File_compareByName( CXFile i_file, CXFile j_file ) {
-  assert( i_file != NULL );
-  assert( j_file != NULL );
-
-  CXString const    i_name_cxs = clang_getFileName( i_file );
-  CXString const    j_name_cxs = clang_getFileName( j_file );
-  char const *const i_name = clang_getCString( i_name_cxs );
-  char const *const j_name = clang_getCString( j_name_cxs );
-  int const         cmp = strcmp( i_name, j_name );
-
-  clang_disposeString( i_name_cxs );
-  clang_disposeString( j_name_cxs );
-  return cmp;
-}
-
 CXString tidy_File_getRealPathName( CXFile file ) {
   assert( file != NULL );
 
