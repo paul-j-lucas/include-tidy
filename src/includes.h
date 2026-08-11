@@ -106,7 +106,13 @@ struct tidy_include {
 
 ////////// extern variables ///////////////////////////////////////////////////
 
-extern rb_tree_t tidy_include_set;      ///< Set of included files.
+/**
+ * The set of included files.
+ *
+ * @remarks This is a red-black tree and not a hash table because, when we
+ * iterate over it, we want it to be in sorted order.
+ */
+extern rb_tree_t tidy_include_set;
 
 /**
  * Number of missing include files.
