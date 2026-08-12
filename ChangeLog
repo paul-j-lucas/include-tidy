@@ -1,3 +1,11 @@
+2026-08-12  Paul J. Lucas <paul@lucasmail.org>
+
+   * clang_util.c: Now setting cxx_recurse_into_scope to true only if scope_csr
+     is C++.
+   * hash_table.c: Now calling ht_entry_data() for free_fn.
+   * includes.c: Using tidy_getFileLocation_File().
+   * symbols.c: tidy_Token_getScopedNameCursor fixes.
+
 2026-08-11  Paul J. Lucas <paul@lucasmail.org>
 
    * symbols.c: Now excluding field name.
