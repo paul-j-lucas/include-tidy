@@ -282,7 +282,7 @@ static char const *const TABLE_KINDS[] = {
 /// Otherwise Doxygen generates two entries.
 
 char const       *tidy_associated_header_rel_path;
-bool              tidy_ignore_source_path;
+bool              tidy_is_source_path_ignored;
 
 /// @endcond
 
@@ -1102,7 +1102,7 @@ static void ignore_as_argument_parse( char const *config_path,
   if ( strcmp( table->name, tidy_source_path ) != 0 )
     return;
   if ( bool_value_parse( config_path, "ignore-as-argument", value ) )
-    tidy_ignore_source_path = true;
+    tidy_is_source_path_ignored = true;
 };
 
 /**
