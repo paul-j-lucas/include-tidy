@@ -253,7 +253,7 @@ ht_insert_rv_t ht_insert( hash_table_t *table, void *data, size_t data_size );
 void ht_iterator_init( ht_iterator_t *it, hash_table_t *table );
 
 /**
- * Gets the nexy hash table entry, if any.
+ * Gets the next hash table entry, if any.
  *
  * @remarks The order entries are returned is in bucket order that is seemingly
  * arbitrary.
