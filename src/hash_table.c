@@ -88,7 +88,7 @@ void ht_cleanup( hash_table_t *table, ht_free_fn_t free_fn ) {
     for ( ht_entry_t *entry = table->buckets[b].next, *next;
           entry != NULL; entry = next ) {
       if ( free_fn != NULL )
-        (*free_fn)( entry->data );
+        (*free_fn)( ht_entry_data( table, entry ) );
       next = entry->next;
       free( entry );
     }
