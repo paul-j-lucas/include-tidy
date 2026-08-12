@@ -248,6 +248,10 @@ struct symbols_init_data {
 NODISCARD
 static add_cxx_member_fn_rv add_cxx_member_fn( CXCursor, CXCursor );
 
+NODISCARD
+static CXCursor symbols_init_data_cxx_scope( symbols_init_data const*,
+                                             CXCursor );
+
 static void     tidy_symbol_cleanup( tidy_symbol* );
 static bool     visit_CallExpr( CXCursor, CXCursor, symbols_init_data* );
 static void     visit_FieldDecl( CXCursor, CXCursor, symbols_init_data* );
@@ -552,6 +556,97 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
 done:
   clang_disposeTokens( tu, tokens, token_count );
   return matched;
+}
+
+/**
+ * Checks whether \a cursor and its declaration \a dec_csr constitute an
+ * include-what-you-use (IWYU) exception for C++.
+ *
+ * @param cursor The cursor to check.
+ * @param parent The parent cursor of \a cursor.
+ * @param dec_csr The referenced cursor (declaration) of \a cursor.
+ * @param sid The symbols_init_data to use.
+ * @return Returns `true` only if \a dec_csr (and the header that declares it)
+ * should _not_ be added, i.e., is an IWYU exception.
+ */
+static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
+                                   CXCursor dec_csr, symbols_init_data *sid ) {
+  assert( tidy_is_cxx );
+  assert( sid != NULL );
+
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  CXCursor const scope_csr = symbols_init_data_cxx_scope( sid, parent );
+
+  if ( !clang_isDeclaration( kind ) &&
+        has_cxx_qualifier_proxy( cursor, parent, scope_csr ) ) {
+    return true;
+  }
+
+  //
+  // The remaining IWYU exceptions apply only within a C++ class scope.
+  //
+  if ( !tidy_Cursor_isClassDecl( scope_csr ) )
+    return false;
+
+  if ( clang_equalCursors( scope_csr, dec_csr ) ||
+       tidy_Cursor_isInheritedFrom( scope_csr, dec_csr ) ) {
+    //
+    // Don't add the symbol (and the header that declares it) if it's either
+    // the current class or one of its base classes.  Given:
+    //
+    //      // Base.hpp
+    //      struct Base {
+    //        Base( int );
+    //      };
+    //
+    //      // Derived.hpp
+    //      #include "Base.hpp"
+    //      struct Derived : Base {
+    //        Derived( int n ) : Base{ n } { }
+    //      };
+    //
+    // Here, where scope_csr is Derived and dec_csr is Base, even though Base
+    // (declared in Base.hpp) is referenced inside Derived's implementation,
+    // Base (and Base.hpp) is not needed because Derived.hpp includes Base.hpp,
+    // and that's sufficient --- an exception to IWYU.
+    //
+    return true;
+  }
+
+  CXCursor const dec_parent = clang_getCursorSemanticParent( dec_csr );
+  if ( clang_equalCursors( scope_csr, dec_parent ) ||
+       tidy_Cursor_isInheritedFrom( scope_csr, dec_parent ) ) {
+    //
+    // Don't add the symbol (and the header that declares it) if it's a member
+    // (e.g., typedef, data member, etc.) declared within the current class or
+    // inherited from a base class.  Given:
+    //
+    //      // Base.hpp
+    //      struct Base {
+    //        using value_type = int;
+    //      };
+    //
+    //      // Derived.hpp
+    //      #include "Base.hpp"
+    //      struct Derived : Base {
+    //        void f();
+    //      };
+    //
+    //      // Derived.cpp
+    //      #include "Derived.hpp"
+    //      void Derived::f() {
+    //        value_type v = 42;
+    //      }
+    //
+    // Here, where scope_csr is Derived and dec_parent is Base, despite
+    // referencing value_type (declared in Base.hpp) inside Derived, Base (and
+    // Base.hpp) is not needed because Derived.cpp includes Derived.hpp that
+    // includes Base.hpp, and that's sufficient --- an exception to IWYU.
+    //
+    return true;
+  }
+
+  return false;
 }
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
@@ -1260,84 +1355,13 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   if ( tidy_Cursor_isInvalid( dec_csr ) )
     return;
 
-  enum CXCursorKind const kind = clang_getCursorKind( cursor );
-
   if ( tidy_is_cxx ) {
     // See the comment for symbols_init_data::cxx_deferred_fn_csr.
     if ( clang_equalCursors( dec_csr, sid->cxx_deferred_fn_csr ) )
       return;
 
-    CXCursor const scope_csr = symbols_init_data_cxx_scope( sid, parent );
-
-    if ( !clang_isDeclaration( kind ) &&
-         has_cxx_qualifier_proxy( cursor, parent, scope_csr ) ) {
-      return; 
-    }
-
-    if ( tidy_Cursor_isClassDecl( scope_csr ) ) {
-      //
-      // The folling exceptions to IWYU apply only within a C++ class scope.
-      //
-      if ( clang_equalCursors( scope_csr, dec_csr ) ||
-           tidy_Cursor_isInheritedFrom( scope_csr, dec_csr ) ) {
-        //
-        // Don't add the symbol (and the header that declares it) if it's
-        // either the current class or one of its base classes.  Given:
-        //
-        //      // Base.hpp
-        //      struct Base {
-        //        Base( int );
-        //      };
-        //
-        //      // Derived.hpp
-        //      #include "Base.hpp"
-        //      struct Derived : Base {
-        //        Derived( int n ) : Base{ n } { }
-        //      };
-        //
-        // Here, where scope_csr is Derived and dec_csr is Base, despite
-        // referencing Base (declared in Base.hpp) inside Derived's
-        // implementation, Base (and Base.hpp) is not needed because
-        // Derived.hpp includes Base.hpp, and that's sufficient --- an
-        // exception to IWYU.
-        //
-        return;
-      }
-
-      CXCursor const dec_parent = clang_getCursorSemanticParent( dec_csr );
-      if ( clang_equalCursors( scope_csr, dec_parent ) ||
-           tidy_Cursor_isInheritedFrom( scope_csr, dec_parent ) ) {
-        //
-        // Don't add the symbol (and the header that declares it) if it's a
-        // member (e.g., typedef, data member, etc.) declared within the
-        // current class or inherited from a base class.  Given:
-        //
-        //      // Base.hpp
-        //      struct Base {
-        //        using value_type = int;
-        //      };
-        //
-        //      // Derived.hpp
-        //      #include "Base.hpp"
-        //      struct Derived : Base {
-        //        void f();
-        //      };
-        //
-        //      // Derived.cpp
-        //      #include "Derived.hpp"
-        //      void Derived::f() {
-        //        value_type v = 42;
-        //      }
-        //
-        // Here, where scope_csr is Derived and dec_parent is Base, despite
-        // referencing value_type (declared in Base.hpp) inside Derived, Base
-        // (and Base.hpp) is not needed because Derived.cpp includes
-        // Derived.hpp that includes Base.hpp, and that's sufficient --- an
-        // exception to IWYU.
-        //
-        return;
-      }
-    }
+    if ( is_cxx_iwyu_exception( cursor, parent, dec_csr, sid ) )
+      return;
   }
 
   maybe_add_symbol( dec_csr, dec_csr, sid );
@@ -1394,6 +1418,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
       return;
   }
   else {
+    enum CXCursorKind const kind = clang_getCursorKind( cursor );
     switch ( kind ) {
       case CXCursor_TypeRef:
       case CXCursor_TemplateRef:
