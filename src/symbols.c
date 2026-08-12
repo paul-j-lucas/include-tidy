@@ -253,7 +253,10 @@ static CXCursor symbols_init_data_cxx_scope( symbols_init_data const*,
                                              CXCursor );
 
 static void     tidy_symbol_cleanup( tidy_symbol* );
+
+NODISCARD
 static bool     visit_CallExpr( CXCursor, CXCursor, symbols_init_data* );
+
 static void     visit_FieldDecl( CXCursor, CXCursor, symbols_init_data* );
 static void     visit_MacroDefinition( CXCursor, CXCursor, symbols_init_data* );
 static void     visit_MemberRefExpr( CXCursor, CXCursor, symbols_init_data* );
@@ -569,6 +572,7 @@ done:
  * @return Returns `true` only if \a dec_csr (and the header that declares it)
  * should _not_ be added, i.e., is an IWYU exception.
  */
+NODISCARD
 static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
                                    CXCursor dec_csr, symbols_init_data *sid ) {
   assert( tidy_is_cxx );
@@ -734,6 +738,7 @@ static CXCursor macro_getCursorByNameToken( CXToken token, CXCursor scope_csr,
  * @param param_set The set to add the parameter names to.
  * @return Returns the index of the token one past the `)`.
  */
+NODISCARD
 static unsigned macro_get_params( CXToken const tokens[static 2],
                                   unsigned token_count,
                                   hash_table_t *param_set ) {
@@ -794,6 +799,7 @@ static unsigned macro_get_params( CXToken const tokens[static 2],
  *
  * @sa tidy_Token_getScopedNameCursor()
  */
+NODISCARD
 static
 CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
                                           unsigned token_count,
@@ -961,6 +967,7 @@ static void symbols_cleanup( void ) {
  * @sa symbols_init_data::cxx_current_fn_class_csr
  * @sa visit_most_kinds()
  */
+NODISCARD
 static CXCursor symbols_init_data_cxx_scope( symbols_init_data const *sid,
                                              CXCursor else_csr ) {
   assert( sid != NULL );
@@ -1129,6 +1136,7 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
  * @param scope_csr The scope to look in.
  * @return Returns said cursor or the null cursor for none.
  */
+NODISCARD
 static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
                                                 unsigned token_count,
                                                 unsigned *ptoken_idx,
