@@ -1,5 +1,21 @@
 2026-08-11  Paul J. Lucas <paul@lucasmail.org>
 
+   * symbols.c: Now excluding field name.
+   * clang_util.c, clang_util.h, symbols.c: Added
+     tidy_Token_isScopeQualifier().
+   * symbols.c: Now skipping all but CXToken_Identifier.
+   * clang_util.c: tidy_getCursorByName() now only checks spelling for
+     declarations and macro definitions.
+   * src/Makefile.am: tidy now depends on include-tidy.
+   * includes.c, includes.h, symbols.c, symbols.h: tidy_include::symbol_set is
+     now a hash_table.
+   * toml_lite.h: Fixed toml_iterator_next() to return data directly.
+   * hash_table.c, hash_table.h, hash_table_test.c: ht_iterator_next now
+     returns data, not an entry.
+   * config_file.c, hash_table.c, hash_table.h, hash_table_test.c, symbols.c,
+     toml_lite.c, typedefs.c: hash_table now has dloc.
+   * hash_table.c: Added asserts in ht_insert().
+   * symbols.c, toml_lite.c, typedefs.c: Changed max load factor to 2.0.
    * src/Makefile.am, config_file.c, hash_table.c, hash_table.h,
      hash_table_test.c, symbols.c, toml_lite.c, toml_lite.h, typedefs.c,
      util.c, util.h: Now using a hash table instead of a red-black tree in most
