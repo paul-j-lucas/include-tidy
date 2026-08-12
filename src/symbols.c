@@ -501,7 +501,7 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
 
   int i = STATIC_CAST( int, cursor_token_idx );
   CXToken const *ptoken = tidy_Token_getPrev( tokens, &i );
-  if ( ptoken == NULL || !tidy_Token_isEqualTo( tu, *ptoken, "::" ) )
+  if ( ptoken == NULL || !tidy_Token_isScopeQualifier( tu, *ptoken ) )
     goto done;
 
   CXCursor *const cursors = MALLOC( CXCursor, token_count );
@@ -719,9 +719,7 @@ CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
     CXToken const *t;
     if ( (t = tidy_Token_getNext( tokens, token_count, ptoken_idx )) == NULL )
       break;
-    if ( clang_getTokenKind( *t ) != CXToken_Punctuation )
-      break;                            // can't be "::"
-    if ( !tidy_Token_isEqualTo( tidy_tu, *t, "::" ) )
+    if ( !tidy_Token_isScopeQualifier( tidy_tu, *t ) )
       break;
     if ( (t = tidy_Token_getNext( tokens, token_count, ptoken_idx )) == NULL )
       break;
@@ -1045,9 +1043,7 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
     CXToken const *t;
     if ( (t = tidy_Token_getNext( tokens, token_count, ptoken_idx )) == NULL )
       break;
-    if ( clang_getTokenKind( *t ) != CXToken_Punctuation )
-      break;                            // can't be "::"
-    if ( !tidy_Token_isEqualTo( tidy_tu, *t, "::" ) )
+    if ( !tidy_Token_isScopeQualifier( tidy_tu, *t ) )
       break;
     if ( (t = tidy_Token_getNext( tokens, token_count, ptoken_idx )) == NULL )
       break;

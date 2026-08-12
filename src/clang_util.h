@@ -554,6 +554,7 @@ CXToken const* tidy_Token_getPrev( CXToken const tokens[], int *ptoken_idx );
  * @return Returns `true` only if the spelling of \a token equals \a value.
  *
  * @sa #tidy_Token_isEqualToAny()
+ * @sa tidy_Token_isScopeQualifier()
  */
 NODISCARD
 bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
@@ -575,6 +576,17 @@ bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
 NODISCARD
 int tidy_Token_isEqualToAny_impl( CXTranslationUnit tu, CXToken token,
                                   char const *values[] );
+
+/**
+ * Gets whether the spelling of \a token is the scope qualifier `"::"`.
+ *
+ * @param tu The translation unit to use.
+ * @param token The token to check.
+ * @return Returns `true` only if the spelling of \a token equals `"::"`.
+ * @sa tidy_Token_isEqualTo()
+ */
+NODISCARD
+bool tidy_Token_isScopeQualifier( CXTranslationUnit tu, CXToken token );
 
 /**
  * Gets whether the spelling of \a token equals any one of \a values.

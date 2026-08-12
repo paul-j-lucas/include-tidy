@@ -996,6 +996,12 @@ int tidy_Token_isEqualToAny_impl( CXTranslationUnit tu, CXToken token,
   return equal_idx;
 }
 
+bool tidy_Token_isScopeQualifier( CXTranslationUnit tu, CXToken token ) {
+  if ( clang_getTokenKind( token ) != CXToken_Punctuation )
+    return false;
+  return tidy_Token_isEqualTo( tu, token, "::" );
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */
