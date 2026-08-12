@@ -1147,6 +1147,8 @@ static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
   CXCursor const class_csr = clang_getCursorSemanticParent( field_csr );
 
   for ( unsigned i = 0; i < token_count; ++i ) {
+    if ( clang_getTokenKind( tokens[i] ) != CXToken_Identifier )
+      continue;
     CXCursor const sym_csr =
       tidy_Token_getScopedNameCursor( tokens, token_count, &i, class_csr );
     if ( !tidy_Cursor_isInvalid( sym_csr ) )
