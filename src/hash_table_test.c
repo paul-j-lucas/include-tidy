@@ -78,8 +78,8 @@ static void test_ht_seen( hash_table_t *table, bool seen[] ) {
   ht_iterator_t it;
   ht_iterator_init( &it, table );
 
-  for ( ht_entry_t const *entry; (entry = ht_iterator_next( &it )) != NULL; )
-    seen[ (unsigned)((test_data*)HT_DINT( entry ))->key[0] ] = true;
+  for ( test_data const *data; (data = ht_iterator_next( &it )) != NULL; )
+    seen[ (unsigned)data->key[0] ] = true;
 }
 
 ////////// test functions /////////////////////////////////////////////////////

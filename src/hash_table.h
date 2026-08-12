@@ -206,10 +206,10 @@ struct ht_insert_rv {
  * An iterator for a hash_table.
  */
 struct ht_iterator {
-  hash_table_t *table;                  ///< Hash table being iterated over.
-  ht_entry_t   *next;                   ///< Next entry, if any.
-  unsigned      bucket_idx;             ///< Current bucket index.
-  unsigned      n_buckets;              ///< Number of buckets.
+  hash_table_t const *table;            ///< Hash table being iterated over.
+  ht_entry_t         *next;             ///< Next entry, if any.
+  unsigned            bucket_idx;       ///< Current bucket index.
+  unsigned            n_buckets;        ///< Number of buckets.
 };
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -314,7 +314,7 @@ ht_insert_rv_t ht_insert( hash_table_t *table, void *data, size_t data_size );
  *
  * @sa ht_iterator_next()
  */
-void ht_iterator_init( ht_iterator_t *it, hash_table_t *table );
+void ht_iterator_init( ht_iterator_t *it, hash_table_t const *table );
 
 /**
  * Gets the next hash table entry, if any.
@@ -323,9 +323,9 @@ void ht_iterator_init( ht_iterator_t *it, hash_table_t *table );
  * arbitrary.
  *
  * @param it The hash table iterator.
- * @return Returns a pointer to the next entry or NULL if none.
+ * @return Returns a pointer to the data of the next entry or NULL if none.
  */
-ht_entry_t* ht_iterator_next( ht_iterator_t *it );
+void* ht_iterator_next( ht_iterator_t *it );
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -187,7 +187,7 @@ ht_insert_rv_t ht_insert( hash_table_t *table, void *data, size_t data_size ) {
   return (ht_insert_rv_t){ entry, .inserted = true };
 }
 
-void ht_iterator_init( ht_iterator_t *it, hash_table_t *table ) {
+void ht_iterator_init( ht_iterator_t *it, hash_table_t const *table ) {
   assert( it != NULL );
   assert( table != NULL );
 
@@ -198,7 +198,7 @@ void ht_iterator_init( ht_iterator_t *it, hash_table_t *table ) {
   };
 }
 
-ht_entry_t* ht_iterator_next( ht_iterator_t *it ) {
+void* ht_iterator_next( ht_iterator_t *it ) {
   assert( it != NULL );
 
   for (;;) {
@@ -206,7 +206,7 @@ ht_entry_t* ht_iterator_next( ht_iterator_t *it ) {
     if ( it->next != NULL ) {
       ht_entry_t *const entry = it->next;
       it->next = it->next->next;
-      return entry;
+      return ht_entry_data( it->table, entry );
     }
     if ( ++it->bucket_idx == it->n_buckets )
       return NULL;
