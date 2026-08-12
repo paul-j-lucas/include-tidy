@@ -327,8 +327,7 @@ void rb_iterator_init( rb_iterator_t *iter, rb_tree_t const *tree );
  * Iterates to the next in-order node in the tree, if any.
  *
  * @param iter A pointer to the rb_iterator.
- * @return Returns a pointer to the next rb_node or NULL if the entire tree was
- * visited.
+ * @return Returns a pointer to the data of the next node or NULL if none.
  *
  * @warning Even though this function returns a pointer to a non-`const` \ref
  * rb_node, the node's \ref rb_node::data "data" _must not_ be modified if that
