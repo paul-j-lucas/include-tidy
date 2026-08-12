@@ -265,11 +265,7 @@ static void ii_matrix_visitor( CXFile included_file,
   if ( included == NULL )
     return;
 
-  CXFile includer_file;
-  clang_getFileLocation(
-    inclusion_stack[0],
-    &includer_file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
-  );
+  CXFile const includer_file = tidy_getFileLocation_File( inclusion_stack[0] );
   if ( includer_file == NULL )
     return;
 
