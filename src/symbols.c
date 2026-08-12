@@ -705,27 +705,35 @@ CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
                                           unsigned *ptoken_idx,
                                           hash_table_t const *param_set ) {
   assert( param_set != NULL );
+  unsigned token_idx = *ptoken_idx;
 
   CXCursor const tu_csr = clang_getTranslationUnitCursor( tidy_tu );
-
   CXCursor rv_csr =
     macro_getCursorByNameToken( tokens[ *ptoken_idx ], tu_csr, param_set );
 
-  CXCursor loop_csr = rv_csr;
-
-  while ( !tidy_Cursor_isInvalid( loop_csr ) ) {
-    rv_csr = loop_csr;
-
+  while ( !tidy_Cursor_isInvalid( rv_csr ) ) {
+    unsigned next_idx = token_idx;
     CXToken const *t;
-    if ( (t = tidy_Token_getNext( tokens, token_count, ptoken_idx )) == NULL )
+
+    // Look for "::".
+    if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
       break;
     if ( !tidy_Token_isScopeQualifier( tidy_tu, *t ) )
       break;
-    if ( (t = tidy_Token_getNext( tokens, token_count, ptoken_idx )) == NULL )
+
+    // Look for an identifier.
+    if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
       break;
-    loop_csr = macro_getCursorByNameToken( *t, rv_csr, param_set );
+    CXCursor const next_csr =
+      macro_getCursorByNameToken( *t, rv_csr, param_set );
+    if ( tidy_Cursor_isInvalid( next_csr ) )
+      break;
+
+    rv_csr = next_csr;
+    token_idx = next_idx;
   } // while
 
+  *ptoken_idx = token_idx;
   return rv_csr;
 }
 
@@ -1031,25 +1039,33 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
                                                 unsigned *ptoken_idx,
                                                 CXCursor scope_csr ) {
   assert( ptoken_idx != NULL );
+  unsigned token_idx = *ptoken_idx;
 
   CXCursor rv_csr =
     tidy_getCursorByNameToken( tidy_tu, tokens[ *ptoken_idx ], scope_csr );
 
-  CXCursor loop_csr = rv_csr;
-
-  while ( !tidy_Cursor_isInvalid( loop_csr ) ) {
-    rv_csr = loop_csr;
-
+  while ( !tidy_Cursor_isInvalid( rv_csr ) ) {
+    unsigned next_idx = token_idx;
     CXToken const *t;
-    if ( (t = tidy_Token_getNext( tokens, token_count, ptoken_idx )) == NULL )
+
+    // Look for "::".
+    if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
       break;
     if ( !tidy_Token_isScopeQualifier( tidy_tu, *t ) )
       break;
-    if ( (t = tidy_Token_getNext( tokens, token_count, ptoken_idx )) == NULL )
+
+    // Look for an identifier.
+    if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
       break;
-    loop_csr = tidy_getCursorByNameToken( tidy_tu, *t, rv_csr );
+    CXCursor const next_csr = tidy_getCursorByNameToken( tidy_tu, *t, rv_csr );
+    if ( tidy_Cursor_isInvalid( next_csr ) )
+      break;
+
+    rv_csr = next_csr;
+    token_idx = next_idx;
   } // while
 
+  *ptoken_idx = token_idx;
   return rv_csr;
 }
 
