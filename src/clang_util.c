@@ -838,7 +838,8 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_csr ) {
     if ( clang_equalCursors( sem_parent, scope_csr ) )
       break;
 
-    gcbnd.cxx_recurse_into_scope = true;
+    enum CXLanguageKind const lang = clang_getCursorLanguage( scope_csr );
+    gcbnd.cxx_recurse_into_scope = lang == CXLanguage_CPlusPlus;
     gcbnd.skip_csr = scope_csr;
     scope_csr = sem_parent;
   } // while
