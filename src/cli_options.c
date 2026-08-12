@@ -1156,7 +1156,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   // We have to add -I. manually since libclang doesn't start out with any
   // include paths.  We also have to do this after --help and --version have
   // been checked.
-  insert_argv( pargc, pargv, 1, 1, (char const *const []){ "-I." } );
+  insert_argv( pargc, pargv, 1, 1, (char const *const[]){ "-I." } );
 
   // tmp_include_paths is needed because we have to defer calling ipath_add()
   // until after chdir() (if called).
