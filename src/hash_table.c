@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 /**
  * @addtogroup hash-table
@@ -115,15 +116,15 @@ ht_entry_t* ht_find( hash_table_t const *table, void const *data ) {
   unsigned const b = (*table->hash_fn)( data ) % HT_PRIME[ table->prime_idx ];
   for ( ht_entry_t *entry = table->buckets[b].next; entry != NULL;
         entry = entry->next ) {
-    if ( (*table->cmp_fn)( data, entry->data ) == 0 )
+    if ( (*table->cmp_fn)( data, ht_entry_data( table, entry ) ) == 0 )
       return entry;
   } // for
 
   return NULL;
 }
 
-void ht_init( hash_table_t *table, double max_lf, unsigned est_size,
-              ht_cmp_fn_t cmp_fn, ht_hash_fn_t hash_fn ) {
+void ht_init( hash_table_t *table, ht_dloc_t dloc, double max_lf,
+              unsigned est_size, ht_cmp_fn_t cmp_fn, ht_hash_fn_t hash_fn ) {
   assert( table != NULL );
   assert( max_lf > 0.0 );
   assert( cmp_fn != NULL );
@@ -138,6 +139,7 @@ void ht_init( hash_table_t *table, double max_lf, unsigned est_size,
   *table = (hash_table_t){
     .buckets = calloc( HT_PRIME[ prime_idx ], sizeof(ht_entry_t) ),
     .cmp_fn = cmp_fn,
+    .dloc = dloc,
     .hash_fn = hash_fn,
     .max_lf = max_lf,
     .prime_idx = prime_idx
@@ -147,16 +149,16 @@ void ht_init( hash_table_t *table, double max_lf, unsigned est_size,
 ht_insert_rv_t ht_insert( hash_table_t *table, void *data, size_t data_size ) {
   assert( table != NULL );
   assert( data != NULL );
-  assert( data_size > 0 );
+  assert( table->dloc == HT_DPTR || data_size > 0 );
 
   ht_hash_val_t const hash = (*table->hash_fn)( data );
 
   unsigned n_buckets = HT_PRIME[ table->prime_idx ];
   unsigned b = hash % n_buckets;
-  ht_entry_t *head = &table->buckets[b];
+  ht_entry_t *head = &table->buckets[b], *entry;
 
-  for ( ht_entry_t *entry = head->next; entry != NULL; entry = entry->next ) {
-    if ( (*table->cmp_fn)( data, entry->data ) == 0 )
+  for ( entry = head->next; entry != NULL; entry = entry->next ) {
+    if ( (*table->cmp_fn)( data, ht_entry_data( table, entry ) ) == 0 )
       return (ht_insert_rv_t){ entry, .inserted = false };
   } // for
 
@@ -168,7 +170,15 @@ ht_insert_rv_t ht_insert( hash_table_t *table, void *data, size_t data_size ) {
     head = &table->buckets[b];
   }
 
-  ht_entry_t *const entry = malloc( sizeof(ht_entry_t) + data_size );
+  if ( table->dloc == HT_DINT ) {
+    entry = malloc( sizeof *entry + data_size );
+    memcpy( HT_DINT( entry ), data, data_size );
+  }
+  else {
+    entry = malloc( sizeof *entry + sizeof( void* ) );
+    HT_DPTR( entry ) = data;
+  }
+
   *entry = (ht_entry_t){ .next = head->next, .prev = head, .hash = hash };
   if ( head->next != NULL )
     head->next->prev = entry;
@@ -211,6 +221,7 @@ ht_entry_t* ht_iterator_next( ht_iterator_t *it ) {
 /// @cond DOXYGEN_IGNORE
 
 extern inline bool ht_empty( hash_table_t const* );
+extern inline void* ht_entry_data( hash_table_t const*, ht_entry_t const* );
 
 /// @endcond
 

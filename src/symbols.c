@@ -661,16 +661,13 @@ static unsigned macro_get_params( CXToken const tokens[static 2],
     char const *const token_cs = clang_getCString( token_cxs );
 
     switch ( kind ) {
-      case CXToken_Identifier:;
-        ht_insert_rv_t const hti =
+      case CXToken_Identifier:
+        PJL_DISCARD(
           ht_insert(
             param_set, CONST_CAST( char*, token_cs ),
             strlen( token_cs ) + 1/*\0*/
-          );
-        if ( hti.inserted ) {
-          char *const ht_token_cs = HT_DINT( hti.entry );
-          strcpy( ht_token_cs, token_cs );
-        }
+          )
+        );
         break;
       case CXToken_Punctuation:
         if ( strcmp( token_cs, ")" ) == 0 ) {
@@ -813,8 +810,6 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
   };
   ht_insert_rv_t const hti = ht_insert( &symbol_set, &new_sym, sizeof new_sym );
   tidy_symbol *const sym = HT_DINT( hti.entry );
-  if ( hti.inserted )
-    *sym = new_sym;
   ++sym->ref_count;
 
   CXFile include_file = config_get_symbol_include( simple_name );
@@ -1213,7 +1208,7 @@ static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
   //
   hash_table_t param_set;
   ht_init(
-    &param_set, 2.0, 10,
+    &param_set, HT_DINT, 2.0, 10,
     POINTER_CAST( ht_cmp_fn_t, &strcmp ),
     POINTER_CAST( ht_hash_fn_t, &fnv1a_s )
   );
@@ -1471,7 +1466,7 @@ static void visit_OverloadedDeclRef( CXCursor overloaded_csr, CXCursor parent,
 void symbols_init( void ) {
   ASSERT_RUN_ONCE();
   ht_init(
-    &symbol_set, 2.0, 1024,
+    &symbol_set, HT_DINT, 2.0, 1024,
     POINTER_CAST( ht_cmp_fn_t, &tidy_symbol_cmp ),
     POINTER_CAST( ht_hash_fn_t, &tidy_symbol_hash )
   );

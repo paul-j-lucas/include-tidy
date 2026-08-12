@@ -1120,15 +1120,12 @@ static void ignore_parse( char const *config_path, toml_table const *table,
 
   if ( !bool_value_parse( config_path, "ignore", value ) )
     return;
-  ht_insert_rv_t const hti =
+  PJL_DISCARD(
     ht_insert(
       &ignore_symbol_set, CONST_CAST( char*, table->name ),
       strlen( table->name ) + 1/*\0*/
-    );
-  if ( hti.inserted ) {
-    char *const ht_table_name = HT_DINT( hti.entry );
-    strcpy( ht_table_name, table->name );
-  }
+    )
+  );
 }
 
 /**
@@ -1175,11 +1172,7 @@ static void ignore_symbols_parse_string( char const *config_path,
     &ignore_symbol_set, CONST_CAST( char*, value->s ),
     strlen( value->s ) + 1/*\0*/
   );
-  if ( hti.inserted ) {
-    char *const ht_sym_name = HT_DINT( hti.entry );
-    strcpy( ht_sym_name, value->s );
-  }
-  else {
+  if ( !hti.inserted ) {
     print_file_warning(
       config_path, value->loc.line, value->loc.col,
       "\"%s\" already ignored\n",
@@ -1663,7 +1656,7 @@ void config_init( void ) {
   ASSERT_RUN_ONCE();
 
   ht_init(
-    &ignore_symbol_set, 2.0, 10,
+    &ignore_symbol_set, HT_DINT, 2.0, 10,
     POINTER_CAST( ht_cmp_fn_t, &strcmp ),
     POINTER_CAST( ht_hash_fn_t, &fnv1a_s )
   );

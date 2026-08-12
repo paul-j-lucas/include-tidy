@@ -1000,7 +1000,7 @@ void toml_file_init( toml_file *toml, FILE *file ) {
   };
 
   ht_init(
-    &toml->table_names, 2.0, 32,
+    &toml->table_names, HT_DINT, 2.0, 32,
     POINTER_CAST( ht_cmp_fn_t, &strcmp ),
     POINTER_CAST( ht_hash_fn_t, &fnv1a_s )
   );
@@ -1034,7 +1034,7 @@ void toml_table_init( toml_table *table ) {
   table->name = NULL;
   table->loc = (toml_loc){ 0 };
   ht_init(
-    &table->keys_values, 2.0, 64,
+    &table->keys_values, HT_DINT, 2.0, 64,
     POINTER_CAST( ht_cmp_fn_t, &toml_key_value_cmp ),
     POINTER_CAST( ht_hash_fn_t, &toml_key_value_hash )
   );
@@ -1071,8 +1071,6 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
     toml->loc.col = table_name_col;
     return false;
   }
-  char *const ht_table_name = HT_DINT( hti.entry );
-  strcpy( ht_table_name, table_name );
 
   toml_table_init( table );
   table->name = table_name;
@@ -1094,7 +1092,6 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
       toml->error = TOML_ERR_KEY_DUPLICATE;
       break;
     }
-    *(toml_key_value*)HT_DINT( hti.entry ) = kv;
   } // for
 
   toml_table_cleanup( table );

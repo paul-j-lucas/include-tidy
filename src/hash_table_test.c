@@ -66,7 +66,8 @@ static void test_ht_fill( hash_table_t *table ) {
 
 static void test_ht_init( hash_table_t *table ) {
   ht_init(
-    table, TEST_LOAD_FACTOR_MAX, 0, POINTER_CAST( ht_cmp_fn_t, &strcmp ),
+    table, HT_DINT, TEST_LOAD_FACTOR_MAX, 0,
+    POINTER_CAST( ht_cmp_fn_t, &strcmp ),
     &test_fnv1a
   );
 }

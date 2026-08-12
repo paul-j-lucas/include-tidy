@@ -75,9 +75,49 @@
  */
 #define HT_DPTR(ENTRY)            ( *(void**)HT_DINT( (ENTRY) ) )
 
+////////// enums //////////////////////////////////////////////////////////////
+
+/**
+ * Hash table entry data location.
+ */
+enum ht_dloc {
+  /**
+   * Entries contain data internally.  The advantages are:
+   *
+   *  + No separate call to `malloc()` is needed to allocate the data and no
+   *    separate call to `free()` is needed to deallocate it.
+   *  + The data can be accessed faster since it's already been loaded with the
+   *    entry (cache hit).
+   *
+   * The disadvantages are:
+   *
+   *  - Inserting data into a tree requires copying it into an entry.
+   *  - If you want to delete an entry from the tree but keep its data, you
+   *    have to copy it out first.
+   */
+  HT_DINT,
+
+  /**
+   * Entries contain a pointer to the data.  The advantages are:
+   *
+   *  + Inserting data into a tree requires copying only a pointer into an
+   *    entry.
+   *  + Hence, the lifetime of data is separate from the tree.
+   *
+   * The disadvantages are:
+   *
+   *  - A separate call to `malloc()` is needed to allocate the data and a
+   *    separate call to `free()` is needed to deallocate it.
+   *  - Accessing the data is slower since it's in a different memory location
+   *    than the entry (cache miss).
+   */
+  HT_DPTR
+};
+
 ////////// typrdefs ///////////////////////////////////////////////////////////
 
 typedef struct hash_table     hash_table_t;
+typedef enum   ht_dloc        ht_dloc_t;
 typedef struct ht_entry       ht_entry_t;
 typedef uint64_t              ht_hash_val_t;
 typedef struct ht_insert_rv   ht_insert_rv_t;
@@ -120,6 +160,7 @@ struct hash_table {
   ht_cmp_fn_t   cmp_fn;                 ///< Comparison function.
   ht_hash_fn_t  hash_fn;                ///< Hash function.
   double        max_lf;                 ///< Maximum load factor.
+  ht_dloc_t     dloc;                   ///< Entry data location.
   unsigned      size;                   ///< Number of entries.
   unsigned      prime_idx;              ///< Index into HT_PRIME.
 };
@@ -203,6 +244,26 @@ inline bool ht_empty( hash_table_t const *table ) {
 }
 
 /**
+ * Gets a pointer to an \a entry's data.
+ *
+ * @param table A pointer to the hash_table of \a entry.
+ * @param entry The ht_entry to get the data of.
+ * @return Returns said data.
+ *
+ * @note Normally, either #HT_DINT or #HT_DPTR is used to get a pointer to an
+ * entry's data.  This function would only be used in code that should work
+ * with a table using either data location.
+ *
+ * @sa #HT_DINT
+ * @sa #HT_DPTR
+ */
+NODISCARD
+inline void* ht_entry_data( hash_table_t const *table,
+                            ht_entry_t const *entry ) {
+  return table->dloc == HT_DINT ? HT_DINT( entry ) : HT_DPTR( entry );
+}
+
+/**
  * Attempts to find \a data within a hash table.
  *
  * @param table The hash table to search.
@@ -216,29 +277,32 @@ ht_entry_t* ht_find( hash_table_t const *table, void const *data );
  * Initializes a hash table.
  *
  * @param table The hash table to initialize.
+ * @param dloc Where data for each entry is stored.
  * @param max_lf The maximum load factor.
  * @param est_size The estimated number of entries.
  * @param cmp_fn The comparison function to use.
  * @param hash_fn The hash function to use.
  * @sa ht_cleanup()
  */
-void ht_init( hash_table_t *table, double max_lf, unsigned est_size,
-              ht_cmp_fn_t cmp_fn, ht_hash_fn_t hash_fn );
+void ht_init( hash_table_t *table, ht_dloc_t dloc, double max_lf,
+              unsigned est_size, ht_cmp_fn_t cmp_fn, ht_hash_fn_t hash_fn );
 
 /**
  * Attempts to insert \a data into \a table.
  *
  * @param table The hash table to insert into.
  * @param data The data to insert.
- * @param data_size The size of \a data.
+ * @param data_size If \a table's \ref hash_table::dloc "dloc" is:
+ *  + #HT_DINT: The size of \a data.  If an entry is inserted, then this number
+ *    of bytes are copied from \a data into the new entry's \ref ht_entry::data
+ *    "data".
+ *  + #HT_DPTR: Not used.  If an entry is inserted, then the pointer value of
+ *    \a data itself is copied into the new entry's \ref ht_entry::data "data".
+ *
  * @return Returns an \ref ht_insert_rv where its \ref ht_insert_rv::entry
  * "entry" points to either the newly inserted entry or the existing entry
  * having the same \ref ht_entry::data "data" and \ref ht_insert_rv::inserted
  * "inserted" is `true` only if \ref ht_entry::data "data" was inserted.
- *
- * @note If \ref ht_insert_rv::inserted "inserted" is `true`, only a new entry
- * was inserted; \a data was _not_ copied into \ref ht_entry::data "data" ---
- * that needs to be done by the caller.
  */
 ht_insert_rv_t ht_insert( hash_table_t *table, void *data, size_t data_size );
 

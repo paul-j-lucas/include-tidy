@@ -136,10 +136,7 @@ void typedef_add( CXCursor cursor ) {
     ht_insert( &typedef_map, &new_tdef, sizeof new_tdef );
   if ( hti.inserted ) {
     tidy_typedef *const tdef = HT_DINT( hti.entry );
-    *tdef = (tidy_typedef){
-      .type_csr = cursor,
-      .alias_name = tidy_Cursor_getScopedSimpleName( cursor )
-    };
+    tdef->alias_name = tidy_Cursor_getScopedSimpleName( cursor );
   }
 }
 
@@ -152,7 +149,7 @@ tidy_typedef const* typedef_find( CXCursor cursor ) {
 void typedefs_init( void ) {
   ASSERT_RUN_ONCE();
   ht_init(
-    &typedef_map, 2.0, 769,
+    &typedef_map, HT_DINT, 2.0, 769,
     POINTER_CAST( ht_cmp_fn_t, &tidy_typedef_cmp ),
     POINTER_CAST( ht_hash_fn_t, &tidy_typedef_hash )
   );
