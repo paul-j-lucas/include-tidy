@@ -1648,10 +1648,6 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   return best_include != NULL ? best_include->file : NULL;
 }
 
-bool config_ignore_symbol( char const *sym_name ) {
-  return ht_find( &ignore_symbol_set, sym_name ) != NULL;
-}
-
 void config_init( void ) {
   ASSERT_RUN_ONCE();
 
@@ -1697,6 +1693,10 @@ bool config_is_standard_include( char const *rel_path ) {
 
   return  (tidy_is_cxx && is_standard_include( rel_path, &std_cxx_includes )) ||
           is_standard_include( rel_path, &std_c_includes );
+}
+
+bool config_is_symbol_ignored( char const *sym_name ) {
+  return ht_find( &ignore_symbol_set, sym_name ) != NULL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

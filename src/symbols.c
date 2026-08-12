@@ -802,7 +802,7 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
     check_strdup( found_tdef->alias_name ) :
     tidy_Cursor_getScopedSimpleName( name_csr );
 
-  if ( config_ignore_symbol( simple_name ) )
+  if ( config_is_symbol_ignored( simple_name ) )
     goto done;
 
   tidy_symbol new_sym = {

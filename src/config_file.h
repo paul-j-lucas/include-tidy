@@ -69,15 +69,6 @@ NODISCARD
 CXFile config_get_symbol_include( char const *symbol_name );
 
 /**
- * Gets whether \a sym_name should be ignored.
- *
- * @param sym_name The symbol name to check.
- * @return Returns `true` only if \a sym_name should be ignored.
- */
-NODISCARD
-bool config_ignore_symbol( char const *sym_name );
-
-/**
  * Reads an **include-tidy**(5) configuration file, if any.
  *
  * @note This function must be called at most once.
@@ -95,6 +86,15 @@ void config_init( void );
  */
 NODISCARD
 bool config_is_standard_include( char const *rel_path );
+
+/**
+ * Gets whether \a sym_name should be ignored.
+ *
+ * @param sym_name The symbol name to check.
+ * @return Returns `true` only if \a sym_name should be ignored.
+ */
+NODISCARD
+bool config_is_symbol_ignored( char const *sym_name );
 
 ///////////////////////////////////////////////////////////////////////////////
 
