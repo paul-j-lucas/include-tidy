@@ -89,7 +89,7 @@ toml_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 			toml_lite.c toml_lite.h \
 			toml_test.c
 
-tidy:
+tidy: include-tidy
 	@for file in *.h *.c; do \
 	  [ ! -f "$$file" ] || \
 	    include-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) "$$file" || exit $$?; \
