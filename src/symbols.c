@@ -1020,17 +1020,6 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
 }
 
 /**
- * Calculates the hash of \a sym.
- *
- * @param sym The tidy_symbol to calculate the hash for.
- * @return Returns said hash.
- */
-NODISCARD
-static ht_hash_val_t tidy_symbol_hash( tidy_symbol const *sym ) {
-  return fnv1a_s( sym->name );
-}
-
-/**
  * Gets the cursor for the scoped symbol from \a tokens.
  *
  * @param tokens The array of macro tokens.
@@ -1489,6 +1478,10 @@ int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
   assert( i_sym != NULL );
   assert( j_sym != NULL );
   return strcmp( i_sym->name, j_sym->name );
+}
+
+ht_hash_val_t tidy_symbol_hash( tidy_symbol const *sym ) {
+  return fnv1a_s( sym->name );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

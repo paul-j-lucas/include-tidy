@@ -30,6 +30,7 @@
 #include "clang_util.h"
 #include "color.h"
 #include "config_file.h"
+#include "hash_table.h"
 #include "ipaths.h"
 #include "options.h"
 #include "path_util.h"
@@ -126,7 +127,8 @@ static char*  tidy_File_getRelativePath( CXFile );
 static void   tidy_include_cleanup( tidy_include* );
 
 NODISCARD
-static int    tidy_symbol_ptr_cmp_by_name_length( void const*, void const* ),
+static int    tidy_symbol_ptr_cmp_by_name( void const*, void const* ),
+              tidy_symbol_ptr_cmp_by_name_length( void const*, void const* ),
               tidy_symbol_ptr_cmp_by_ref_count( void const*, void const* );
 
 ////////// extern variables ///////////////////////////////////////////////////
@@ -393,11 +395,12 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       included->depth = included->includer->depth + 1;
     }
     array_init( &included->lines, sizeof(unsigned) );
-    rb_tree_init(
+    ht_init(
       // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
       // symbol_set in symbols.c.
-      &included->symbol_set, RB_DPTR,
-      POINTER_CAST( rb_cmp_fn_t, &tidy_symbol_cmp )
+      &included->symbol_set, HT_DPTR, 2.0, 256,
+      POINTER_CAST( ht_cmp_fn_t, &tidy_symbol_cmp ),
+      POINTER_CAST( ht_hash_fn_t, &tidy_symbol_hash )
     );
   }
   else if ( is_direct ) {
@@ -565,9 +568,9 @@ static char* make_symbols_comment( tidy_include const *include ) {
   array_init( &symbols_array, sizeof(tidy_symbol*) );
   array_reserve( &symbols_array, include->symbol_set.size );
 
-  rb_iterator_t iter;
-  rb_iterator_init( &iter, &include->symbol_set );
-  for ( tidy_symbol const *sym; (sym = rb_iterator_next( &iter )) != NULL; )
+  ht_iterator_t iter;
+  ht_iterator_init( &iter, &include->symbol_set );
+  for ( tidy_symbol const *sym; (sym = ht_iterator_next( &iter )) != NULL; )
     *(tidy_symbol const**)array_push_back( &symbols_array ) = sym;
 
   strbuf_t symbols_buf;
@@ -575,7 +578,7 @@ static char* make_symbols_comment( tidy_include const *include ) {
 
   switch ( opt_comment_symbols ) {
     case TIDY_COM_SYM_ALPHA:
-      // Array is already sorted alphabetically.
+      array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_name );
       break;
     case TIDY_COM_SYM_LENGTH:
       array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_name_length );
@@ -804,7 +807,7 @@ static void tidy_include_cleanup( tidy_include *include ) {
   array_cleanup( &include->lines, /*free_fn=*/NULL );
 
   // Because the nodes point to existing tidy_symbol objects, use NULL.
-  rb_tree_cleanup( &include->symbol_set, /*free_fn=*/NULL );
+  ht_cleanup( &include->symbol_set, /*free_fn=*/NULL );
 }
 
 /**
@@ -852,6 +855,29 @@ static int tidy_include_cmp_for_print( void const *pi_data,
 }
 
 /**
+ * Compares two \ref tidy_symbol objects by their name.
+ *
+ * @param i_pp The first pointer to a `tidy_symbol*`.
+ * @param j_pp The second pointer to a `tidy_symbol*`.
+ * @return Returns a number less than 0, 0, or greater than 0 if the first
+ * symbol's name is less than, equal to, or greater than the second symbol's
+ * name, respectively.
+ *
+ * @sa tidy_symbol_ptr_cmp_by_name_length()
+ * @sa tidy_symbol_ptr_cmp_by_ref_count()
+ */
+NODISCARD
+static int tidy_symbol_ptr_cmp_by_name( void const *i_pp, void const *j_pp ) {
+  assert( i_pp != NULL );
+  assert( j_pp != NULL );
+
+  tidy_symbol const *const i_sym = *POINTER_CAST( tidy_symbol const**, i_pp );
+  tidy_symbol const *const j_sym = *POINTER_CAST( tidy_symbol const**, j_pp );
+
+  return strcmp( i_sym->name, j_sym->name );
+}
+
+/**
  * Compares two \ref tidy_symbol objects by their name length.
  *
  * @param i_pp The first pointer to a `tidy_symbol*`.
@@ -860,6 +886,7 @@ static int tidy_include_cmp_for_print( void const *pi_data,
  * the first symbol's name is less than, equal to, or greater than the length
  * of the second symbol's name, respectively.
  *
+ * @sa tidy_symbol_ptr_cmp_by_name()
  * @sa tidy_symbol_ptr_cmp_by_ref_count()
  */
 NODISCARD
@@ -888,6 +915,7 @@ static int tidy_symbol_ptr_cmp_by_name_length( void const *i_pp,
  * count of the second symbol is less than, equal to, or greater than the
  * reference count of the first symbol, respectively.
  *
+ * @sa tidy_symbol_ptr_cmp_by_name()
  * @sa tidy_symbol_ptr_cmp_by_name_length()
  */
 NODISCARD
@@ -918,7 +946,7 @@ tidy_include const* include_add_symbol( CXFile include_file,
     return NULL;
   while ( include->proxy != NULL )
     include = include->proxy;
-  PJL_DISCARD_RV( rb_tree_insert( &include->symbol_set, sym, 0 ) );
+  PJL_DISCARD_RV( ht_insert( &include->symbol_set, sym, 0 ) );
   include->is_needed = true;
   return include;
 }

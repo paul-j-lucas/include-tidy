@@ -28,6 +28,7 @@
 
 // local
 #include "pjl_config.h"
+#include "hash_table.h"
 #include "red_black.h"
 #include "array.h"
 #include "symbols.h"
@@ -101,7 +102,7 @@ struct tidy_include {
   bool            is_local;             ///< Local include file?
   bool            is_needed;            ///< Is this include needed?
   bool            is_proxy_explicit;    ///< Was \ref proxy explicitly added?
-  rb_tree_t       symbol_set;           ///< Symbols referenced from this file.
+  hash_table_t    symbol_set;           ///< Symbols referenced from this file.
 };
 
 ////////// extern variables ///////////////////////////////////////////////////

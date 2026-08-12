@@ -28,6 +28,7 @@
 
 // local
 #include "pjl_config.h"
+#include "hash_table.h"
 
 /**
  * @defgroup tidy-symbols-group Symbols
@@ -67,6 +68,15 @@ void symbols_init( void );
  */
 NODISCARD
 int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym );
+
+/**
+ * Calculates the hash of \a sym.
+ *
+ * @param sym The tidy_symbol to calculate the hash for.
+ * @return Returns said hash.
+ */
+NODISCARD
+ht_hash_val_t tidy_symbol_hash( tidy_symbol const *sym );
 
 ///////////////////////////////////////////////////////////////////////////////
 
