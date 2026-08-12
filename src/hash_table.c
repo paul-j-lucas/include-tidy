@@ -202,7 +202,7 @@ void* ht_iterator_next( ht_iterator_t *it ) {
   assert( it != NULL );
 
   for (;;) {
-    assert( it->n_buckets == HT_PRIME[it->table->prime_idx] );
+    assert( it->n_buckets == HT_PRIME[ it->table->prime_idx ] );
     if ( it->next != NULL ) {
       ht_entry_t *const entry = it->next;
       it->next = it->next->next;
