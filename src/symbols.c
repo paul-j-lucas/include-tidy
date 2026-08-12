@@ -1140,11 +1140,24 @@ static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
   if ( unlikely( token_count == 0 ) )
     return;
 
+  CXString const    field_name_cxs = clang_getCursorSpelling( field_csr );
+  char const *const field_name_cs  = clang_getCString( field_name_cxs );
+
   CXCursor const class_csr = clang_getCursorSemanticParent( field_csr );
 
   for ( unsigned i = 0; i < token_count; ++i ) {
     if ( clang_getTokenKind( tokens[i] ) != CXToken_Identifier )
       continue;
+
+    CXString const    token_cxs = clang_getTokenSpelling( tidy_tu, tokens[i] );
+    char const *const token_cs  = clang_getCString( token_cxs );
+    bool const        is_field_name = strcmp( token_cs, field_name_cs ) == 0;
+
+    clang_disposeString( token_cxs );
+
+    if ( is_field_name )
+      continue;
+
     CXCursor const sym_csr =
       tidy_Token_getScopedNameCursor( tokens, token_count, &i, class_csr );
     if ( !tidy_Cursor_isInvalid( sym_csr ) )
