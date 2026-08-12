@@ -296,6 +296,9 @@ static bool         verbose_printed_any;  ///< Print any configuration files?
 /**
  * Mapping from symbols to the include file(s) they're declared in.
  *
+ * @remarks This is a red-black tree and not a hash table because, when we
+ * iterate over it, we want it to be in sorted order.
+ *
  * @sa symbol_includes
  */
 static rb_tree_t symbol_includes_map;
