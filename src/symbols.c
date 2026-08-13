@@ -790,8 +790,8 @@ static bool is_symbol_excluded( CXCursor sym_csr ) {
     case CXCursor_Destructor:
       //
       // Even though the switch in symbols_init_visitor() doesn't include cases
-      // for these, the referenced cursor obtained in visit_most_kinds() may
-      // turn out to be one of these.
+      // for all of these, the referenced cursor obtained in visit_most_kinds()
+      // may turn out to be one of these.
       //
       // However, adding the symbol for one of these would trigger a false-
       // positive include dependency for merely _calling_ the symbol when
