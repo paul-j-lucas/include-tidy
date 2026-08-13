@@ -570,7 +570,7 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
   if ( unlikely( token_count == 0 ) )
     return false;
 
-  // Locate the specific token index corresponding to `cursor`
+  // Locate the specific token index corresponding to cursor.
   unsigned cursor_token_idx = token_count;
   for ( unsigned i = 0; i < token_count; ++i ) {
     CXSourceLocation const token_loc = clang_getTokenLocation( tu, tokens[i] );
