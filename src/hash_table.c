@@ -42,6 +42,18 @@ static unsigned const HT_PRIME[] = {
   786433, 1572869, 3145739, 6291469, 12582917, 25165843
 };
 
+////////// inline functions ///////////////////////////////////////////////////
+
+/**
+ * Calculates the current load factor of \a table.
+ *
+ * @param table The hash table to calculate the load factor of.
+ * @return Returns the load factor of \a table.
+ */
+static inline double ht_load_factor( hash_table_t const *table ) {
+  return STATIC_CAST( double, table->size ) / HT_PRIME[ table->prime_idx ];
+}
+
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
@@ -162,7 +174,8 @@ ht_insert_rv_t ht_insert( hash_table_t *table, void *data, size_t data_size ) {
       return (ht_insert_rv_t){ entry, .inserted = false };
   } // for
 
-  double const lf = ++table->size / (double)n_buckets;
+  ++table->size;
+  double const lf = ht_load_factor( table );
   if ( lf >= table->max_lf ) {
     ht_grow( table );
     n_buckets = HT_PRIME[ table->prime_idx ];
