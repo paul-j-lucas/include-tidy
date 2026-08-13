@@ -1,3 +1,16 @@
+2026-08-13  Paul J. Lucas <paul@lucasmail.org>
+
+   * hash_table.c: Added ht_load_factor().
+   * symbols.c: Reduced estimated number of symbols.
+   * symbols.c: Eliminated unnecessary call to tidy_Cursor_isInvalid().
+   * clang_util.c, clang_util.h, symbols.c: Added
+     tidy_getSpellingLocation_offset().
+   * symbols.c: Now calling tidy_Token_isEqualToAny() only if token is
+     punctuation.
+   * configure.ac: Upped version to 2.1.
+   * symbols.c: Factored out is_definition_needed().
+   * symbols.c: Now handling C23/C++11 fixed-type enums.
+
 2026-08-12  Paul J. Lucas <paul@lucasmail.org>
 
    * symbols.c: Now excluding template and parameter cursors.
