@@ -5,6 +5,15 @@ See the end of the file for license conditions.
 
 -------------------------------------------------------------------------------
 
+* Changes in Include-tidy 2.1
+
+** Fixed-type enumerations
+Fixed-type enumerations in C23/C++11 are now handled correctly.
+
+** Comma in TOML arrays
+Now correctly requiring commas between TOML array elements.
+
+
 * Changes in Include-tidy 2.0
 
 ** Vastly improved C++ support
