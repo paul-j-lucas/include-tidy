@@ -325,7 +325,9 @@ bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
  * @return Returns `true` only if \a cursor is either null or invalid.
  */
 NODISCARD
-bool tidy_Cursor_isInvalid( CXCursor cursor );
+inline bool tidy_Cursor_isInvalid( CXCursor cursor ) {
+  return clang_Cursor_isNull( cursor ) || clang_isInvalid( cursor.kind );
+}
 
 /**
  * Gets whether \a cursor is an out-of-line definition for a C++ constructor,

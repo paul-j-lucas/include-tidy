@@ -718,10 +718,6 @@ bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
   return true;
 }
 
-bool tidy_Cursor_isInvalid( CXCursor cursor ) {
-  return clang_Cursor_isNull( cursor ) || clang_isInvalid( cursor.kind );
-}
-
 bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
                                         CXCursor *pclass_csr ) {
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
@@ -1010,6 +1006,7 @@ bool tidy_Token_isScopeQualifier( CXTranslationUnit tu, CXToken token ) {
 /// @cond DOXYGEN_IGNORE
 
 extern inline CXCursor tidy_Cursor_getCanonicalTypeDeclaration( CXCursor );
+extern inline bool tidy_Cursor_isInvalid( CXCursor );
 extern inline int tidy_FileUniqueID_compare( CXFileUniqueID const*,
                                              CXFileUniqueID const* );
 extern inline CXFile tidy_getFileLocation_File( CXSourceLocation );
