@@ -1488,7 +1488,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     //      };
     //
     //      // S.cpp
-    //      #include "S.h"
+    //      #include "S.hpp"
     //      void S::f() {
     //        // ...
     //      }
