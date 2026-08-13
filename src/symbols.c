@@ -1500,6 +1500,11 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     def_csr = clang_getCursorDefinition( class_csr );
   }
   else {
+    //
+    // We care only if the cursor is for a type or template that we need the
+    // definition (not declaration) of.  For all other kinds, the declaration
+    // (added above) is sufficient.
+    //
     enum CXCursorKind const kind = clang_getCursorKind( cursor );
     switch ( kind ) {
       case CXCursor_TypeRef:
@@ -1516,8 +1521,6 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     if ( tidy_Cursor_isInvalid( type_csr ) )
       return;
     def_csr = clang_getCursorDefinition( type_csr );
-    if ( tidy_Cursor_isInvalid( def_csr ) )
-      return;
     if ( clang_equalCursors( def_csr, dec_csr ) )
       return;
 
