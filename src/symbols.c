@@ -426,6 +426,89 @@ static add_cxx_member_fn_rv add_cxx_member_fn( CXCursor call_csr,
 }
 
 /**
+ * Adds a symbol to the global set and marks the header that declares is as
+ * necessary.
+ *
+ * @param name_csr The cursor to use for the name of the symbol.  It may be
+ * (and often is) the same as \a sym_csr.
+ * @param sym_csr The cursor for the symbol to add.
+ * @param sym_file The file that contains the declaration for \a sym_csr.
+ * @param sid The symbols_init_data to use.
+ *
+ * @sa maybe_add_symbol()
+ */
+static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
+                        symbols_init_data *sid ) {
+  assert( sid != NULL );
+
+  tidy_typedef const *const found_tdef = typedef_find( sym_csr );
+  char *const simple_name = found_tdef != NULL ?
+    check_strdup( found_tdef->alias_name ) :
+    tidy_Cursor_getScopedSimpleName( name_csr );
+
+  if ( config_is_symbol_ignored( simple_name ) )
+    goto done;
+
+  tidy_symbol new_sym = {
+    .name = tidy_Cursor_getScopedDisplayName( name_csr )
+  };
+  ht_insert_rv_t const hti = ht_insert( &symbol_set, &new_sym, sizeof new_sym );
+  tidy_symbol *const sym = HT_DINT( hti.entry );
+  ++sym->ref_count;
+
+  CXFile include_file = config_get_symbol_include( simple_name );
+  if ( include_file == NULL )
+    include_file = sym_file;
+  tidy_include const *const include_added_to =
+    include_add_symbol( include_file, sym );
+
+  if ( !hti.inserted ) {
+    tidy_symbol_cleanup( &new_sym );
+    goto done;
+  }
+  if ( include_added_to == NULL )
+    goto done;
+
+  if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
+    if ( false_set( &sid->verbose_printed ) )
+      verbose_printf( "symbols:\n" );
+    char delims[2];
+    include_get_delims( include_added_to, delims );
+    verbose_printf(
+      "  \"%s\" -> %c%s%c\n",
+      sym->name, delims[0], include_added_to->abs_path, delims[1]
+    );
+  }
+
+done:
+  free( simple_name );
+}
+
+/**
+ * Gets the file containing \a sym_csr unless it's the file being tidied in
+ * which case we don't want to add that symbol to the global set.
+ *
+ * @param sym_csr The cursor for the symbol.
+ * @param sid The symbols_init_data to use.
+ * @return Returns the file containing \a sym_csr or NULL.
+ */
+NODISCARD
+static CXFile get_symbol_file( CXCursor sym_csr,
+                               symbols_init_data const *sid ) {
+  assert( sid != NULL );
+
+  CXFile const sym_file = tidy_getCursorLocation_File( sym_csr );
+  if ( unlikely( sym_file == NULL ) )
+    return NULL;
+
+  // If the symbol was first declared in the file being tidied, we don't care.
+  if ( clang_File_isEqual( sym_file, sid->source_file ) )
+    return NULL;
+
+  return sym_file;
+}
+
+/**
  * Gets whether a symbol is referenced via an explicit C++ scope qualifier that
  * acts as its proxy.
  *
@@ -574,7 +657,8 @@ done:
  */
 NODISCARD
 static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
-                                   CXCursor dec_csr, symbols_init_data *sid ) {
+                                   CXCursor dec_csr,
+                                   symbols_init_data const *sid ) {
   assert( tidy_is_cxx );
   assert( sid != NULL );
 
@@ -687,6 +771,62 @@ static bool is_include_path( CXCursor ref_csr, CXCursor def_csr ) {
   return includes_include( ref_include, def_include ) > 0;
 }
 #endif /* NEED_II_MATRIX */
+
+/**
+ * Gets whether \a sym_csr should be excluded from the global set.
+ *
+ * @param sym_csr The symbol's cursor to check.
+ * @return Returns `true` only if \a sym_csr is excluded.
+ */
+NODISCARD
+static bool is_symbol_excluded( CXCursor sym_csr ) {
+  if ( tidy_Cursor_isInvalid( sym_csr ) )
+    return true;
+  enum CXCursorKind const sym_kind = clang_getCursorKind( sym_csr );
+  switch ( sym_kind ) {
+    case CXCursor_CXXMethod:
+    case CXCursor_Constructor:
+    case CXCursor_ConversionFunction:
+    case CXCursor_Destructor:
+      //
+      // Even though the switch in symbols_init_visitor() doesn't include cases
+      // for these, the referenced cursor obtained in visit_most_kinds() may
+      // turn out to be one of these.
+      //
+      // However, adding the symbol for one of these would trigger a false-
+      // positive include dependency for merely _calling_ the symbol when
+      // inherited, e.g.:
+      //
+      //      // Base.hpp
+      //      struct Base {
+      //        void f();
+      //      };
+      //
+      //      // Derived.hpp
+      //      #include "Base.hpp"
+      //      struct Derived : Base {
+      //        void g();
+      //      };
+      //
+      //      // Derived.cpp
+      //      #include "Derived.hpp"
+      //      void Derived::g() {
+      //        f();
+      //      }
+      //
+      // If these cases weren't skipped, then the call of f() in Derived.cpp
+      // would trigger a dependency on Base.hpp because that's where f() is
+      // declared.
+      //
+      // However, since Derived is derived from Base, that means the definition
+      // of Base was available via Derived.hpp including Base.hpp and that's
+      // sufficient --- an exception to IWYU.
+      //
+      return true;
+    default:
+      return false;
+  } // switch
+}
 
 /**
  * For a macro, gets the cursor for the identifier given by \a token within \a
@@ -839,112 +979,25 @@ CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
 }
 
 /**
- * Helper function for symbols_init_visitor that maybe adds a symbol to the
- * global set.
+ * Maybe adds a symbol to the global set and marks the header that declares is
+ * as necessary.
+ *
+ * @remarks This is a convenience function for the common case of calling
+ * is_symbol_excluded(), get_symbol_file(), and add_symbol().
  *
  * @param name_csr The cursor to use for the name of the symbol.  It may be
  * (and often is) the same as \a sym_csr.
- * @param sym_csr The cursor for the symbol to add (maybe).
+ * @param sym_csr The cursor for the symbol to add.
  * @param sid The symbols_init_data to use.
  */
 static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
                               symbols_init_data *sid ) {
-  assert( sid != NULL );
-
-  enum CXCursorKind const sym_kind = clang_getCursorKind( sym_csr );
-  switch ( sym_kind ) {
-    case CXCursor_CXXMethod:
-    case CXCursor_Constructor:
-    case CXCursor_ConversionFunction:
-    case CXCursor_Destructor:
-      //
-      // Even though the switch in symbols_init_visitor() doesn't include cases
-      // for these, the referenced cursor obtained in visit_most_kinds() may
-      // turn out to be one of these.
-      //
-      // However, adding the symbol for one of these would trigger a false-
-      // positive include dependency for merely _calling_ the symbol when
-      // inherited, e.g.:
-      //
-      //      // Base.hpp
-      //      struct Base {
-      //        void f();
-      //      };
-      //
-      //      // Derived.hpp
-      //      #include "Base.hpp"
-      //      struct Derived : Base {
-      //        void g();
-      //      };
-      //
-      //      // Derived.cpp
-      //      #include "Derived.hpp"
-      //      void Derived::g() {
-      //        f();
-      //      }
-      //
-      // If these cases weren't skipped, then the call of f() in Derived.cpp
-      // would trigger a dependency on Base.hpp because that's where f() is
-      // declared.
-      //
-      // However, since Derived is derived from Base, that means the definition
-      // of Base was available via Derived.hpp including Base.hpp and that's
-      // sufficient --- an exception to IWYU.
-      //
-      return;
-    default:
-      /* suppress warning */;
-  } // switch
-
-  CXFile const sym_file = tidy_getCursorLocation_File( sym_csr );
-  if ( unlikely( sym_file == NULL ) )
+  if ( is_symbol_excluded( sym_csr ) )
     return;
-
-  // If the symbol was first declared in the file being tidied, we don't care.
-  if ( clang_File_isEqual( sym_file, sid->source_file ) )
+  CXFile const sym_file = get_symbol_file( sym_csr, sid );
+  if ( sym_file == NULL )
     return;
-
-  tidy_typedef const *const found_tdef = typedef_find( sym_csr );
-  char *const simple_name = found_tdef != NULL ?
-    check_strdup( found_tdef->alias_name ) :
-    tidy_Cursor_getScopedSimpleName( name_csr );
-
-  if ( config_is_symbol_ignored( simple_name ) )
-    goto done;
-
-  tidy_symbol new_sym = {
-    .name = tidy_Cursor_getScopedDisplayName( name_csr )
-  };
-  ht_insert_rv_t const hti = ht_insert( &symbol_set, &new_sym, sizeof new_sym );
-  tidy_symbol *const sym = HT_DINT( hti.entry );
-  ++sym->ref_count;
-
-  CXFile include_file = config_get_symbol_include( simple_name );
-  if ( include_file == NULL )
-    include_file = sym_file;
-  tidy_include const *const include_added_to =
-    include_add_symbol( include_file, sym );
-
-  if ( !hti.inserted ) {
-    tidy_symbol_cleanup( &new_sym );
-    goto done;
-  }
-  if ( include_added_to == NULL )
-    goto done;
-
-  if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
-    if ( false_set( &sid->verbose_printed ) )
-      verbose_printf( "symbols:\n" );
-    char delims[2];
-    include_get_delims( include_added_to, delims );
-    verbose_printf(
-      "  \"%s\" -> %c%s%c\n",
-      sym->name, delims[0], include_added_to->abs_path, delims[1]
-    );
-  }
-
-done:
-  free( simple_name );
+  add_symbol( name_csr, sym_csr, sym_file, sid );
 }
 
 /**
@@ -1279,8 +1332,7 @@ static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
 
     CXCursor const sym_csr =
       tidy_Token_getScopedNameCursor( tokens, token_count, &i, class_csr );
-    if ( !tidy_Cursor_isInvalid( sym_csr ) )
-      maybe_add_symbol( sym_csr, sym_csr, sid );
+    maybe_add_symbol( sym_csr, sym_csr, sid );
   } // for
 
   clang_disposeTokens( tidy_tu, tokens, token_count );
@@ -1339,8 +1391,7 @@ static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
   for ( ; i < token_count; ++i ) {
     CXCursor const sym_csr =
       macro_Token_getScopedNameCursor( tokens, token_count, &i, &param_set );
-    if ( !tidy_Cursor_isInvalid( sym_csr ) )
-      maybe_add_symbol( sym_csr, sym_csr, sid );
+    maybe_add_symbol( sym_csr, sym_csr, sid );
   } // for
 
   ht_cleanup( &param_set, /*free_fn=*/NULL );
@@ -1363,16 +1414,24 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   if ( tidy_Cursor_isInvalid( dec_csr ) )
     return;
 
-  if ( tidy_is_cxx ) {
-    // See the comment for symbols_init_data::cxx_deferred_fn_csr.
-    if ( clang_equalCursors( dec_csr, sid->cxx_deferred_fn_csr ) )
-      return;
+  //
+  // Explicitly call is_symbol_excluded() and get_symbol_file() so we can avoid
+  // calling the expensive is_cxx_iwyu_exception() unless necessary.
+  //
+  if ( !is_symbol_excluded( dec_csr ) ) {
+    CXFile const dec_file = get_symbol_file( dec_csr, sid );
+    if ( dec_file != NULL ) {
+      if ( tidy_is_cxx ) {
+        // See the comment for symbols_init_data::cxx_deferred_fn_csr.
+        if ( clang_equalCursors( dec_csr, sid->cxx_deferred_fn_csr ) )
+          return;
 
-    if ( is_cxx_iwyu_exception( cursor, parent, dec_csr, sid ) )
-      return;
+        if ( is_cxx_iwyu_exception( cursor, parent, dec_csr, sid ) )
+          return;
+      }
+      add_symbol( dec_csr, dec_csr, dec_file, sid );
+    }
   }
-
-  maybe_add_symbol( dec_csr, dec_csr, sid );
 
   //
   // Now we have to determine whether the definition of a symbol is also
@@ -1422,8 +1481,6 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     // since maybe_add_symbol() ignores C++ methods (see its comment for why).
     //
     def_csr = clang_getCursorDefinition( class_csr );
-    if ( tidy_Cursor_isInvalid( def_csr ) )
-      return;
   }
   else {
     enum CXCursorKind const kind = clang_getCursorKind( cursor );
