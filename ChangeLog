@@ -1,5 +1,6 @@
 2026-08-12  Paul J. Lucas <paul@lucasmail.org>
 
+   * symbols.c: Now excluding template and parameter cursors.
    * symbols.c: Split maybe_add_symbol() up.
    * clang_util.c, clang_util.h: Made tidy_Cursor_isInvalid() inline.
    * symbols.c: Added NODISCARD.
