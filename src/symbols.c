@@ -823,6 +823,23 @@ static bool is_symbol_excluded( CXCursor sym_csr ) {
       // sufficient --- an exception to IWYU.
       //
       return true;
+
+    case CXCursor_NonTypeTemplateParameter:
+    case CXCursor_TemplateTemplateParameter:
+    case CXCursor_TemplateTypeParameter:
+      //
+      // These are local to the template definition, so don't need to be added
+      // to symbol_set.
+      //
+      return true;
+
+    case CXCursor_ParmDecl:
+      //
+      // These are local to a function, so don't need to be added to
+      // symbol_set.
+      //
+      return true;
+
     default:
       return false;
   } // switch
