@@ -1011,6 +1011,7 @@ extern inline int tidy_FileUniqueID_compare( CXFileUniqueID const*,
                                              CXFileUniqueID const* );
 extern inline CXFile tidy_getFileLocation_File( CXSourceLocation );
 extern inline CXFile tidy_getSpellingLocation_File( CXSourceLocation );
+extern inline unsigned tidy_getSpellingLocation_offset( CXSourceLocation );
 
 /// @endcond
 

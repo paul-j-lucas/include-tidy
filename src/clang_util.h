@@ -509,6 +509,7 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file );
  * @return Returns the file of \a loc.
  *
  * @sa tidy_getFileLocation_File()
+ * @sa tidy_getSpellingLocation_offset()
  */
 NODISCARD
 inline CXFile tidy_getSpellingLocation_File( CXSourceLocation loc ) {
@@ -517,6 +518,24 @@ inline CXFile tidy_getSpellingLocation_File( CXSourceLocation loc ) {
     loc, &file, /*line=*/NULL, /*column=*/NULL, /*offset=*/NULL
   );
   return file;
+}
+
+/**
+ * Calls `clang_getSpellingLocation()` and returns only the offset.
+ *
+ * @param loc The location to use.
+ * @return Returns the file of \a loc.
+ *
+ * @sa tidy_getFileLocation_File()
+ * @sa tidy_getSpellingLocation_File()
+ */
+NODISCARD
+inline unsigned tidy_getSpellingLocation_offset( CXSourceLocation loc ) {
+  unsigned offset;
+  clang_getSpellingLocation(
+    loc, /*file=*/NULL, /*line=*/NULL, /*column=*/NULL, &offset
+  );
+  return offset;
 }
 
 /**

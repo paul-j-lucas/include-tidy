@@ -550,10 +550,7 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
   assert( tidy_is_cxx );
 
   CXSourceLocation const cursor_loc = clang_getCursorLocation( cursor );
-  unsigned cursor_offset = 0;
-  clang_getSpellingLocation(
-    cursor_loc, /*file=*/NULL, /*line=*/NULL, /*column=*/NULL, &cursor_offset
-  );
+  unsigned cursor_offset = tidy_getSpellingLocation_offset( cursor_loc );
   if ( cursor_offset == 0 )
     return false;
 
@@ -574,10 +571,7 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
   unsigned cursor_token_idx = token_count;
   for ( unsigned i = 0; i < token_count; ++i ) {
     CXSourceLocation const token_loc = clang_getTokenLocation( tu, tokens[i] );
-    unsigned token_offset = 0;
-    clang_getSpellingLocation(
-      token_loc, /*file=*/NULL, /*line=*/NULL, /*column=*/NULL, &token_offset
-    );
+    unsigned const token_offset = tidy_getSpellingLocation_offset( token_loc );
     if ( token_offset == cursor_offset ) {
       cursor_token_idx = i;
       break;
