@@ -1,5 +1,8 @@
 2026-08-12  Paul J. Lucas <paul@lucasmail.org>
 
+   * symbols.c: Split maybe_add_symbol() up.
+   * clang_util.c, clang_util.h: Made tidy_Cursor_isInvalid() inline.
+   * symbols.c: Added NODISCARD.
    * symbols.c: Factored out is_cxx_iwyu_exception().
    * clang_util.c: Now setting cxx_recurse_into_scope to true only if scope_csr
      is C++.
