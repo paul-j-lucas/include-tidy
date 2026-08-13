@@ -1612,8 +1612,6 @@ static void visit_OverloadedDeclRef( CXCursor overloaded_csr, CXCursor parent,
     if ( tidy_Cursor_isInvalid( dec_csr ) )
       continue;
     dec_csr = clang_getCanonicalCursor( dec_csr );
-    if ( tidy_Cursor_isInvalid( dec_csr ) )
-      continue;
     maybe_add_symbol( dec_csr, dec_csr, sid );
     //
     // It's possible that different overloads will be declared in different
