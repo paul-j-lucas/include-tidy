@@ -600,7 +600,9 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
   // Scan backwards past template brackets <...> to find the qualifier token
   int angle_depth = 0;
   while ( (ptoken = tidy_Token_getPrev( tokens, &i )) != NULL ) {
-    switch ( tidy_Token_isEqualToAny( tu, *ptoken, ">", "<" ) ) {
+    int const match = clang_getTokenKind( *ptoken ) == CXToken_Punctuation ?
+                      tidy_Token_isEqualToAny( tu, *ptoken, ">", "<" ) : -1;
+    switch ( match ) {
       case 0:
         ++angle_depth;
         continue;
