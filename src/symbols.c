@@ -737,6 +737,122 @@ static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
   return false;
 }
 
+/**
+ * Gets whether the definition of \a cursor is needed rather than just its
+ * declaration.
+ *
+ * @par Example
+ * @parblock
+ * For example:
+ *
+ *      // Point.hpp
+ *      struct point {
+ *        int x, y;
+ *      };
+ *
+ *      // Foo.cpp
+ *      void pass_thru( point *p ) {
+ *        f( p );
+ *      }
+ *
+ *      // Bar.cpp
+ *      void point_init( point *p ) {
+ *        p->x = p->y = 0;
+ *      }
+ *
+ * `Foo.cpp` doesn't access any member of `point`, so its declaration is
+ * sufficient whereas `Bar.cpp` accesses members, so its definition (and the
+ * header that defines it) is needed.
+ * @endparblock
+ *
+ * @par Example
+ * @parblock
+ * For C++, out-of-line member function definitions need their class's
+ * definition:
+ *
+ *      // S.hpp
+ *      struct S {
+ *        void f();
+ *      };
+ *
+ *      // S.cpp
+ *      #include "S.hpp"
+ *      void S::f() {
+ *        // ...
+ *      }
+ *
+ * `S::f()` requires the definition of its class `S` and this is what we will
+ * pass to maybe_add_symbol(), not the original cursor for the member, since
+ * maybe_add_symbol() ignores C++ methods (see its comment for why).
+ * @endparblock
+ *
+ * @param cursor The cursor to visit.
+ * @param parent The parent cursor of \a cursor.
+ * @param dec_csr The declaration cursor of \a cursor.
+ * @param pdef_csr A pointer to receieve the definition cursor of \a cursor
+ * only if the definition is needed.
+ * @return Returns `true` only if the definition is needed.
+ */
+NODISCARD
+static bool is_definition_needed( CXCursor cursor, CXCursor parent,
+                                  CXCursor dec_csr, CXCursor *pdef_csr ) {
+  assert( pdef_csr != NULL );
+
+  CXCursor class_csr;
+
+  if ( tidy_is_cxx &&
+       tidy_Cursor_isOutOfLineDefinition( cursor, parent, &class_csr ) ) {
+    *pdef_csr = clang_getCursorDefinition( class_csr );
+    return true;
+  }
+
+  //
+  // We care only if the cursor is for a type or template that we need the
+  // definition (not declaration) of.  For all other kinds, the declaration is
+  // sufficient.
+  //
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  switch ( kind ) {
+    case CXCursor_TypeRef:
+    case CXCursor_TemplateRef:
+      break;
+    default:
+      return false;
+  } // switch
+
+  CXType type = clang_getCanonicalType( clang_getCursorType( parent ) );
+  CXCursor const type_csr = clang_getTypeDeclaration( type );
+  if ( tidy_Cursor_isInvalid( type_csr ) )
+    return false;
+
+  switch ( type.kind ) {
+    case CXType_Enum:
+      //
+      // If an enum has a fixed type in C23/C++11 (e.g., enum E : int), the
+      // definition isn't needed.
+      //
+      type = clang_getEnumDeclIntegerType( type_csr );
+      if ( type.kind != CXType_Invalid )
+        return false;
+      break;
+    case CXType_Record:               // class, struct, or union
+      break;
+    default:
+      return false;
+  } // switch
+
+  CXCursor const def_csr = clang_getCursorDefinition( type_csr );
+  if ( clang_equalCursors( def_csr, dec_csr ) )
+    return false;
+
+  // If we've already seen the definition, we don't need this declaration.
+  if ( tidy_Cursor_isBeforeInTranslationUnit( def_csr, dec_csr ) )
+    return false;
+
+  *pdef_csr = def_csr;
+  return true;
+}
+
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
  * Gets whether it's possible to go from a cursor that refernces a symbol to
@@ -1450,101 +1566,9 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     }
   }
 
-  //
-  // Now we have to determine whether the definition of a symbol is also
-  // necessary in addition to its declaration.  Given:
-  //
-  //      // Point.hpp
-  //      struct point {
-  //        int x, y;
-  //      };
-  //
-  //      // Foo.cpp
-  //      void pass_thru( point *p ) {
-  //        f( p );
-  //      }
-  //
-  //      // Bar.cpp
-  //      void point_init( point *p ) {
-  //        p->x = p->y = 0;
-  //      }
-  //
-  // `Foo.cpp` doesn't access any member of `point`, so its declaration is
-  // sufficient whereas `Bar.cpp` accesses members, so its definition (and the
-  // header that defines it) is necessary.
-  //
-
-  CXCursor class_csr;
   CXCursor def_csr;
-
-  if ( tidy_is_cxx &&
-       tidy_Cursor_isOutOfLineDefinition( cursor, parent, &class_csr ) ) {
-    //
-    // For C++ out-of-line member definitions, e.g.:
-    //
-    //      // S.hpp
-    //      struct S {
-    //        void f();
-    //      };
-    //
-    //      // S.cpp
-    //      #include "S.hpp"
-    //      void S::f() {
-    //        // ...
-    //      }
-    //
-    // S::f() requires the definition of S, i.e., its class, and this is what
-    // we pass to maybe_add_symbol(), not the original cursor for the member,
-    // since maybe_add_symbol() ignores C++ methods (see its comment for why).
-    //
-    def_csr = clang_getCursorDefinition( class_csr );
-  }
-  else {
-    //
-    // We care only if the cursor is for a type or template that we need the
-    // definition (not declaration) of.  For all other kinds, the declaration
-    // (added above) is sufficient.
-    //
-    enum CXCursorKind const kind = clang_getCursorKind( cursor );
-    switch ( kind ) {
-      case CXCursor_TypeRef:
-      case CXCursor_TemplateRef:
-        break;
-      default:
-        return;
-    } // switch
-
-    CXType type = clang_getCanonicalType( clang_getCursorType( parent ) );
-    CXCursor const type_csr = clang_getTypeDeclaration( type );
-    if ( tidy_Cursor_isInvalid( type_csr ) )
-      return;
-
-    switch ( type.kind ) {
-      case CXType_Enum:
-        //
-        // If an enum has a fixed type in C23/C++11 (e.g., enum E : int), the
-        // definition isn't needed.
-        //
-        type = clang_getEnumDeclIntegerType( type_csr );
-        if ( type.kind != CXType_Invalid )
-          return;
-        break;
-      case CXType_Record:               // class, struct, or union
-        break;
-      default:
-        return;
-    } // switch
-
-    def_csr = clang_getCursorDefinition( type_csr );
-    if ( clang_equalCursors( def_csr, dec_csr ) )
-      return;
-
-    // If we've already seen the definition, we don't need this declaration.
-    if ( tidy_Cursor_isBeforeInTranslationUnit( def_csr, dec_csr ) )
-      return;
-  }
-
-  maybe_add_symbol( dec_csr, def_csr, sid );
+  if ( is_definition_needed( cursor, parent, dec_csr, &def_csr ) )
+    maybe_add_symbol( dec_csr, def_csr, sid );
 }
 
 /**
