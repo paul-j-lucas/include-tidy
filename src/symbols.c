@@ -1514,12 +1514,27 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
         return;
     } // switch
 
-    CXType const type = clang_getCanonicalType( clang_getCursorType( parent ) );
-    if ( type.kind != CXType_Record )     // class, struct, or union
-      return;
+    CXType type = clang_getCanonicalType( clang_getCursorType( parent ) );
     CXCursor const type_csr = clang_getTypeDeclaration( type );
     if ( tidy_Cursor_isInvalid( type_csr ) )
       return;
+
+    switch ( type.kind ) {
+      case CXType_Enum:
+        //
+        // If an enum has a fixed type in C23/C++11 (e.g., enum E : int), the
+        // definition isn't needed.
+        //
+        type = clang_getEnumDeclIntegerType( type_csr );
+        if ( type.kind != CXType_Invalid )
+          return;
+        break;
+      case CXType_Record:               // class, struct, or union
+        break;
+      default:
+        return;
+    } // switch
+
     def_csr = clang_getCursorDefinition( type_csr );
     if ( clang_equalCursors( def_csr, dec_csr ) )
       return;
