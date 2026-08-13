@@ -733,6 +733,41 @@ static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
   return false;
 }
 
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
+/**
+ * Gets whether it's possible to go from a cursor that refernces a symbol to
+ * the cursor that defines said symbol via the set of files that were included.
+ *
+ * @param ref_csr A cursor referencing a symbol.
+ * @param def_csr A cursor defining a symbol.
+ * @return Returns `true` only if it's possible.
+ */
+NODISCARD
+static bool is_include_path( CXCursor ref_csr, CXCursor def_csr ) {
+  if ( tidy_Cursor_isInvalid( def_csr ) )
+    return false;
+  CXFile const def_file = tidy_getCursorLocation_File( def_csr );
+  if ( def_file == NULL )
+    return false;
+  tidy_include const *const def_include = include_find_by_File( def_file );
+  if ( def_include == NULL )
+    return false;
+  if ( includes_include( NULL, def_include ) > 0 )
+    return true;
+
+  if ( tidy_Cursor_isInvalid( ref_csr ) )
+    return false;
+  CXFile const ref_file = tidy_getCursorLocation_File( ref_csr );
+  if ( ref_file == NULL )
+    return false;
+  tidy_include const *const ref_include = include_find_by_File( ref_file );
+  if ( ref_include == NULL )
+    return false;
+
+  return includes_include( ref_include, def_include ) > 0;
+}
+#endif /* NEED_II_MATRIX */
+
 /**
  * Gets whether the definition of \a cursor is needed rather than just its
  * declaration.
@@ -790,8 +825,9 @@ static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
  * @return Returns `true` only if the definition is needed.
  */
 NODISCARD
-static bool is_definition_needed( CXCursor cursor, CXCursor parent,
-                                  CXCursor dec_csr, CXCursor *pdef_csr ) {
+static bool is_symbol_definition_needed( CXCursor cursor, CXCursor parent,
+                                         CXCursor dec_csr,
+                                         CXCursor *pdef_csr ) {
   assert( pdef_csr != NULL );
 
   CXCursor class_csr;
@@ -848,41 +884,6 @@ static bool is_definition_needed( CXCursor cursor, CXCursor parent,
   *pdef_csr = def_csr;
   return true;
 }
-
-#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-/**
- * Gets whether it's possible to go from a cursor that refernces a symbol to
- * the cursor that defines said symbol via the set of files that were included.
- *
- * @param ref_csr A cursor referencing a symbol.
- * @param def_csr A cursor defining a symbol.
- * @return Returns `true` only if it's possible.
- */
-NODISCARD
-static bool is_include_path( CXCursor ref_csr, CXCursor def_csr ) {
-  if ( tidy_Cursor_isInvalid( def_csr ) )
-    return false;
-  CXFile const def_file = tidy_getCursorLocation_File( def_csr );
-  if ( def_file == NULL )
-    return false;
-  tidy_include const *const def_include = include_find_by_File( def_file );
-  if ( def_include == NULL )
-    return false;
-  if ( includes_include( NULL, def_include ) > 0 )
-    return true;
-
-  if ( tidy_Cursor_isInvalid( ref_csr ) )
-    return false;
-  CXFile const ref_file = tidy_getCursorLocation_File( ref_csr );
-  if ( ref_file == NULL )
-    return false;
-  tidy_include const *const ref_include = include_find_by_File( ref_file );
-  if ( ref_include == NULL )
-    return false;
-
-  return includes_include( ref_include, def_include ) > 0;
-}
-#endif /* NEED_II_MATRIX */
 
 /**
  * Gets whether \a sym_csr should be excluded from the global set.
@@ -1563,7 +1564,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   }
 
   CXCursor def_csr;
-  if ( is_definition_needed( cursor, parent, dec_csr, &def_csr ) )
+  if ( is_symbol_definition_needed( cursor, parent, dec_csr, &def_csr ) )
     maybe_add_symbol( dec_csr, def_csr, sid );
 }
 
