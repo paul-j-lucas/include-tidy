@@ -23,7 +23,7 @@
 
 /**
  * @file
- * Declares functions for printing error and warning messages.
+ * Declares functions for printing error, warnings, and other things.
  */
 
 // local
@@ -42,8 +42,8 @@
 /// @endcond
 
 /**
- * @defgroup printing-errors-warnings-group Printing Errors & Warnings
- * Functions for printing errors and warning messages.
+ * @defgroup printing-group Printing Errors, Warnings, Etc.
+ * Functions for printing errors, warnings, and other things.
  * @{
  */
 

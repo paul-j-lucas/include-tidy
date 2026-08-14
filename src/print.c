@@ -20,7 +20,7 @@
 
 /**
  * @file
- * Defines functions for printing error and warning messages.
+ * Defines functions for printing errors, warnings, and other things.
  */
 
 // local
@@ -48,7 +48,7 @@
 /// @endcond
 
 /**
- * @addtogroup printing-errors-warnings-group
+ * @addtogroup printing-group
  * @{
  */
 
