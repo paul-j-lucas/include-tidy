@@ -83,7 +83,7 @@ typedef struct  symbols_init_data     symbols_init_data;
  */
 struct symbols_init_data {
   CXFile    source_file;                ///< The file being tidied.
-  bool      verbose_printed;            ///< Printed any verbose output?
+  bool      printed_verbose_symbols;    ///< Verbosely printed symbols?
 
   /**
    * The C++ class of the current function or operator we're in.
@@ -470,7 +470,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     goto done;
 
   if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
-    if ( false_set( &sid->verbose_printed ) )
+    if ( false_set( &sid->printed_verbose_symbols ) )
       verbose_printf( "symbols:\n" );
     char delims[2];
     include_get_delims( include_added_to, delims );
@@ -1641,7 +1641,7 @@ void symbols_init( void ) {
     .cxx_statement_class_csr = clang_getNullCursor()
   };
   clang_visitChildren( cursor, &symbols_init_visitor, &sid );
-  if ( sid.verbose_printed )
+  if ( sid.printed_verbose_symbols )
     verbose_printf( "\n" );
 }
 

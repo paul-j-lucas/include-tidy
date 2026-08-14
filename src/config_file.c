@@ -291,7 +291,9 @@ bool              tidy_is_source_path_ignored;
 static hash_table_t ignore_symbol_set;    ///< Set of symbols to ignore.
 static array_t      std_c_includes;       ///< Standard-ish C include files.
 static array_t      std_cxx_includes;     ///< Standard C++ include files.
-static bool         verbose_printed_any;  ///< Print any configuration files?
+
+/// Verbosely printed any configuration files?
+static bool         printed_verbose_config_files;
 
 /**
  * Mapping from symbols to the include file(s) they're declared in.
@@ -857,7 +859,7 @@ static FILE* config_open( char const *path, config_opts opts ) {
   bool const  ok = config_file != NULL;
 
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_FILES) != 0 ) {
-    if ( false_set( &verbose_printed_any ) )
+    if ( false_set( &printed_verbose_config_files ) )
       verbose_printf( "configuration files:\n" );
     verbose_printf( "  \"%s\": %s\n", path, ok ? "OK" : STRERROR() );
   }
@@ -1683,7 +1685,7 @@ void config_init( void ) {
     exit( EX_CONFIG );
   }
 
-  if ( verbose_printed_any )
+  if ( printed_verbose_config_files )
     verbose_printf( "\n" );
 
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_SYMBOLS) != 0 )
