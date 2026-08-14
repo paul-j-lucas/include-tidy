@@ -28,6 +28,7 @@
 #include "pjl_config.h"                 /* must go first */
 #include "options.h"
 #include "color.h"
+#include "type_traits.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
