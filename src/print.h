@@ -49,6 +49,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Hash table load factor `printf` format.
+ */
+#define TIDY_STAT_LF_FMT          "%4.2f"
+
+/**
  * Prints an error message to standard error.
  *
  * @note In debug mode, also prints the file & line where the function was
@@ -247,6 +252,17 @@ void verbose_print_tokens( CXCursor cursor );
 PJL_DISCARD
 PJL_PRINTF_LIKE_FUNC(1)
 int verbose_printf( char const *format, ... );
+
+/**
+ * Gets whether statistics should be printed.
+ *
+ * @remarks If so, the `statistics:` header is printed only the first time this
+ * function is called.
+ *
+ * @return Returns `true` only if statistics should be printed.
+ */
+NODISCARD
+bool verbose_print_statistics( void );
 
 ///////////////////////////////////////////////////////////////////////////////
 

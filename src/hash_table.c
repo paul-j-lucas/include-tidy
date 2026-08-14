@@ -34,25 +34,13 @@
  * @{
  */
 
-////////// local constants ////////////////////////////////////////////////////
+////////// extern constants ///////////////////////////////////////////////////
 
-static unsigned const HT_PRIME[] = {
+unsigned const HT_PRIME[] = {
       11,      23,      53,      97,      193,      389,    769,   1543,
     3079,    6151,   12289,   24593,    49157,    98317, 196613, 393241,
   786433, 1572869, 3145739, 6291469, 12582917, 25165843
 };
-
-////////// inline functions ///////////////////////////////////////////////////
-
-/**
- * Calculates the current load factor of \a table.
- *
- * @param table The hash table to calculate the load factor of.
- * @return Returns the load factor of \a table.
- */
-static inline double ht_load_factor( hash_table_t const *table ) {
-  return STATIC_CAST( double, table->size ) / HT_PRIME[ table->prime_idx ];
-}
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -238,6 +226,7 @@ void* ht_iterator_next( ht_iterator_t *it ) {
 
 extern inline bool ht_empty( hash_table_t const* );
 extern inline void* ht_entry_data( hash_table_t const*, ht_entry_t const* );
+extern inline double ht_load_factor( hash_table_t const* );
 
 /// @endcond
 

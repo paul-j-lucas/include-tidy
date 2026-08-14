@@ -344,6 +344,17 @@ void ht_iterator_init( ht_iterator_t *it, hash_table_t const *table );
  */
 void* ht_iterator_next( ht_iterator_t *it );
 
+/**
+ * Calculates the current load factor of \a table.
+ *
+ * @param table The hash table to calculate the load factor of.
+ * @return Returns the load factor of \a table.
+ */
+inline double ht_load_factor( hash_table_t const *table ) {
+  extern unsigned const HT_PRIME[];
+  return (double)table->size / HT_PRIME[ table->prime_idx ];
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */

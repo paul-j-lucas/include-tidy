@@ -283,6 +283,14 @@ int verbose_printf( char const *format, ... ) {
   return raw_len;
 }
 
+bool verbose_print_statistics( void ) {
+  static bool printed_header;
+  bool const want_statistics = (opt_verbose & TIDY_VERBOSE_STATISTICS) != 0;
+  if ( want_statistics && false_set( &printed_header ) )
+    verbose_printf( "statistics:\n" );
+  return want_statistics;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */

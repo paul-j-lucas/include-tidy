@@ -121,6 +121,8 @@ static void   ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
 NODISCARD
 static bool   is_assoc_header( tidy_include const*, char const* );
 
+static void   print_statistics( void );
+
 NODISCARD
 static char*  tidy_File_getRelativePath( CXFile );
 
@@ -290,6 +292,7 @@ static void ii_matrix_visitor( CXFile included_file,
  * Cleans-up set of included files.
  */
 static void includes_cleanup( void ) {
+  print_statistics();
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
   free( ii_matrix );
 #endif /* NEED_II_MATRIX */
@@ -726,6 +729,46 @@ static void maybe_print_include( tidy_include const *include,
   free( comment );
   if ( reset_opt_comment_style )
     opt_comment_style[0] = "";
+}
+
+/**
+ * Prints statistics for included files if requested.
+ */
+static void print_statistics( void ) {
+  if ( !verbose_print_statistics() )
+    return;
+
+  verbose_printf( "  include set:\n" );
+  verbose_printf( "    is-size = %u\n", tidy_include_set.size );
+
+  tidy_include const *max_include = NULL;
+  double max_lf = -1.0;
+
+  // Find the include file having the symbol set with the largest load factor.
+  rb_iterator_t iter;
+  rb_iterator_init( &iter, &tidy_include_set );
+  for ( tidy_include const *include;
+        (include = rb_iterator_next( &iter )) != NULL; ) {
+    double const lf = ht_load_factor( &include->symbol_set );
+    if ( lf > max_lf ) {
+      max_include = include;
+      max_lf = lf;
+    }
+  } // for
+
+  if ( max_include != NULL ) {
+    char delims[2];
+    include_get_delims( max_include, delims );
+    verbose_printf( "    is-max-load-factor:\n" );
+    verbose_printf(
+      "      is-path = %c%s%c\n", delims[0], max_include->abs_path, delims[1]
+    );
+    verbose_printf( "      symbol set:\n" );
+    verbose_printf(
+      "        isss-load-factor = " TIDY_STAT_LF_FMT "\n", max_lf
+    );
+    verbose_printf( "        isss-size = %u\n", max_include->symbol_set.size );
+  }
 }
 
 /**

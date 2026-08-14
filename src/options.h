@@ -76,6 +76,7 @@ enum tidy_verbose {
   TIDY_VERBOSE_PROXIES_IMPLICIT     = 1 << 7,   ///< Implicit include proxies.
   TIDY_VERBOSE_SRC_FILE_VIOLATIONS  = 1 << 8,   ///< Source file in violation.
   TIDY_VERBOSE_SRC_FILE_ALWAYS      = 1 << 9,   ///< All source file.
+  TIDY_VERBOSE_STATISTICS           = 1 << 11,  ///< Print statistics?
   TIDY_VERBOSE_SYMBOLS              = 1 << 10,  ///< Symbols referenced.
 };
 
@@ -104,7 +105,7 @@ extern tidy_verbose opt_verbose;          ///< Print verbose output?
 #define OPT_CLANG_DEFAULT         "clang" /**< Default `clang` path. */
 #define OPT_LINE_LENGTH_DEFAULT   80      /**< Default line length. */
 #define OPT_LINE_LENGTH_MAX       256     /**< Maximum line length. */
-#define OPT_VERBOSE_ALL           "acCdfFipPsS" /**< All verbose values. */
+#define OPT_VERBOSE_ALL           "acCdfFipPsSz" /**< All verbose values. */
 
 ////////// extern argument variables //////////////////////////////////////////
 

@@ -282,6 +282,9 @@ bool opt_verbose_parse( char const *verbose_format ) {
       case 'S':
         verbose |= TIDY_VERBOSE_CONFIG_SYMBOLS;
         break;
+      case 'z':
+        verbose |= TIDY_VERBOSE_STATISTICS;
+        break;
       default:
         return false;
     } // switch

@@ -35,7 +35,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "August 13, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "August 14, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -613,6 +613,11 @@ declaring them.
 .TP
 .B S
 Configuration file symbols.
+.TP
+.B z
+Print statistics.
+(See
+.BR STATISTICS .)
 .RE
 .PD
 .IP
@@ -1177,6 +1182,40 @@ then
 .I only
 the first configuration file found
 is read.
+.SH STATISTICS
+Including
+.B z
+in the argument to the
+.B \-\-verbose
+or
+.B \-v
+option
+prints statistics
+for
+.IR source-file .
+(These are of interest for developers of
+.B include-tidy
+itself.)
+.TP 6
+.B is-size
+The total number of files included.
+.TP
+.B is-path
+The path of the include file having the most symbols from it referenced.
+.TP
+.B isss-load-factor
+The load factor for the symbol hash table for
+.BR is-path .
+.TP
+.B isss-size
+The total number of relevant symbols referenced from
+.BR is-path .
+.TP
+.B ss-load-factor
+The load factor for the symbol hash table.
+.TP
+.B ss-size
+The total number of relevant symbols.
 .SH EXIT STATUS
 .PD 0
 .IP 0
