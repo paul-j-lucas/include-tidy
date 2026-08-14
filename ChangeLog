@@ -1,3 +1,11 @@
+2026-08-14  Paul J. Lucas <paul@lucasmail.org>
+
+   * options.h: Added "F" to OPT_VERBOSE_ALL.
+   * hash_table.c: ht_grow() now returns whether it grew the table (very
+     likely).
+   * clang_util.c: Eliminated clang_Cursor_isNull().
+   * options.c: Fixed #include.
+
 2026-08-13  Paul J. Lucas <paul@lucasmail.org>
 
    * etc/config.toml: Added std::exchange.
