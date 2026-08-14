@@ -60,14 +60,17 @@ static inline double ht_load_factor( hash_table_t const *table ) {
  * Grows a hash table.
  *
  * @param table The hash table to grow.
+ * @return Returns `true` only if the table was grown (very likely).
  */
-static void ht_grow( hash_table_t *table ) {
+NODISCARD
+static bool ht_grow( hash_table_t *table ) {
   assert( table != NULL );
 
+  if ( unlikely( table->prime_idx >= ARRAY_SIZE( HT_PRIME ) - 1 ) )
+    return false;
+
   unsigned const old_n_buckets = HT_PRIME[ table->prime_idx ];
-  if ( likely( table->prime_idx < ARRAY_SIZE( HT_PRIME ) - 1 ) )
-    ++table->prime_idx;
-  unsigned const new_n_buckets = HT_PRIME[ table->prime_idx ];
+  unsigned const new_n_buckets = HT_PRIME[ ++table->prime_idx ];
   ht_entry_t *const new_buckets = calloc( new_n_buckets, sizeof(ht_entry_t) );
 
   for ( unsigned b = 0; b < old_n_buckets; ++b ) {
@@ -88,6 +91,7 @@ static void ht_grow( hash_table_t *table ) {
 
   free( table->buckets );
   table->buckets = new_buckets;
+  return true;
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -176,8 +180,7 @@ ht_insert_rv_t ht_insert( hash_table_t *table, void *data, size_t data_size ) {
 
   ++table->size;
   double const lf = ht_load_factor( table );
-  if ( lf >= table->max_lf ) {
-    ht_grow( table );
+  if ( lf >= table->max_lf && likely( ht_grow( table ) ) ) {
     n_buckets = HT_PRIME[ table->prime_idx ];
     b = hash % n_buckets;
     head = &table->buckets[b];
