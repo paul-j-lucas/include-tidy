@@ -76,8 +76,8 @@ enum tidy_verbose {
   TIDY_VERBOSE_PROXIES_IMPLICIT     = 1 << 7,   ///< Implicit include proxies.
   TIDY_VERBOSE_SRC_FILE_VIOLATIONS  = 1 << 8,   ///< Source file in violation.
   TIDY_VERBOSE_SRC_FILE_ALWAYS      = 1 << 9,   ///< All source file.
-  TIDY_VERBOSE_STATISTICS           = 1 << 11,  ///< Print statistics?
-  TIDY_VERBOSE_SYMBOLS              = 1 << 10,  ///< Symbols referenced.
+  TIDY_VERBOSE_STATISTICS           = 1 << 10,  ///< Print statistics?
+  TIDY_VERBOSE_SYMBOLS              = 1 << 11,  ///< Symbols referenced.
 };
 
 ////////// typedefs ///////////////////////////////////////////////////////////
