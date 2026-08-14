@@ -419,6 +419,7 @@ includes = "memory"
 
 [utility]
 symbols = [
+  "std::exchange",
   "std::make_pair",
   "std::pair",
 ]
