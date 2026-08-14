@@ -1,5 +1,9 @@
 2026-08-14  Paul J. Lucas <paul@lucasmail.org>
 
+   * man/man1/include-tidy.1, hash_table.c, hash_table.h, includes.c,
+     options.c, options.h, print.c, print.h, symbols.c: Added statistics for
+     verbose option.
+   * includes.c: Changed tidy_include::symbol_set estimated size to 64.
    * options.h: Added "F" to OPT_VERBOSE_ALL.
    * hash_table.c: ht_grow() now returns whether it grew the table (very
      likely).
