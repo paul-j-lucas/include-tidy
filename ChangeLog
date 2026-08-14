@@ -1,5 +1,6 @@
 2026-08-13  Paul J. Lucas <paul@lucasmail.org>
 
+   * etc/config.toml: Added std::exchange.
    * man/man1/include-tidy.1, include-tidy.c, includes.c, options.c, options.h,
      type_traits.h: Added new 'F' verbose option.
    * hash_table.c: Added ht_load_factor().
