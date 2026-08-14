@@ -270,7 +270,6 @@ static enum CXChildVisitResult getTypeRef_visitor( CXCursor cursor,
                                                    CXCursor parent,
                                                    CXClientData data ) {
   (void)parent;
-  assert( data != NULL );
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
@@ -278,6 +277,7 @@ static enum CXChildVisitResult getTypeRef_visitor( CXCursor cursor,
     case CXCursor_TypeRef:;
       CXCursor const ref_csr = clang_getCursorReferenced( cursor );
       if ( tidy_Cursor_isClassDecl( ref_csr ) ) {
+        assert( data != NULL );
         CXCursor *const type_ref_csr = data;
         *type_ref_csr = ref_csr;
         return CXChildVisit_Break;
@@ -318,8 +318,8 @@ static enum CXChildVisitResult isBaseClass_visitor( CXCursor cursor,
     isBaseClass_data *const ibcd = data;
 
     if ( clang_equalCursors( ref_csr, ibcd->base_csr ) ||
-         tidy_Cursor_isTemplateSpecializationOf( ibcd->base_csr, ref_csr ) ||
-         tidy_Cursor_isInheritedFrom( ref_csr, ibcd->base_csr ) ) {
+         tidy_Cursor_isInheritedFrom( ref_csr, ibcd->base_csr ) ||
+         tidy_Cursor_isTemplateSpecializationOf( ibcd->base_csr, ref_csr ) ) {
       ibcd->is_base = true;
       return CXChildVisit_Break;
     }
@@ -367,7 +367,6 @@ static CXCursor tidy_Cursor_getTypeRef( CXCursor cursor ) {
  *
  *      int a = 42;
  *      int b = a;
- *      int c = b;
  *
  * If passed the cursor for the DeclRefExpr for `b`, will return `42`.
  * @endparblock
@@ -548,9 +547,9 @@ CXCursor tidy_Cursor_getFunctionScope( CXCursor fn_csr ) {
   for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
     CXCursor arg_csr = clang_Cursor_getArgument( fn_csr, i );
     arg_csr = tidy_Cursor_getUnderlyingType( arg_csr );
-    CXCursor const class_csr = tidy_Cursor_getOutermostClass( arg_csr );
-    if ( !clang_Cursor_isNull( class_csr ) )
-      return class_csr;
+    CXCursor const arg_ocls_csr = tidy_Cursor_getOutermostClass( arg_csr );
+    if ( !clang_Cursor_isNull( arg_ocls_csr ) )
+      return arg_ocls_csr;
   } // for
 
   return tidy_Cursor_skipLinkageSpec( sem_parent );
@@ -666,12 +665,12 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_csr ) {
         return true;
     }
 
-    CXCursor parent = clang_getCursorSemanticParent( cursor );
-    if ( tidy_Cursor_isInvalid( parent ) ||
-         clang_equalCursors( parent, cursor ) ) {
-      parent = clang_getCursorLexicalParent( cursor );
+    CXCursor sem_parent = clang_getCursorSemanticParent( cursor );
+    if ( tidy_Cursor_isInvalid( sem_parent ) ||
+         clang_equalCursors( sem_parent, cursor ) ) {
+      sem_parent = clang_getCursorLexicalParent( cursor );
     }
-    cursor = parent;
+    cursor = sem_parent;
   } // while
 
   return false;
