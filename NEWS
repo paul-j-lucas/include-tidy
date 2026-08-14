@@ -7,6 +7,11 @@ See the end of the file for license conditions.
 
 * Changes in Include-tidy 2.1
 
+** New `F` verbose option
+The new `F` verbose option unconditionally prints the current source file's
+name.  (The original `f` option still prints the current source file's name
+only if it has one or more violations.)  `F` supercedes `f`.
+
 ** Fixed-type enumerations
 Fixed-type enumerations in C23/C++11 are now handled correctly.
 

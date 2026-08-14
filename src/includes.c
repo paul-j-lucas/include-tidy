@@ -655,7 +655,7 @@ static void maybe_print_include( tidy_include const *include,
   if ( group != args->want_group )
     return;
 
-  if ( (opt_verbose & TIDY_VERBOSE_SOURCE_FILE) != 0 &&
+  if ( (opt_verbose & TIDY_VERBOSE_SRC_FILE_VIOLATIONS) != 0 &&
        false_set( &args->printed_source_file ) ) {
     verbose_printf( "%s\n", tidy_source_path );
   }

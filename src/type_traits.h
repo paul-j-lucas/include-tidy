@@ -230,6 +230,21 @@
   )
 
 /**
+ * Casts the result of \a N to an unsigned type whose size is
+ * <code>sizeof(</code>\a N<code>)</code>.
+ *
+ * @param N An integral expression.
+ * @return Returns \a N cast to an unsigned type.
+ */
+#define TO_UNSIGNED_EXPR(N) (                                             \
+  STATIC_ASSERT_EXPR( IS_INTEGRAL_EXPR( (N) ), #N " must be integral" ) * \
+  STATIC_IF( sizeof(N) == sizeof(char ), (unsigned char     )(N),         \
+  STATIC_IF( sizeof(N) == sizeof(short), (unsigned short    )(N),         \
+  STATIC_IF( sizeof(N) == sizeof(int  ), (unsigned int      )(N),         \
+  STATIC_IF( sizeof(N) == sizeof(long ), (unsigned long     )(N),         \
+          /* else */                     (unsigned long long)(N) ) ) ) ) )
+
+/**
  * Converts \a EXPR (a pointer expression) to a pointer to `void` preserving
  * `const`-ness.
  *
