@@ -107,10 +107,8 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
 
   getCursorByName_data *const gcbnd = data;
 
-  if ( !clang_Cursor_isNull( gcbnd->skip_csr ) &&
-       clang_equalCursors( cursor, gcbnd->skip_csr ) ) {
+  if ( clang_equalCursors( cursor, gcbnd->skip_csr ) )
     goto skip;
-  }
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
 
