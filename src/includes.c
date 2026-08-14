@@ -394,7 +394,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     ht_init(
       // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
       // symbol_set in symbols.c.
-      &included->symbol_set, HT_DPTR, 2.0, 256,
+      &included->symbol_set, HT_DPTR, 2.0, 64,
       POINTER_CAST( ht_cmp_fn_t, &tidy_symbol_cmp ),
       POINTER_CAST( ht_hash_fn_t, &tidy_symbol_hash )
     );
