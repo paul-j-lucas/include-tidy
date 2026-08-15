@@ -292,9 +292,6 @@ static hash_table_t ignore_symbol_set;    ///< Set of symbols to ignore.
 static array_t      std_c_includes;       ///< Standard-ish C include files.
 static array_t      std_cxx_includes;     ///< Standard C++ include files.
 
-/// Verbosely printed any configuration files?
-static bool         printed_verbose_config_files;
-
 /**
  * Mapping from symbols to the include file(s) they're declared in.
  *
@@ -857,10 +854,13 @@ static FILE* config_open( char const *path, config_opts opts ) {
 
   FILE *const config_file = fopen( path, "r" );
   bool const  ok = config_file != NULL;
+  static bool printed_configuration_files;
 
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_FILES) != 0 ) {
-    if ( false_set( &printed_verbose_config_files ) )
+    if ( false_set( &printed_configuration_files ) ) {
+      verbose_section_begin();
       verbose_printf( "configuration files:\n" );
+    }
     verbose_printf( "  \"%s\": %s\n", path, ok ? "OK" : STRERROR() );
   }
 
@@ -1537,6 +1537,7 @@ static void symbol_include_add( char const *from_symbol_name,
 static void symbol_includes_dump( void ) {
   if ( rb_tree_empty( &symbol_includes_map ) )
     return;
+  verbose_section_begin();
   verbose_printf( "configuration symbols:\n" );
   rb_iterator_t si_iter;
   rb_iterator_init( &si_iter, &symbol_includes_map );
@@ -1559,7 +1560,6 @@ static void symbol_includes_dump( void ) {
     } // for
     puts( " ]" );
   }
-  verbose_printf( "\n" );
 }
 
 /**
@@ -1684,9 +1684,6 @@ void config_init( void ) {
     print_error( "no configuration file found\n" );
     exit( EX_CONFIG );
   }
-
-  if ( printed_verbose_config_files )
-    verbose_printf( "\n" );
 
   if ( (opt_verbose & TIDY_VERBOSE_CONFIG_SYMBOLS) != 0 )
     symbol_includes_dump();

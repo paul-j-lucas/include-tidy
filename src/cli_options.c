@@ -1103,14 +1103,14 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   FREE( short_opts );
 
   if ( (opt_verbose & TIDY_VERBOSE_ARGS) != 0 ) {
+    verbose_section_begin();
     verbose_printf( "clang argv:\n" );
     for ( int i = 0; i < *pargc; ++i )
       verbose_printf( "  %2d %s\n", i, (*pargv)[i] );
-    verbose_printf( "\n" );
+    verbose_section_begin();
     verbose_printf( "tidy argv:\n" );
     for ( int i = 0; i < tidy_argc; ++i )
       verbose_printf( "  %2d %s\n", i, tidy_argv[i] );
-    verbose_printf( "\n" );
   }
 
   tidy_argc -= optind - 1;
@@ -1145,12 +1145,12 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   tidy_is_cxx = strcmp( source_lang, "c++" ) == 0;
 
   if ( opt_directory != NULL ) {
-    if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )
+    if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 ) {
+      verbose_section_begin();
       verbose_printf( "change directory: \"%s\"\n", opt_directory );
+    }
     if ( chdir( opt_directory ) != 0 )
       fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
-    if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 )
-      verbose_printf( "\n" );
   }
 
   // We have to add -I. manually since libclang doesn't start out with any

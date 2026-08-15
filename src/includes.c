@@ -98,7 +98,7 @@ typedef enum    print_group               print_group;
  * Additional data passed to includes_init_visitor().
  */
 struct includes_init_data {
-  bool  printed_verbose_includes;       ///< Printed any verbose output?
+  bool  printed_verbose_includes;       ///< Printed any verbose includes?
 };
 
 /**
@@ -452,8 +452,10 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   }
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
-    if ( false_set( &iid->printed_verbose_includes ) )
+    if ( false_set( &iid->printed_verbose_includes ) ) {
+      verbose_section_begin();
       verbose_printf( "includes:\n" );
+    }
 
     char delims[2];
     include_get_delims( included, delims );
@@ -1048,8 +1050,6 @@ void includes_init( void ) {
   includes_init_data iid = { 0 };
   CXCursor cursor = clang_getTranslationUnitCursor( tidy_tu );
   clang_visitChildren( cursor, &includes_init_visitor, &iid );
-  if ( iid.printed_verbose_includes )
-    verbose_printf( "\n" );
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
   ii_matrix_init( tidy_include_set.size + 1 );
 #endif /* NEED_II_MATRIX */

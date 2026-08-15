@@ -98,8 +98,10 @@ int main( int argc, char const *argv[] ) {
   includes_init();
   config_init();
   if ( !tidy_is_source_path_ignored ) {
-    if ( (opt_verbose & TIDY_VERBOSE_SRC_FILE_ALWAYS) != 0 )
-      verbose_printf( "%s\n", tidy_source_path );
+    if ( (opt_verbose & TIDY_VERBOSE_SRC_FILE_ALWAYS) != 0 ) {
+      verbose_section_begin();
+      verbose_printf( "source file: %s\n", tidy_source_path );
+    }
     trans_unit_check_for_errors();
     implicit_proxies_init();
     symbols_init();

@@ -255,6 +255,12 @@ PJL_PRINTF_LIKE_FUNC(1)
 int verbose_printf( char const *format, ... );
 
 /**
+ * This should be called once just before starting to print a new verbose
+ * output section to pring a blank line to separate sections if necessary.
+ */
+void verbose_section_begin( void );
+
+/**
  * Gets whether statistics should be printed.
  *
  * @remarks If so, the `statistics:` header is printed only the first time this
