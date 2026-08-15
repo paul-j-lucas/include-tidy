@@ -1128,20 +1128,8 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   }
 
   if ( (opt_verbose & TIDY_VERBOSE_ARGS) != 0 ) {
-    verbose_section_begin();
-    verbose_printf( "clang argv:\n" );
-    for ( int i = 0; i < argc; ++i ) {
-      verbose_printf( "  %2d = ", i );
-      fputs_quoted( (*pargv)[i], '"', stdout );
-      putchar( '\n' );
-    } // for
-    verbose_section_begin();
-    verbose_printf( "tidy argv:\n" );
-    for ( int i = 0; i < tidy_argc; ++i ) {
-      verbose_printf( "  %2d = ", i );
-      fputs_quoted( tidy_argv[i], '"', stdout );
-      putchar( '\n' );
-    } // for
+    verbose_print_argv( "clang", argc, *pargv );
+    verbose_print_argv( "tidy", tidy_argc, tidy_argv );
   }
 
   tidy_argc -= optind - 1;

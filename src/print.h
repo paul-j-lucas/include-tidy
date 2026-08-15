@@ -222,6 +222,17 @@ void print_source_line( char const *path, unsigned line, unsigned col,
                         unsigned offset );
 
 /**
+ * Prints each value of \a argv preceded by its index.
+ *
+ * @param label A label to print before the word `argv`.  A space is printed
+ * after the label.
+ * @param argc The argument count of \a argv.
+ * @param argv The command-line argument values.
+ */
+void verbose_print_argv( char const *label, int argc,
+                         char const *const argv[] );
+
+/**
  * Prints a cursor's "spelling", kind, and source location.
  *
  * @note This function isn't normally called directly; use either the

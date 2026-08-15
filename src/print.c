@@ -221,6 +221,17 @@ done:
   fclose( fsource );
 }
 
+void verbose_print_argv( char const *label, int argc,
+                         char const *const argv[] ) {
+  verbose_section_begin();
+  verbose_printf( "%s argv:\n", label );
+  for ( int i = 0; i < argc; ++i ) {
+    verbose_printf( "  %2d = ", i );
+    fputs_quoted( argv[i], '"', stdout );
+    putchar( '\n' );
+  } // for
+}
+
 void verbose_print_cursor_impl( char const *label, CXCursor cursor ) {
   label = empty_if_null( label );
   char const *const space = label[0] != '\0' ? " " : "";
