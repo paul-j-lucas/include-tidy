@@ -1,5 +1,10 @@
 2026-08-15  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c: Now quoting command-line arguments.
+   * cli_options.c: Now printing command line arguments after inserting
+     CLANG_ARGS.
+   * cli_options.c: insert_argv() now allows inserting at the NULL element at
+     the end.
    * cli_options.c, include-tidy.c: Now printign source file earlier.
    * symbols.c: Eliminated add_cxx_member_fn_rv.
 
