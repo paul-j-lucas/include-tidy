@@ -1,5 +1,11 @@
 2026-08-14  Paul J. Lucas <paul@lucasmail.org>
 
+   * include-tidy.c: Now printing source file in quotes.
+   * config_file.c: Hoisted strbuf outside of loop.
+   * cli_options.c, config_file.c, include-tidy.c, includes.c, print.c,
+     print.h, proxies.c, symbols.c: Now printing blank line between verbose
+     sections only if necessary.
+   * print.c, print.h: Include fixes.
    * man/man1/include-tidy.1, hash_table.c, hash_table.h, includes.c,
      options.c, options.h, print.c, print.h, symbols.c: Added statistics for
      verbose option.
