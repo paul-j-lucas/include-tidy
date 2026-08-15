@@ -1,5 +1,6 @@
 2026-08-15  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c, print.c, print.h: Factored out verbose_print_argv().
    * cli_options.c: Now quoting command-line arguments.
    * cli_options.c: Now printing command line arguments after inserting
      CLANG_ARGS.
