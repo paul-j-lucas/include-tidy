@@ -56,24 +56,10 @@
  * @{
  */
 
-////////// enums //////////////////////////////////////////////////////////////
-
-/**
- * The return value of add_cxx_member_fn().
- *
- * @remarks Having add_cxx_member_fn() return no/unknown is clearer than having
- * it return `false`/`true` since `true` implies "yes, add it."
- */
-enum add_cxx_member_fn_rv {
-  ADD_CXX_MEMBER_FN_NO,                 ///< Do not add symbol for function.
-  ADD_CXX_MEMBER_FN_UNKNOWN             ///< Unknown whether to add symbol.
-};
-
 ////////// typedefs ///////////////////////////////////////////////////////////
 
 /// @cond DOXYGEN_IGNORE
-typedef enum    add_cxx_member_fn_rv  add_cxx_member_fn_rv;
-typedef struct  symbols_init_data     symbols_init_data;
+typedef struct symbols_init_data symbols_init_data;
 /// @endcond
 
 ////////// structs ////////////////////////////////////////////////////////////
@@ -246,7 +232,7 @@ struct symbols_init_data {
 ////////// local functions ////////////////////////////////////////////////////
 
 NODISCARD
-static add_cxx_member_fn_rv add_cxx_member_fn( CXCursor, CXCursor );
+static bool     is_cxx_mbr_fn_iwyu_exception( CXCursor, CXCursor );
 
 NODISCARD
 static CXCursor symbols_init_data_cxx_scope( symbols_init_data const*,
@@ -292,7 +278,7 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
   bool const is_member_fn = fn_kind == CXCursor_CXXMethod ||
                             fn_kind == CXCursor_ConversionFunction;
 
-  if ( is_member_fn && !add_cxx_member_fn( call_csr, fn_csr ) )
+  if ( is_member_fn && is_cxx_mbr_fn_iwyu_exception( call_csr, fn_csr ) )
     return false;
 
   // The function is either a non-member function or a static member function.
@@ -382,47 +368,6 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
   } // for
 
   return true;
-}
-
-/**
- * Helper function for add_cxx_fn() that gets whether the symbol for a C++
- * member function or operator should be added to the global set.
- *
- * @param call_csr A CallExpr cursor.
- * @param fn_csr The cursor of the function being called.
- * @return
- *  + #ADD_CXX_MEMBER_FN_NO only if the symbol for the member function should
- *    not be added.
- *  + #ADD_CXX_MEMBER_FN_UNKNOWN only if it is unknown whether to add the
- *    symbol for the member function (further checks are needed).
- */
-NODISCARD
-static add_cxx_member_fn_rv add_cxx_member_fn( CXCursor call_csr,
-                                               CXCursor fn_csr ) {
-  CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( call_csr );
-  if ( clang_getCursorKind( callee_csr ) != CXCursor_MemberRefExpr )
-    return ADD_CXX_MEMBER_FN_UNKNOWN;
-
-  CXCursor const obj_expr_csr = tidy_Cursor_getFirstExposedChild( callee_csr );
-  if ( clang_Cursor_isNull( obj_expr_csr ) )
-    return ADD_CXX_MEMBER_FN_UNKNOWN;
-
-  CXCursor const obj_class_csr = tidy_Cursor_getUnderlyingType( obj_expr_csr );
-  CXCursor const fn_class_csr = clang_getCursorSemanticParent( fn_csr );
-
-  if ( tidy_Cursor_isInheritedFrom( obj_class_csr, fn_class_csr ) )
-    return ADD_CXX_MEMBER_FN_NO;
-
-  CXCursor base_csr;
-  if ( !tidy_Cursor_isInheritedMemberFunctionCall( obj_expr_csr, &base_csr ) )
-    return ADD_CXX_MEMBER_FN_NO;
-
-  if ( clang_equalCursors( base_csr, fn_class_csr ) ||
-        tidy_Cursor_isInheritedFrom( base_csr, fn_class_csr ) ) {
-    return ADD_CXX_MEMBER_FN_NO;
-  }
-
-  return ADD_CXX_MEMBER_FN_UNKNOWN;
 }
 
 /**
@@ -729,6 +674,43 @@ static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
     // Base.hpp) is not needed because Derived.cpp includes Derived.hpp that
     // includes Base.hpp, and that's sufficient --- an exception to IWYU.
     //
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Gets whether \a call_csr and the called C++ function (or operator) \a fn_csr
+ * constitutes an include-what-you-use (IWYU) exception.
+ *
+ * @param call_csr A CallExpr cursor.
+ * @param fn_csr The cursor of the function or operator being called.
+ * @return Returns `true` only if the member function or operator (and the
+ * header that declares it) should _not_ be added, i.e., is an IWYU exception.
+ */
+NODISCARD
+static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
+  CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( call_csr );
+  if ( clang_getCursorKind( callee_csr ) != CXCursor_MemberRefExpr )
+    return false;
+
+  CXCursor const obj_expr_csr = tidy_Cursor_getFirstExposedChild( callee_csr );
+  if ( clang_Cursor_isNull( obj_expr_csr ) )
+    return false;
+
+  CXCursor const obj_class_csr = tidy_Cursor_getUnderlyingType( obj_expr_csr );
+  CXCursor const fn_class_csr = clang_getCursorSemanticParent( fn_csr );
+
+  if ( tidy_Cursor_isInheritedFrom( obj_class_csr, fn_class_csr ) )
+    return true;
+
+  CXCursor base_csr;
+  if ( !tidy_Cursor_isInheritedMemberFunctionCall( obj_expr_csr, &base_csr ) )
+    return true;
+
+  if ( clang_equalCursors( base_csr, fn_class_csr ) ||
+        tidy_Cursor_isInheritedFrom( base_csr, fn_class_csr ) ) {
     return true;
   }
 
