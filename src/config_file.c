@@ -1668,17 +1668,18 @@ void config_init( void ) {
   ATEXIT( &config_cleanup );
 
   bool found_at_least_1 = false;
+  strbuf_t path_buf;
+  strbuf_init( &path_buf );
   do {
-    strbuf_t path_buf;
-    strbuf_init( &path_buf );
     FILE *const config_file = config_find( opt_config_path, &path_buf );
     if ( config_file == NULL )
       break;
     config_parse( path_buf.str, config_file );
     fclose( config_file );
-    strbuf_cleanup( &path_buf );
     found_at_least_1 = true;
+    strbuf_reset( &path_buf );
   } while ( opt_config_layers || !found_at_least_1 );
+  strbuf_cleanup( &path_buf );
 
   if ( !found_at_least_1 ) {
     print_error( "no configuration file found\n" );
