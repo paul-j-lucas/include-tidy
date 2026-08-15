@@ -537,7 +537,7 @@ static void insert_argv( int *pargc, char const **pargv[], size_t argi,
   assert( *pargc > 0 );
   assert(  pargv != NULL );
   assert( *pargv != NULL );
-  assert(  argi < STATIC_CAST( size_t, *pargc ) );
+  assert(  argi <= STATIC_CAST( size_t, *pargc ) );
 
   if ( args_len == 0 )
     return;
@@ -557,8 +557,10 @@ static void insert_argv( int *pargc, char const **pargv[], size_t argi,
     REALLOC( *pargv, new_argc + 1/*NULL*/ );
   }
 
-  memmove( &(*pargv)[argi + args_len], &(*pargv)[argi],
-           (old_argc - argi) * sizeof(char*) );
+  if ( argi < old_argc ) {
+    memmove( &(*pargv)[argi + args_len], &(*pargv)[argi],
+             (old_argc - argi) * sizeof(char*) );
+  }
   memcpy( &(*pargv)[argi], args, args_len * sizeof(char*) );
 
   *pargc = STATIC_CAST( int, new_argc );
