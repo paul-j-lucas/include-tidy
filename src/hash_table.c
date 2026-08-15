@@ -36,6 +36,21 @@
 
 ////////// extern constants ///////////////////////////////////////////////////
 
+/**
+ * A table of prime numbers for the number of buckets a hash table should have
+ * as the number of entries increases.
+ *
+ * @remarks
+ * @parblock
+ * If the number of buckets, _m_, isn't prime and the set of keys are not
+ * uniformly distributed, _h(k)_ `%` _m_ produces more collisions at bucket
+ * index _i_ where it’s a factor of _m_.
+ *
+ * Additionally, _m_ should be as far away from a power of 2 as possibe. If _m_
+ * &asymp; 2<sup>_b_</sup>, then all but the lower _b_ bits of _h(k)_ are
+ * discarded.
+ * @endparblock
+ */
 unsigned const HT_PRIME[] = {
       11,      23,      53,      97,      193,      389,    769,   1543,
     3079,    6151,   12289,   24593,    49157,    98317, 196613, 393241,
