@@ -232,7 +232,7 @@ struct symbols_init_data {
 ////////// local functions ////////////////////////////////////////////////////
 
 NODISCARD
-static bool     is_cxx_mbr_fn_iwyu_exception( CXCursor, CXCursor );
+static bool     is_cxx_member_fn_iwyu_exception( CXCursor, CXCursor );
 
 NODISCARD
 static CXCursor symbols_init_data_cxx_scope( symbols_init_data const*,
@@ -278,7 +278,7 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
   bool const is_member_fn = fn_kind == CXCursor_CXXMethod ||
                             fn_kind == CXCursor_ConversionFunction;
 
-  if ( is_member_fn && is_cxx_mbr_fn_iwyu_exception( call_csr, fn_csr ) )
+  if ( is_member_fn && is_cxx_member_fn_iwyu_exception( call_csr, fn_csr ) )
     return false;
 
   // The function is either a non-member function or a static member function.
@@ -690,7 +690,8 @@ static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
  * header that declares it) should _not_ be added, i.e., is an IWYU exception.
  */
 NODISCARD
-static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
+static bool is_cxx_member_fn_iwyu_exception( CXCursor call_csr,
+                                             CXCursor fn_csr ) {
   CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( call_csr );
   if ( clang_getCursorKind( callee_csr ) != CXCursor_MemberRefExpr )
     return false;
