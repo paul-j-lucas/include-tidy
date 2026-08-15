@@ -1102,6 +1102,11 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   } // for
   FREE( short_opts );
 
+  if ( (opt_verbose & TIDY_VERBOSE_SRC_FILE_ALWAYS) != 0 ) {
+    verbose_section_begin();
+    verbose_printf( "source file: \"%s\"\n", tidy_source_path );
+  }
+
   if ( (opt_verbose & TIDY_VERBOSE_ARGS) != 0 ) {
     verbose_section_begin();
     verbose_printf( "clang argv:\n" );

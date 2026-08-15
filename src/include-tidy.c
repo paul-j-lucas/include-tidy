@@ -33,7 +33,6 @@
 #include "ipaths.h"
 #include "options.h"
 #include "path_util.h"
-#include "print.h"
 #include "proxies.h"
 #include "symbols.h"
 #include "trans_unit.h"
@@ -98,10 +97,6 @@ int main( int argc, char const *argv[] ) {
   includes_init();
   config_init();
   if ( !tidy_is_source_path_ignored ) {
-    if ( (opt_verbose & TIDY_VERBOSE_SRC_FILE_ALWAYS) != 0 ) {
-      verbose_section_begin();
-      verbose_printf( "source file: \"%s\"\n", tidy_source_path );
-    }
     trans_unit_check_for_errors();
     implicit_proxies_init();
     symbols_init();
