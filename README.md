@@ -2,7 +2,7 @@
 
 ## Introduction
 
-**include-tidy** is a command-line tool
+**include-tidy** (Tidy) is a command-line tool
 that allows you to tidy-up the set of `#include` directives
 used in either a C or C++ source file,
 specifically:
@@ -11,19 +11,37 @@ specifically:
   in a source file, you should directly `#include` the header
   that declares that symbol.
 
-That means **include-tidy** will print the `#include` directives
+That means Tidy will print the `#include` directives
 for every header your source file:
 
 1. Is missing (and so should be added).
 2. Is unnecessary (and so should be deleted).
 
-**include-tidy** has the same purpose as
+Tidy has the same purpose as
 [**include-what-you-use**](https://include-what-you-use.org) (IWYU),
-but IWYU has a number of [issues](https://github.com/include-what-you-use/include-what-you-use/issues).
+but:
+
++ Tidy uses [TOML](https://toml.io/) with an intuitive schema
+  for its configuration files.
+
++ All configuration is done via configuration files.
+  Your source code does not need to be modified
+  by adding special comments
+  to tweak Tidy's behavior.
+
++ Tidy supports configuration file _layering_,
+  that is you can have multiple configration files:
+  one for a subdirectory (to configure files only in that directory),
+  project directory (to configure a project as a whole),
+  home directory (personal preferences),
+  and a site-wide directory.
+
++ IWYU has a number of
+  [issues](https://github.com/include-what-you-use/include-what-you-use/issues).
 
 ## Dependencies
 
-**include-tidy** has the following dependencies:
+Tidy has the following dependencies:
 
 + [Libclang](https://clang.llvm.org/docs/LibClang.html)
   (typically installed as part of either a `clang`
@@ -44,9 +62,9 @@ Although Clang and LLVM are often packaged seperately,
 their versions increment in lockstep,
 so you _should_ install the same version for both.
 
-**include-tidy** was written against version 21.x of Libclang.
-(Hopefully, **include-tidy** will continue to work with future versions.)
-**include-tidy** is known _not_ to work correctly
+Tidy was written against version 21.x of Libclang.
+(Hopefully, Tidy will continue to work with future versions.)
+Tidy is known _not_ to work correctly
 with version 18.
 Nothing is known about either versions 19 or 20.
 
@@ -79,15 +97,15 @@ then do:
 
     make doc                            # or: make docs
 
-Since **include-tidy** uses
+Since Tidy uses
 [Autotools](https://en.wikipedia.org/wiki/GNU_Autotools)
 that is exclusively for Unix-like environments,
-**include-tidy**
+Tidy
 (or any other software that uses Autotools)
 will not compile
 nor run
 on native Windows.
-If you're determined to run **include-tidy** on Windows,
+If you're determined to run Tidy on Windows,
 you might try one of
 [Cygwin](https://www.cygwin.com),
 [MinGW-64](https://www.mingw-w64.org),
