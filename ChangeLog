@@ -1,5 +1,6 @@
 2026-08-15  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c, include-tidy.c: Now printign source file earlier.
    * symbols.c: Eliminated add_cxx_member_fn_rv.
 
 2026-08-14  Paul J. Lucas <paul@lucasmail.org>
