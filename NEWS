@@ -12,6 +12,10 @@ The new `F` verbose option unconditionally prints the current source file's
 name.  (The original `f` option still prints the current source file's name
 only if it has one or more violations.)  `F` supercedes `f`.
 
+** No verbose trailing blank line
+When printing any verbose output, blank lines are now printed only between
+sections, not after each section.  This eliminates a trailing blank line.
+
 ** Fixed-type enumerations
 Fixed-type enumerations in C23/C++11 are now handled correctly.
 
