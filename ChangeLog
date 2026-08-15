@@ -1,3 +1,7 @@
+2026-08-15  Paul J. Lucas <paul@lucasmail.org>
+
+   * symbols.c: Eliminated add_cxx_member_fn_rv.
+
 2026-08-14  Paul J. Lucas <paul@lucasmail.org>
 
    * include-tidy.c: Now printing source file in quotes.
