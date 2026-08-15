@@ -1104,6 +1104,24 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   } // for
   FREE( short_opts );
 
+  check_options();
+
+  // Keep a copy of *pargc as it is now before we add options we need to pass
+  // to clang.
+  int const argc = *pargc;
+
+  // We have to add -I. manually since libclang doesn't start out with any
+  // include paths.  We also have to do this after --help and --version have
+  // been checked.
+  insert_argv( pargc, pargv, 1, 1, (char const *const[]){ "-I." } );
+
+  char const *const CLANG_ARGS[] = {
+    "-D__include_tidy__",
+    "-Qunused-arguments",
+    "-Wno-unknown-warning-option",
+  };
+  insert_argv( pargc, pargv, 1, ARRAY_SIZE( CLANG_ARGS ), CLANG_ARGS );
+
   if ( (opt_verbose & TIDY_VERBOSE_SRC_FILE_ALWAYS) != 0 ) {
     verbose_section_begin();
     verbose_printf( "source file: \"%s\"\n", tidy_source_path );
@@ -1112,7 +1130,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   if ( (opt_verbose & TIDY_VERBOSE_ARGS) != 0 ) {
     verbose_section_begin();
     verbose_printf( "clang argv:\n" );
-    for ( int i = 0; i < *pargc; ++i )
+    for ( int i = 0; i < argc; ++i )
       verbose_printf( "  %2d %s\n", i, (*pargv)[i] );
     verbose_section_begin();
     verbose_printf( "tidy argv:\n" );
@@ -1122,14 +1140,13 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   tidy_argc -= optind - 1;
   free( tidy_argv );
-  check_options();
 
   if ( tidy_argc > 1 )
     print_usage( EX_USAGE );
   if ( opt_help )
-    print_usage( *pargc > 1 ? EX_USAGE : EX_OK );
+    print_usage( argc > 1 ? EX_USAGE : EX_OK );
   if ( opt_version > 0 ) {
-    if ( *pargc > 1 )                   // include-tidy --version foo
+    if ( argc > 1 )                     // include-tidy --version foo
       print_usage( EX_USAGE );
     print_version( /*verbose=*/opt_version > 1 );
     exit( EX_OK );
@@ -1160,11 +1177,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
   }
 
-  // We have to add -I. manually since libclang doesn't start out with any
-  // include paths.  We also have to do this after --help and --version have
-  // been checked.
-  insert_argv( pargc, pargv, 1, 1, (char const *const[]){ "-I." } );
-
   // tmp_include_paths is needed because we have to defer calling ipath_add()
   // until after chdir() (if called).
   ipath_add( "." );
@@ -1173,14 +1185,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     ipath_add( *ppath );
   } // for
   array_cleanup( &tmp_include_paths, /*free_fn=*/NULL );
-
-  // We have to do this after --help and --version have been checked.
-  char const *const CLANG_ARGS[] = {
-    "-D__include_tidy__",
-    "-Qunused-arguments",
-    "-Wno-unknown-warning-option",
-  };
-  insert_argv( pargc, pargv, 1, ARRAY_SIZE( CLANG_ARGS ), CLANG_ARGS );
 
   // argv[argc-1] is the source file, but we've already copied it into
   // tidy_source_path, so just NULL it out.
