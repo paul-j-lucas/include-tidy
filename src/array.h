@@ -342,6 +342,15 @@ inline void* array_bsearch( array_t *array, void const *key,
 }
 
 /**
+ * De-duplicates an array by overwriting element _i_ with element(s) _i_ + { 1
+ * ... n-1 } where the elements compare equal.
+ *
+ * @param array The array to dedup.
+ * @param cmp_fn The comparison function to use.
+ */
+void array_dedup( array_t *array, array_cmp_fn_t cmp_fn );
+
+/**
  * Gets a pointer to the element at the front of \a array.
  *
  * @param array A pointer to the \ref array.

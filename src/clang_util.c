@@ -220,18 +220,14 @@ static void getScopedName_impl( CXCursor cursor, getCursorName_fn name_fn,
 
   CXString const name_cxs = (*name_fn)( cursor );
   char const *const name = null_if_empty( clang_getCString( name_cxs ) );
-  // Skip "(anonymous ...)" and "(unnamed ...)".
-  if ( name != NULL && name[0] != '(' ) {
-    if ( sbuf->len > 0 )
-      strbuf_putsn( sbuf, "::", STRLITLEN( "::" ) );
-    // Don't include function signatures.
-    char const *const lparen = strchr_nul( name, '(' );
-    size_t name_len = STATIC_CAST( size_t, lparen - name );
-    // Don't include empty "<>".
-    if ( name_len >= 2 && STRNCMPLIT( name + name_len - 2, "<>" ) == 0 )
-      name_len -= 2;
-    strbuf_putsn( sbuf, name, name_len );
-  }
+  if ( name == NULL || name[0] == '(' )
+    goto done;  // Skip "(anonymous ...)" and "(unnamed ...)".
+
+  if ( sbuf->len > 0 )
+    strbuf_putsn( sbuf, "::", STRLITLEN( "::" ) );
+  strbuf_puts( sbuf, name );
+
+done:
   clang_disposeString( name_cxs );
 }
 

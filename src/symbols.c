@@ -387,21 +387,23 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
   assert( sid != NULL );
 
   tidy_typedef const *const found_tdef = typedef_find( sym_csr );
-  char *const simple_name = found_tdef != NULL ?
+  char *sym_name = found_tdef != NULL ?
     check_strdup( found_tdef->alias_name ) :
     tidy_Cursor_getScopedSpelling( name_csr );
 
-  if ( config_is_symbol_ignored( simple_name ) )
+  if ( config_is_symbol_ignored( sym_name ) )
     goto done;
 
   tidy_symbol new_sym = {
-    .name = tidy_Cursor_getScopedSpelling( name_csr )
+    .name = sym_name,
+    .name_key = tidy_Cursor_getScopedDisplayName( name_csr )
   };
+  sym_name = NULL;
   ht_insert_rv_t const hti = ht_insert( &symbol_set, &new_sym, sizeof new_sym );
   tidy_symbol *const sym = HT_DINT( hti.entry );
   ++sym->ref_count;
 
-  CXFile include_file = config_get_symbol_include( simple_name );
+  CXFile include_file = config_get_symbol_include( sym->name );
   if ( include_file == NULL )
     include_file = sym_file;
   tidy_include const *const include_added_to =
@@ -423,12 +425,12 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     include_get_delims( include_added_to, delims );
     verbose_printf(
       "  \"%s\" -> %c%s%c\n",
-      sym->name, delims[0], include_added_to->abs_path, delims[1]
+      sym->name_key, delims[0], include_added_to->abs_path, delims[1]
     );
   }
 
 done:
-  free( simple_name );
+  free( sym_name );
 }
 
 /**
@@ -1309,6 +1311,7 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
   if ( sym == NULL )
     return;
   FREE( sym->name );
+  FREE( sym->name_key );
 }
 
 /**
@@ -1647,11 +1650,11 @@ void symbols_init( void ) {
 int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
   assert( i_sym != NULL );
   assert( j_sym != NULL );
-  return strcmp( i_sym->name, j_sym->name );
+  return strcmp( i_sym->name_key, j_sym->name_key );
 }
 
 ht_hash_val_t tidy_symbol_hash( tidy_symbol const *sym ) {
-  return fnv1a_s( sym->name );
+  return fnv1a_s( sym->name_key );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

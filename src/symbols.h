@@ -46,7 +46,21 @@ typedef struct tidy_symbol tidy_symbol;
  * A symbol used in a translation unit.
  */
 struct tidy_symbol {
-  char const *name;                     ///< Symbol name.
+  /**
+   * The symbol name without signature (for functions or operators) or template
+   * parameters (for templates) used in `#include` comments.
+   *
+   * @note In C++, this is not guaranteed to be unique due to overloaded
+   * functions or specialized templates.
+   */
+  char const *name;
+
+  /**
+   * The symbol name with signature (for functions or operators) or template
+   * parameters (for templates) used as a unique key.
+   */
+  char const *name_key;
+
   unsigned    ref_count;                ///< Number of times referenced.
 };
 

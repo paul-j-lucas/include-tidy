@@ -65,6 +65,30 @@ void array_cleanup( array_t *restrict array, array_free_fn_t free_fn ) {
   array_init( array, esize );
 }
 
+void array_dedup( array_t *array, array_cmp_fn_t cmp_fn ) {
+  assert( array != NULL );
+  assert( cmp_fn != NULL );
+
+  if ( array->len < 2 )
+    return;
+
+  size_t dst_idx = 1;
+
+  for ( size_t src_idx = 1; src_idx < array->len; ++src_idx ) {
+    void *const last = array_at_nc( array, dst_idx - 1 );
+    void *const curr = array_at_nc( array, src_idx );
+
+    if ( (*cmp_fn)( last, curr ) == 0 )
+      continue;
+
+    if ( src_idx != dst_idx )
+      memcpy( array_at_nc( array, dst_idx ), curr, array->esize );
+    ++dst_idx;
+  } // for
+
+  array->len = dst_idx;
+}
+
 void* array_push_array_back( array_t *restrict dst_array,
                              array_t *restrict src_array ) {
   assert( dst_array != NULL );

@@ -28,6 +28,7 @@
 #include "includes.h"
 #include "array.h"
 #include "clang_util.h"
+#include "cli_options.h"
 #include "color.h"
 #include "config_file.h"
 #include "hash_table.h"
@@ -577,12 +578,16 @@ static char* make_symbols_comment( tidy_include const *include ) {
   strbuf_t symbols_buf;
   strbuf_init( &symbols_buf );
 
+  bool need_dedup = false;
+
   switch ( opt_comment_symbols ) {
     case TIDY_COM_SYM_ALPHA:
       array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_name );
+      need_dedup = tidy_is_cxx;
       break;
     case TIDY_COM_SYM_LENGTH:
       array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_name_length );
+      need_dedup = tidy_is_cxx;
       break;
     case TIDY_COM_SYM_MOST_USED:;
       // We could sort by ref_count descending as in TIDY_COM_SYM_REF_COUNT
@@ -600,8 +605,12 @@ static char* make_symbols_comment( tidy_include const *include ) {
       goto done;
     case TIDY_COM_SYM_REF_COUNT:
       array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_ref_count );
+      need_dedup = tidy_is_cxx;
       break;
   } // switch
+
+  if ( need_dedup )
+    array_dedup( &symbols_array, &tidy_symbol_ptr_cmp_by_name );
 
   bool comma = false;
   bool is_done = false;
