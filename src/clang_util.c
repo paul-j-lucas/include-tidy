@@ -237,7 +237,7 @@ static void getScopedName_impl( CXCursor cursor, getCursorName_fn name_fn,
 
 /**
  * Helper function for both tidy_Cursor_getScopedDisplayName() and
- * tidy_Cursor_getScopedSimpleName().
+ * tidy_Cursor_getScopedSpelling().
  *
  * @param cursor The cursor at a symbol.
  * @param name_fn The libclang function to use to get the name of \a cursor.
@@ -573,7 +573,7 @@ char* tidy_Cursor_getScopedDisplayName( CXCursor cursor ) {
   return getScopedName_thunk( cursor, &clang_getCursorDisplayName );
 }
 
-char* tidy_Cursor_getScopedSimpleName( CXCursor cursor ) {
+char* tidy_Cursor_getScopedSpelling( CXCursor cursor ) {
   return getScopedName_thunk( cursor, &clang_getCursorSpelling );
 }
 

@@ -136,7 +136,7 @@ void typedef_add( CXCursor cursor ) {
     ht_insert( &typedef_map, &new_tdef, sizeof new_tdef );
   if ( hti.inserted ) {
     tidy_typedef *const tdef = HT_DINT( hti.entry );
-    tdef->alias_name = tidy_Cursor_getScopedSimpleName( cursor );
+    tdef->alias_name = tidy_Cursor_getScopedSpelling( cursor );
   }
 }
 

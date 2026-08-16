@@ -389,13 +389,13 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
   tidy_typedef const *const found_tdef = typedef_find( sym_csr );
   char *const simple_name = found_tdef != NULL ?
     check_strdup( found_tdef->alias_name ) :
-    tidy_Cursor_getScopedSimpleName( name_csr );
+    tidy_Cursor_getScopedSpelling( name_csr );
 
   if ( config_is_symbol_ignored( simple_name ) )
     goto done;
 
   tidy_symbol new_sym = {
-    .name = tidy_Cursor_getScopedDisplayName( name_csr )
+    .name = tidy_Cursor_getScopedSpelling( name_csr )
   };
   ht_insert_rv_t const hti = ht_insert( &symbol_set, &new_sym, sizeof new_sym );
   tidy_symbol *const sym = HT_DINT( hti.entry );

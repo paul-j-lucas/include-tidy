@@ -198,7 +198,7 @@ CXCursor tidy_Cursor_getOutermostClass( CXCursor cursor );
  * @return Returns the fully scoped name.  The caller is responsible for
  * freeing it.
  *
- * @sa tidy_Cursor_getScopedSimpleName()
+ * @sa tidy_Cursor_getScopedSpelling()
  */
 NODISCARD
 char* tidy_Cursor_getScopedDisplayName( CXCursor cursor );
@@ -206,7 +206,7 @@ char* tidy_Cursor_getScopedDisplayName( CXCursor cursor );
 /**
  * Given a cursor at a local name of an enumeration, class, class data member,
  * class member function, structure, union, or namespace, gets its fully scoped
- * "simple" name that does _not_ include template parameters (if any).
+ * "spelling" name that does _not_ include template parameters (if any).
  *
  * @param cursor The cursor for a symbol.
  * @return Returns the fully scoped name.  The caller is responsible for
@@ -215,7 +215,7 @@ char* tidy_Cursor_getScopedDisplayName( CXCursor cursor );
  * @sa tidy_Cursor_getScopedDisplayName()
  */
 NODISCARD
-char* tidy_Cursor_getScopedSimpleName( CXCursor cursor );
+char* tidy_Cursor_getScopedSpelling( CXCursor cursor );
 
 /**
  * If \a cursor represents either a pointer or reference, gets the cursor for
