@@ -52,12 +52,13 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
-#include <limits.h>                     /* for PATH_MAX */
+#include <limits.h>                     /* PATH_MAX */
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 #include <stdalign.h>
 #endif /* NEED_II_MATRIX */
 #include <stdbool.h>
-#include <stdlib.h>                     /* for atexit(3) */
+#include <stddef.h>                     /* unreachable() */
+#include <stdlib.h>                     /* atexit() */
 #include <string.h>
 #include <sysexits.h>
 
