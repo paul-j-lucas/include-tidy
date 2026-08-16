@@ -1642,8 +1642,7 @@ CXFile config_get_symbol_include( char const *symbol_name ) {
   tidy_include const *best_include = NULL;
   for ( tidy_include const *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    while ( include->proxy != NULL )
-      include = include->proxy;
+    include = include_get_proxy( include );
     if ( best_include == NULL || include->depth < best_include->depth )
       best_include = include;
     if ( best_include->depth == 0 )

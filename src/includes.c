@@ -999,8 +999,7 @@ tidy_include const* include_add_symbol( CXFile include_file,
   tidy_include *include = include_find_by_File( include_file );
   if ( include == NULL )
     return NULL;
-  while ( include->proxy != NULL )
-    include = include->proxy;
+  include = include_get_proxy( include );
   PJL_DISCARD_RV( ht_insert( &include->symbol_set, sym, 0 ) );
   include->is_needed = true;
   return include;
@@ -1042,6 +1041,14 @@ void include_get_delims( tidy_include const *include, char delim[static 2] ) {
     delim[0] = '<';
     delim[1] = '>';
   }
+}
+
+// See comment for NONCONST_OVERLOAD regarding ().
+tidy_include const* (include_get_proxy)( tidy_include const *include ) {
+  assert( include != NULL );
+  while ( include->proxy != NULL )
+    include = include->proxy;
+  return include;
 }
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
@@ -1133,6 +1140,12 @@ void includes_print( void ) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/// @cond DOXYGEN_IGNORE
+
+extern inline tidy_include* nonconst_include_get_proxy( tidy_include* );
+
+/// @endcond
 
 /** @} */
 

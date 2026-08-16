@@ -32,6 +32,7 @@
 #include "red_black.h"
 #include "array.h"
 #include "symbols.h"
+#include "util.h"
 
 /// @cond DOXYGEN_IGNORE
 
@@ -181,6 +182,25 @@ tidy_include* include_find_by_rel_path( char const *rel_path );
  * @param delims The 2-element array to receive the delimiters.
  */
 void include_get_delims( tidy_include const *include, char delims[static 2] );
+
+/**
+ * Gets the proxy for \a include, if any.
+ *
+ * @param include The include file to get the proxy for.
+ * @return Returns the proxy for \a include, or \a include if it has no proxy.
+ */
+NODISCARD
+tidy_include const* include_get_proxy( tidy_include const *include );
+
+/// @cond DOXYGEN_IGNORE
+NODISCARD
+inline tidy_include* nonconst_include_get_proxy( tidy_include *include ) {
+  return CONST_CAST( tidy_include*, include_get_proxy( include ) );
+}
+
+#define include_get_proxy(INCLUDE) \
+  NONCONST_OVERLOAD( include_get_proxy, (INCLUDE) )
+/// @endcond
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
