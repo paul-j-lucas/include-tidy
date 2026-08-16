@@ -563,50 +563,52 @@ NODISCARD
 static char* make_symbols_comment( tidy_include const *include ) {
   assert( include != NULL );
 
+  ht_iterator_t iter;
+  ht_iterator_init( &iter, &include->symbol_set );
+
+  if ( opt_comment_symbols == TIDY_COM_SYM_MOST_USED ) {
+    //
+    // We could sort by ref_count as in the TIDY_COM_SYM_REF_COUNT case below,
+    // then use only the last element, but sorting is O(n log n), whereas just
+    // iterating through the entire hash table is O(n).
+    //
+    tidy_symbol const *sym = ht_iterator_next( &iter );
+    tidy_symbol const *most_ref_sym = sym;
+
+    while ( (sym = ht_iterator_next( &iter )) != NULL ) {
+      if ( sym->ref_count > most_ref_sym->ref_count )
+        most_ref_sym = sym;
+    } // while
+
+    return check_strdup( most_ref_sym->name );
+  }
+
+  //
+  // For all other cases, we need to copy pointers to the symbols into an array
+  // and sort it.
+  //
   array_t symbols_array;
   array_init( &symbols_array, sizeof(tidy_symbol*) );
   array_reserve( &symbols_array, include->symbol_set.size );
 
-  ht_iterator_t iter;
-  ht_iterator_init( &iter, &include->symbol_set );
   for ( tidy_symbol const *sym; (sym = ht_iterator_next( &iter )) != NULL; )
     *(tidy_symbol const**)array_push_back( &symbols_array ) = sym;
-
-  strbuf_t symbols_buf;
-  strbuf_init( &symbols_buf );
-
-  bool need_dedup = false;
 
   switch ( opt_comment_symbols ) {
     case TIDY_COM_SYM_ALPHA:
       array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_name );
-      need_dedup = tidy_is_cxx;
       break;
     case TIDY_COM_SYM_LENGTH:
       array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_name_length );
-      need_dedup = tidy_is_cxx;
       break;
-    case TIDY_COM_SYM_MOST_USED:;
-      // We could sort by ref_count descending as in TIDY_COM_SYM_REF_COUNT
-      // then simply use only the zeroth element, but sorting is O(n log n),
-      // whereas just iterating through the entire array is O(n).
-      tidy_symbol const *most_ref_sym =
-        *(tidy_symbol const**)array_at_nc( &symbols_array, 0 );
-      for ( size_t i = 1; i < symbols_array.len; ++i ) {
-        tidy_symbol const *const sym =
-          *(tidy_symbol const**)array_at_nc( &symbols_array, i );
-        if ( sym->ref_count > most_ref_sym->ref_count )
-          most_ref_sym = sym;
-      } // for
-      strbuf_puts( &symbols_buf, most_ref_sym->name );
-      goto done;
+    case TIDY_COM_SYM_MOST_USED:
+      unreachable();
     case TIDY_COM_SYM_REF_COUNT:
       array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_ref_count );
-      need_dedup = tidy_is_cxx;
       break;
   } // switch
 
-  if ( need_dedup )
+  if ( tidy_is_cxx )
     array_dedup( &symbols_array, &tidy_symbol_ptr_cmp_by_name );
 
   bool comma = false;
@@ -614,6 +616,9 @@ static char* make_symbols_comment( tidy_include const *include ) {
 
   size_t const fixed_len = opt_align_column +
     strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
+
+  strbuf_t symbols_buf;
+  strbuf_init( &symbols_buf );
 
   for ( size_t i = 0; !is_done && i < symbols_array.len; ++i ) {
     tidy_symbol const *const sym =
@@ -638,7 +643,6 @@ static char* make_symbols_comment( tidy_include const *include ) {
     );
   } // for
 
-done:
   array_cleanup( &symbols_array, /*free_fn=*/NULL );
   return strbuf_take( &symbols_buf );
 }
