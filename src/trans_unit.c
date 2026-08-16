@@ -150,7 +150,7 @@ void trans_unit_init( int argc, char const *const argv[] ) {
     // We only want errors printed and not warnings, so set this to false and
     // print errors ourselves.
     //
-    /*displayDisgnostics=*/false
+    /*displayDiagnostics=*/false
   );
 
   enum CXErrorCode const error_code = clang_parseTranslationUnit2(
