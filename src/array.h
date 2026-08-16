@@ -345,6 +345,8 @@ inline void* array_bsearch( array_t *array, void const *key,
  * De-duplicates a sorted array by overwriting element _i_ with element _i_ +
  * { 1 ... _n_-1 } where the elements compare equal.
  *
+ * @note This is an O(N) operation.
+ *
  * @param array The sorted array to dedup.
  * @param cmp_fn The comparison function to use.
  */
