@@ -1,5 +1,17 @@
+2026-08-16  Paul J. Lucas <paul@lucasmail.org>
+
+   * symbols.c: For functions, now using include proxy for file comparison
+     rather than direct CXFile.
+   * config_file.c, includes.c, includes.h: Added include_get_proxy().
+   * includes.c: #include fix.
+   * includes.c: Simplified make_symbols_comment.
+   * includes.c: Moved fixed_len declaration.
+   * array.c, array.h, clang_util.c, includes.c, symbols.c, symbols.h: Now
+     keeping both a symbol's name and display name (with signature).
+
 2026-08-15  Paul J. Lucas <paul@lucasmail.org>
 
+   * array.h: Added array_cmp_fn_t.
    * cli_options.c, print.c, print.h: Factored out verbose_print_argv().
    * cli_options.c: Now quoting command-line arguments.
    * cli_options.c: Now printing command line arguments after inserting
