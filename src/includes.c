@@ -563,9 +563,6 @@ NODISCARD
 static char* make_symbols_comment( tidy_include const *include ) {
   assert( include != NULL );
 
-  size_t const fixed_len = opt_align_column +
-    strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
-
   array_t symbols_array;
   array_init( &symbols_array, sizeof(tidy_symbol*) );
   array_reserve( &symbols_array, include->symbol_set.size );
@@ -614,6 +611,9 @@ static char* make_symbols_comment( tidy_include const *include ) {
 
   bool comma = false;
   bool is_done = false;
+
+  size_t const fixed_len = opt_align_column +
+    strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
 
   for ( size_t i = 0; !is_done && i < symbols_array.len; ++i ) {
     tidy_symbol const *const sym =
