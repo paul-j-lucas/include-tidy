@@ -273,6 +273,10 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
   CXFile const fn_file = tidy_getCursorLocation_File( fn_csr );
   if ( fn_file == NULL )
     return true;
+  tidy_include const *fn_include = include_find_by_File( fn_file );
+  if ( fn_include == NULL )
+    return true;
+  fn_include = include_get_proxy( fn_include );
 
   enum CXCursorKind const fn_kind = clang_getCursorKind( fn_csr );
   bool const is_member_fn = fn_kind == CXCursor_CXXMethod ||
@@ -299,7 +303,13 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
       continue;
 
     CXFile const par_file = tidy_getCursorLocation_File( par_ocls_csr );
-    if ( par_file == NULL || !clang_File_isEqual( fn_file, par_file ) )
+    if ( par_file == NULL )
+      continue;
+    tidy_include const *par_include = include_find_by_File( par_file );
+    if ( par_include == NULL )
+      continue;
+    par_include = include_get_proxy( par_include );
+    if ( fn_include != par_include )
       continue;
 
     CXCursor const arg_csr = clang_Cursor_getArgument( call_csr, i );

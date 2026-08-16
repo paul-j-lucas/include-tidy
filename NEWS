@@ -16,6 +16,9 @@ only if it has one or more violations.)  `F` supercedes `f`.
 When printing any verbose output, blank lines are now printed only between
 sections, not after each section.  This eliminates a trailing blank line.
 
+** C++ overloaded functions
+C++ overloaded functions are now handled better.
+
 ** Fixed-type enumerations
 Fixed-type enumerations in C23/C++11 are now handled correctly.
 
