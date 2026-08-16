@@ -1160,8 +1160,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     exit( EX_USAGE );
   }
 
-  tidy_is_cxx = strcmp( source_lang, "c++" ) == 0;
-
   if ( opt_directory != NULL ) {
     if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 ) {
       verbose_section_begin();
@@ -1170,6 +1168,8 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     if ( chdir( opt_directory ) != 0 )
       fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
   }
+
+  tidy_is_cxx = strcmp( source_lang, "c++" ) == 0;
 
   // tmp_include_paths is needed because we have to defer calling ipath_add()
   // until after chdir() (if called).
