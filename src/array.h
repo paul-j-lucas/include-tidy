@@ -106,6 +106,16 @@
 typedef struct array array_t;
 
 /**
+ * The signature for a function that compares two elements.
+ *
+ * @param i_element A pointer to the first element.
+ * @param j_element A pointer to the second element.
+ * @return Returns a number less than 0, 0, or greater than 0 if \a i_element
+ * is less than, equal to, or greater than \a j_element, respectively.
+ */
+typedef int (*array_cmp_fn_t)( void const *i_element, void const *j_element );
+
+/**
  * The signature for a function passed to array_cleanup() used to free an
  * element (if necessary).
  *
@@ -327,7 +337,7 @@ inline void* nonconst_array_back( array_t *array ) {
  */
 NODISCARD
 inline void* array_bsearch( array_t *array, void const *key,
-                            int (*cmp_fn)(void const*, void const*) ) {
+                            array_cmp_fn_t cmp_fn ) {
   return bsearch( key, array->elements, array->len, array->esize, cmp_fn );
 }
 
@@ -476,8 +486,7 @@ inline void* array_push_back( array_t *array ) {
  * @param array The array to sort.
  * @param cmp_fn The comparison function to use.
  */
-inline void array_qsort( array_t *array,
-                         int (*cmp_fn)(void const*, void const*) ) {
+inline void array_qsort( array_t *array, array_cmp_fn_t cmp_fn ) {
   qsort( array->elements, array->len, array->esize, cmp_fn );
 }
 
