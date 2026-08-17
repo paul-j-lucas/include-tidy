@@ -207,12 +207,14 @@ inline tidy_include* nonconst_include_get_proxy( tidy_include *include ) {
  * Gets whether \a i_include includes \a j_include, and whether directly or
  * indirectly.
  *
- * @param i_include The first include file.
+ * @param i_include The first include file.  If NULL, \ref tidy_source_path
+ * substitutes for it, i.e., gets whether \ref tidy_source_path includes \a
+ * j_include.
  * @param j_include The second include file.
- * @return Returns a value &gt; 0 only if \a i_include includes \a j_include.
- * The value indicates the number of includes between them, i.e., 1 means \e i
- * includes \e j directly, 2 means \e i includes \e k that includes \e j, and
- * so on.
+ * @return Returns a value &gt; 0 only if \a i_include (or, if NULL, \ref
+ * tidy_source_path) includes \a j_include.  The value indicates the number of
+ * includes between them, i.e., 1 means \e i includes \e j directly, 2 means \e
+ * i includes \e k that includes \e j, and so on.
  */
 NODISCARD
 unsigned include_includes( tidy_include const *i_include,
