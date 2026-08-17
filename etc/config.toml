@@ -409,8 +409,10 @@ symbols = [
   "std::ostream"
 ]
 
-["std::string"]
-includes = "string"
+[string]
+symbols = [
+  "std::string"
+]
 
 [utility]
 symbols = [
