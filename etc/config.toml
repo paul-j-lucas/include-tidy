@@ -248,6 +248,17 @@ symbols = [
   "ntohs",
 ]
 
+# errno_t is declared in all of these, so any one is sufficient.
+[errno_t]
+includes = [
+  "stddef.h",
+  "stdio.h",
+  "stdlib.h",
+  "string.h",
+  "time.h",
+  "wchar.h"
+]
+
 # Gnulib weirdly declares free(3) in its string.h, but C says it's in stdlib.h.
 [free]
 includes = "stdlib.h"
