@@ -10,6 +10,12 @@
 #define cdecl_c_typedef_H
 
 #include "red_black.h"
+#include "types.h"
+
+struct c_typedef {
+  c_ast_t const  *ast;
+  // ...
+};
 
 void c_typedef_remove( rb_node_t *node );
 
