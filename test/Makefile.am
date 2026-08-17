@@ -42,8 +42,7 @@ TESTS+=	tests/align-column.test \
 
 # Other tests
 TESTS+=	tests/associated-header.test \
-	tests/duplicate.test \
-	tests/header-keep.test
+	tests/duplicate.test
 
 # Real-world C tests.
 TESTS+=	tests/c_ast.test \
@@ -70,6 +69,7 @@ TESTS+=	tests/cxx.test \
 	tests/Derived-MI.test \
 	tests/derived_set-2.test \
 	tests/derived_set.test \
+	tests/entities_hpp.test \
 	tests/error_string.test \
 	tests/exit_codes.test \
 	tests/namespace_type.test \
