@@ -355,6 +355,7 @@ symbols = [
   "std::copy"
 ]
 
+# Some platforms have these in clocale, but they're in cctype.
 [cctype]
 symbols = [
   "isalnum",
@@ -408,14 +409,8 @@ symbols = [
   "std::ostream"
 ]
 
-["std::streambuf"]
-includes = "streambuf"
-
 ["std::string"]
 includes = "string"
-
-["std::unique_ptr"]
-includes = "memory"
 
 [utility]
 symbols = [
