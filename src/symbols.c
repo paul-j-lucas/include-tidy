@@ -1600,7 +1600,7 @@ static void visit_MemberRefExpr( CXCursor member_ref_csr, CXCursor parent,
     return;
 
   CXCursor const dec_class_csr = clang_getCursorSemanticParent( dec_csr );
-  if ( !tidy_Cursor_isClassDecl( dec_class_csr ) )
+  if ( tidy_Cursor_isClassDecl( dec_class_csr ) )
     visit_most_kinds( member_ref_csr, dec_class_csr, sid );
 }
 
