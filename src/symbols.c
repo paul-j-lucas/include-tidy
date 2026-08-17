@@ -732,6 +732,21 @@ static bool is_cxx_member_fn_iwyu_exception( CXCursor call_csr,
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
+ * Attempts to find the include file containing \a cursor.
+ *
+ * @param cursor The cursor to find the include file for.
+ * @return Returns the include file for cursor or NULL if either \a cursor is
+ * invalid or the include file can't be found.
+ */
+NODISCARD
+static tidy_include* include_find_by_cursor( CXCursor cursor ) {
+  if ( tidy_Cursor_isInvalid( cursor ) )
+    return NULL;
+  CXFile const file = tidy_getCursorLocation_File( cursor );
+  return file != NULL ? include_find_by_File( file ) : NULL;
+}
+
+/**
  * Gets whether it's possible to go from a cursor that refernces a symbol to
  * the cursor that defines said symbol via the set of files that were included.
  *
@@ -741,26 +756,12 @@ static bool is_cxx_member_fn_iwyu_exception( CXCursor call_csr,
  */
 NODISCARD
 static bool is_include_path( CXCursor ref_csr, CXCursor def_csr ) {
-  if ( tidy_Cursor_isInvalid( def_csr ) )
-    return false;
-  CXFile const def_file = tidy_getCursorLocation_File( def_csr );
-  if ( def_file == NULL )
-    return false;
-  tidy_include const *const def_include = include_find_by_File( def_file );
+  tidy_include const *const def_include = include_find_by_cursor( def_csr );
   if ( def_include == NULL )
     return false;
-  if ( include_includes( NULL, def_include ) > 0 )
-    return true;
-
-  if ( tidy_Cursor_isInvalid( ref_csr ) )
-    return false;
-  CXFile const ref_file = tidy_getCursorLocation_File( ref_csr );
-  if ( ref_file == NULL )
-    return false;
-  tidy_include const *const ref_include = include_find_by_File( ref_file );
+  tidy_include const *const ref_include = include_find_by_cursor( ref_csr );
   if ( ref_include == NULL )
     return false;
-
   return include_includes( ref_include, def_include ) > 0;
 }
 #endif /* NEED_II_MATRIX */
