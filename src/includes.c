@@ -1052,7 +1052,7 @@ tidy_include const* (include_get_proxy)( tidy_include const *include ) {
 }
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-unsigned includes_include( tidy_include const *i_include,
+unsigned include_includes( tidy_include const *i_include,
                            tidy_include const *j_include ) {
   assert( j_include != NULL );
   unsigned const i = i_include != NULL ? i_include->instance_id : 0;

@@ -749,7 +749,7 @@ static bool is_include_path( CXCursor ref_csr, CXCursor def_csr ) {
   tidy_include const *const def_include = include_find_by_File( def_file );
   if ( def_include == NULL )
     return false;
-  if ( includes_include( NULL, def_include ) > 0 )
+  if ( include_includes( NULL, def_include ) > 0 )
     return true;
 
   if ( tidy_Cursor_isInvalid( ref_csr ) )
@@ -761,7 +761,7 @@ static bool is_include_path( CXCursor ref_csr, CXCursor def_csr ) {
   if ( ref_include == NULL )
     return false;
 
-  return includes_include( ref_include, def_include ) > 0;
+  return include_includes( ref_include, def_include ) > 0;
 }
 #endif /* NEED_II_MATRIX */
 

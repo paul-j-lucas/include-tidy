@@ -215,7 +215,7 @@ inline tidy_include* nonconst_include_get_proxy( tidy_include *include ) {
  * so on.
  */
 NODISCARD
-unsigned includes_include( tidy_include const *i_include,
+unsigned include_includes( tidy_include const *i_include,
                            tidy_include const *j_include );
 #endif /* NEED_II_MATRIX */
 
