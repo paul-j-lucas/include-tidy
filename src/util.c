@@ -191,7 +191,7 @@ void perror_exit( int status ) {
   exit( status );
 }
 
-char const* strchr_nul( char const *s, int c ) {
+char const* (strchr_nul)( char const *s, int c ) {
   assert( s != NULL );
   while ( *s != '\0' && *s != (char)c )
     ++s;
@@ -216,10 +216,11 @@ char* str_trim( char *s ) {
 extern inline char const* (empty_if_null)( char const* );
 
 extern inline bool false_set( bool* );
-extern inline char* nonconst_null_if_empty( char* );
-extern inline char* nonconst_empty_if_null( char* );
 
 // See comment for NONCONST_OVERLOAD regarding ().
+extern inline char* (nonconst_null_if_empty)( char* );
+extern inline char* (nonconst_empty_if_null)( char* );
+extern inline char* (nonconst_strchr_nul)( char*, int );
 extern inline char const* (null_if_empty)( char const* );
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */

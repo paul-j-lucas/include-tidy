@@ -1001,7 +1001,8 @@ inline char* nonconst_null_if_empty( char *s ) {
   return CONST_CAST( char*, null_if_empty( s ) );
 }
 
-#define null_if_empty(S)          NONCONST_OVERLOAD( null_if_empty, (S) )
+#define nonconst_null_if_empty(S) \
+  NONCONST_OVERLOAD( nonconst_null_if_empty, (S) )
 /// @endcond
 
 /**
@@ -1052,7 +1053,7 @@ inline char* nonconst_strchr_nul( char *s, int c ) {
   return CONST_CAST( char*, strchr_nul( s, c ) );
 }
 
-#define null_if_empty(S)          NONCONST_OVERLOAD( null_if_empty, (S) )
+#define strchr_nul(S,C)           NONCONST_OVERLOAD( strchr_nul, (S), (C) )
 /// @endcond
 
 /**
