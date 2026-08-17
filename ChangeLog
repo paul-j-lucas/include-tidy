@@ -1,5 +1,7 @@
 2026-08-16  Paul J. Lucas <paul@lucasmail.org>
 
+   * etc/config.toml: Using "string" as table name rather than "std::string".
+   * etc/config.toml: Able to eliminate std::streambuf and stc::unique_ptr.
    * symbols.c: For functions, now using include proxy for file comparison
      rather than direct CXFile.
    * config_file.c, includes.c, includes.h: Added include_get_proxy().
