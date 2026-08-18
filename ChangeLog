@@ -1,5 +1,15 @@
+2026-08-17  Paul J. Lucas <paul@lucasmail.org>
+
+   * symbols.c: Addedinclude_find_by_cursor().
+   * test/Makefile.am, entities.hpp, less.hpp, entities_hpp.out,
+     entities_hpp.test: Updated tests.
+   * configure.ac: Updated version.
+
 2026-08-16  Paul J. Lucas <paul@lucasmail.org>
 
+   * c_typedef.h, show.c: Updated test.
+   * symbols.c: Fixed struct/union/class member references.
+   * etc/config.toml: Added errno_t.
    * array.c: Now using array_cmp_fn_t in .c file.
    * util.c, util.h: Fixed null_if_empty, strchr_nul macros.
    * etc/config.toml: Using "string" as table name rather than "std::string".
