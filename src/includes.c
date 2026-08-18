@@ -236,15 +236,15 @@ static void ii_matrix_init( unsigned N ) {
 
   for ( unsigned k = 0; k < N; ++k ) {
     for ( unsigned i = 0; i < N; ++i ) {
-      if ( ii_matrix[i][k] > 0 ) {
-        for ( unsigned j = 0; j < N; ++j ) {
-          if ( ii_matrix[k][j] > 0 ) {
-            ii_matrix_t const new_dist = ii_matrix[i][k] + ii_matrix[k][j];
-            if ( ii_matrix[i][j] == 0 || new_dist < ii_matrix[i][j] )
-              ii_matrix[i][j] = new_dist;
-          }
-        } // for j
-      }
+      if ( ii_matrix[i][k] == 0 )
+        continue;
+      for ( unsigned j = 0; j < N; ++j ) {
+        if ( ii_matrix[k][j] > 0 )
+          continue;
+        ii_matrix_t const new_dist = ii_matrix[i][k] + ii_matrix[k][j];
+        if ( ii_matrix[i][j] == 0 || new_dist < ii_matrix[i][j] )
+          ii_matrix[i][j] = new_dist;
+      } // for j
     } // for i
   } // for k
 }
