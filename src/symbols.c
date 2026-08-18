@@ -747,7 +747,7 @@ static tidy_include* include_find_by_cursor( CXCursor cursor ) {
 }
 
 /**
- * Gets whether it's possible to go from the header file containing \ref_csr
+ * Gets whether it's possible to go from the header file containing \a ref_csr
  * that refernces a symbol to the header file containing \a def_csr that
  * defines the symbol via the set of files that were included.
  *
