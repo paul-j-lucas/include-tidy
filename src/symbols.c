@@ -747,22 +747,26 @@ static tidy_include* include_find_by_cursor( CXCursor cursor ) {
 }
 
 /**
- * Gets whether it's possible to go from a cursor that refernces a symbol to
- * the cursor that defines said symbol via the set of files that were included.
+ * Gets whether it's possible to go from the header file containing \ref_csr
+ * that refernces a symbol to the header file containing \a def_csr that
+ * defines the symbol via the set of files that were included.
  *
  * @param ref_csr A cursor referencing a symbol.
  * @param def_csr A cursor defining a symbol.
- * @return Returns `true` only if it's possible.
+ * @return Returns a value &gt; 0 only if the header file containing ref_csr
+ * includes the header file containing \a def_csr.  The value indicates the
+ * number of includes between them, i.e., 1 means \e i includes \e j directly,
+ * 2 means \e i includes \e k that includes \e j, and so on.
  */
 NODISCARD
-static bool is_include_path( CXCursor ref_csr, CXCursor def_csr ) {
+static unsigned is_include_path( CXCursor ref_csr, CXCursor def_csr ) {
   tidy_include const *const def_include = include_find_by_cursor( def_csr );
   if ( def_include == NULL )
-    return false;
+    return 0;
   tidy_include const *const ref_include = include_find_by_cursor( ref_csr );
   if ( ref_include == NULL )
-    return false;
-  return include_includes( ref_include, def_include ) > 0;
+    return 0;
+  return include_includes( ref_include, def_include );
 }
 #endif /* NEED_II_MATRIX */
 
