@@ -1524,11 +1524,12 @@ static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
       // For the case of a C++ member function call, its AST is like:
       //
       //      CallExpr
-      //        MemberRefExpr
+      //        |
+      //        +-- MemberRefExpr
       //
       // that is the CallExpr has a child of a MemberRefExpr for the member
       // function.  Since we handle MemberRefExpr cursors specially in
-      // visit_MemberRefExpr(), we want do do nothing for the CallExpr.
+      // visit_MemberRefExpr(), we want do do nothing here.
       //
       if ( child_kind == CXCursor_MemberRefExpr )
         return false;
