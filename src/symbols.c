@@ -302,10 +302,8 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     goto done;
 
   if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
-    if ( false_set( &sid->printed_verbose_symbols ) ) {
-      verbose_section_begin();
+    if ( verbose_section_begin( &sid->printed_verbose_symbols  ) )
       verbose_printf( "symbols:\n" );
-    }
     char delims[2];
     include_get_delims( include_added_to, delims );
     verbose_printf(

@@ -454,10 +454,8 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   }
 
   if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
-    if ( false_set( &iid->printed_verbose_includes ) ) {
-      verbose_section_begin();
+    if ( verbose_section_begin( &iid->printed_verbose_includes ) )
       verbose_printf( "includes:\n" );
-    }
 
     char delims[2];
     include_get_delims( included, delims );

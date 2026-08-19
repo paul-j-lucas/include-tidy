@@ -217,8 +217,7 @@ static void include_proxies_dump( bool want_explicit ) {
       continue;
     if ( include->is_proxy_explicit != want_explicit )
       continue;
-    if ( false_set( &printed_any ) ) {
-      verbose_section_begin();
+    if ( verbose_section_begin( &printed_any ) ) {
       verbose_printf(
         "%s proxies:\n",
         want_explicit ? "explicit" : "implicit"

@@ -269,9 +269,15 @@ int verbose_printf( char const *format, ... );
 
 /**
  * This should be called once just before starting to print a new verbose
- * output section to pring a blank line to separate sections if necessary.
+ * output section to print a blank line to separate sections if necessary.
+ *
+ * @param flag If not NULL, a pointer to Booelan flag to be tested and, if
+ * `false`, sets it to `true`.
+ * @return Returns `true` only if \a flag is NULL or \a *flag was `false`
+ * initially.
  */
-void verbose_section_begin( void );
+PJL_DISCARD
+bool verbose_section_begin( bool *flag );
 
 /**
  * Gets whether statistics should be printed.
