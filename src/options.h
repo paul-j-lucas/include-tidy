@@ -35,7 +35,7 @@
 #include <stdbool.h>
 
 /**
- * @defgroup options-group **include-tidy** Options
+ * @defgroup options-group Include-Tidy Options
  * Types, global variables, and functions for **include-tidy** options.
  * @{
  */

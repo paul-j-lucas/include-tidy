@@ -23,14 +23,14 @@
 
 /**
  * @file
- * Declares miscellanous stuff.
+ * Declares miscellanous **include-tidy** types, constants, and functions.
  */
 
 // local
 #include "pjl_config.h"                 /* must go first */
 
 /**
- * @defgroup tidy-util-group Include Tidy Utility
+ * @defgroup tidy-util-group Include-Tidy Utilities
  * Miscellanous **include-tidy**-specific types, constants, and functions.
  * @{
  */
