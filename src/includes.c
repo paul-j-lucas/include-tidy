@@ -87,7 +87,7 @@ enum print_group {
 ////////// typedefs ///////////////////////////////////////////////////////////
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-typedef unsigned char ii_matrix_t;      ///< Element type for ii_matrix.
+typedef unsigned short ii_matrix_t;     ///< Element type for ii_matrix.
 #endif /* NEED_II_MATRIX */
 
 typedef struct  includes_init_data        includes_init_data;
