@@ -69,7 +69,7 @@ typedef struct symbols_init_data symbols_init_data;
  */
 struct symbols_init_data {
   CXFile    source_file;                ///< The file being tidied.
-  bool      printed_verbose_symbols;    ///< Verbosely printed symbols?
+  bool      printed_verbose_symbols;    ///< Printed any verbose symbols?
 
   /**
    * The C++ class of the current function or operator we're in.
