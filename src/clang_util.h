@@ -131,6 +131,7 @@ CXCursor tidy_Cursor_getFirstChild( CXCursor cursor );
  * cursor if none.
  *
  * @sa tidy_Cursor_getFirstChild()
+ * @sa tidy_Cursor_skipUnexposedDown()
  */
 NODISCARD
 CXCursor tidy_Cursor_getFirstExposedChild( CXCursor cursor );
@@ -228,6 +229,41 @@ char* tidy_Cursor_getScopedSpelling( CXCursor cursor );
  */
 NODISCARD
 CXCursor tidy_Cursor_getUnderlyingType( CXCursor cursor );
+
+/**
+ * Gets the root initializer for a variable.
+ *
+ * @par Example
+ * @parblock
+ * Given:
+ *
+ *      int a = 42;
+ *      int b = a;
+ *
+ * If passed the cursor for the DeclRefExpr for `b`, will return `42`.
+ * @endparblock
+ *
+ * @param expr_csr The cursor for the initializing expression.
+ * @return Returns the root initializer expression or \a expr_csr (without
+ * UnexposedExpr) if no other initializer expressions exist.
+ *
+ * @sa tidy_Cursor_getVarInitNoUnaryOps()
+ */
+NODISCARD
+CXCursor tidy_Cursor_getVarInit( CXCursor expr_csr );
+
+/**
+ * Calls tidy_Cursor_getVarInit(), but strips all unary operators (cast, `&`,
+ * `*`) as well as `()`.
+ *
+ * @param expr_csr The cursor for the initializing expression.
+ * @return Returns the root initializer expression or \a expr_csr (without
+ * UnexposedExpr) if no other initializer expressions exist.
+ *
+ * @sa tidy_Cursor_getVarInit()
+ */
+NODISCARD
+CXCursor tidy_Cursor_getVarInitNoUnaryOps( CXCursor expr_csr );
 
 /**
  * Gets whether \a i_csr is before \a j_csr in the translation unit.
@@ -357,6 +393,16 @@ NODISCARD
 bool tidy_Cursor_isScopeDecl( CXCursor cursor );
 
 /**
+ * Gets whether the spelling of \a cursor equals \a value.
+ *
+ * @param cursor The cursor to compare.
+ * @param value The value to compare against.
+ * @return Returns `true` only if the spelling of \a cursor equals \a value.
+ */
+NODISCARD
+bool tidy_Cursor_isSpellingEqualTo( CXCursor cursor, char const *value );
+
+/**
  * Gets whether \a cursor is a template specialization of \a template_csr.
  *
  * @param cursor The candicate template class specialization cursor.
@@ -369,15 +415,52 @@ bool tidy_Cursor_isTemplateSpecializationOf( CXCursor cursor,
                                              CXCursor template_csr );
 
 /**
+ * Gets whether \a alias_csr is an alias for a complete type.
+ *
+ * @par Example
+ * @parblock
+ * Given:
+ *
+ *      struct point {
+ *        int x, y;
+ *      };
+ *
+ *      typedef struct point point_t;
+ *      typedef struct foo foo_t;
+ *
+ * The alias `point_t` is "complete" because the definition of `point` is known
+ * whereas the alias `foo_t` is incomplete because the definition of `foo` is
+ * unknown.
+ * @endparblock
+ *
+ * @param alias_csr The cursor for a type alias.
+ * @return Returns `true` only if \a alias_csr is an alias for a complete type.
+ */
+NODISCARD
+bool tidy_Cursor_isTypeAliasComplete( CXCursor alias_csr );
+
+/**
  * Gets whether \a alias_csr is an alias type for \a underlying_csr.
  *
- * @param alias_csr The cursor for a type.
+ * @param alias_csr The cursor for a type alias.
  * @param underlying_csr The cursor for an underlying type.
  * @return Returns `true` only if \a alias_csr is an alias type for \a
  * underlying_csr.
  */
 NODISCARD
 bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr );
+
+/**
+ * If \a cursor is an UnexposedExpr, gets its first child cursor.
+ *
+ * @param cursor The cursor.
+ * @return If \a cursor is an UnexposedExpr, returns its first exposed child;
+ * otherwise returns \a cursor.
+ *
+ * @sa tidy_Cursor_getFirstExposedChild()
+ */
+NODISCARD
+CXCursor tidy_Cursor_skipUnexposedDown( CXCursor cursor );
 
 /**
  * Compares two CXFileUniqueID objects.

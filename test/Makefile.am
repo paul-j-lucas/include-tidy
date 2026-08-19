@@ -46,6 +46,7 @@ TESTS+=	tests/associated-header.test \
 
 # Real-world C tests.
 TESTS+=	tests/c_ast.test \
+	tests/c_ast_util.test \
 	tests/c_type.test \
 	tests/c_typedef.test \
 	tests/cdecl_dym.test \
@@ -69,11 +70,13 @@ TESTS+=	tests/cxx.test \
 	tests/Derived-MI.test \
 	tests/derived_set-2.test \
 	tests/derived_set.test \
+	tests/elements_cpp.test \
 	tests/entities_hpp.test \
 	tests/error_string.test \
 	tests/exit_codes.test \
 	tests/namespace_type.test \
 	tests/query_node.test \
+	tests/timespec_t.test \
 	tests/using_set.test
 
 ###############################################################################

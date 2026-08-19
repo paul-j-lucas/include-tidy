@@ -84,11 +84,6 @@ struct isBaseClass_data {
 
 ////////// local functions ////////////////////////////////////////////////////
 
-NODISCARD
-static CXCursor tidy_Cursor_skipUnexposedDown( CXCursor );
-
-////////// local functions ////////////////////////////////////////////////////
-
 /**
  * A helper function for tidy_getCursorByName() that Visits each symbol within
  * a scope attempting to find one having \ref getCursorByName_data::find_name
@@ -355,39 +350,6 @@ static CXCursor tidy_Cursor_getTypeRef( CXCursor cursor ) {
 }
 
 /**
- * Gets the root initializer for a variable.
- *
- * @par Example
- * @parblock
- * Given:
- *
- *      int a = 42;
- *      int b = a;
- *
- * If passed the cursor for the DeclRefExpr for `b`, will return `42`.
- * @endparblock
- *
- * @param expr_csr The cursor for the initializing expression.
- * @return Returns the root initializer expression or \a expr_csr (without
- * UnexposedExpr) if no other initializer expressions exist.
- */
-NODISCARD
-static CXCursor tidy_Cursor_getVarInitializer( CXCursor expr_csr ) {
-  expr_csr = tidy_Cursor_skipUnexposedDown( expr_csr );
-  enum CXCursorKind kind = clang_getCursorKind( expr_csr );
-  if ( kind == CXCursor_DeclRefExpr ) {
-    CXCursor const ref_csr = clang_getCursorReferenced( expr_csr );
-    kind = clang_getCursorKind( ref_csr );
-    if ( kind == CXCursor_VarDecl ) {
-      CXCursor const init_csr = tidy_Cursor_getFirstExprChild( ref_csr );
-      if ( !clang_Cursor_isNull( init_csr ) )
-        return tidy_Cursor_getVarInitializer( init_csr );
-    }
-  }
-  return expr_csr;
-}
-
-/**
  * Gets whether the kind of \a cursor can be inherited from a base class into a
  * derived class.
  *
@@ -428,22 +390,6 @@ NODISCARD
 static CXCursor tidy_Cursor_skipLinkageSpec( CXCursor cursor ) {
   while ( clang_getCursorKind( cursor ) == CXCursor_LinkageSpec )
     cursor = clang_getCursorSemanticParent( cursor );
-  return cursor;
-}
-
-/**
- * If \a cursor is an UnexposedExpr, gets its first child cursor.
- *
- * @param cursor The cursor.
- * @return If \a cursor is an UnexposedExpr, returns its first exposed child;
- * otherwise returns \a cursor.
- *
- * @sa tidy_Cursor_getFirstExposedChild()
- */
-NODISCARD
-static CXCursor tidy_Cursor_skipUnexposedDown( CXCursor cursor ) {
-  while ( clang_isUnexposed( clang_getCursorKind( cursor ) ) )
-    cursor = tidy_Cursor_getFirstChild( cursor );
   return cursor;
 }
 
@@ -593,6 +539,44 @@ CXCursor tidy_Cursor_getUnderlyingType( CXCursor cursor ) {
   return clang_getTypeDeclaration( type );
 }
 
+CXCursor tidy_Cursor_getVarInit( CXCursor expr_csr ) {
+  expr_csr = tidy_Cursor_skipUnexposedDown( expr_csr );
+  enum CXCursorKind kind = clang_getCursorKind( expr_csr );
+  if ( kind == CXCursor_DeclRefExpr ) {
+    CXCursor const ref_csr = clang_getCursorReferenced( expr_csr );
+    kind = clang_getCursorKind( ref_csr );
+    if ( kind == CXCursor_VarDecl ) {
+      CXCursor const init_csr = tidy_Cursor_getFirstExprChild( ref_csr );
+      if ( !clang_Cursor_isNull( init_csr ) )
+        return tidy_Cursor_getVarInit( init_csr );
+    }
+  }
+  return expr_csr;
+}
+
+CXCursor tidy_Cursor_getVarInitNoUnaryOps( CXCursor expr_csr ) {
+  while ( !tidy_Cursor_isInvalid( expr_csr ) ) {
+    expr_csr = tidy_Cursor_skipUnexposedDown( expr_csr );
+    CXCursor const init_csr = tidy_Cursor_getVarInit( expr_csr );
+    enum CXCursorKind const kind = clang_getCursorKind( init_csr );
+    switch ( kind ) {
+      case CXCursor_ParenExpr:
+      case CXCursor_UnaryOperator:
+        expr_csr = tidy_Cursor_getFirstExposedChild( init_csr );
+        if ( tidy_Cursor_isInvalid( expr_csr ) ||
+             clang_equalCursors( expr_csr, init_csr ) ) {
+          return init_csr;
+        }
+        break;
+      default:
+        return init_csr;
+    } // switch
+  } // while
+
+  return expr_csr;
+}
+
+
 bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_csr, CXCursor j_csr ) {
   if ( tidy_Cursor_isInvalid( i_csr ) || tidy_Cursor_isInvalid( j_csr ) )
     return false;
@@ -674,7 +658,7 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_csr ) {
 
 bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
                                                 CXCursor *pclass_csr ) {
-  expr_csr = tidy_Cursor_getVarInitializer( expr_csr );
+  expr_csr = tidy_Cursor_getVarInit( expr_csr );
   expr_csr = tidy_Cursor_skipUnexposedDown( expr_csr );
 
   enum CXCursorKind const kind = clang_getCursorKind( expr_csr );
@@ -752,6 +736,17 @@ bool tidy_Cursor_isScopeDecl( CXCursor cursor ) {
   } // switch
 }
 
+bool tidy_Cursor_isSpellingEqualTo( CXCursor cursor, char const *value ) {
+  assert( value != NULL );
+
+  CXString const    cxs = clang_getCursorSpelling( cursor );
+  char const *const s = clang_getCString( cxs );
+  bool const        is_equal = s != NULL && strcmp( s, value ) == 0;
+
+  clang_disposeString( cxs );
+  return is_equal;
+}
+
 bool tidy_Cursor_isTemplateSpecializationOf( CXCursor cursor,
                                              CXCursor template_csr ) {
   template_csr = clang_getSpecializedCursorTemplate( template_csr );
@@ -761,6 +756,12 @@ bool tidy_Cursor_isTemplateSpecializationOf( CXCursor cursor,
       return true;
   }
   return false;
+}
+
+bool tidy_Cursor_isTypeAliasComplete( CXCursor alias_csr ) {
+  CXType type = clang_getCursorType( alias_csr );
+  type = clang_getCanonicalType( type );
+  return type.kind == CXType_Record && clang_Type_getSizeOf( type ) > 0;
 }
 
 bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr ) {
@@ -791,6 +792,12 @@ bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr ) {
     underlying_csr = spec_csr;
 
   return clang_equalCursors( alias_csr, underlying_csr );
+}
+
+CXCursor tidy_Cursor_skipUnexposedDown( CXCursor cursor ) {
+  while ( clang_isUnexposed( clang_getCursorKind( cursor ) ) )
+    cursor = tidy_Cursor_getFirstChild( cursor );
+  return cursor;
 }
 
 CXString tidy_File_getRealPathName( CXFile file ) {

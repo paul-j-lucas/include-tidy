@@ -171,7 +171,7 @@ unsigned  tidy_includes_unnecessary;
  * include file \e j.
  * @endparblock
  */
-static ii_matrix_t  **ii_matrix;
+static ii_matrix_t **ii_matrix;
 #endif /* NEED_II_MATRIX */
 
 ////////// local functions ////////////////////////////////////////////////////

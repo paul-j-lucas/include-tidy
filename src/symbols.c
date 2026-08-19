@@ -600,6 +600,72 @@ done:
 }
 
 /**
+ * Gets whether a call expression is via a C++ overloaded `operator->` and
+ * whether it's a proxy for some other class.
+ *
+ * @par Example
+ * @parblock
+ * Given:
+ *
+ *      struct point {
+ *        int x, y;
+ *      };
+ *
+ *      class proxy {
+ *      public:
+ *        point* operator->() const {
+ *          return _p;
+ *        }
+ *      private:
+ *        point *_p;
+ *      };
+ *
+ *      void f( proxy p ) {
+ *        p->x = 0;
+ *      }
+ *
+ * then \a call_expr_csr refers to `p->` and \a mbr_cls_csr refers to `point`.
+ * @endparblock
+ *
+ * @param call_expr_csr The cursor for the call expresssion.
+ * @param mbr_cls_csr The cursor for the class of the member.
+ * @return Returns `true` only if \a call_expr_csr is via an overloaded
+ * `operator->` and \a mbr_cls_csr is _not_ the same as the class that defines
+ * (or inherits) the operator, i.e., it's a proxy for \a mbr_cls_csr and
+ * therefore an IWYU exception.
+ */
+NODISCARD
+static bool is_cxx_arrow_iwyu_exception( CXCursor call_expr_csr,
+                                         CXCursor mbr_cls_csr ) {
+  assert( tidy_is_cxx );
+
+  enum CXCursorKind const kind = clang_getCursorKind( call_expr_csr );
+  if ( kind != CXCursor_CallExpr )
+    return false;
+
+  CXCursor const op_csr = clang_getCursorReferenced( call_expr_csr );
+  if ( !tidy_Cursor_isSpellingEqualTo( op_csr, "operator->" ) )
+    return false;
+
+  // For obj->mbr, get obj.
+  CXCursor obj_csr = tidy_Cursor_getFirstExposedChild( call_expr_csr );
+  if ( tidy_Cursor_isInvalid( obj_csr ) )
+    return true;
+
+  // If obj was a pointer or reference, get the underlying type.
+  CXCursor obj_cls_csr = tidy_Cursor_getUnderlyingType( obj_csr );
+  if ( tidy_Cursor_isInvalid( obj_cls_csr ) )
+    return true;
+
+  obj_cls_csr = clang_getCanonicalCursor( obj_cls_csr );
+  mbr_cls_csr = clang_getCanonicalCursor( mbr_cls_csr );
+
+  // The proxy object's class (e.g., std::map<K,V>::const_iterator) is not the
+  // same as the member's class (e.g., std::pair<T1,T2>).
+  return !clang_equalCursors( obj_cls_csr, mbr_cls_csr );
+}
+
+/**
  * Checks whether \a cursor and its declaration \a dec_csr constitute an
  * include-what-you-use (IWYU) exception for C++.
  *
@@ -730,42 +796,107 @@ static bool is_cxx_member_fn_iwyu_exception( CXCursor call_csr,
   return false;
 }
 
-#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
- * Attempts to find the include file containing \a cursor.
+ * Gets whether the referenced C++ class member \a obj_csr constitutes an
+ * include-what-you-use (IWYU) exception.
  *
- * @param cursor The cursor to find the include file for.
- * @return Returns the include file for cursor or NULL if either \a cursor is
- * invalid or the include file can't be found.
+ * @param obj_csr The C++ object whose member is being referenced.
+ * @return Returns `true` only if \a obj_csr (and the header that declares it)
+ * referencing the class member should _not_ be added, i.e., is an IWYU
+ * exception.
  */
 NODISCARD
-static tidy_include* include_find_by_cursor( CXCursor cursor ) {
-  if ( tidy_Cursor_isInvalid( cursor ) )
-    return NULL;
-  CXFile const file = tidy_getCursorLocation_File( cursor );
-  return file != NULL ? include_find_by_File( file ) : NULL;
+static bool is_cxx_member_ref_iwyu_exception( CXCursor obj_csr ) {
+  if ( tidy_Cursor_isInvalid( obj_csr ) )
+    return false;
+
+  // Fully unwrap address-of, dereferences, parens, casts, and variable
+  // initializers.
+  CXCursor const init_csr = tidy_Cursor_getVarInitNoUnaryOps( obj_csr );
+  if ( tidy_Cursor_isInvalid( init_csr ) )
+    return false;
+
+  // Is the type a nested typedef (e.g., std::map<K,V>::value_type) or class
+  // (e.g., std::map<K,V>::iterator) inside a class?
+  CXCursor const type_decl_csr = tidy_Cursor_getUnderlyingType( init_csr );
+  if ( !tidy_Cursor_isInvalid( type_decl_csr ) ) {
+    CXCursor const sem_parent = clang_getCursorSemanticParent( type_decl_csr );
+    if ( tidy_Cursor_isClassDecl( sem_parent ) )
+      return true;
+  }
+
+  // Does the initializer originate from a struct field, C++ member function,
+  // or a parameter thereof?
+  CXCursor child_csr = tidy_Cursor_skipUnexposedDown( init_csr );
+  if ( tidy_Cursor_isInvalid( child_csr ) )
+    return false;
+  CXCursor ref_csr = clang_getCursorReferenced( child_csr );
+  if ( clang_Cursor_isNull( ref_csr ) ) {
+    enum CXCursorKind const kind = clang_getCursorKind( child_csr );
+    if ( kind == CXCursor_CallExpr ) {
+      CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( child_csr );
+      ref_csr = clang_getCursorReferenced( callee_csr );
+    }
+  }
+  if ( tidy_Cursor_isInvalid( ref_csr ) )
+    return false;
+
+  // Method return value (e.g., map.insert(), iterator operator*, operator->)
+  enum CXCursorKind const kind = clang_getCursorKind( ref_csr );
+  switch ( kind ) {
+    case CXCursor_ConversionFunction:
+    case CXCursor_CXXMethod:
+    case CXCursor_FieldDecl:;
+      CXCursor const cls_csr = clang_getCursorSemanticParent( ref_csr );
+      if ( tidy_Cursor_isClassDecl( cls_csr ) )
+        return true;
+      break;
+
+    case CXCursor_ParmDecl:;
+      CXCursor const fn_csr = clang_getCursorSemanticParent( ref_csr );
+      if ( clang_getCursorKind( fn_csr ) == CXCursor_CXXMethod ) {
+        CXCursor const fn_cls_csr = clang_getCursorSemanticParent( fn_csr );
+        if ( tidy_Cursor_isClassDecl( fn_cls_csr ) )
+          return true;
+      }
+      break;
+
+    default:
+      /* suppress warning */;
+  } // switch
+
+  return false;
 }
 
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
- * Gets whether it's possible to go from the header file containing \a ref_csr
- * that refernces a symbol to the header file containing \a def_csr that
- * defines the symbol via the set of files that were included.
+ * Gets whether it's possible to go from the header \a ref_file containing a
+ * reference to a symbol to the header \a def_file containing the definition of
+ * that symbol via the set of files that were included.
  *
- * @param ref_csr A cursor referencing a symbol.
- * @param def_csr A cursor defining a symbol.
- * @return Returns a value &gt; 0 only if the header file containing ref_csr
- * includes the header file containing \a def_csr.  The value indicates the
- * number of includes between them, i.e., 1 means \e i includes \e j directly,
- * 2 means \e i includes \e k that includes \e j, and so on.
+ * @param ref_file A header file containing a reference to a symbol.
+ * @param def_file A header file containing the definition of that symbol.
+ * @return Returns a value &gt; 0 only if \a ref_file includes the \a def_file,
+ * directly or indirectly.  The value indicates the number of includes between
+ * them, i.e., 1 means \e ref_file includes \e def_file directly, 2 means \e
+ * ref_file includes \e other_file that includes \e def_file, and so on.
  */
 NODISCARD
-static unsigned is_include_path( CXCursor ref_csr, CXCursor def_csr ) {
-  tidy_include const *const def_include = include_find_by_cursor( def_csr );
+static unsigned is_include_path( CXFile ref_file, CXFile def_file ) {
+  tidy_include const *const def_include = include_find_by_File( def_file );
   if ( def_include == NULL )
     return 0;
-  tidy_include const *const ref_include = include_find_by_cursor( ref_csr );
-  if ( ref_include == NULL )
-    return 0;
+
+  tidy_include const *ref_include;
+  if ( ref_file != NULL ) {
+    ref_include = include_find_by_File( ref_file );
+    if ( ref_include == NULL )
+      return 0;
+  }
+  else {
+    ref_include = NULL;
+  }
+
   return include_includes( ref_include, def_include );
 }
 #endif /* NEED_II_MATRIX */
@@ -1599,14 +1730,73 @@ static void visit_MemberRefExpr( CXCursor member_ref_csr, CXCursor parent,
   (void)parent;
   assert( sid != NULL );
 
-  // Gets the cursor for _a_ declaration of the symbol.
-  CXCursor const dec_csr = clang_getCursorReferenced( member_ref_csr );
-  if ( tidy_Cursor_isInvalid( dec_csr ) )
+  CXCursor const mbr_csr = clang_getCursorReferenced( member_ref_csr );
+  if ( tidy_Cursor_isInvalid( mbr_csr ) )
     return;
 
-  CXCursor const dec_class_csr = clang_getCursorSemanticParent( dec_csr );
-  if ( tidy_Cursor_isClassDecl( dec_class_csr ) )
-    visit_most_kinds( member_ref_csr, dec_class_csr, sid );
+  CXCursor const mbr_cls_csr = clang_getCursorSemanticParent( mbr_csr );
+  if ( !tidy_Cursor_isClassDecl( mbr_cls_csr ) )
+    goto skip;
+
+  // For a MemberRefExpr, the first child is the class/struct/union object that
+  // we're referencing the member of.
+  CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( member_ref_csr );
+  if ( tidy_Cursor_isInvalid( obj_csr ) )
+    goto skip;
+
+  if ( tidy_is_cxx ) {
+    if ( is_cxx_arrow_iwyu_exception( obj_csr, mbr_cls_csr ) )
+      return;
+    if ( is_cxx_member_ref_iwyu_exception( obj_csr ) )
+      return;
+  }
+
+  CXCursor const type_csr = tidy_Cursor_getUnderlyingType( obj_csr );
+  enum CXCursorKind const kind = clang_getCursorKind( type_csr );
+
+  switch ( kind ) {
+    case CXCursor_TypedefDecl:
+    case CXCursor_TypeAliasDecl:
+      //
+      // This is for a case like:
+      //
+      //      // types.h
+      //      #include <time.h>
+      //      typedef struct timespec timespec_t;
+      //
+      //      // Foo.c
+      //      #include "types.h"
+      //      void f( timespec_t *time ) {
+      //        time_t t = time->tv_sec;
+      //        // ...
+      //      }
+      //
+      // Since types.h includes time.h, timespec_t is an alias for a complete
+      // type since the definition of timespec has been seen.  Therefore, Foo.c
+      // need only include types.h and not time.h to access tv_sec (that
+      // requires a complete type).
+      //
+      if ( !tidy_Cursor_isTypeAliasComplete( type_csr ) )
+        break;
+      CXCursor const def_cls_csr = clang_getCursorDefinition( mbr_cls_csr );
+      if ( tidy_Cursor_isInvalid( def_cls_csr ) )
+        break;
+      CXFile const def_file = tidy_getCursorLocation_File( def_cls_csr );
+      if ( def_file == NULL )
+        break;
+      tidy_include const *const def_include = include_find_by_File( def_file );
+      if ( def_include == NULL )
+        break;
+      if ( def_include->depth > 0 )     // not directly included
+        return;
+      break;
+
+    default:
+      /* suppress warning */;
+  } // switch
+
+skip:
+  visit_most_kinds( member_ref_csr, mbr_cls_csr, sid );
 }
 
 /**

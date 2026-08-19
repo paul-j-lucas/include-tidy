@@ -7,9 +7,13 @@ See the end of the file for license conditions.
 
 * Changes in Include-tidy 2.1.1
 
+** C++ overloaded `operator->`
+Now handing overloaded `operator->` correctly.
+
 ** Fixed `struct`/`union`/`class` member references
 Referencing a `struct`/`union`/`class` member now correctly required its
 definition.
+
 
 * Changes in Include-tidy 2.1
 
