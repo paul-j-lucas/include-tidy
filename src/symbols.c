@@ -554,6 +554,25 @@ NODISCARD
 static bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
   assert( tidy_is_cxx );
 
+  enum CXCursorKind const fn_kind = clang_getCursorKind( fn_csr );
+  switch ( fn_kind ) {
+    case CXCursor_ConversionFunction:
+    case CXCursor_CXXMethod:
+      if ( is_cxx_mbr_fn_iwyu_exception( call_csr, fn_csr ) )
+        return true;
+      break;
+    default:
+      /* suppress warning */;
+  } // switch
+
+  // At this point, the function is either a non-member function or a class
+  // static member function.
+
+  int const num_args = clang_Cursor_getNumArguments( call_csr );
+  assert( num_args >= 0 && "call_csr is not a function" );
+  if ( num_args == 0 )
+    return false;
+
   CXFile const fn_file = tidy_getCursorLocation_File( fn_csr );
   if ( fn_file == NULL )
     return false;
@@ -562,27 +581,12 @@ static bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
     return false;
   fn_include = include_get_proxy( fn_include );
 
-  enum CXCursorKind const fn_kind = clang_getCursorKind( fn_csr );
-  bool const is_mbr_fn = fn_kind == CXCursor_CXXMethod ||
-                         fn_kind == CXCursor_ConversionFunction;
-
-  if ( is_mbr_fn && is_cxx_mbr_fn_iwyu_exception( call_csr, fn_csr ) )
-    return true;
-
-  // The function is either a non-member function or a static member function.
-
-  int const num_args = clang_Cursor_getNumArguments( call_csr );
-  assert( num_args >= 0 && "call_csr is not a function" );
-  if ( num_args == 0 )
-    return false;
-
   for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
     CXCursor const par_csr = clang_Cursor_getArgument( fn_csr, i );
     if ( clang_Cursor_isNull( par_csr ) )
       continue;
     CXCursor const par_type_csr = tidy_Cursor_getUnderlyingType( par_csr );
-    CXCursor const par_ocls_csr =
-      tidy_Cursor_getOutermostClass( par_type_csr );
+    CXCursor const par_ocls_csr = tidy_Cursor_getOutermostClass( par_type_csr );
     if ( clang_Cursor_isNull( par_ocls_csr ) )
       continue;
 
