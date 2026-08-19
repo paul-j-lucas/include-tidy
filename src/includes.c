@@ -239,7 +239,7 @@ static void ii_matrix_init( unsigned N ) {
       if ( ii_matrix[i][k] == 0 )
         continue;
       for ( unsigned j = 0; j < N; ++j ) {
-        if ( ii_matrix[k][j] > 0 )
+        if ( ii_matrix[k][j] == 0 )
           continue;
         ii_matrix_t const new_dist = ii_matrix[i][k] + ii_matrix[k][j];
         if ( ii_matrix[i][j] == 0 || new_dist < ii_matrix[i][j] )
