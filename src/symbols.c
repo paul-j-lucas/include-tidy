@@ -133,7 +133,7 @@ struct symbols_init_data {
    * Here, `Derived.cpp` correctly includes `Derived.hpp` that correctly
    * includes `Base.hpp`. `Derived.cpp` uses `operator==()` that's declared in
    * `Base.hpp`, so `Derived.cpp` should include `Base.hpp` according to the
-   * include-what-you-use rule (IWYU).
+   * include-what-you-use (IWYU) principle..
    *
    * However, since `Derived` is derived from `Base`, that means the definition
    * of `Base` was available via `Derived.hpp` including `Base.hpp`; and since
@@ -194,7 +194,7 @@ struct symbols_init_data {
    *  + The reference to it is from the global scope, not a class scope.
    *
    * For all of these reasons, `Derived.cpp` should include `Base.hpp`
-   * according to the include-what-you-use rule (IWYU).
+   * according to the include-what-you-use (IWYU) principle.
    *
    * However, since `Derived` is derived from `Base`, that means the definition
    * of `Base` was available via `Derived.hpp` including `Base.hpp`; and since
@@ -474,7 +474,8 @@ done:
 
 /**
  * Gets whether a call expression is via a C++ overloaded `operator->` and
- * whether it's a proxy for some other class.
+ * whether it's a proxy for some other class and therefore constitites an
+ * include-what-you-use (IWYU) exception.
  *
  * @par Example
  * @parblock
@@ -521,11 +522,11 @@ static bool is_cxx_arrow_iwyu_exception( CXCursor call_expr_csr,
     return false;
 
   // For obj->mbr, get obj.
-  CXCursor obj_csr = tidy_Cursor_getFirstExposedChild( call_expr_csr );
+  CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( call_expr_csr );
   if ( tidy_Cursor_isInvalid( obj_csr ) )
     return true;
 
-  // If obj was a pointer or reference, get the underlying type.
+  // If obj is a pointer or reference, get the underlying type.
   CXCursor obj_cls_csr = tidy_Cursor_getUnderlyingType( obj_csr );
   if ( tidy_Cursor_isInvalid( obj_cls_csr ) )
     return true;
@@ -533,20 +534,25 @@ static bool is_cxx_arrow_iwyu_exception( CXCursor call_expr_csr,
   obj_cls_csr = clang_getCanonicalCursor( obj_cls_csr );
   mbr_cls_csr = clang_getCanonicalCursor( mbr_cls_csr );
 
+  //
   // The proxy object's class (e.g., std::map<K,V>::const_iterator) is not the
-  // same as the member's class (e.g., std::pair<T1,T2>).
+  // same as the member's class (e.g., std::pair<T1,T2>); therefore, operator->
+  // is a proxy for the member and an IWYU exception.
+  //
   return !clang_equalCursors( obj_cls_csr, mbr_cls_csr );
 }
 
 /**
- * Helper function for visit_CallExpr() that gets whether the symbol for a
- * C++ function or operator should be added to the global set.
+ * Gets whether the symbol for a C++ function or operator (and the header that
+ * declares it) should be added to the global set or constitites an include-
+ * what-you-use (IWYU) exception.
  *
  * @note This function should be called only for C++ files being tidied.
  *
  * @param call_csr A CallExpr cursor.
  * @param fn_csr The cursor of the function being called.
- * @return Returns `true` only if the function should be added.
+ * @return Returns `true` only if the function (and the header that declares
+ * it) should _not_ be added and is therefore an IWYU exception.
  */
 NODISCARD
 static bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
