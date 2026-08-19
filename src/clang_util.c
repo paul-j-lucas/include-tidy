@@ -657,7 +657,7 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_csr ) {
 }
 
 bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
-                                                CXCursor *pclass_csr ) {
+                                                CXCursor *pcls_csr ) {
   expr_csr = tidy_Cursor_getVarInit( expr_csr );
   expr_csr = tidy_Cursor_skipUnexposedDown( expr_csr );
 
@@ -672,31 +672,31 @@ bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
   CXCursor const mbr_fn_csr = clang_getCursorReferenced( callee_csr );
   if ( clang_Cursor_isNull( mbr_fn_csr ) )
     return false;
-  CXCursor mbr_fn_class_csr = clang_getCursorSemanticParent( mbr_fn_csr );
-  mbr_fn_class_csr = clang_getCanonicalCursor( mbr_fn_class_csr );
-  if ( clang_Cursor_isNull( mbr_fn_class_csr ) )
+  CXCursor mbr_fn_cls_csr = clang_getCursorSemanticParent( mbr_fn_csr );
+  mbr_fn_cls_csr = clang_getCanonicalCursor( mbr_fn_cls_csr );
+  if ( clang_Cursor_isNull( mbr_fn_cls_csr ) )
     return false;
 
   // Get the object the member function is being called on.
   CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( callee_csr );
   if ( clang_Cursor_isNull( obj_csr ) )
     return false;
-  CXCursor obj_class_csr = tidy_Cursor_getUnderlyingType( obj_csr );
-  obj_class_csr = clang_getCanonicalCursor( obj_class_csr );
-  if ( clang_Cursor_isNull( obj_class_csr ) )
+  CXCursor obj_cls_csr = tidy_Cursor_getUnderlyingType( obj_csr );
+  obj_cls_csr = clang_getCanonicalCursor( obj_cls_csr );
+  if ( clang_Cursor_isNull( obj_cls_csr ) )
     return false;
 
   // Is the object's class inherited from the member function's class?
-  if ( !tidy_Cursor_isInheritedFrom( obj_class_csr, mbr_fn_class_csr ) )
+  if ( !tidy_Cursor_isInheritedFrom( obj_cls_csr, mbr_fn_cls_csr ) )
     return false;
 
-  if ( pclass_csr != NULL )
-    *pclass_csr = mbr_fn_class_csr;
+  if ( pcls_csr != NULL )
+    *pcls_csr = mbr_fn_cls_csr;
   return true;
 }
 
 bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
-                                        CXCursor *pclass_csr ) {
+                                        CXCursor *pcls_csr ) {
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
     case CXCursor_Constructor:
@@ -705,10 +705,10 @@ bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
     case CXCursor_Destructor:
     case CXCursor_VarDecl:
       if ( clang_isCursorDefinition( cursor ) ) {
-        CXCursor const class_csr = clang_getCursorSemanticParent( cursor );
-        bool const is_out_of_line = !clang_equalCursors( parent, class_csr );
-        if ( is_out_of_line && pclass_csr != NULL )
-          *pclass_csr = class_csr;
+        CXCursor const cls_csr = clang_getCursorSemanticParent( cursor );
+        bool const is_out_of_line = !clang_equalCursors( parent, cls_csr );
+        if ( is_out_of_line && pcls_csr != NULL )
+          *pcls_csr = cls_csr;
         return is_out_of_line;
       }
       break;

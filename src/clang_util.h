@@ -346,13 +346,13 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_csr );
  * @endparblock
  *
  * @param expr_csr The expression the member function is being called on.
- * @param pclass_csr If not NULL and the member function was inherited,
- * receives the cursor for the base class that the function was declared in.
+ * @param pcls_csr If not NULL and the member function was inherited, receives
+ * the cursor for the base class that the function was declared in.
  * @return Returns `true` only if the member function was inherited.
  */
 NODISCARD
 bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
-                                                CXCursor *pclass_csr );
+                                                CXCursor *pcls_csr );
 
 /**
  * Gets whether \a cursor is either null or invalid.
@@ -371,13 +371,13 @@ inline bool tidy_Cursor_isInvalid( CXCursor cursor ) {
  *
  * @param cursor The cursor to check.
  * @param parent The lexical parent cursor of \a cursor.
- * @param pclass_csr If not NULL and \a cursor is an out-of-line definition,
- * the class of \a cursor is put here.
+ * @param pcls_csr If not NULL and \a cursor is an out-of-line definition, the
+ * class of \a cursor is put here.
  * @return Returns `true` only if \a cursor is an out-of-line definition.
  */
 NODISCARD
 bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
-                                        CXCursor *pclass_csr );
+                                        CXCursor *pcls_csr );
 
 /**
  * Gets whether \a cursor is a class, class template, enumeration, namespace,

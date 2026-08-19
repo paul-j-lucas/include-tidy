@@ -99,7 +99,7 @@ struct symbols_init_data {
    *
    * @note This is set while visiting any cursor _inside_ a function.
    */
-  CXCursor cxx_current_fn_class_csr;
+  CXCursor cxx_current_fn_cls_csr;
 
   /**
    * The cursor of the current C++ function (including member functions and
@@ -226,13 +226,13 @@ struct symbols_init_data {
    * @note This is set only for the current statement or declaration.  It is
    * reset upon encountering the next statement or declaration.
    */
-  CXCursor cxx_statement_class_csr;
+  CXCursor cxx_statement_cls_csr;
 };
 
 ////////// local functions ////////////////////////////////////////////////////
 
 NODISCARD
-static bool     is_cxx_member_fn_iwyu_exception( CXCursor, CXCursor );
+static bool     is_cxx_mbr_fn_iwyu_exception( CXCursor, CXCursor );
 
 NODISCARD
 static CXCursor symbols_init_data_cxx_scope( symbols_init_data const*,
@@ -279,10 +279,10 @@ static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
   fn_include = include_get_proxy( fn_include );
 
   enum CXCursorKind const fn_kind = clang_getCursorKind( fn_csr );
-  bool const is_member_fn = fn_kind == CXCursor_CXXMethod ||
-                            fn_kind == CXCursor_ConversionFunction;
+  bool const is_mbr_fn = fn_kind == CXCursor_CXXMethod ||
+                         fn_kind == CXCursor_ConversionFunction;
 
-  if ( is_member_fn && is_cxx_member_fn_iwyu_exception( call_csr, fn_csr ) )
+  if ( is_mbr_fn && is_cxx_mbr_fn_iwyu_exception( call_csr, fn_csr ) )
     return false;
 
   // The function is either a non-member function or a static member function.
@@ -768,8 +768,7 @@ static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
  * header that declares it) should _not_ be added, i.e., is an IWYU exception.
  */
 NODISCARD
-static bool is_cxx_member_fn_iwyu_exception( CXCursor call_csr,
-                                             CXCursor fn_csr ) {
+static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
   CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( call_csr );
   if ( clang_getCursorKind( callee_csr ) != CXCursor_MemberRefExpr )
     return false;
@@ -778,18 +777,18 @@ static bool is_cxx_member_fn_iwyu_exception( CXCursor call_csr,
   if ( clang_Cursor_isNull( obj_expr_csr ) )
     return false;
 
-  CXCursor const obj_class_csr = tidy_Cursor_getUnderlyingType( obj_expr_csr );
-  CXCursor const fn_class_csr = clang_getCursorSemanticParent( fn_csr );
+  CXCursor const obj_cls_csr = tidy_Cursor_getUnderlyingType( obj_expr_csr );
+  CXCursor const fn_cls_csr = clang_getCursorSemanticParent( fn_csr );
 
-  if ( tidy_Cursor_isInheritedFrom( obj_class_csr, fn_class_csr ) )
+  if ( tidy_Cursor_isInheritedFrom( obj_cls_csr, fn_cls_csr ) )
     return true;
 
   CXCursor base_csr;
   if ( !tidy_Cursor_isInheritedMemberFunctionCall( obj_expr_csr, &base_csr ) )
     return true;
 
-  if ( clang_equalCursors( base_csr, fn_class_csr ) ||
-        tidy_Cursor_isInheritedFrom( base_csr, fn_class_csr ) ) {
+  if ( clang_equalCursors( base_csr, fn_cls_csr ) ||
+        tidy_Cursor_isInheritedFrom( base_csr, fn_cls_csr ) ) {
     return true;
   }
 
@@ -806,7 +805,7 @@ static bool is_cxx_member_fn_iwyu_exception( CXCursor call_csr,
  * exception.
  */
 NODISCARD
-static bool is_cxx_member_ref_iwyu_exception( CXCursor obj_csr ) {
+static bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
   if ( tidy_Cursor_isInvalid( obj_csr ) )
     return false;
 
@@ -963,11 +962,11 @@ static bool is_symbol_definition_needed( CXCursor cursor, CXCursor parent,
                                          CXCursor *pdef_csr ) {
   assert( pdef_csr != NULL );
 
-  CXCursor class_csr;
+  CXCursor cls_csr;
 
   if ( tidy_is_cxx &&
-       tidy_Cursor_isOutOfLineDefinition( cursor, parent, &class_csr ) ) {
-    *pdef_csr = clang_getCursorDefinition( class_csr );
+       tidy_Cursor_isOutOfLineDefinition( cursor, parent, &cls_csr ) ) {
+    *pdef_csr = clang_getCursorDefinition( cls_csr );
     return true;
   }
 
@@ -1295,8 +1294,8 @@ static void symbols_cleanup( void ) {
  * one.
  * @return Returns The cursor for the scope that should be used.
  *
- * @sa symbols_init_data::cxx_statement_class_csr
- * @sa symbols_init_data::cxx_current_fn_class_csr
+ * @sa symbols_init_data::cxx_statement_cls_csr
+ * @sa symbols_init_data::cxx_current_fn_cls_csr
  * @sa visit_most_kinds()
  */
 NODISCARD
@@ -1304,11 +1303,11 @@ static CXCursor symbols_init_data_cxx_scope( symbols_init_data const *sid,
                                              CXCursor else_csr ) {
   assert( sid != NULL );
 
-  if ( !clang_Cursor_isNull( sid->cxx_current_fn_class_csr ) )
-    return sid->cxx_current_fn_class_csr;
+  if ( !clang_Cursor_isNull( sid->cxx_current_fn_cls_csr ) )
+    return sid->cxx_current_fn_cls_csr;
 
-  if ( !clang_Cursor_isNull( sid->cxx_statement_class_csr ) )
-    return sid->cxx_statement_class_csr;
+  if ( !clang_Cursor_isNull( sid->cxx_statement_cls_csr ) )
+    return sid->cxx_statement_cls_csr;
 
   return else_csr;
 }
@@ -1329,7 +1328,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   symbols_init_data *const sid = data;
 
   bool is_new_statement = false;
-  CXCursor const prev_cxx_statement_class_csr = sid->cxx_statement_class_csr;
+  CXCursor const prev_cxx_statement_cls_csr = sid->cxx_statement_cls_csr;
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
@@ -1351,14 +1350,14 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 
   if ( tidy_is_cxx ) {
     //
-    // Since a non-null value of cxx_statement_class_csr must span across
+    // Since a non-null value of cxx_statement_cls_csr must span across
     // multiple calls to symbols_init_visitor() for siblings, we have to know
     // when to reset it.  Once way to do it is whenever the declaration or
     // statement changes.
     //
     is_new_statement = clang_isDeclaration( kind ) || clang_isStatement( kind );
     if ( is_new_statement )
-      sid->cxx_statement_class_csr = clang_getNullCursor();
+      sid->cxx_statement_cls_csr = clang_getNullCursor();
   }
 
   switch ( kind ) {
@@ -1408,14 +1407,14 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 
   if ( tidy_is_cxx ) {
     //
-    // If it's a class scope, set cxx_statement_class_csr.
+    // If it's a class scope, set cxx_statement_cls_csr.
     //
     switch ( kind ) {
       case CXCursor_TemplateRef:
       case CXCursor_TypeRef:;
         CXCursor const ref_csr = clang_getCursorReferenced( cursor );
         if ( tidy_Cursor_isClassDecl( ref_csr ) )
-          sid->cxx_statement_class_csr = ref_csr;
+          sid->cxx_statement_cls_csr = ref_csr;
         break;
       default:
         /* suppress warning */;
@@ -1423,28 +1422,28 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   }
 
 skip:;
-  // See the comment for symbols_init_data::cxx_current_fn_class_csr.
-  CXCursor const prev_cxx_current_fn_class_csr = sid->cxx_current_fn_class_csr;
+  // See the comment for symbols_init_data::cxx_current_fn_cls_csr.
+  CXCursor const prev_cxx_current_fn_cls_csr = sid->cxx_current_fn_cls_csr;
   if ( tidy_is_cxx && tidy_Cursor_isFunctionDecl( cursor ) ) {
-    CXCursor const fn_class_csr = clang_getCursorSemanticParent( cursor );
-    sid->cxx_current_fn_class_csr = tidy_Cursor_isClassDecl( fn_class_csr ) ?
-      fn_class_csr :
+    CXCursor const fn_cls_csr = clang_getCursorSemanticParent( cursor );
+    sid->cxx_current_fn_cls_csr = tidy_Cursor_isClassDecl( fn_cls_csr ) ?
+      fn_cls_csr :
       clang_getNullCursor();
   }
 
   //
   // Returning CXChildVisit_Recurse causes clang_visitChildren() to do only
-  // pre-order traversal, but we need to reset both cxx_current_fn_class_csr
-  // and cxx_statement_class_csr after visiting a child node. Therefore,
-  // recurse manually.
+  // pre-order traversal, but we need to reset both cxx_current_fn_cls_csr and
+  // cxx_statement_cls_csr after visiting a child node. Therefore, recurse
+  // manually.
   //
   clang_visitChildren( cursor, &symbols_init_visitor, data );
 
-  sid->cxx_current_fn_class_csr = prev_cxx_current_fn_class_csr;
+  sid->cxx_current_fn_cls_csr = prev_cxx_current_fn_cls_csr;
 
 skip_children:
   if ( is_new_statement )
-    sid->cxx_statement_class_csr = prev_cxx_statement_class_csr;
+    sid->cxx_statement_cls_csr = prev_cxx_statement_cls_csr;
   return CXChildVisit_Continue;
 }
 
@@ -1595,7 +1594,7 @@ static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
   CXString const    field_name_cxs = clang_getCursorSpelling( field_csr );
   char const *const field_name_cs  = clang_getCString( field_name_cxs );
 
-  CXCursor const class_csr = clang_getCursorSemanticParent( field_csr );
+  CXCursor const cls_csr = clang_getCursorSemanticParent( field_csr );
 
   for ( unsigned i = 0; i < token_count; ++i ) {
     if ( clang_getTokenKind( tokens[i] ) != CXToken_Identifier )
@@ -1611,7 +1610,7 @@ static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
       continue;
 
     CXCursor const sym_csr =
-      tidy_Token_getScopedNameCursor( tokens, token_count, &i, class_csr );
+      tidy_Token_getScopedNameCursor( tokens, token_count, &i, cls_csr );
     maybe_add_symbol( sym_csr, sym_csr, sid );
   } // for
 
@@ -1721,16 +1720,16 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
 /**
  * Visits a `CXCursor_MemberRefExpr` kind of cursor.
  *
- * @param member_ref_csr The member reference's cursor to visit.
+ * @param mbr_ref_csr The member reference's cursor to visit.
  * @param parent Not used.
  * @param sid The symbols_init_data to use.
  */
-static void visit_MemberRefExpr( CXCursor member_ref_csr, CXCursor parent,
+static void visit_MemberRefExpr( CXCursor mbr_ref_csr, CXCursor parent,
                                  symbols_init_data *sid ) {
   (void)parent;
   assert( sid != NULL );
 
-  CXCursor const mbr_csr = clang_getCursorReferenced( member_ref_csr );
+  CXCursor const mbr_csr = clang_getCursorReferenced( mbr_ref_csr );
   if ( tidy_Cursor_isInvalid( mbr_csr ) )
     return;
 
@@ -1740,14 +1739,14 @@ static void visit_MemberRefExpr( CXCursor member_ref_csr, CXCursor parent,
 
   // For a MemberRefExpr, the first child is the class/struct/union object that
   // we're referencing the member of.
-  CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( member_ref_csr );
+  CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( mbr_ref_csr );
   if ( tidy_Cursor_isInvalid( obj_csr ) )
     goto skip;
 
   if ( tidy_is_cxx ) {
     if ( is_cxx_arrow_iwyu_exception( obj_csr, mbr_cls_csr ) )
       return;
-    if ( is_cxx_member_ref_iwyu_exception( obj_csr ) )
+    if ( is_cxx_mbr_ref_iwyu_exception( obj_csr ) )
       return;
   }
 
@@ -1796,7 +1795,7 @@ static void visit_MemberRefExpr( CXCursor member_ref_csr, CXCursor parent,
   } // switch
 
 skip:
-  visit_most_kinds( member_ref_csr, mbr_cls_csr, sid );
+  visit_most_kinds( mbr_ref_csr, mbr_cls_csr, sid );
 }
 
 /**
@@ -1845,9 +1844,9 @@ void symbols_init( void ) {
   CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
   symbols_init_data sid = {
     .source_file = clang_getFile( tidy_tu, tidy_source_path ),
-    .cxx_current_fn_class_csr = clang_getNullCursor(),
+    .cxx_current_fn_cls_csr = clang_getNullCursor(),
     .cxx_deferred_fn_csr = clang_getNullCursor(),
-    .cxx_statement_class_csr = clang_getNullCursor()
+    .cxx_statement_cls_csr = clang_getNullCursor()
   };
   clang_visitChildren( cursor, &symbols_init_visitor, &sid );
 }
