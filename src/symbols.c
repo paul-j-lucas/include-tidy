@@ -235,8 +235,7 @@ NODISCARD
 static bool     is_cxx_mbr_fn_iwyu_exception( CXCursor, CXCursor );
 
 NODISCARD
-static CXCursor symbols_init_data_cxx_scope( symbols_init_data const*,
-                                             CXCursor );
+static CXCursor sid_cxx_scope( symbols_init_data const*, CXCursor );
 
 static void     tidy_symbol_cleanup( tidy_symbol* );
 
@@ -684,7 +683,7 @@ static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
   assert( sid != NULL );
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
-  CXCursor const scope_csr = symbols_init_data_cxx_scope( sid, parent );
+  CXCursor const scope_csr = sid_cxx_scope( sid, parent );
 
   if ( !clang_isDeclaration( kind ) &&
         has_cxx_qualifier_proxy( cursor, parent, scope_csr ) ) {
@@ -1299,8 +1298,8 @@ static void symbols_cleanup( void ) {
  * @sa visit_most_kinds()
  */
 NODISCARD
-static CXCursor symbols_init_data_cxx_scope( symbols_init_data const *sid,
-                                             CXCursor else_csr ) {
+static CXCursor sid_cxx_scope( symbols_init_data const *sid,
+                               CXCursor else_csr ) {
   assert( sid != NULL );
 
   if ( !clang_Cursor_isNull( sid->cxx_current_fn_cls_csr ) )
