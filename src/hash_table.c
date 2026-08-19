@@ -30,7 +30,7 @@
 #include <string.h>
 
 /**
- * @addtogroup hash-table
+ * @addtogroup hash-table-group
  * @{
  */
 
