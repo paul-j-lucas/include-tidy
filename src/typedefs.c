@@ -108,9 +108,9 @@ void typedef_add( CXCursor cursor ) {
     return;
 
   CXString const    alias_name_cxs = clang_getCursorSpelling( cursor );
-  char const *const alias_name = clang_getCString( alias_name_cxs );
+  char const *const alias_name_cs = clang_getCString( alias_name_cxs );
   CXString const    type_name_cxs = clang_getCursorSpelling( type_csr );
-  char const *const type_name = clang_getCString( type_name_cxs );
+  char const *const type_name_cs = clang_getCString( type_name_cxs );
 
   //
   // There can be declarations like:
@@ -121,9 +121,9 @@ void typedef_add( CXCursor cursor ) {
   // mapping these.
   //
   bool const is_same =
-    (alias_name == NULL && type_name == NULL) ||
-    (alias_name != NULL && type_name != NULL &&
-     strcmp( alias_name, type_name ) == 0);
+    (alias_name_cs == NULL && type_name_cs == NULL) ||
+    (alias_name_cs != NULL && type_name_cs != NULL &&
+     strcmp( alias_name_cs, type_name_cs ) == 0);
 
   clang_disposeString( alias_name_cxs );
   clang_disposeString( type_name_cxs );
