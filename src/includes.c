@@ -990,25 +990,25 @@ static int tidy_symbol_ptr_cmp_by_ref_count( void const *i_pp,
 ////////// extern functions ///////////////////////////////////////////////////
 
 tidy_include const* include_add_symbol( CXFile include_file,
-                                        tidy_symbol *sym ) {
+                                        tidy_symbol const *sym ) {
   assert( include_file != NULL );
   assert( sym != NULL );
 
   tidy_include *include = include_find_by_File( include_file );
-  if ( include == NULL )
-    return NULL;
-  include = include_get_proxy( include );
-  PJL_DISCARD_RV( ht_insert( &include->symbol_set, sym, 0 ) );
-  include->is_needed = true;
+  if ( include != NULL ) {
+    include = include_get_proxy( include );
+    PJL_DISCARD_RV(
+      ht_insert( &include->symbol_set, CONST_CAST( tidy_symbol*, sym ), 0 )
+    );
+    include->is_needed = true;
+  }
   return include;
 }
 
 tidy_include* include_find_by_File( CXFile file ) {
   assert( file != NULL );
 
-  tidy_include find_include = {
-    .file_id = tidy_getFileUniqueID( file )
-  };
+  tidy_include find_include = { .file_id = tidy_getFileUniqueID( file ) };
   rb_node_t const *const found_rb =
     rb_tree_find( &tidy_include_set, &find_include );
   return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
