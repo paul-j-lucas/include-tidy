@@ -28,6 +28,7 @@
 #include "typedefs.h"
 #include "clang_util.h"
 #include "hash_table.h"
+#include "print.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -54,6 +55,21 @@ static hash_table_t typedef_map;        ///< Map of typedefs.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
+ * Prints statistics for `typedef`s if requested.
+ */
+static void print_statistics( void ) {
+  if ( !verbose_print_statistics() )
+    return;
+
+  verbose_printf( "  typedef map:\n" );
+  verbose_printf(
+    "    tm-load-factor = " TIDY_STAT_LF_FMT "\n",
+    ht_load_factor( &typedef_map )
+  );
+  verbose_printf( "    tm-size = %u\n", typedef_map.size );
+}
+
+/**
  * Cleans-up a tidy_typedef.
  *
  * @param tdef The tidy_typedef to clean up.  If NULL, does nothing.
@@ -68,6 +84,7 @@ static void tidy_typedef_cleanup( tidy_typedef *tdef ) {
  * Cleans-up all symbols.
  */
 static void typedefs_cleanup( void ) {
+  print_statistics();
   ht_cleanup(
     &typedef_map, POINTER_CAST( ht_free_fn_t, &tidy_typedef_cleanup )
   );

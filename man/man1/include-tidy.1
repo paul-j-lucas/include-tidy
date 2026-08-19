@@ -35,7 +35,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "August 14, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "August 19, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -1216,6 +1216,12 @@ The load factor for the symbol hash table.
 .TP
 .B ss-size
 The total number of relevant symbols.
+.TP
+.B tm-load-factor
+The load factor for the \f(CWtypedef\fP hash table.
+.TP
+.B tm-size
+The total number of \f(CWtypedef\fPs.
 .SH EXIT STATUS
 .PD 0
 .IP 0
