@@ -257,130 +257,6 @@ static hash_table_t symbol_set;         ///< Set of symbols.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Helper function for visit_CallExpr() that gets whether the symbol for a
- * C++ function or operator should be added to the global set.
- *
- * @note This function should be called only for C++ files being tidied.
- *
- * @param call_csr A CallExpr cursor.
- * @param fn_csr The cursor of the function being called.
- * @return Returns `true` only if the function should be added.
- */
-NODISCARD
-static bool add_cxx_fn( CXCursor call_csr, CXCursor fn_csr ) {
-  assert( tidy_is_cxx );
-
-  CXFile const fn_file = tidy_getCursorLocation_File( fn_csr );
-  if ( fn_file == NULL )
-    return true;
-  tidy_include const *fn_include = include_find_by_File( fn_file );
-  if ( fn_include == NULL )
-    return true;
-  fn_include = include_get_proxy( fn_include );
-
-  enum CXCursorKind const fn_kind = clang_getCursorKind( fn_csr );
-  bool const is_mbr_fn = fn_kind == CXCursor_CXXMethod ||
-                         fn_kind == CXCursor_ConversionFunction;
-
-  if ( is_mbr_fn && is_cxx_mbr_fn_iwyu_exception( call_csr, fn_csr ) )
-    return false;
-
-  // The function is either a non-member function or a static member function.
-
-  int const num_args = clang_Cursor_getNumArguments( call_csr );
-  assert( num_args >= 0 && "call_csr is not a function" );
-  if ( num_args == 0 )
-    return true;
-
-  for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
-    CXCursor const par_csr = clang_Cursor_getArgument( fn_csr, i );
-    if ( clang_Cursor_isNull( par_csr ) )
-      continue;
-    CXCursor const par_type_csr = tidy_Cursor_getUnderlyingType( par_csr );
-    CXCursor const par_ocls_csr =
-      tidy_Cursor_getOutermostClass( par_type_csr );
-    if ( clang_Cursor_isNull( par_ocls_csr ) )
-      continue;
-
-    CXFile const par_file = tidy_getCursorLocation_File( par_ocls_csr );
-    if ( par_file == NULL )
-      continue;
-    tidy_include const *par_include = include_find_by_File( par_file );
-    if ( par_include == NULL )
-      continue;
-    par_include = include_get_proxy( par_include );
-    if ( fn_include != par_include )
-      continue;
-
-    CXCursor const arg_csr = clang_Cursor_getArgument( call_csr, i );
-    CXCursor const arg_cls_csr = tidy_Cursor_getClassAsWritten( arg_csr );
-    if ( clang_Cursor_isNull( arg_cls_csr ) )
-      continue;
-
-    //
-    // Given:
-    //
-    //      // int_set.hpp
-    //      #include <set>
-    //      using int_set = std::set<int>;
-    //
-    //      // test.cpp
-    //      #include "int_set.hpp"
-    //
-    //      void erase_even( int_set &s ) {
-    //        std::erase_if( s, []( auto x ) { return x % 2 == 0; } );
-    //      }
-    //
-    // Even though test.cpp uses std::erase_if() declared in <set>, it's
-    // sufficient that only int_set.hpp is included and <set> isn't because:
-    //
-    //  + s of type int_set is an for std::set; and:
-    //  + In order to declare int_set, int_set.hpp must have included <set>.
-    //
-    // Therefore, we allow the transitive include of <set> as an exception to
-    // the include-what-you-use rule.
-    //
-    if ( tidy_Cursor_isTypeAliasOf( arg_cls_csr, par_type_csr ) )
-      return false;
-
-    //
-    // Similar to the above case, but instead of one type being the alias of
-    // another, it's derived from another:
-    //
-    //      // int_set.hpp
-    //      #include <set>
-    //      struct int_set : std::set<int> {
-    //        // ...
-    //      };
-    //
-    //      // test.cpp
-    //      #include "int_set.hpp"
-    //
-    //      void erase_even( int_set &s ) {
-    //        std::erase_if( s, []( auto x ) { return x % 2 == 0; } );
-    //      }
-    //
-    // Even though test.cpp uses std::erase_if() declared in <set>, it's
-    // sufficient that only int_set.hpp is included and <set> isn't because:
-    //
-    //  + s of type int_set is derived from std::set; and:
-    //  + In order to declare int_set, int_set.hpp must have included <set>.
-    //
-    // Therefore, we allow the transitive include of <set> as an exception to
-    // the include-what-you-use rule.
-    //
-    CXCursor const arg_ocls_csr = tidy_Cursor_getOutermostClass( arg_cls_csr );
-
-    if ( tidy_Cursor_isInheritedFrom( arg_ocls_csr, par_ocls_csr ) )
-      return false;
-    if ( tidy_Cursor_isTemplateSpecializationOf( arg_ocls_csr, par_ocls_csr ) )
-      return false;
-  } // for
-
-  return true;
-}
-
-/**
  * Adds a symbol to the global set and marks the header that declares is as
  * necessary.
  *
@@ -663,6 +539,130 @@ static bool is_cxx_arrow_iwyu_exception( CXCursor call_expr_csr,
   // The proxy object's class (e.g., std::map<K,V>::const_iterator) is not the
   // same as the member's class (e.g., std::pair<T1,T2>).
   return !clang_equalCursors( obj_cls_csr, mbr_cls_csr );
+}
+
+/**
+ * Helper function for visit_CallExpr() that gets whether the symbol for a
+ * C++ function or operator should be added to the global set.
+ *
+ * @note This function should be called only for C++ files being tidied.
+ *
+ * @param call_csr A CallExpr cursor.
+ * @param fn_csr The cursor of the function being called.
+ * @return Returns `true` only if the function should be added.
+ */
+NODISCARD
+static bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
+  assert( tidy_is_cxx );
+
+  CXFile const fn_file = tidy_getCursorLocation_File( fn_csr );
+  if ( fn_file == NULL )
+    return false;
+  tidy_include const *fn_include = include_find_by_File( fn_file );
+  if ( fn_include == NULL )
+    return false;
+  fn_include = include_get_proxy( fn_include );
+
+  enum CXCursorKind const fn_kind = clang_getCursorKind( fn_csr );
+  bool const is_mbr_fn = fn_kind == CXCursor_CXXMethod ||
+                         fn_kind == CXCursor_ConversionFunction;
+
+  if ( is_mbr_fn && is_cxx_mbr_fn_iwyu_exception( call_csr, fn_csr ) )
+    return true;
+
+  // The function is either a non-member function or a static member function.
+
+  int const num_args = clang_Cursor_getNumArguments( call_csr );
+  assert( num_args >= 0 && "call_csr is not a function" );
+  if ( num_args == 0 )
+    return false;
+
+  for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
+    CXCursor const par_csr = clang_Cursor_getArgument( fn_csr, i );
+    if ( clang_Cursor_isNull( par_csr ) )
+      continue;
+    CXCursor const par_type_csr = tidy_Cursor_getUnderlyingType( par_csr );
+    CXCursor const par_ocls_csr =
+      tidy_Cursor_getOutermostClass( par_type_csr );
+    if ( clang_Cursor_isNull( par_ocls_csr ) )
+      continue;
+
+    CXFile const par_file = tidy_getCursorLocation_File( par_ocls_csr );
+    if ( par_file == NULL )
+      continue;
+    tidy_include const *par_include = include_find_by_File( par_file );
+    if ( par_include == NULL )
+      continue;
+    par_include = include_get_proxy( par_include );
+    if ( fn_include != par_include )
+      continue;
+
+    CXCursor const arg_csr = clang_Cursor_getArgument( call_csr, i );
+    CXCursor const arg_cls_csr = tidy_Cursor_getClassAsWritten( arg_csr );
+    if ( clang_Cursor_isNull( arg_cls_csr ) )
+      continue;
+
+    //
+    // Given:
+    //
+    //      // int_set.hpp
+    //      #include <set>
+    //      using int_set = std::set<int>;
+    //
+    //      // test.cpp
+    //      #include "int_set.hpp"
+    //
+    //      void erase_even( int_set &s ) {
+    //        std::erase_if( s, []( auto x ) { return x % 2 == 0; } );
+    //      }
+    //
+    // Even though test.cpp uses std::erase_if() declared in <set>, it's
+    // sufficient that only int_set.hpp is included and <set> isn't because:
+    //
+    //  + s of type int_set is an for std::set; and:
+    //  + In order to declare int_set, int_set.hpp must have included <set>.
+    //
+    // Therefore, we allow the transitive include of <set> as an exception to
+    // the include-what-you-use rule.
+    //
+    if ( tidy_Cursor_isTypeAliasOf( arg_cls_csr, par_type_csr ) )
+      return true;
+
+    //
+    // Similar to the above case, but instead of one type being the alias of
+    // another, it's derived from another:
+    //
+    //      // int_set.hpp
+    //      #include <set>
+    //      struct int_set : std::set<int> {
+    //        // ...
+    //      };
+    //
+    //      // test.cpp
+    //      #include "int_set.hpp"
+    //
+    //      void erase_even( int_set &s ) {
+    //        std::erase_if( s, []( auto x ) { return x % 2 == 0; } );
+    //      }
+    //
+    // Even though test.cpp uses std::erase_if() declared in <set>, it's
+    // sufficient that only int_set.hpp is included and <set> isn't because:
+    //
+    //  + s of type int_set is derived from std::set; and:
+    //  + In order to declare int_set, int_set.hpp must have included <set>.
+    //
+    // Therefore, we allow the transitive include of <set> as an exception to
+    // the include-what-you-use rule.
+    //
+    CXCursor const arg_ocls_csr = tidy_Cursor_getOutermostClass( arg_cls_csr );
+
+    if ( tidy_Cursor_isInheritedFrom( arg_ocls_csr, par_ocls_csr ) )
+      return true;
+    if ( tidy_Cursor_isTemplateSpecializationOf( arg_ocls_csr, par_ocls_csr ) )
+      return true;
+  } // for
+
+  return false;
 }
 
 /**
@@ -1544,7 +1544,7 @@ static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
     clang_visitChildren( call_csr, &symbols_init_visitor, sid );
     sid->cxx_deferred_fn_csr = prev_deferred_fn_csr;
 
-    if ( !is_function || !add_cxx_fn( call_csr, fn_csr ) )
+    if ( !is_function || is_cxx_fn_iwyu_exception( call_csr, fn_csr ) )
       return true;
   }
 
