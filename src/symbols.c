@@ -65,7 +65,7 @@ typedef struct symbols_init_data symbols_init_data;
 ////////// structs ////////////////////////////////////////////////////////////
 
 /**
- * Additional data passed to symbols_init_visitor.
+ * Additional data passed to symbols_init_visitor().
  */
 struct symbols_init_data {
   CXFile    source_file;                ///< The file being tidied.
