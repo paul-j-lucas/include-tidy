@@ -1,3 +1,19 @@
+2026-08-19  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c, config_file.c, includes.c, print.c, print.h, proxies.c,
+     symbols.c: verbose_section_begin() now takes bool*.
+   * man/man1/include-tidy.1, typedefs.c: Added typedef_map statistics.
+   * clang_util.c, clang_util.h, includes.c, symbols.c, test/Makefile.am,
+     c_ast_util.h, c_operator.h, elements.cpp, elements.hpp, timespec_t.c,
+     timespec_t.h, types.h, c_ast_util.out, elements_cpp.out, timespec_t.out,
+     c_ast_util.test, elements_cpp.test, timespec_t.test: Now handling C++'s
+     overloaded operator-> correctly and class/struct member references better.
+
+2026-08-18  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c: s/unsigned char/unsigned short/
+   * includes.c: Floyd-Warshall algorithm.
+
 2026-08-17  Paul J. Lucas <paul@lucasmail.org>
 
    * symbols.c: Addedinclude_find_by_cursor().
