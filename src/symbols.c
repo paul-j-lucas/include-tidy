@@ -133,7 +133,7 @@ struct symbols_init_data {
    * Here, `Derived.cpp` correctly includes `Derived.hpp` that correctly
    * includes `Base.hpp`. `Derived.cpp` uses `operator==()` that's declared in
    * `Base.hpp`, so `Derived.cpp` should include `Base.hpp` according to the
-   * include-what-you-use (IWYU) principle..
+   * include-what-you-use (IWYU) principle.
    *
    * However, since `Derived` is derived from `Base`, that means the definition
    * of `Base` was available via `Derived.hpp` including `Base.hpp`; and since
@@ -502,33 +502,33 @@ done:
  *        p->x = 0;
  *      }
  *
- * then \a call_expr_csr refers to `p->` and \a mbr_cls_csr refers to `point`.
+ * then \a call_csr refers to `p->` and \a mbr_cls_csr refers to `point`.
  * @endparblock
  *
- * @param call_expr_csr The cursor for the call expresssion.
+ * @param call_csr The cursor for the call expresssion.
  * @param mbr_cls_csr The cursor for the class of the member.
- * @return Returns `true` only if \a call_expr_csr is via an overloaded
- * `operator->` and \a mbr_cls_csr is _not_ the same as the class that defines
- * (or inherits) the operator, i.e., it's a proxy for \a mbr_cls_csr and
- * therefore an IWYU exception.
+ * @return Returns `true` only if \a call_csr is via an overloaded `operator->`
+ * and \a mbr_cls_csr is _not_ the same as the class that defines (or inherits)
+ * the operator, i.e., it's a proxy for \a mbr_cls_csr and therefore an IWYU
+ * exception.
  *
  * @note This function should be called only when the file being tidied is C++.
  */
 NODISCARD
-static bool is_cxx_arrow_iwyu_exception( CXCursor call_expr_csr,
+static bool is_cxx_arrow_iwyu_exception( CXCursor call_csr,
                                          CXCursor mbr_cls_csr ) {
   assert( tidy_is_cxx );
 
-  enum CXCursorKind const kind = clang_getCursorKind( call_expr_csr );
+  enum CXCursorKind const kind = clang_getCursorKind( call_csr );
   if ( kind != CXCursor_CallExpr )
     return false;
 
-  CXCursor const op_csr = clang_getCursorReferenced( call_expr_csr );
+  CXCursor const op_csr = clang_getCursorReferenced( call_csr );
   if ( !tidy_Cursor_isSpellingEqualTo( op_csr, "operator->" ) )
     return false;
 
   // For obj->mbr, get obj.
-  CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( call_expr_csr );
+  CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( call_csr );
   if ( tidy_Cursor_isInvalid( obj_csr ) )
     return true;
 
@@ -537,14 +537,13 @@ static bool is_cxx_arrow_iwyu_exception( CXCursor call_expr_csr,
   if ( tidy_Cursor_isInvalid( obj_cls_csr ) )
     return true;
 
+  //
+  // The proxy object's class (e.g., std::map<K,V>::iterator) is not the same
+  // as the member's class (e.g., std::pair<T1,T2>); therefore, operator-> is a
+  // proxy for the member and an IWYU exception.
+  //
   obj_cls_csr = clang_getCanonicalCursor( obj_cls_csr );
   mbr_cls_csr = clang_getCanonicalCursor( mbr_cls_csr );
-
-  //
-  // The proxy object's class (e.g., std::map<K,V>::const_iterator) is not the
-  // same as the member's class (e.g., std::pair<T1,T2>); therefore, operator->
-  // is a proxy for the member and an IWYU exception.
-  //
   return !clang_equalCursors( obj_cls_csr, mbr_cls_csr );
 }
 
@@ -593,6 +592,10 @@ static bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
     return false;
   fn_include = include_get_proxy( fn_include );
 
+  //
+  // Check all of the function's paramters: only one is needed to trigger an
+  // IWYU exception.
+  //
   for ( unsigned i = 0; i < STATIC_CAST( unsigned, num_args ); ++i ) {
     CXCursor const par_csr = clang_Cursor_getArgument( fn_csr, i );
     if ( clang_Cursor_isNull( par_csr ) )
@@ -602,6 +605,14 @@ static bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
     if ( clang_Cursor_isNull( par_ocls_csr ) )
       continue;
 
+    //
+    // Check whether the parameter's outermost class type is declared in the
+    // same header (or proxy) as the function itself.
+    //
+    // If they're in different headers, including the header that declares the
+    // parameter's type can't guarantee that the function is declared, so this
+    // pararamter doesn't trigger an IWYU exception.
+    //
     CXFile const par_file = tidy_getCursorLocation_File( par_ocls_csr );
     if ( par_file == NULL )
       continue;
@@ -611,6 +622,8 @@ static bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
     par_include = include_get_proxy( par_include );
     if ( fn_include != par_include )
       continue;
+
+    // Now compare the argument's type against the parameter's type.
 
     CXCursor const arg_csr = clang_Cursor_getArgument( call_csr, i );
     CXCursor const arg_cls_csr = tidy_Cursor_getClassAsWritten( arg_csr );
@@ -708,9 +721,8 @@ static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
     return true;
   }
 
-  //
   // The remaining IWYU exceptions apply only within a C++ class scope.
-  //
+
   if ( !tidy_Cursor_isClassDecl( scope_csr ) )
     return false;
 
@@ -791,23 +803,38 @@ static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
   assert( tidy_is_cxx );
 
   CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( call_csr );
+  // Ensure the callee is a member function, e.g., obj.f() or ptr->f().
   if ( clang_getCursorKind( callee_csr ) != CXCursor_MemberRefExpr )
     return false;
 
-  CXCursor const obj_expr_csr = tidy_Cursor_getFirstExposedChild( callee_csr );
-  if ( clang_Cursor_isNull( obj_expr_csr ) )
+  CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( callee_csr );
+  if ( clang_Cursor_isNull( obj_csr ) )
     return false;
 
-  CXCursor const obj_cls_csr = tidy_Cursor_getUnderlyingType( obj_expr_csr );
+  //
+  // Check whether the object's class inherits from the member function's
+  // class.  If it does, including the object's class header provides the
+  // function's declaration -- an IWYU exception.
+  //
+  CXCursor const obj_cls_csr = tidy_Cursor_getUnderlyingType( obj_csr );
   CXCursor const fn_cls_csr = clang_getCursorSemanticParent( fn_csr );
-
   if ( tidy_Cursor_isInheritedFrom( obj_cls_csr, fn_cls_csr ) )
     return true;
 
+  //
+  // Check whether the member function call is on one inherited from a base
+  // class: if not, it must be on our own class whose declaration must have
+  // already been seen so we don't need its header -- an IWYU exception.
+  //
   CXCursor base_csr;
-  if ( !tidy_Cursor_isInheritedMemberFunctionCall( obj_expr_csr, &base_csr ) )
+  if ( !tidy_Cursor_isInheritedMemberFunctionCall( obj_csr, &base_csr ) )
     return true;
 
+  //
+  // Check whether the base class through which the member function is called
+  // either is or derived from the function's class. If so, the base class's
+  // header provides the function's declaration -- an IWYU exception.
+  //
   if ( clang_equalCursors( base_csr, fn_cls_csr ) ||
         tidy_Cursor_isInheritedFrom( base_csr, fn_cls_csr ) ) {
     return true;
@@ -840,17 +867,25 @@ static bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
   if ( tidy_Cursor_isInvalid( init_csr ) )
     return false;
 
-  // Is the type a nested typedef (e.g., std::map<K,V>::value_type) or class
-  // (e.g., std::map<K,V>::iterator) inside a class?
-  CXCursor const type_decl_csr = tidy_Cursor_getUnderlyingType( init_csr );
-  if ( !tidy_Cursor_isInvalid( type_decl_csr ) ) {
-    CXCursor const sem_parent = clang_getCursorSemanticParent( type_decl_csr );
+  //
+  // Check whether the object's underlying type is declared within a C++ class
+  // (e.g., a nested typedef like std::set<T>::value_type or a nested class
+  // like std::set<T>::iterator).
+  //
+  // If it is, the class's header must have already provided the declaration
+  // for the class that the type is declared within -- an IWYU exception.
+  //
+  CXCursor const type_dec_csr = tidy_Cursor_getUnderlyingType( init_csr );
+  if ( !tidy_Cursor_isInvalid( type_dec_csr ) ) {
+    CXCursor const sem_parent = clang_getCursorSemanticParent( type_dec_csr );
     if ( tidy_Cursor_isClassDecl( sem_parent ) )
       return true;
   }
 
-  // Does the initializer originate from a struct field, C++ member function,
-  // or a parameter thereof?
+  //
+  // Get what initialized the object.  If it's a CXCursor_CallExpr, we have to
+  // dig down to the callee.
+  //
   CXCursor child_csr = tidy_Cursor_skipUnexposedDown( init_csr );
   if ( tidy_Cursor_isInvalid( child_csr ) )
     return false;
@@ -865,18 +900,30 @@ static bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
   if ( tidy_Cursor_isInvalid( ref_csr ) )
     return false;
 
-  // Member function return value (e.g., std::map<K,V>::insert()).
   enum CXCursorKind const kind = clang_getCursorKind( ref_csr );
   switch ( kind ) {
     case CXCursor_ConversionFunction:
     case CXCursor_CXXMethod:
     case CXCursor_FieldDecl:;
+      //
+      // The object is either a data member or the return value of either a
+      // member function or conversion operator.
+      //
+      // If its semantic parent is a class declaration, the header defining the
+      // class must have already provided the declaration for the object's type
+      // and all its members -- an IWYU exception.
+      //
       CXCursor const cls_csr = clang_getCursorSemanticParent( ref_csr );
       if ( tidy_Cursor_isClassDecl( cls_csr ) )
         return true;
       break;
 
     case CXCursor_ParmDecl:;
+      //
+      // If the parameter is for a C++ member function, the header declaring
+      // the function's class already provided the declaration for the
+      // parameter's type -- an IWYU exception.
+      //
       CXCursor const fn_csr = clang_getCursorSemanticParent( ref_csr );
       if ( clang_getCursorKind( fn_csr ) == CXCursor_CXXMethod ) {
         CXCursor const fn_cls_csr = clang_getCursorSemanticParent( fn_csr );
