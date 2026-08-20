@@ -954,6 +954,8 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   assert( *pargv != NULL );
   ASSERT_RUN_ONCE();
 
+  ipaths_init();
+
   // Ordinarily, a program would parse all options first, increment argv past
   // them, then look at (the new) argv[1] for the file.
   //

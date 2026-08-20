@@ -30,7 +30,6 @@
 #include "color.h"
 #include "config_file.h"
 #include "includes.h"
-#include "ipaths.h"
 #include "options.h"
 #include "path_util.h"
 #include "proxies.h"
@@ -90,7 +89,6 @@ int main( int argc, char const *argv[] ) {
   prog_name = path_basename( argv[0] );
 
   // Initialization MUST happen in this order.
-  ipaths_init();
   cli_options_init( &argc, &argv );
   colors_init();
   trans_unit_init( argc, argv );
