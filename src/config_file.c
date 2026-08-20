@@ -1019,7 +1019,7 @@ static void elide_includes_parse( char const *config_path,
 static void error_parse( char const *config_path, toml_table const *table,
                          toml_value const *value ) {
   assert( config_path != NULL );
-  assert( table != NULL );
+  (void)table;
   assert( value != NULL );
 
   char const *const string_value =
