@@ -41,11 +41,8 @@ typedef struct toml_test toml_test;
 ////////// structs ////////////////////////////////////////////////////////////
 
 struct toml_test {
-  // In C, a struct with a member having a variable-sized type must be at the
-  // end.  Since both toml_file and toml_table have an rb_tree, they both can't
-  // be at the end of this struct.  Therefore, just make them both pointers.
-  toml_file  *toml;
-  toml_table *table;
+  toml_file  toml;
+  toml_table table;
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -77,11 +74,9 @@ static void toml_error_print( toml_file const *toml ) {
 static void toml_test_cleanup( toml_test *test ) {
   if ( test == NULL )
     return;
-  toml_table_cleanup( test->table );
-  free( test->table );
-  fclose( test->toml->file );
-  toml_file_cleanup( test->toml );
-  free( test->toml );
+  toml_table_cleanup( &test->table );
+  fclose( test->toml.file );
+  toml_file_cleanup( &test->toml );
 }
 
 static void toml_test_init( toml_test *test, char const *buf ) {
@@ -91,10 +86,8 @@ static void toml_test_init( toml_test *test, char const *buf ) {
   FILE *const file = fmemopen( CONST_CAST( void*, buf ), strlen( buf ), "r" );
   if ( file == NULL )
     fatal_error( EX_SOFTWARE, "%s\n", STRERROR() );
-  test->toml = MALLOC( toml_file, 1 );
-  toml_file_init( test->toml, file );
-  test->table = MALLOC( toml_table, 1 );
-  toml_table_init( test->table );
+  toml_file_init( &test->toml, file );
+  toml_table_init( &test->table );
 }
 
 ////////// test functions /////////////////////////////////////////////////////
@@ -114,15 +107,15 @@ static bool test_comments( void ) {
     "]                #8  \n"
   );
 
-  if ( TEST( toml_table_next( test.toml, test.table ) ) ) {
+  if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
     toml_value const *value;
 
-    value = toml_table_find( test.table, "bf" );
+    value = toml_table_find( &test.table, "bf" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_BOOL ) &&
       TEST( value->b == false );
 
-    value = toml_table_find( test.table, "ab" );
+    value = toml_table_find( &test.table, "ab" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_ARRAY ) &&
       TEST( value->a.size == 2 ) &&
@@ -132,7 +125,7 @@ static bool test_comments( void ) {
       TEST( value->a.values[1].b == true );
   }
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -146,12 +139,12 @@ static bool test_key_bad_leading_dot( void ) {
     ".key = false\n"
   );
 
-  TEST( !toml_table_next( test.toml, test.table ) )
-    && TEST( test.toml->error == TOML_ERR_KEY_INVALID )
-    && TEST( test.toml->loc.line == 2 )
-    && TEST( test.toml->loc.col  == 1 );
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_KEY_INVALID )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 1 );
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -165,12 +158,12 @@ static bool test_key_bad_trailing_dot( void ) {
     "key. = false\n"
   );
 
-  TEST( !toml_table_next( test.toml, test.table ) )
-    && TEST( test.toml->error == TOML_ERR_KEY_INVALID )
-    && TEST( test.toml->loc.line == 2 )
-    && TEST( test.toml->loc.col  == 4 );
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_KEY_INVALID )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 4 );
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -186,13 +179,13 @@ static bool test_table_names_duplicate( void ) {
     "key = false  \n"
   );
 
-  TEST( toml_table_next( test.toml, test.table ) )
-    && TEST( !toml_table_next( test.toml, test.table ) )
-    && TEST( test.toml->error == TOML_ERR_TABLE_DUPLICATE )
-    && TEST( test.toml->loc.line == 3 )
-    && TEST( test.toml->loc.col == 2 );
+  TEST( toml_table_next( &test.toml, &test.table ) )
+    && TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_TABLE_DUPLICATE )
+    && TEST( test.toml.loc.line == 3 )
+    && TEST( test.toml.loc.col == 2 );
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -215,14 +208,14 @@ static bool test_table_names_valid( void ) {
   FOREACH_ARRAY_ELEMENT( char const*, ptable_name, VALID_TABLE_NAMES ) {
     toml_test test;
     toml_test_init( &test, *ptable_name );
-    if ( TEST( toml_table_next( test.toml, test.table ) ) &&
-         TEST( test.table->name != NULL ) ) {
+    if ( TEST( toml_table_next( &test.toml, &test.table ) ) &&
+         TEST( test.table.name != NULL ) ) {
       char *const expected_name = strdup( *ptable_name );
       strip_table_name( expected_name );
-      TEST( strcmp( test.table->name, expected_name ) == 0 );
+      TEST( strcmp( test.table.name, expected_name ) == 0 );
       free( expected_name );
     }
-    toml_error_print( test.toml );
+    toml_error_print( &test.toml );
     toml_test_cleanup( &test );
   } // for
 
@@ -241,10 +234,10 @@ static bool test_value_array( void ) {
     "]        \n"
   );
 
-  if ( TEST( toml_table_next( test.toml, test.table ) ) ) {
+  if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
     toml_value const *value;
 
-    value = toml_table_find( test.table, "ab" );
+    value = toml_table_find( &test.table, "ab" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_ARRAY ) &&
       TEST( value->a.size == 2 ) &&
@@ -254,7 +247,7 @@ static bool test_value_array( void ) {
       TEST( value->a.values[1].b == true );
   }
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -270,12 +263,12 @@ static bool test_value_array_bad_comma( void ) {
     "]            \n"
   );
 
-  TEST( !toml_table_next( test.toml, test.table ) )
-    && TEST( test.toml->error == TOML_ERR_UNEX_CHAR )
-    && TEST( test.toml->loc.line == 3 )
-    && TEST( test.toml->loc.col  == 3 );
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
+    && TEST( test.toml.loc.line == 3 )
+    && TEST( test.toml.loc.col  == 3 );
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -289,12 +282,12 @@ static bool test_value_array_unex_eof( void ) {
     "ab = [\n"
   );
 
-  TEST( !toml_table_next( test.toml, test.table ) )
-    && TEST( test.toml->error == TOML_ERR_UNEX_EOF )
-    && TEST( test.toml->loc.line == 2 )
-    && TEST( test.toml->loc.col  == 7 );
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 7 );
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -309,21 +302,21 @@ static bool test_value_bool( void ) {
     "bt = true    \n"
   );
 
-  if ( TEST( toml_table_next( test.toml, test.table ) ) ) {
+  if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
     toml_value const *value;
 
-    value = toml_table_find( test.table, "bf" );
+    value = toml_table_find( &test.table, "bf" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_BOOL ) &&
       TEST( value->b == false );
 
-    value = toml_table_find( test.table, "bt" );
+    value = toml_table_find( &test.table, "bt" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_BOOL ) &&
       TEST( value->b == true );
   }
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -337,12 +330,12 @@ static bool test_value_bool_bad_false( void ) {
     "b = fALSE    \n"
   );
 
-  TEST( !toml_table_next( test.toml, test.table ) )
-    && TEST( test.toml->error == TOML_ERR_UNEX_VALUE )
-    && TEST( test.toml->loc.line == 2 )
-    && TEST( test.toml->loc.col  == 5 );
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_VALUE )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 5 );
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -360,36 +353,36 @@ static bool test_value_int( void ) {
     "i10_us = 4_2   \n"
   );
 
-  if ( TEST( toml_table_next( test.toml, test.table ) ) ) {
+  if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
     toml_value const *value;
 
-    value = toml_table_find( test.table, "i2" );
+    value = toml_table_find( &test.table, "i2" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_INT ) &&
       TEST( value->i == 42 );
 
-    value = toml_table_find( test.table, "i8" );
+    value = toml_table_find( &test.table, "i8" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_INT ) &&
       TEST( value->i == 42 );
 
-    value = toml_table_find( test.table, "i10" );
+    value = toml_table_find( &test.table, "i10" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_INT ) &&
       TEST( value->i == 42 );
 
-    value = toml_table_find( test.table, "i16" );
+    value = toml_table_find( &test.table, "i16" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_INT ) &&
       TEST( value->i == 42 );
 
-    value = toml_table_find( test.table, "i10_us" );
+    value = toml_table_find( &test.table, "i10_us" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_INT ) &&
       TEST( value->i == 42 );
   }
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -403,12 +396,12 @@ static bool test_value_int_bad_base( void ) {
     "i = 0a     \n"
   );
 
-  TEST( !toml_table_next( test.toml, test.table ) )
-    && TEST( test.toml->error == TOML_ERR_INT_INVALID )
-    && TEST( test.toml->loc.line == 2 )
-    && TEST( test.toml->loc.col  == 6 );
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INT_INVALID )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 6 );
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -422,12 +415,12 @@ static bool test_value_int_bad_binary( void ) {
     "i = 0b2    \n"
   );
 
-  TEST( !toml_table_next( test.toml, test.table ) )
-    && TEST( test.toml->error == TOML_ERR_INT_INVALID )
-    && TEST( test.toml->loc.line == 2 )
-    && TEST( test.toml->loc.col  == 7 );
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INT_INVALID )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 7 );
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -441,12 +434,12 @@ static bool test_value_int_bad_underscore( void ) {
     "i = 1_     \n"
   );
 
-  TEST( !toml_table_next( test.toml, test.table ) )
-    && TEST( test.toml->error == TOML_ERR_INT_INVALID )
-    && TEST( test.toml->loc.line == 2 )
-    && TEST( test.toml->loc.col  == 6 );
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INT_INVALID )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 6 );
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
@@ -460,16 +453,16 @@ static bool test_value_string( void ) {
     "s1 = \"ab\"    \n"
   );
 
-  if ( TEST( toml_table_next( test.toml, test.table ) ) ) {
+  if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
     toml_value const *value;
 
-    value = toml_table_find( test.table, "s1" );
+    value = toml_table_find( &test.table, "s1" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_STRING ) &&
       TEST( strcmp( value->s, "ab" ) == 0 );
   }
 
-  toml_error_print( test.toml );
+  toml_error_print( &test.toml );
   toml_test_cleanup( &test );
   TEST_FUNC_END();
 }
