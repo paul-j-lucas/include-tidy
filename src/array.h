@@ -440,6 +440,8 @@ inline void array_init( array_t *array, size_t esize ) {
  * caller is responsible for freeing it if necessary.
  *
  * @warning \a array is _not_ checked to ensure it's not empty.
+ * @warning The pointer to the element returned is ephemeral and should be
+ * dealt with before either array_cleanup() or array_push_back() is called.
  *
  * @note If the element type is a pointer, then this returns a _pointer to that
  * pointer_, i.e., `T**`.
@@ -462,6 +464,9 @@ inline void* array_pop_back_nc( array_t *array ) {
  * @param array The pointer to the \ref array.
  * @return Returns a pointer to the element at the back of \a array or NULL if
  * the array is empty.  The caller is responsible for freeing it if necessary.
+ *
+ * @warning The pointer to the element returned is ephemeral and should be
+ * dealt with before either array_cleanup() or array_push_back() is called.
  *
  * @note If the element type is a pointer, then this returns a _pointer to that
  * pointer_, i.e., `T**`.
