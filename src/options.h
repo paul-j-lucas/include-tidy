@@ -178,10 +178,17 @@ bool opt_line_length_parse( char const *s );
  * Format | Be verbose about ...
  * -------|-----------------------------------------------------------------
  * `a`    | Command-line arguments.
+ * `c`    | Configuration files read or attempted.
+ * `C`    | Libclang cursors.
+ * `d`    | Directory changing to from the `--directory` or `-d` option.
+ * `f`    | Name of source-file only if in violation.
+ * `F`    | Name of source-file.
  * `i`    | Files included.
- * `P`    | Connfiration file proxies.
- * `s`    | Symbols referenced.
+ * `P`    | Implicit include proxies.
+ * `P`    | Explicit include proxies.
+ * `s`    | Symbols referenced and the include files declaring them.
  * `S`    | Configuration file symbols.
+ * `z`    | Statistics.
  *
  * Multiple formats may be given, one immediately after the other, e.g., `ai`.
  * Alternatively, `*` may be given to mean "all" or either the empty string or
