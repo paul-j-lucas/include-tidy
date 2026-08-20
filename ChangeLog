@@ -1,3 +1,7 @@
+2026-08-20  Paul J. Lucas <paul@lucasmail.org>
+
+   * includes.c, includes.h, symbols.c: s/include_includes/tidy_File_includes/
+
 2026-08-19  Paul J. Lucas <paul@lucasmail.org>
 
    * array.c: Now checking for integer overflow.
