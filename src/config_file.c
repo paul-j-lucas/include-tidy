@@ -393,8 +393,7 @@ static array_t string_array_value_parse( char const *config_path,
     exit( EX_CONFIG );
   }
 
-  array_t array;
-  array_init( &array, sizeof(char*) );
+  array_t array = ARRAY_INIT( sizeof(char*) );
 
   if ( value->a.size > 0 ) {
     array_reserve( &array, value->a.size );

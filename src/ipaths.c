@@ -50,7 +50,10 @@
 
 ////////// local variables ////////////////////////////////////////////////////
 
-static array_t ipaths;                  ///< Array of `-I` paths.
+/**
+ * Array of `-I` paths.
+ */
+static array_t ipaths = ARRAY_INIT( sizeof(tidy_ipath) );
 
 /////////// local functions ///////////////////////////////////////////////////
 
@@ -158,7 +161,6 @@ char const* ipath_relativize( char const *abs_path ) {
 
 void ipaths_init( void ) {
   ASSERT_RUN_ONCE();
-  array_init( &ipaths, sizeof(tidy_ipath) );
   ATEXIT( &ipaths_cleanup );
 }
 

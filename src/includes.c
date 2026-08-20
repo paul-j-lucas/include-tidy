@@ -587,8 +587,7 @@ static char* make_symbols_comment( tidy_include const *include ) {
   // For all other cases, we need to copy pointers to the symbols into an array
   // and sort it.
   //
-  array_t symbols_array;
-  array_init( &symbols_array, sizeof(tidy_symbol*) );
+  array_t symbols_array = ARRAY_INIT( sizeof(tidy_symbol*) );
   array_reserve( &symbols_array, include->symbol_set.size );
 
   for ( tidy_symbol const *sym; (sym = ht_iterator_next( &iter )) != NULL; )
@@ -1074,8 +1073,7 @@ void includes_init( void ) {
 }
 
 void includes_print( void ) {
-  array_t include_array;
-  array_init( &include_array, sizeof(tidy_include*) );
+  array_t include_array = ARRAY_INIT( sizeof(tidy_include*) );
   array_reserve( &include_array, tidy_include_set.size );
 
   tidy_include *const assoc_include = get_associated_header();

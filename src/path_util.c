@@ -159,8 +159,7 @@ char* path_normalize( char const *path ) {
   }
   strbuf_paths( &in_path, path );
 
-  array_t comp_stack;
-  array_init( &comp_stack, sizeof(char*) );
+  array_t comp_stack = ARRAY_INIT( sizeof(char*) );
 
   for ( char const *comp = strtok( in_path.str, "/" ); comp != NULL;
         comp = strtok( NULL, "/" ) ) {

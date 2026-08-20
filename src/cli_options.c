@@ -990,10 +990,9 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   char const *const short_opts = make_short_opts( OPTIONS, SOPT(INCLUDE) ":" );
   int               tidy_argc;
   char const      **tidy_argv;
-  array_t           tmp_include_paths;
+  array_t           tmp_include_paths = ARRAY_INIT( sizeof(char*) );
 
   move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
-  array_init( &tmp_include_paths, sizeof(char*) );
 
   opterr = 0;                           // suppress default error message
   for (;;) {

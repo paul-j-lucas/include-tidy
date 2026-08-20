@@ -101,6 +101,18 @@
 /// @{
 ///
 
+////////// macros /////////////////////////////////////////////////////////////
+
+/**
+ * An initializer that can be assigned to stand-alone arrays.
+ *
+ * @param ESIZE The element size.
+ *
+ * @sa array_cleanup()
+ * @sa array_init()
+ */
+#define ARRAY_INIT(ESIZE)         (array_t){ .esize = (ESIZE) }
+
 ////////// typedefs ///////////////////////////////////////////////////////////
 
 typedef struct array array_t;
@@ -150,6 +162,7 @@ struct array {
  * @note If \a free_fn is NULL, this is an O(1) operation; otherwise O(N).
  *
  * @sa array_init()
+ * @sa #ARRAY_INIT()
  */
 void array_cleanup( array_t *restrict array, array_free_fn_t free_fn );
 
@@ -427,9 +440,10 @@ inline void* nonconst_array_front( array_t *array ) {
  * @param esize The element size.
  *
  * @sa array_cleanup()
+ * @sa #ARRAY_INIT()
  */
 inline void array_init( array_t *array, size_t esize ) {
-  *array = (array_t){ .esize = esize };
+  *array = ARRAY_INIT( esize );
 }
 
 /**
