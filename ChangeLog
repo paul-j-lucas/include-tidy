@@ -1,5 +1,14 @@
 2026-08-20  Paul J. Lucas <paul@lucasmail.org>
 
+   * configure.ac, array.h, bit_util.h, clang_util.h, cli_options.h, color.h,
+     config_file.h, cxx.h, hash_table.h, include-tidy.h, includes.h, ipaths.h,
+     options.h, path_util.h, pjl_config.h, print.h, proxies.h, red_black.h,
+     strbuf.h, symbols.h, tidy_util.h, toml_lite.c, toml_lite.h, trans_unit.h,
+     type_traits.h, typedefs.h, unit_test.h, util.h: Header macro renaming.
+   * src/Makefile.am, cxx.c, cxx.h, symbols.c: Split C++ IWYU exception code
+     into cxx.[hc].
+   * symbols.c: No longer need forward declaration.
+   * symbols.c: Now passing scope_csr to is_cxx_iwyu_exception.
    * includes.c, includes.h, symbols.c: s/include_includes/tidy_File_includes/
 
 2026-08-19  Paul J. Lucas <paul@lucasmail.org>
