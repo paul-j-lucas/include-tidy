@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef pjl_config_H
-#define pjl_config_H
+#ifndef pjl_config_h
+#define pjl_config_h
 
 /**
  * @file
@@ -27,7 +27,7 @@
  * `#include` this file rather than `config.h` directly.
  */
 
-#ifdef include_tidy_config_H
+#ifdef tidy_config_h
 #error "Must #include pjl_config.h instead."
 #endif
 
@@ -93,5 +93,5 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#endif /* pjl_config_H */
+#endif /* pjl_config_h */
 /* vim:set et sw=2 ts=2: */

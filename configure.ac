@@ -156,9 +156,9 @@ AC_SUBST([LIBCLANG_CPPFLAGS])
 AC_SUBST([LIBCLANG_LDFLAGS])
 AC_SUBST([LIBCLANG_LIBDIR])
 AC_SUBST([LIBCLANG_LIBS])
-AH_TOP([#ifndef include_tidy_config_H
-#define include_tidy_config_H])
-AH_BOTTOM([#endif /* include_tidy_config_H */])
+AH_TOP([#ifndef tidy_config_h
+#define tidy_config_h])
+AH_BOTTOM([#endif /* tidy_config_h */])
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_FILES([
   Makefile

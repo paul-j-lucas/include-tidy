@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_ipaths_H
-#define include_tidy_ipaths_H
+#ifndef tidy_ipaths_h
+#define tidy_ipaths_h
 
 /**
  * @file
@@ -103,5 +103,5 @@ void ipaths_init( void );
 
 /** @} */
 
-#endif /* include_tidy_ipaths_H */
+#endif /* tidy_ipaths_h */
 /* vim:set et sw=2 ts=2: */

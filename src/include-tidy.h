@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_include_tidy_H
-#define include_tidy_include_tidy_H
+#ifndef tidy_include_tidy_h
+#define tidy_include_tidy_h
 
 /**
  * @file
@@ -69,5 +69,5 @@ extern char const *prog_name;           ///< Program name.
 
 /** @} */
 
-#endif /* include_tidy_include_tidy_H */
+#endif /* tidy_include_tidy_h */
 /* vim:set et sw=2 ts=2: */

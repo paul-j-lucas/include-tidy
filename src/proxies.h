@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_proxies_H
-#define include_tidy_proxies_H
+#ifndef tidy_proxies_h
+#define tidy_proxies_h
 
 /**
  * @file
@@ -64,5 +64,5 @@ bool include_proxy_would_cycle( tidy_include const *from_include,
 
 /** @} */
 
-#endif /* include_tidy_proxies_H */
+#endif /* tidy_proxies_h */
 /* vim:set et sw=2 ts=2: */

@@ -1,5 +1,5 @@
 /*
-**      include-tidy -- #include tidier
+**      PJL Library
 **      src/toml_lite.c
 **
 **      Copyright (C) 2026  Paul J. Lucas

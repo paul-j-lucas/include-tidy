@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http
 */
 
-#ifndef include_tidy_tidy_util_H
-#define include_tidy_tidy_util_H
+#ifndef tidy_tidy_util_h
+#define tidy_tidy_util_h
 
 /**
  * @file
@@ -73,5 +73,5 @@ char const* get_ext_language( char const *ext );
 
 /** @} */
 
-#endif /* include_tidy_tidy_util_H */
+#endif /* tidy_tidy_util_h */
 /* vim:set et sw=2 ts=2: */

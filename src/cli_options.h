@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http
 */
 
-#ifndef include_tidy_cli_options_H
-#define include_tidy_cli_options_H
+#ifndef tidy_cli_options_h
+#define tidy_cli_options_h
 
 /**
  * @file
@@ -107,5 +107,5 @@ void opt_mark_set( int short_opt );
 
 /** @} */
 
-#endif /* include_tidy_cli_options_H */
+#endif /* tidy_cli_options_h */
 /* vim:set et sw=2 ts=2: */

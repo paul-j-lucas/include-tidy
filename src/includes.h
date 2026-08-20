@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_includes_H
-#define include_tidy_includes_H
+#ifndef tidy_includes_h
+#define tidy_includes_h
 
 /**
  * @file
@@ -237,5 +237,5 @@ unsigned tidy_File_includes( CXFile ref_file, CXFile def_file );
 
 /** @} */
 
-#endif /* include_tidy_includes_H */
+#endif /* tidy_includes_h */
 /* vim:set et sw=2 ts=2: */

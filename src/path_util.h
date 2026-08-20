@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_path_util_H
-#define include_tidy_path_util_H
+#ifndef tidy_path_util_h
+#define tidy_path_util_h
 
 /**
  * @file
@@ -212,5 +212,5 @@ char* path_normalize( char const *path );
 
 /** @} */
 
-#endif /* include_tidy_path_util_H */
+#endif /* tidy_path_util_h */
 /* vim:set et sw=2 ts=2: */

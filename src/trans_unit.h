@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_trans_unit_H
-#define include_tidy_trans_unit_H
+#ifndef tidy_trans_unit_h
+#define tidy_trans_unit_h
 
 /**
  * @file
@@ -63,5 +63,5 @@ void trans_unit_init( int argc, char const *const argv[] );
 
 /** @} */
 
-#endif /* include_tidy_trans_unit_H */
+#endif /* tidy_trans_unit_h */
 /* vim:set et sw=2 ts=2: */

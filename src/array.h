@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef pjl_array_H
-#define pjl_array_H
+#ifndef pjl_array_h
+#define pjl_array_h
 
 /**
  * @file
@@ -513,5 +513,5 @@ inline void array_qsort( array_t *array, array_cmp_fn_t cmp_fn ) {
 
 /** @} */
 
-#endif /* pjl_array_H */
+#endif /* pjl_array_h */
 /* vim:set et sw=2 ts=2: */

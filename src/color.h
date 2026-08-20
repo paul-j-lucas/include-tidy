@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_color_H
-#define include_tidy_color_H
+#ifndef tidy_color_h
+#define tidy_color_h
 
 /**
  * @file
@@ -105,5 +105,5 @@ void colors_init( void );
 
 /** @} */
 
-#endif /* include_tidy_color_H */
+#endif /* tidy_color_h */
 /* vim:set et sw=2 ts=2: */

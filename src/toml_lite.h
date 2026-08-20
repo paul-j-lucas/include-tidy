@@ -1,5 +1,5 @@
 /*
-**      include-tidy -- #include tidier
+**      PJL Library
 **      src/toml_lite.h
 **
 **      Copyright (C) 2026  Paul J. Lucas
@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_toml_lite_H
-#define include_tidy_toml_lite_H
+#ifndef pjl_toml_lite_h
+#define pjl_toml_lite_h
 
 /**
  * @file
@@ -317,5 +317,5 @@ bool toml_table_next( toml_file *toml, toml_table *table );
 
 /** @} */
 
-#endif /* include_tidy_toml_lite_H */
+#endif /* pjl_toml_lite_h */
 /* vim:set et sw=2 ts=2: */

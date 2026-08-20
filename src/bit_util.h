@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef pjl_bit_util_H
-#define pjl_bit_util_H
+#ifndef pjl_bit_util_h
+#define pjl_bit_util_h
 
 /**
  * @file
@@ -94,5 +94,5 @@ inline bool is_1_bit( uint64_t n ) {
 
 /** @} */
 
-#endif /* pjl_bit_util_H */
+#endif /* pjl_bit_util_h */
 /* vim:set et sw=2 ts=2: */

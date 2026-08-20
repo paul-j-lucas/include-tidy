@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_options_H
-#define include_tidy_options_H
+#ifndef tidy_options_h
+#define tidy_options_h
 
 /**
  * @file
@@ -196,5 +196,5 @@ bool opt_verbose_parse( char const *verbose_format );
 
 /** @} */
 
-#endif /* include_tidy_options_H */
+#endif /* tidy_options_h */
 /* vim:set et sw=2 ts=2: */

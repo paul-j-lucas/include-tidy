@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef pjl_hash_table_H
-#define pjl_hash_table_H
+#ifndef pjl_hash_table_h
+#define pjl_hash_table_h
 
 // local
 #include "pjl_config.h"
@@ -359,5 +359,5 @@ inline double ht_load_factor( hash_table_t const *table ) {
 
 /** @} */
 
-#endif /* pjl_hash_table_H */
+#endif /* pjl_hash_table_h */
 /* vim:set et sw=2 ts=2: */

@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_print_H
-#define include_tidy_print_H
+#ifndef tidy_print_h
+#define tidy_print_h
 
 /**
  * @file
@@ -294,5 +294,5 @@ bool verbose_print_statistics( void );
 
 /** @} */
 
-#endif /* include_tidy_print_H */
+#endif /* tidy_print_h */
 /* vim:set et sw=2 ts=2: */

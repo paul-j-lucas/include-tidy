@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_config_file_H
-#define include_tidy_config_file_H
+#ifndef tidy_config_file_h
+#define tidy_config_file_h
 
 /**
  * @file
@@ -100,5 +100,5 @@ bool config_is_symbol_ignored( char const *sym_name );
 
 /** @} */
 
-#endif /* include_tidy_config_file_H */
+#endif /* tidy_config_file_h */
 /* vim:set et sw=2 ts=2: */

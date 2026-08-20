@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_clang_util_H
-#define include_tidy_clang_util_H
+#ifndef tidy_clang_util_h
+#define tidy_clang_util_h
 
 /**
  * @file
@@ -711,5 +711,5 @@ bool tidy_Token_isScopeQualifier( CXTranslationUnit tu, CXToken token );
 
 /** @} */
 
-#endif /* include_tidy_clang_util_H */
+#endif /* tidy_clang_util_h */
 /* vim:set et sw=2 ts=2: */

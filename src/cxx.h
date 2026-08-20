@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef include_tidy_cxx_H
-#define include_tidy_cxx_H
+#ifndef tidy_cxx_h
+#define tidy_cxx_h
 
 /**
  * @file
@@ -141,5 +141,5 @@ bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent, CXCursor dec_csr,
 
 /** @} */
 
-#endif /* include_tidy_cxx_H */
+#endif /* tidy_cxx_h */
 /* vim:set et sw=2 ts=2: */
