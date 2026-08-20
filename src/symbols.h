@@ -57,7 +57,8 @@ struct tidy_symbol {
 
   /**
    * The symbol name with signature (for functions or operators) or template
-   * parameters (for templates) used as a unique key.
+   * parameters (for templates) used as a unique key since C++ allows
+   * overloading.
    */
   char const *name_key;
 
