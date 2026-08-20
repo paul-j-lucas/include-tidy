@@ -48,11 +48,11 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 void array_cleanup( array_t *restrict array, array_free_fn_t free_fn ) {
-  if ( array == NULL )
+  if ( array == NULL || array->elements == NULL )
     return;
 
   // Force hoist of array-> out of loop.
-  void *const   elements = array->elements;
+  char *const   elements = array->elements;
   size_t const  esize = array->esize;
 
   if ( free_fn != NULL ) {
@@ -65,7 +65,8 @@ void array_cleanup( array_t *restrict array, array_free_fn_t free_fn ) {
   array_init( array, esize );
 }
 
-void array_dedup( array_t *array, array_cmp_fn_t cmp_fn ) {
+void array_dedup( array_t *array, array_cmp_fn_t cmp_fn,
+                  array_free_fn_t free_fn ) {
   assert( array != NULL );
   assert( cmp_fn != NULL );
 
@@ -78,8 +79,11 @@ void array_dedup( array_t *array, array_cmp_fn_t cmp_fn ) {
     void *const last = array_at_nc( array, dst_idx - 1 );
     void *const curr = array_at_nc( array, src_idx );
 
-    if ( (*cmp_fn)( last, curr ) == 0 )
+    if ( (*cmp_fn)( last, curr ) == 0 ) {
+      if ( free_fn != NULL )
+        (*free_fn)( curr );
       continue;
+    }
 
     if ( src_idx != dst_idx )
       memcpy( array_at_nc( array, dst_idx ), curr, array->esize );

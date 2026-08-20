@@ -613,7 +613,9 @@ static char* make_symbols_comment( tidy_include const *include ) {
     // Since C++ allows function, operator, and template overloading, there can
     // be multiple entires with the same name, so remove duplicates.
     //
-    array_dedup( &symbols_array, &tidy_symbol_ptr_cmp_by_name );
+    array_dedup(
+      &symbols_array, &tidy_symbol_ptr_cmp_by_name, /*free_fn=*/NULL
+    );
   }
 
   bool comma = false;

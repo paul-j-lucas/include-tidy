@@ -349,8 +349,11 @@ inline void* array_bsearch( array_t *array, void const *key,
  *
  * @param array The sorted array to dedup.
  * @param cmp_fn The comparison function to use.
+ * @param free_fn A pointer to a function used to free duplicate elements or
+ * NULL if unnecessary.
  */
-void array_dedup( array_t *array, array_cmp_fn_t cmp_fn );
+void array_dedup( array_t *array, array_cmp_fn_t cmp_fn,
+                  array_free_fn_t free_fn );
 
 /**
  * Gets a pointer to the element at the front of \a array.
