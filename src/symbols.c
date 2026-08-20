@@ -937,39 +937,6 @@ static bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
   return false;
 }
 
-#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-/**
- * Gets whether it's possible to go from the header \a ref_file containing a
- * reference to a symbol to the header \a def_file containing the definition of
- * that symbol via the set of files that were included.
- *
- * @param ref_file A header file containing a reference to a symbol.
- * @param def_file A header file containing the definition of that symbol.
- * @return Returns a value &gt; 0 only if \a ref_file includes the \a def_file,
- * directly or indirectly.  The value indicates the number of includes between
- * them, i.e., 1 means \e ref_file includes \e def_file directly, 2 means \e
- * ref_file includes \e other_file that includes \e def_file, and so on.
- */
-NODISCARD
-static unsigned is_include_path( CXFile ref_file, CXFile def_file ) {
-  tidy_include const *const def_include = include_find_by_File( def_file );
-  if ( def_include == NULL )
-    return 0;
-
-  tidy_include const *ref_include;
-  if ( ref_file != NULL ) {
-    ref_include = include_find_by_File( ref_file );
-    if ( ref_include == NULL )
-      return 0;
-  }
-  else {
-    ref_include = NULL;
-  }
-
-  return include_includes( ref_include, def_include );
-}
-#endif /* NEED_II_MATRIX */
-
 /**
  * Gets whether the definition of \a cursor is needed rather than just its
  * declaration.

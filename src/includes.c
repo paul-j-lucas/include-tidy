@@ -1057,15 +1057,6 @@ tidy_include const* (include_get_proxy)( tidy_include const *include ) {
   return include;
 }
 
-#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-unsigned include_includes( tidy_include const *i_include,
-                           tidy_include const *j_include ) {
-  assert( j_include != NULL );
-  unsigned const i = i_include != NULL ? i_include->instance_id : 0;
-  return ii_matrix[ i ][ j_include->instance_id ];
-}
-#endif /* NEED_II_MATRIX */
-
 void includes_init( void ) {
   ASSERT_RUN_ONCE();
   rb_tree_init(
@@ -1144,6 +1135,28 @@ void includes_print( void ) {
 
   array_cleanup( &include_array, /*free_fn=*/NULL );
 }
+
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
+unsigned tidy_File_includes( CXFile ref_file, CXFile def_file ) {
+  tidy_include const *const def_include = include_find_by_File( def_file );
+  if ( def_include == NULL )
+    return 0;
+
+  unsigned ref_id;
+
+  if ( ref_file != NULL ) {
+    tidy_include const *const ref_include = include_find_by_File( ref_file );
+    if ( ref_include == NULL )
+      return 0;
+    ref_id = ref_include->instance_id;
+  }
+  else {
+    ref_id = 0;
+  }
+
+  return ii_matrix[ ref_id ][ def_include->instance_id ];
+}
+#endif /* NEED_II_MATRIX */
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -203,25 +203,6 @@ inline tidy_include* nonconst_include_get_proxy( tidy_include *include ) {
   NONCONST_OVERLOAD( include_get_proxy, (INCLUDE) )
 /// @endcond
 
-#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-/**
- * Gets whether \a i_include includes \a j_include, and whether directly or
- * indirectly.
- *
- * @param i_include The first include file.  If NULL, \ref tidy_source_path
- * substitutes for it, i.e., gets whether \ref tidy_source_path includes \a
- * j_include.
- * @param j_include The second include file.
- * @return Returns a value &gt; 0 only if \a i_include (or, if NULL, \ref
- * tidy_source_path) includes \a j_include.  The value indicates the number of
- * includes between them, i.e., 1 means \e i includes \e j directly, 2 means \e
- * i includes \e k that includes \e j, and so on.
- */
-NODISCARD
-unsigned include_includes( tidy_include const *i_include,
-                           tidy_include const *j_include );
-#endif /* NEED_II_MATRIX */
-
 /**
  * Initializes the set of files included in the given translation unit.
  *
@@ -233,6 +214,24 @@ void includes_init( void );
  * Prints include files.
  */
 void includes_print( void );
+
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
+/**
+ * Gets whether \a i_file includes \a j_file, and whether directly or
+ * indirectly.
+ *
+ * @param i_file The first file.  If NULL, the file for \ref tidy_source_path
+ * substitutes for it, i.e., gets whether \ref tidy_source_path includes \a
+ * j_file.
+ * @param j_file The second file.
+ * @return Returns a value &gt; 0 only if \a i_file (or, if NULL, \ref
+ * tidy_source_path) includes \a j_file.  The value indicates the number of
+ * includes between them, i.e., 1 means \a i_file includes \a j_filey, 2 means
+ * \a i_file includes \e k_file that includes \a j_file, and so on.
+ */
+NODISCARD
+unsigned tidy_File_includes( CXFile ref_file, CXFile def_file );
+#endif /* NEED_II_MATRIX */
 
 ///////////////////////////////////////////////////////////////////////////////
 
