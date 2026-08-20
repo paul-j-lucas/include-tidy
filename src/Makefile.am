@@ -43,6 +43,7 @@ include_tidy_SOURCES =	array.c array.h \
 			cli_options.c cli_options.h \
 			color.c color.h \
 			config_file.c config_file.h \
+			cxx.c cxx.h \
 			hash_table.c hash_table.h \
 			includes.c includes.h \
 			include-tidy.c include-tidy.h \
