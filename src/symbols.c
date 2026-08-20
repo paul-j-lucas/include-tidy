@@ -236,9 +236,6 @@ struct symbols_init_data {
 NODISCARD
 static bool     is_cxx_mbr_fn_iwyu_exception( CXCursor, CXCursor );
 
-NODISCARD
-static CXCursor sid_cxx_scope( symbols_init_data const*, CXCursor );
-
 static void     tidy_symbol_cleanup( tidy_symbol* );
 
 NODISCARD
