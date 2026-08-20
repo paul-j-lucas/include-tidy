@@ -156,6 +156,8 @@ struct symbols_init_data {
    *
    * @note This is set only while the current cursor being visited is a
    * function and not while _inside_ the function.
+   *
+   * @sa is_cxx_fn_iwyu_exception()
    */
   CXCursor cxx_deferred_fn_csr;
 
@@ -375,6 +377,8 @@ static CXFile get_symbol_file( CXCursor sym_csr,
  * @param scope_csr The cursor representing the surrounding C++ class scope, if
  * any.
  * @return Returns `true` only if \a cursor is explicitly qualified.
+ *
+ * @note This function should be called only when the file being tidied is C++.
  */
 NODISCARD
 static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
@@ -423,7 +427,7 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
   CXCursor *const cursors = MALLOC( CXCursor, token_count );
   clang_annotateTokens( tu, tokens, token_count, cursors );
 
-  // Scan backwards past template brackets <...> to find the qualifier token
+  // Scan backwards past template brackets <...> to find the qualifier token.
   int angle_depth = 0;
   while ( (ptoken = tidy_Token_getPrev( tokens, &i )) != NULL ) {
     int const match = clang_getTokenKind( *ptoken ) == CXToken_Punctuation ?
@@ -507,6 +511,8 @@ done:
  * `operator->` and \a mbr_cls_csr is _not_ the same as the class that defines
  * (or inherits) the operator, i.e., it's a proxy for \a mbr_cls_csr and
  * therefore an IWYU exception.
+ *
+ * @note This function should be called only when the file being tidied is C++.
  */
 NODISCARD
 static bool is_cxx_arrow_iwyu_exception( CXCursor call_expr_csr,
@@ -547,12 +553,14 @@ static bool is_cxx_arrow_iwyu_exception( CXCursor call_expr_csr,
  * declares it) should be added to the global set or constitites an include-
  * what-you-use (IWYU) exception.
  *
- * @note This function should be called only for C++ files being tidied.
- *
  * @param call_csr A CallExpr cursor.
  * @param fn_csr The cursor of the function being called.
  * @return Returns `true` only if the function (and the header that declares
  * it) should _not_ be added and is therefore an IWYU exception.
+ *
+ * @note This function should be called only when the file being tidied is C++.
+ *
+ * @sa symbols_init_data::cxx_deferred_fn_csr
  */
 NODISCARD
 static bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
@@ -682,6 +690,8 @@ static bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
  * @param sid The symbols_init_data to use.
  * @return Returns `true` only if \a dec_csr (and the header that declares it)
  * should _not_ be added, i.e., is an IWYU exception.
+ *
+ * @note This function should be called only when the file being tidied is C++.
  */
 NODISCARD
 static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
@@ -773,9 +783,13 @@ static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
  * @param fn_csr The cursor of the function or operator being called.
  * @return Returns `true` only if the member function or operator (and the
  * header that declares it) should _not_ be added, i.e., is an IWYU exception.
+ *
+ * @note This function should be called only when the file being tidied is C++.
  */
 NODISCARD
 static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
+  assert( tidy_is_cxx );
+
   CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( call_csr );
   if ( clang_getCursorKind( callee_csr ) != CXCursor_MemberRefExpr )
     return false;
@@ -810,9 +824,13 @@ static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
  * @return Returns `true` only if \a obj_csr (and the header that declares it)
  * referencing the class member should _not_ be added, i.e., is an IWYU
  * exception.
+ *
+ * @note This function should be called only when the file being tidied is C++.
  */
 NODISCARD
 static bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
+  assert( tidy_is_cxx );
+
   if ( tidy_Cursor_isInvalid( obj_csr ) )
     return false;
 
@@ -847,7 +865,7 @@ static bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
   if ( tidy_Cursor_isInvalid( ref_csr ) )
     return false;
 
-  // Method return value (e.g., map.insert(), iterator operator*, operator->)
+  // Member function return value (e.g., std::map<K,V>::insert()).
   enum CXCursorKind const kind = clang_getCursorKind( ref_csr );
   switch ( kind ) {
     case CXCursor_ConversionFunction:
