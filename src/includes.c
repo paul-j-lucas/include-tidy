@@ -444,10 +444,11 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       // is incorrect).
       //
       tidy_include *const includer = include_find_by_File( includer_file );
-      if ( includer != old_includer &&
-           strcmp( path_basename( included->rel_path ),
-                   path_basename( includer->rel_path ) ) == 0 ) {
-        included->includer = includer;
+      if ( includer != old_includer ) {
+        char const *const included_base = path_basename( included->rel_path );
+        char const *const includer_base = path_basename( includer->rel_path );
+        if ( strcmp( included_base, includer_base ) == 0 )
+          included->includer = includer;
       }
     }
     goto done;
@@ -607,8 +608,13 @@ static char* make_symbols_comment( tidy_include const *include ) {
       break;
   } // switch
 
-  if ( tidy_is_cxx )
+  if ( tidy_is_cxx ) {
+    //
+    // Since C++ allows function, operator, and template overloading, there can
+    // be multiple entires with the same name, so remove duplicates.
+    //
     array_dedup( &symbols_array, &tidy_symbol_ptr_cmp_by_name );
+  }
 
   bool comma = false;
   bool is_done = false;
