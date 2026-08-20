@@ -1,5 +1,7 @@
 2026-08-20  Paul J. Lucas <paul@lucasmail.org>
 
+   * toml_test.c: No longer need to use pointers in toml_test.
+   * config_file.c: Fixed unused variable warning when asserts are disabled.
    * configure.ac, array.h, bit_util.h, clang_util.h, cli_options.h, color.h,
      config_file.h, cxx.h, hash_table.h, include-tidy.h, includes.h, ipaths.h,
      options.h, path_util.h, pjl_config.h, print.h, proxies.h, red_black.h,
