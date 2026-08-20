@@ -33,6 +33,7 @@
 // standard
 #include <assert.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -113,11 +114,19 @@ void* array_push_array_back( array_t *restrict dst_array,
 
 bool array_reserve( array_t *array, size_t res_len ) {
   assert( array != NULL );
+
   if ( res_len <= array->cap - array->len )
     return false;
+
+  assert( res_len <= SIZE_MAX - array->len );
+  size_t const min_cap = array->len + res_len;
+
+  size_t const max_cap = SIZE_MAX / array->esize;
+  assert( min_cap <= max_cap );
+
   if ( array->cap == 0 )
     array->cap = ARRAY_CAP_MIN;
-  size_t const min_cap = array->len + res_len;
+
   //
   // Why not grow by 2x?  The problem is that the size of each new allocation
   // is always > the sum of all previous allocations combined, which means
@@ -131,8 +140,14 @@ bool array_reserve( array_t *array, size_t res_len ) {
   // 19), and the next allocation will be 13, and 13 <= 19, so malloc can reuse
   // that block.
   //
-  while ( array->cap < min_cap )
-    array->cap += array->cap >> 1;      // grow by ~1.5x
+  while ( array->cap < min_cap ) {
+    size_t const delta = array->cap >> 1; // grow by ~1.5x
+    if ( unlikely( array->cap > max_cap - delta ) ) {
+      array->cap = min_cap;
+      break;
+    }
+    array->cap += delta;
+  }
   array->elements = check_realloc( array->elements, array->cap * array->esize );
   return true;
 }
