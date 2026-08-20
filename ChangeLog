@@ -1,5 +1,7 @@
 2026-08-19  Paul J. Lucas <paul@lucasmail.org>
 
+   * array.c: Now checking for integer overflow.
+   * array.c, array.h, includes.c: Added free_fn parameter to array_dedup().
    * cli_options.c, config_file.c, includes.c, print.c, print.h, proxies.c,
      symbols.c: verbose_section_begin() now takes bool*.
    * man/man1/include-tidy.1, typedefs.c: Added typedef_map statistics.
