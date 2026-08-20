@@ -247,7 +247,9 @@ inline void toml_iterator_init( toml_iterator *iter, toml_table *table ) {
 }
 
 /**
- * Iterates to the next in-order toml_key_value in the table, if any.
+ * Iterates to the next toml_key_value in the table, if any.
+ *
+ * @note The order in which keys are returned is unspecified.
  *
  * @param iter The toml_iterator.
  * @return Returns a pointer to the next toml_key_value or NULL if the entire
