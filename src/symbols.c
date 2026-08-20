@@ -699,7 +699,7 @@ static bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
  * @param cursor The cursor to check.
  * @param parent The parent cursor of \a cursor.
  * @param dec_csr The referenced cursor (declaration) of \a cursor.
- * @param sid The symbols_init_data to use.
+ * @param scope_csr The cursor for the scope that should be used.
  * @return Returns `true` only if \a dec_csr (and the header that declares it)
  * should _not_ be added --- an IWYU exception.
  *
@@ -707,13 +707,10 @@ static bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
  */
 NODISCARD
 static bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent,
-                                   CXCursor dec_csr,
-                                   symbols_init_data const *sid ) {
+                                   CXCursor dec_csr, CXCursor scope_csr ) {
   assert( tidy_is_cxx );
-  assert( sid != NULL );
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
-  CXCursor const scope_csr = sid_cxx_scope( sid, parent );
 
   if ( !clang_isDeclaration( kind ) &&
         has_cxx_qualifier_proxy( cursor, parent, scope_csr ) ) {
@@ -1743,7 +1740,8 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
         if ( clang_equalCursors( dec_csr, sid->cxx_deferred_fn_csr ) )
           return;
 
-        if ( is_cxx_iwyu_exception( cursor, parent, dec_csr, sid ) )
+        CXCursor const scope_csr = sid_cxx_scope( sid, parent );
+        if ( is_cxx_iwyu_exception( cursor, parent, dec_csr, scope_csr ) )
           return;
       }
       add_symbol( dec_csr, dec_csr, dec_file, sid );
