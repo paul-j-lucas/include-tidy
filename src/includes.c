@@ -454,7 +454,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     goto done;
   }
 
-  if ( (opt_verbose & TIDY_VERBOSE_INCLUDES) != 0 ) {
+  if ( IS_VERBOSE( INCLUDES ) ) {
     if ( verbose_section_begin( &iid->printed_verbose_includes ) )
       verbose_printf( "includes:\n" );
 
@@ -679,7 +679,7 @@ static void maybe_print_include( tidy_include const *include,
   if ( group != args->want_group )
     return;
 
-  if ( (opt_verbose & TIDY_VERBOSE_SRC_FILE_VIOLATIONS) != 0 &&
+  if ( IS_VERBOSE( SRC_FILE_VIOLATIONS ) &&
        false_set( &args->printed_source_file ) ) {
     verbose_printf( "%s\n", tidy_source_path );
   }

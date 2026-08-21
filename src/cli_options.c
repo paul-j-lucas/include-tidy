@@ -1123,12 +1123,12 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   };
   insert_argv( pargc, pargv, 1, ARRAY_SIZE( CLANG_ARGS ), CLANG_ARGS );
 
-  if ( (opt_verbose & TIDY_VERBOSE_SRC_FILE_ALWAYS) != 0 ) {
+  if ( IS_VERBOSE( SRC_FILE_ALWAYS ) ) {
     verbose_section_begin( /*flag=*/NULL );
     verbose_printf( "source file: \"%s\"\n", tidy_source_path );
   }
 
-  if ( (opt_verbose & TIDY_VERBOSE_ARGS) != 0 ) {
+  if ( IS_VERBOSE( ARGS ) ) {
     verbose_print_argv( "clang", argc, *pargv );
     verbose_print_argv( "tidy", tidy_argc, tidy_argv );
   }
@@ -1162,7 +1162,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   }
 
   if ( opt_directory != NULL ) {
-    if ( (opt_verbose & TIDY_VERBOSE_DIRECTORY) != 0 ) {
+    if ( IS_VERBOSE( DIRECTORY ) ) {
       verbose_section_begin( /*flag=*/NULL );
       verbose_printf( "change directory: \"%s\"\n", opt_directory );
     }

@@ -242,9 +242,9 @@ void implicit_proxies_init( void ) {
   CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
   clang_visitChildren( cursor, &implicit_proxies_visitor, /*data=*/NULL );
 
-  if ( (opt_verbose & TIDY_VERBOSE_PROXIES_EXPLICIT) != 0 )
+  if ( IS_VERBOSE( PROXIES_EXPLICIT ) )
     include_proxies_dump( /*want_explicit=*/true );
-  if ( (opt_verbose & TIDY_VERBOSE_PROXIES_IMPLICIT) != 0 )
+  if ( IS_VERBOSE( PROXIES_IMPLICIT ) )
     include_proxies_dump( /*want_explicit=*/false );
 }
 

@@ -297,7 +297,7 @@ int verbose_printf( char const *format, ... ) {
 
 bool verbose_print_statistics( void ) {
   static bool printed_header;
-  bool const want_statistics = (opt_verbose & TIDY_VERBOSE_STATISTICS) != 0;
+  bool const want_statistics = IS_VERBOSE( STATISTICS );
   if ( want_statistics && verbose_section_begin( &printed_header ) )
     verbose_printf( "statistics:\n" );
   return want_statistics;

@@ -298,7 +298,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
   if ( include_added_to == NULL )
     goto done;
 
-  if ( (opt_verbose & TIDY_VERBOSE_SYMBOLS) != 0 ) {
+  if ( IS_VERBOSE( SYMBOLS ) ) {
     if ( verbose_section_begin( &sid->printed_verbose_symbols  ) )
       verbose_printf( "symbols:\n" );
     char delims[2];
@@ -782,7 +782,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   if ( !tidy_Cursor_isInFile( cursor, sid->source_file ) )
     goto skip;
 
-  if ( (opt_verbose & TIDY_VERBOSE_CURSORS) != 0 )
+  if ( IS_VERBOSE( CURSORS ) )
     verbose_print_cursor( cursor );
 
   if ( tidy_is_cxx ) {

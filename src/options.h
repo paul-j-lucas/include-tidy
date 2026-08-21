@@ -63,6 +63,9 @@ enum tidy_error {
 
 /**
  * Verbose mode.
+ *
+ * @sa #IS_VERBOSE()
+ * @sa opt_verbose
  */
 enum tidy_verbose {
   TIDY_VERBOSE_NONE,                            ///< Don't be verbose.
@@ -79,6 +82,17 @@ enum tidy_verbose {
   TIDY_VERBOSE_STATISTICS           = 1 << 10,  ///< Print statistics?
   TIDY_VERBOSE_SYMBOLS              = 1 << 11,  ///< Symbols referenced.
 };
+
+/**
+ * Convenience macro that checks whether being verbose about \a WHAT was
+ * requested.
+ *
+ * @param WHAT What to be verbose about without the `TIDY_VERBOSE_` prefix.
+ *
+ * @sa opt_verbose
+ * @sa tidy_verbose
+ */
+#define IS_VERBOSE(WHAT)          ((opt_verbose & TIDY_VERBOSE_ ## WHAT) != 0)
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 

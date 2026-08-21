@@ -855,7 +855,7 @@ static FILE* config_open( char const *path, config_opts opts ) {
   bool const  ok = config_file != NULL;
   static bool printed_configuration_files;
 
-  if ( (opt_verbose & TIDY_VERBOSE_CONFIG_FILES) != 0 ) {
+  if ( IS_VERBOSE( CONFIG_FILES ) ) {
     if ( verbose_section_begin( &printed_configuration_files ) )
       verbose_printf( "configuration files:\n" );
     verbose_printf( "  \"%s\": %s\n", path, ok ? "OK" : STRERROR() );
@@ -1682,7 +1682,7 @@ void config_init( void ) {
     exit( EX_CONFIG );
   }
 
-  if ( (opt_verbose & TIDY_VERBOSE_CONFIG_SYMBOLS) != 0 )
+  if ( IS_VERBOSE( CONFIG_SYMBOLS ) )
     symbol_includes_dump();
 }
 
