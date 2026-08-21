@@ -223,7 +223,7 @@ done:
 
 void verbose_print_argv( char const *label, int argc,
                          char const *const argv[] ) {
-  verbose_section_begin( /*flag=*/NULL );
+  verbose_section_begin( /*printed_header=*/NULL );
   verbose_printf( "%s argv:\n", label );
   for ( int i = 0; i < argc; ++i ) {
     verbose_printf( "  %2d = ", i );
@@ -303,8 +303,8 @@ bool verbose_print_statistics( void ) {
   return want_statistics;
 }
 
-bool verbose_section_begin( bool *flag ) {
-  if ( flag != NULL && true_or_set( flag ) )
+bool verbose_section_begin( bool *printed_header ) {
+  if ( printed_header != NULL && true_or_set( printed_header ) )
     return false;
   static bool print_blank_line;
   if ( true_or_set( &print_blank_line ) )

@@ -70,7 +70,7 @@ typedef struct symbols_init_data symbols_init_data;
  */
 struct symbols_init_data {
   CXFile    source_file;                ///< The file being tidied.
-  bool      printed_verbose_symbols;    ///< Printed any verbose symbols?
+  bool      printed_symbols_header;     ///< Printed "symbols:" header?
 
   /**
    * The C++ class of the current function or operator we're in.
@@ -299,7 +299,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     goto done;
 
   if ( IS_VERBOSE( SYMBOLS ) ) {
-    if ( verbose_section_begin( &sid->printed_verbose_symbols  ) )
+    if ( verbose_section_begin( &sid->printed_symbols_header  ) )
       verbose_printf( "symbols:\n" );
     char delims[2];
     include_get_delims( include_added_to, delims );

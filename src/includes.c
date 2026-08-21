@@ -100,7 +100,7 @@ typedef enum    print_group               print_group;
  * Additional data passed to includes_init_visitor().
  */
 struct includes_init_data {
-  bool  printed_verbose_includes;       ///< Printed any verbose includes?
+  bool  printed_includes_header;        ///< Printed "includes:" header?
 };
 
 /**
@@ -455,7 +455,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   }
 
   if ( IS_VERBOSE( INCLUDES ) ) {
-    if ( verbose_section_begin( &iid->printed_verbose_includes ) )
+    if ( verbose_section_begin( &iid->printed_includes_header ) )
       verbose_printf( "includes:\n" );
 
     char delims[2];

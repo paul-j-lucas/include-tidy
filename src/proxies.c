@@ -206,10 +206,9 @@ skip:
  * implicit proxies only.
  */
 static void include_proxies_dump( bool want_explicit ) {
-  bool printed_header = false;
-
   rb_iterator_t iter;
   rb_iterator_init( &iter, &tidy_include_set );
+  bool printed_proxies_header = false;
 
   for ( tidy_include const *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
@@ -217,7 +216,7 @@ static void include_proxies_dump( bool want_explicit ) {
       continue;
     if ( include->is_proxy_explicit != want_explicit )
       continue;
-    if ( verbose_section_begin( &printed_header ) ) {
+    if ( verbose_section_begin( &printed_proxies_header ) ) {
       verbose_printf(
         "%s proxies:\n",
         want_explicit ? "explicit" : "implicit"

@@ -853,10 +853,10 @@ static FILE* config_open( char const *path, config_opts opts ) {
 
   FILE *const config_file = fopen( path, "r" );
   bool const  ok = config_file != NULL;
-  static bool printed_configuration_files;
+  static bool printed_configuration_header;
 
   if ( IS_VERBOSE( CONFIG_FILES ) ) {
-    if ( verbose_section_begin( &printed_configuration_files ) )
+    if ( verbose_section_begin( &printed_configuration_header ) )
       verbose_printf( "configuration files:\n" );
     verbose_printf( "  \"%s\": %s\n", path, ok ? "OK" : STRERROR() );
   }
@@ -1534,7 +1534,7 @@ static void symbol_include_add( char const *from_symbol_name,
 static void symbol_includes_dump( void ) {
   if ( rb_tree_empty( &symbol_includes_map ) )
     return;
-  verbose_section_begin( /*flag=*/NULL );
+  verbose_section_begin( /*printed_header=*/NULL );
   verbose_printf( "configuration symbols:\n" );
   rb_iterator_t si_iter;
   rb_iterator_init( &si_iter, &symbol_includes_map );
