@@ -52,8 +52,8 @@ static double const TEST_LOAD_FACTOR_MAX = 1.0;
 ////////// local functions ////////////////////////////////////////////////////
 
 static ht_hash_val_t test_fnv1a( void const *data ) {
-  test_data const *const test_data = data;
-  return fnv1a64_mem( FNV1A_INIT, test_data->key, 1 );
+  test_data const *const tdata = data;
+  return fnv1a64_mem( FNV1A_INIT, tdata->key, 1 );
 }
 
 static void test_ht_fill( hash_table_t *table ) {
