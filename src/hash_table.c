@@ -132,7 +132,8 @@ ht_entry_t* ht_find( hash_table_t const *table, void const *data ) {
   assert( table != NULL );
   assert( data != NULL );
 
-  unsigned const b = (*table->hash_fn)( data ) % HT_PRIME[ table->prime_idx ];
+  ht_hash_val_t const b =
+    (*table->hash_fn)( data ) % HT_PRIME[ table->prime_idx ];
   for ( ht_entry_t *entry = table->buckets[b].next; entry != NULL;
         entry = entry->next ) {
     if ( (*table->cmp_fn)( data, ht_entry_data( table, entry ) ) == 0 )
@@ -170,10 +171,9 @@ ht_insert_rv_t ht_insert( hash_table_t *table, void *data, size_t data_size ) {
   assert( data != NULL );
   assert( table->dloc == HT_DPTR || data_size > 0 );
 
-  ht_hash_val_t const hash = (*table->hash_fn)( data );
-
   unsigned n_buckets = HT_PRIME[ table->prime_idx ];
-  unsigned b = hash % n_buckets;
+  ht_hash_val_t const hash = (*table->hash_fn)( data );
+  ht_hash_val_t b = hash % n_buckets;
   ht_entry_t *head = &table->buckets[b], *entry;
 
   for ( entry = head->next; entry != NULL; entry = entry->next ) {
