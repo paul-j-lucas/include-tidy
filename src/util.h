@@ -60,6 +60,9 @@
  * Gets whether the argument(s) contains a comma, that is there are 2 or more
  * arguments.
  *
+ * @note This macro is not generally useful by itself; it's a helper for
+ * #ARGS_IS_EMPTY().
+ *
  * @param ... Zero to 10 arguments, invariably `__VA_ARGS__`.
  * @return Returns `0` for 0 or 1 argument, or `1` for 2 or more arguments.
  */
@@ -71,7 +74,8 @@
 /// @endcond
 
 /**
- * Gets whether there are no arguments.
+ * Gets whether there are no arguments given to a function-like macro having
+ * `...` as its only parameter.
  *
  * @param ... Zero to 10 arguments, invariably `__VA_ARGS__`.
  * @return Returns `0` for 0 arguments or `1` otherwise.
