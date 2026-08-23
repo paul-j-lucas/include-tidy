@@ -26,6 +26,7 @@
 // local
 #include "pjl_config.h"
 #include "toml_lite.h"
+#include "fnv1a.h"
 #include "hash_table.h"
 #include "strbuf.h"
 #include "util.h"

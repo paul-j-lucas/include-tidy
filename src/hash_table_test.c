@@ -20,6 +20,7 @@
 
 // local
 #include "pjl_config.h"                 /* must go first */
+#include "fnv1a.h"
 #include "hash_table.h"
 #include "util.h"
 

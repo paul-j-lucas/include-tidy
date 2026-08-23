@@ -812,23 +812,6 @@
   /// @endcond
 #endif /* HAVE___VA_OPT__ */
 
-////////// typedefs ///////////////////////////////////////////////////////////
-
-/**
- * Result type for Fowler-Noll-Vo hash function.
- *
- * @sa fnv1a_mem()
- * @sa fnv1a_s()
- */
-typedef uint64_t fnv1a_t;
-
-/**
- * Initialization value for Fowler-Noll-Vo hash function.
- *
- * @sa fnv1a_mem()
- */
-#define FNV1A_INIT                14695981039346656037UL
-
 ////////// extern constants ///////////////////////////////////////////////////
 
 /**
@@ -925,32 +908,6 @@ inline bool false_set( bool *flag ) {
  */
 PJL_PRINTF_LIKE_FUNC(2)
 _Noreturn void fatal_error( int status, char const *format, ... );
-
-/**
- * Fowler-Noll-Vo hash function for memory.
- *
- * @param hash The current hash.  Use #FNV1A_INIT to start.
- * @param data The data to calculate the hash of.
- * @param n The size of \a data.
- * @return Returns said hash.
- *
- * @sa fnv1a64_s()
- * @sa [The FNV Non-Cryptographic Hash Algorithm](https://datatracker.ietf.org/doc/html/draft-eastlake-fnv-17.html)
- */
-NODISCARD
-fnv1a_t fnv1a64_mem( fnv1a_t hash, void const *data, size_t n );
-
-/**
- * Fowler-Noll-Vo hash function for a string.
- *
- * @param s The null-terminated string to calculate the hash of.
- * @return Returns said hash.
- *
- * @sa fnv1a64_mem()
- * @sa [The FNV Non-Cryptographic Hash Algorithm](https://datatracker.ietf.org/doc/html/draft-eastlake-fnv-17.html)
- */
-NODISCARD
-fnv1a_t fnv1a_s( char const *s );
 
 /**
  * Prints \a s as a quoted string with escaped characters.

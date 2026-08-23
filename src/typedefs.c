@@ -27,6 +27,7 @@
 #include "pjl_config.h"
 #include "typedefs.h"
 #include "clang_util.h"
+#include "fnv1a.h"
 #include "hash_table.h"
 #include "print.h"
 #include "util.h"

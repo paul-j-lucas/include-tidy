@@ -35,7 +35,6 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stdint.h>                     /* for uint8_t */
 #include <stdio.h>
 #include <stdlib.h>                     /* for malloc(), ... */
 #include <string.h>
@@ -47,17 +46,6 @@
  * @addtogroup util-group
  * @{
  */
-
-////////// local constants ////////////////////////////////////////////////////
-
-/**
- * Prime value for Fowler-Noll-Vo hash function.
- *
- * @sa #FNV1A_INIT
- * @sa fnv1a_mem()
- * @sa fnv1a_s()
- */
-static fnv1a_t const FNV1A_PRIME = 1099511628211UL;
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -123,19 +111,6 @@ void fatal_error( int status, char const *format, ... ) {
   vfprintf( stderr, format, args );
   va_end( args );
   _Exit( status );
-}
-
-fnv1a_t fnv1a64_mem( fnv1a_t hash, void const *data, size_t n ) {
-  for ( size_t i = 0; i < n; ++i )
-    hash = FNV1A_PRIME * (hash ^ STATIC_CAST( uint8_t const*, data )[i]);
-  return hash;
-}
-
-fnv1a_t fnv1a_s( char const *s ) {
-  fnv1a_t hash = FNV1A_INIT;
-  for ( ; *s != '\0'; ++s )
-    hash = FNV1A_PRIME * (hash ^ STATIC_CAST( uint8_t, *s ));
-  return hash;
 }
 
 void fputs_quoted( char const *s, char quote, FILE *fout ) {

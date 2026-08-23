@@ -26,6 +26,7 @@
 // local
 #include "pjl_config.h"
 #include "clang_util.h"
+#include "fnv1a.h"
 #include "strbuf.h"
 #include "util.h"
 

@@ -30,6 +30,7 @@
 #include "array.h"
 #include "bit_util.h"
 #include "cli_options.h"
+#include "fnv1a.h"
 #include "hash_table.h"
 #include "includes.h"
 #include "options.h"

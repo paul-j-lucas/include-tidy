@@ -44,6 +44,7 @@ include_tidy_SOURCES =	array.c array.h \
 			color.c color.h \
 			config_file.c config_file.h \
 			cxx.c cxx.h \
+			fnv1a.c fnv1a.h \
 			hash_table.c hash_table.h \
 			includes.c includes.h \
 			include-tidy.c include-tidy.h \
@@ -65,6 +66,7 @@ include_tidy_SOURCES =	array.c array.h \
 
 BASE_TEST_SOURCES =	pjl_config.h config.h \
 			array.c array.h \
+			fnv1a.c fnv1a.h \
 			path_util.c path_util.h \
 			strbuf.c strbuf.h \
 			type_traits.h \
