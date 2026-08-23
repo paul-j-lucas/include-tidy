@@ -1,3 +1,23 @@
+2026-08-23  Paul J. Lucas <paul@lucasmail.org>
+
+   * src/Makefile.am, clang_util.c, config_file.c, fnv1a.c, fnv1a.h,
+     hash_table_test.c, symbols.c, toml_lite.c, typedefs.c, util.c, util.h:
+     Split out fnv1a.[ch].
+   * util.c, util.h: Moved round_up_pow_2() out of header.
+
+2026-08-22  Paul J. Lucas <paul@lucasmail.org>
+
+   * SECURITY.md: Fix URL.
+   * SECURITY.md: Placate pedantic repository-scanning-and-reporting tools.
+
+2026-08-21  Paul J. Lucas <paul@lucasmail.org>
+
+   * hash_table_test.c: Fixed "not used" warning.
+   * hash_table_test.c: Fixed shadows warning.
+   * hash_table.c: Fixed conversion warnings.
+   * cli_options.c, config_file.c, includes.c, options.h, print.c, proxies.c,
+     symbols.c: added IS_VERBOSE().
+
 2026-08-20  Paul J. Lucas <paul@lucasmail.org>
 
    * cli_options.c, include-tidy.c: cli_options_init() now calls ipaths_init().
