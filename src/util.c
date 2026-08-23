@@ -68,6 +68,22 @@ char const WS_CHARS[] =           " \n\t\r\f\v";
 
 /// @endcond
 
+////////// local functions ////////////////////////////////////////////////////
+
+#ifdef NEED_MATRIX_NEW
+/**
+ * Rounds \a n up to a multiple of \a multiple.
+ *
+ * @param n The number to round up.  Must be &gt; 0.
+ * @param multiple The multiple to round up to.  It _must_ be a power of 2.
+ * @return Returns \a n rounded up to a multiple of \a multiple.
+ */
+NODISCARD
+static inline size_t round_up_pow_2( size_t n, size_t multiple ) {
+  return (n + multiple - 1) & ~(multiple - 1);
+}
+#endif /* NEED_MATRIX_NEW */
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 unsigned check_asprintf( char **ps, char const *format, ... ) {
@@ -172,8 +188,9 @@ void free_pptr( void *pptr ) {
     free( *POINTER_CAST( void**, pptr ) );
 }
 
-#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
+#ifdef NEED_MATRIX_NEW
 void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim ) {
+  assert( is_1_bit( ealign ) );
   // ensure &elements[0] is suitably aligned
   size_t const ptrs_size = round_up_pow_2( sizeof(void*) * idim, ealign );
   size_t const row_size = esize * jdim;
@@ -184,7 +201,7 @@ void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim ) {
     rows[i] = &elements[ i * row_size ];
   return rows;
 }
-#endif /* NEED_II_MATRIX */
+#endif /* NEED_MATRIX_NEW */
 
 void perror_exit( int status ) {
   perror( prog_name );
@@ -223,9 +240,6 @@ extern inline char* (nonconst_empty_if_null)( char* );
 extern inline char* (nonconst_strchr_nul)( char*, int );
 extern inline char const* (null_if_empty)( char const* );
 
-#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-extern inline size_t round_up_pow_2( size_t, size_t );
-#endif /* NEED_II_MATRIX */
 extern inline char* strncpy_0( char*, char const*, size_t );
 extern inline bool true_or_set( bool* );
 extern inline bool true_clear( bool* );

@@ -29,6 +29,7 @@
 // local
 #include "pjl_config.h"
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
+#define NEED_MATRIX_NEW
 #include "bit_util.h"                   /* for is_1_bit() */
 #endif /* NEED_II_MATRIX */
 #include "type_traits.h"
@@ -967,7 +968,7 @@ void fputs_quoted( char const *s, char quote, FILE *fout );
  */
 void free_pptr( void *pptr );
 
-#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
+#ifdef NEED_MATRIX_NEW
 /**
  * Dynamically allocates a two-dimensional matrix [\a idim][\a jdim] elements
  * of size \a esize.
@@ -982,7 +983,7 @@ void free_pptr( void *pptr );
  */
 NODISCARD
 void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim );
-#endif /* NEED_II_MATRIX */
+#endif /* NEED_MATRIX_NEW */
 
 /**
  * Checks whether \a s is null, an empty string, or consists only of
@@ -1020,21 +1021,6 @@ inline char* nonconst_null_if_empty( char *s ) {
  * @sa #UNEXPECTED_INT_VALUE()
  */
 _Noreturn void perror_exit( int status );
-
-#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-/**
- * Rounds \a n up to a multiple of \a multiple.
- *
- * @param n The number to round up.  Must be &gt; 0.
- * @param multiple The multiple to round up to.  It _must_ be a power of 2.
- * @return Returns \a n rounded up to a multiple of \a multiple.
- */
-NODISCARD
-inline size_t round_up_pow_2( size_t n, size_t multiple ) {
-  assert( is_1_bit( multiple ) );
-  return (n + multiple - 1) & ~(multiple - 1);
-}
-#endif /* NEED_II_MATRIX */
 
 /**
  * A variant of **strchr**(3) that returns a pointer to the terminating `\0`
