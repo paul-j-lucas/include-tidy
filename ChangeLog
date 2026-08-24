@@ -1,3 +1,9 @@
+2026-08-24  Paul J. Lucas <paul@lucasmail.org>
+
+   * print.c: Now printing compiler base-name for error messages that aren't
+     file-specific.
+   * cli_options.c, options.c, options.h: Made opt_compiler_path global.
+
 2026-08-23  Paul J. Lucas <paul@lucasmail.org>
 
    * src/Makefile.am, clang_util.c, config_file.c, fnv1a.c, fnv1a.h,
