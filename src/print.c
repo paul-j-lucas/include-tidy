@@ -102,9 +102,6 @@ static void fl_print_impl( char const *tidy_file, int tidy_line,
     }
     EPUTS( ": " );
   }
-  else if ( opt_compiler_path != NULL ) {
-    EPRINTF( "%s: ", path_basename( opt_compiler_path ) );
-  }
 
   color_start( stderr, what_color );
   EPUTS( what );
