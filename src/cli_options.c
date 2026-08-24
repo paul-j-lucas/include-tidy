@@ -103,7 +103,7 @@ static struct option const OPTIONS[] = {
 static char const *const OPTIONS_HELP[] = {
   [ COPT(ALIGN_COLUMN) ] = "Align comments to this column; default=" STRINGIFY(OPT_ALIGN_COLUMN_DEFAULT),
   [ COPT(ALL_INCLUDES) ] = "Print all includes, not just those in violation",
-  [ COPT(CLANG) ] = "Path of clang to use or \"none\"; default=\"" OPT_CLANG_DEFAULT "\"",
+  [ COPT(CLANG) ] = "Path of clang to use or \"none\"; default=\"" OPT_COMPILER_DEFAULT "\"",
   [ COPT(COLOR) ] = "When to colorize output; default=\"not_file\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"; default=\"//\"",
   [ COPT(COMMENT_SYMBOLS) ] = "Comment symbols sort order",
@@ -298,13 +298,13 @@ static void check_options( void ) {
 }
 
 /**
- * Gets the path to **clang**, if given.
+ * Gets the path to the C/C++ compiler, if given.
  *
  * @param argc The command-line argument count from `main()`.
  * @param argv The command-line argument values from `main()`.
- * @return Returns the path to **clang** or NULL if it's `"none"`.
+ * @return Returns the path to the compiler or NULL if it's `"none"`.
  */
-static char const* get_clang_path( int argc, char const *const argv[] ) {
+static char const* get_compiler_path( int argc, char const *const argv[] ) {
   assert( argc > 0 );
   assert( argv != NULL );
 
@@ -322,7 +322,7 @@ static char const* get_clang_path( int argc, char const *const argv[] ) {
       return strcmp( clang_path, "none" ) == 0 ? NULL : clang_path;
   } // for
 
-  return OPT_CLANG_DEFAULT;
+  return OPT_COMPILER_DEFAULT;
 }
 
 /**
@@ -976,14 +976,14 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   //   with any include paths.
 
   tidy_source_path = get_source_path( *pargc, *pargv );
-  char const *const clang_path = get_clang_path( *pargc, *pargv );
+  opt_compiler_path = get_compiler_path( *pargc, *pargv );
   char const *const source_ext =
     tidy_source_path != NULL ? path_ext( tidy_source_path ) : NULL;
   char const *source_lang = get_x_language( *pargc, *pargv );
   if ( source_lang == NULL && source_ext != NULL )
     source_lang = get_ext_language( source_ext );
-  if ( clang_path != NULL && source_lang != NULL )
-    add_clang_include_paths( pargc, pargv, clang_path, source_lang );
+  if ( opt_compiler_path != NULL && source_lang != NULL )
+    add_clang_include_paths( pargc, pargv, opt_compiler_path, source_lang );
 
   char const       *opt_directory = NULL;
   bool              opt_help = false;

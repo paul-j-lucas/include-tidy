@@ -107,6 +107,7 @@ extern bool         opt_all_includes;     ///< Print all includes?
 extern color_when   opt_color_when;       ///< When to colorize.
 extern char const  *opt_comment_style[2]; ///< Comment delimiters to use.
 extern tidy_com_sym opt_comment_symbols;  ///< How to list symbols in comments.
+extern char const  *opt_compiler_path;    ///< Name/path to C/C++ compiler.
 extern bool         opt_config_layers;    ///< Do configuration file layering?
 extern char const  *opt_config_path;      ///< Configuration file path.
 extern bool         opt_debug;            ///< Print debugging output?
@@ -116,7 +117,7 @@ extern tidy_verbose opt_verbose;          ///< Print verbose output?
 
 #define OPT_ALIGN_COLUMN_DEFAULT  41      /**< Default column alignment. */
 #define OPT_ALIGN_COLUMN_MAX      256     /**< Maximum column alignment. */
-#define OPT_CLANG_DEFAULT         "clang" /**< Default `clang` path. */
+#define OPT_COMPILER_DEFAULT      "clang" /**< Default compiler path. */
 #define OPT_LINE_LENGTH_DEFAULT   80      /**< Default line length. */
 #define OPT_LINE_LENGTH_MAX       256     /**< Maximum line length. */
 #define OPT_VERBOSE_ALL           "acCdfFipPsSz" /**< All verbose values. */
