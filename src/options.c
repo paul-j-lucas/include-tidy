@@ -162,7 +162,7 @@ bool opt_color_parse( char const *s ) {
 bool opt_comment_style_parse( char const *s ) {
   assert( s != NULL );
 
-  if ( strcmp( s, "none" ) == 0 ) {
+  if ( strcasecmp( s, "none" ) == 0 ) {
     opt_comment_style[0] = "";
     opt_comment_style[1] = "";
   }
