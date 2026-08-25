@@ -68,10 +68,9 @@
  * @sa #print_file_error()
  * @sa #print_file_warning()
  */
-#define print_error(FORMAT, ...)            \
-  fl_print_error( __FILE__, __LINE__,       \
-    NULL, 0, 0, FORMAT                      \
-    VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__  \
+#define print_error(FORMAT, ...)                                \
+  fl_print_error( __FILE__, __LINE__,                           \
+    NULL, 0, 0, (FORMAT) VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__ \
   )
 
 /**
@@ -93,7 +92,7 @@
  */
 #define print_file_error(SOURCE_PATH, SOURCE_LINE, SOURCE_COL, FORMAT, ...) \
   fl_print_error( __FILE__, __LINE__,                                       \
-    (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), FORMAT                      \
+    (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), (FORMAT)                    \
     VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__                                  \
   )
 
@@ -116,8 +115,23 @@
  */
 #define print_file_warning(SOURCE_PATH, SOURCE_LINE, SOURCE_COL, FORMAT, ...) \
   fl_print_warning( __FILE__, __LINE__,                                       \
-    (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), FORMAT                        \
+    (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), (FORMAT)                      \
     VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__                                    \
+  )
+
+/**
+ * Prints an error message from libclang.
+ *
+ * @note In debug mode, also prints the file & line where the function was
+ * called from.
+ * @note A newline is _not_ printed.
+ *
+ * @param FORMAT The `printf()` style format string.
+ * @param ... The `printf()` arguments.
+ */
+#define print_libclang_error(FORMAT, ...)                               \
+  fl_print_libclang_error(                                              \
+    __FILE__, __LINE__, (FORMAT) VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__ \
   )
 
 /**
@@ -171,6 +185,27 @@ PJL_PRINTF_LIKE_FUNC(6)
 void fl_print_error( char const *tidy_file, int tidy_line,
                      char const *source_path, unsigned source_line,
                      unsigned source_col, char const *format, ... );
+
+/**
+ * Prints an error message from libclang.
+ *
+ * @note In debug mode, also prints the file & line where the function was
+ * called from.
+ * @note A newline is _not_ printed.
+ * @note This function isn't normally called directly; use the
+ * #print_libclang_error() macro macro instead.
+ *
+ * @param tidy_file The name of the file where this function was called from.
+ * @param tidy_line The line number within \a tidy_file where this function was
+ * called from.
+ * @param format The `printf()` style format string.
+ * @param ... The `printf()` arguments.
+ *
+ * @sa print_libclang_error()
+ */
+PJL_PRINTF_LIKE_FUNC(3)
+void fl_print_libclang_error( char const *tidy_file, int tidy_line,
+                              char const *format, ... );
 
 /**
  * Prints a warning message to standard error.

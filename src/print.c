@@ -28,6 +28,7 @@
 #include "print.h"
 #include "clang_util.h"
 #include "color.h"
+#include "include-tidy.h"
 #include "options.h"
 #include "path_util.h"
 #include "util.h"
@@ -52,6 +53,38 @@
  * @{
  */
 
+////////// typedefs ///////////////////////////////////////////////////////////
+
+typedef struct fl_print_args fl_print_args;
+
+////////// structs ////////////////////////////////////////////////////////////
+
+/**
+ * Additional arguments for fl_print_impl().
+ */
+struct fl_print_args {
+  char const   *tidy_file;              ///< Called-from source file.
+  int           tidy_line;              ///< Called-from source line.
+  char const   *what;                   ///< Print what: `error` or `warning`.
+  char const   *what_color;             ///< Color for \ref what.
+
+  /**
+   * Fields for libclang messages.
+   */
+  struct {
+    bool        is_libclang_message;    ///< Is message from libclang?
+  };
+
+  /**
+   * Fields for source file messages.
+   */
+  struct {
+    char const *source_path;            ///< Source path or NULL for none.
+    unsigned    source_line;            ///< Source line or zero for none.
+    unsigned    source_col;             ///< Source column or zero for none.
+  };
+};
+
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
@@ -61,55 +94,53 @@
  * called from.
  * @note A newline is _not_ printed.
  *
- * @param tidy_file The name of the file where this function was called from.
- * @param tidy_line The line number within \a tidy_file where this function was
- * called from.
- * @param source_path The source file's path or NULL for none.
- * @param source_line The source file's error line or zero for none.
- * @param source_col The source file's error column or zero for none.
- * @param what What to print, e.g., `error` or `warning`.
- * @param what_color The color to print \a what in, if any.
+ * @param flpa The The fl_print_args to use.
  * @param format The `printf()` style format string.
  * @param args The `printf()` arguments.
  */
-static void fl_print_impl( char const *tidy_file, int tidy_line,
-                           char const *source_path, unsigned source_line,
-                           unsigned source_col, char const *what,
-                           char const *what_color, char const *format,
+static void fl_print_impl( fl_print_args const *flpa, char const *format,
                            va_list args ) {
-  assert( tidy_file != NULL );
-  assert( tidy_line > 0 );
-  assert( what != NULL );
+  assert( flpa != NULL );
+  assert( flpa->tidy_file != NULL );
+  assert( flpa->tidy_line > 0 );
+  assert( flpa->what != NULL );
+  assert( flpa->what_color != NULL );
   assert( format != NULL );
 
-  if ( source_path != NULL ) {
+  if ( flpa->is_libclang_message ) {
+    EPRINTF( "libclang (via %s): ", prog_name );
+  }
+  else if ( flpa->source_path != NULL ) {
     color_start( stderr, sgr_locus );
-    EPRINTF( "\"%s\"", path_no_dot_slash( source_path ) );
+    EPRINTF( "\"%s\"", path_no_dot_slash( flpa->source_path ) );
     color_end( stderr, sgr_locus );
 
-    if ( source_line > 0 ) {
+    if ( flpa->source_line > 0 ) {
       EPUTC( ':' );
       color_start( stderr, sgr_locus );
-      EPRINTF( "%u", source_line );
+      EPRINTF( "%u", flpa->source_line );
       color_end( stderr, sgr_locus );
 
-      if ( source_col > 0 ) {
+      if ( flpa->source_col > 0 ) {
         EPUTC( ',' );
         color_start( stderr, sgr_locus );
-        EPRINTF( "%u", source_col );
+        EPRINTF( "%u", flpa->source_col );
         color_end( stderr, sgr_locus );
       }
     }
     EPUTS( ": " );
   }
+  else {
+    EPRINTF( "%s: ", prog_name );
+  }
 
-  color_start( stderr, what_color );
-  EPUTS( what );
-  color_end( stderr, what_color );
+  color_start( stderr, flpa->what_color );
+  EPUTS( flpa->what );
+  color_end( stderr, flpa->what_color );
   EPUTS( ": " );
 
   if ( opt_debug )
-    EPRINTF( "[%s:%d] ", tidy_file, tidy_line );
+    EPRINTF( "[%s:%d] ", flpa->tidy_file, flpa->tidy_line );
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
@@ -129,8 +160,37 @@ void fl_print_error( char const *tidy_file, int tidy_line,
   va_list args;
   va_start( args, format );
   fl_print_impl(
-    tidy_file, tidy_line, source_path, source_line, source_col, "error",
-    sgr_error, format, args
+    &(fl_print_args){
+      .tidy_file = tidy_file,
+      .tidy_line = tidy_line,
+      .source_path = source_path,
+      .source_line = source_line,
+      .source_col = source_col,
+      .what = "error",
+      .what_color = sgr_error
+    },
+    format, args
+  );
+  va_end( args );
+}
+
+void fl_print_libclang_error( char const *tidy_file, int tidy_line,
+                                char const *format, ... ) {
+  assert( tidy_file != NULL );
+  assert( tidy_line > 0 );
+  assert( format != NULL );
+
+  va_list args;
+  va_start( args, format );
+  fl_print_impl(
+    &(fl_print_args){
+      .tidy_file = tidy_file,
+      .tidy_line = tidy_line,
+      .is_libclang_message = true,
+      .what = "error",
+      .what_color = sgr_error
+    },
+    format, args
   );
   va_end( args );
 }
@@ -145,8 +205,16 @@ void fl_print_warning( char const *tidy_file, int tidy_line,
   va_list args;
   va_start( args, format );
   fl_print_impl(
-    tidy_file, tidy_line, source_path, source_line, source_col, "warning",
-    sgr_warning, format, args
+    &(fl_print_args){
+      .tidy_file = tidy_file,
+      .tidy_line = tidy_line,
+      .source_path = source_path,
+      .source_line = source_line,
+      .source_col = source_col,
+      .what = "warning",
+      .what_color = sgr_warning
+    },
+    format, args
   );
   va_end( args );
 }

@@ -26,6 +26,7 @@
 // local
 #include "pjl_config.h"
 #include "trans_unit.h"
+#include "include-tidy.h"
 #include "options.h"
 #include "print.h"
 #include "util.h"
@@ -114,12 +115,18 @@ void trans_unit_check_for_errors( void ) {
         CXString const    diag_file_cxs = clang_getFileName( diag_file );
         char const *const diag_file_cs = clang_getCString( diag_file_cxs );
         CXString const    diag_msg_cxs = clang_getDiagnosticSpelling( diag );
-        print_file_error(
-          diag_file_cs, diag_line, diag_col,
-          "%s\n", clang_getCString( diag_msg_cxs )
-        );
-        if ( diag_file_cs != NULL )
+        char const *const diag_msg_cs = clang_getCString( diag_msg_cxs );
+
+        if ( diag_file_cs != NULL ) {
+          print_file_error(
+            diag_file_cs, diag_line, diag_col, "%s\n", diag_msg_cs
+          );
           print_source_line( diag_file_cs, diag_line, diag_col, diag_offset );
+        }
+        else {
+          print_libclang_error( "%s\n", diag_msg_cs );
+        }
+
         clang_disposeString( diag_msg_cxs );
         clang_disposeString( diag_file_cxs );
         break;
@@ -130,8 +137,9 @@ void trans_unit_check_for_errors( void ) {
   } // for
 
   if ( error_count > 0 ) {
-    print_error(
-      "%u error%s generated\n", error_count, plural_s( error_count )
+    EPRINTF(
+      "%s: %u error%s generated\n",
+      prog_name, error_count, plural_s( error_count )
     );
     exit( EX_DATAERR );
   }
