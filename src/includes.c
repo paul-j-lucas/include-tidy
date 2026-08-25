@@ -566,11 +566,11 @@ static char* make_symbols_comment( tidy_include const *include ) {
   ht_iterator_t iter;
   ht_iterator_init( &iter, &include->symbol_set );
 
-  if ( opt_comment_symbols == TIDY_COM_SYM_MOST_USED ) {
+  if ( opt_comment_symbols == TIDY_COMMENT_SYM_MOST_USED ) {
     //
-    // We could sort by ref_count as in the TIDY_COM_SYM_REF_COUNT case below,
-    // then use only the last element, but sorting is O(n log n), whereas just
-    // iterating through the entire hash table is O(n).
+    // We could sort by ref_count as in the TIDY_COMMENT_SYM_REF_COUNT case
+    // below, then use only the last element, but sorting is O(n log n),
+    // whereas just iterating through the entire hash table is O(n).
     //
     tidy_symbol const *sym = ht_iterator_next( &iter );
     tidy_symbol const *most_ref_sym = sym;
@@ -594,15 +594,15 @@ static char* make_symbols_comment( tidy_include const *include ) {
     *(tidy_symbol const**)array_push_back( &symbols_array ) = sym;
 
   switch ( opt_comment_symbols ) {
-    case TIDY_COM_SYM_ALPHA:
+    case TIDY_COMMENT_SYM_ALPHA:
       array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_name );
       break;
-    case TIDY_COM_SYM_LENGTH:
+    case TIDY_COMMENT_SYM_LENGTH:
       array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_name_length );
       break;
-    case TIDY_COM_SYM_MOST_USED:
+    case TIDY_COMMENT_SYM_MOST_USED:
       unreachable();
-    case TIDY_COM_SYM_REF_COUNT:
+    case TIDY_COMMENT_SYM_REF_COUNT:
       array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_ref_count );
       break;
   } // switch
