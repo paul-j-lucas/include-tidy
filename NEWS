@@ -5,6 +5,12 @@ See the end of the file for license conditions.
 
 -------------------------------------------------------------------------------
 
+* Changes in Include-tidy 2.2
+
+** libclang errors
+Error messages from libclang are now marked so explicitly.
+
+
 * Changes in Include-tidy 2.1.1
 
 ** C++ overloaded `operator->`
