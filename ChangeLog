@@ -1,5 +1,9 @@
 2026-08-24  Paul J. Lucas <paul@lucasmail.org>
 
+   * configure.ac: Bumped version to 2.2.
+   * print.c, print.h, trans_unit.c: Now marking messages from libclang.
+   * print.c: Revert "Now printing compiler base-name for error messages that
+     aren't file-specific."
    * print.c: Now printing compiler base-name for error messages that aren't
      file-specific.
    * cli_options.c, options.c, options.h: Made opt_compiler_path global.
