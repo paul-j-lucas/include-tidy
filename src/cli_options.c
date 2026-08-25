@@ -976,14 +976,14 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   //   with any include paths.
 
   tidy_source_path = get_source_path( *pargc, *pargv );
-  opt_compiler_path = get_compiler_path( *pargc, *pargv );
+  char const *const compiler_path = get_compiler_path( *pargc, *pargv );
   char const *const source_ext =
     tidy_source_path != NULL ? path_ext( tidy_source_path ) : NULL;
   char const *source_lang = get_x_language( *pargc, *pargv );
   if ( source_lang == NULL && source_ext != NULL )
     source_lang = get_ext_language( source_ext );
-  if ( opt_compiler_path != NULL && source_lang != NULL )
-    add_clang_include_paths( pargc, pargv, opt_compiler_path, source_lang );
+  if ( compiler_path != NULL && source_lang != NULL )
+    add_clang_include_paths( pargc, pargv, compiler_path, source_lang );
 
   char const       *opt_directory = NULL;
   bool              opt_help = false;

@@ -107,7 +107,6 @@ extern bool         opt_all_includes;     ///< Print all includes?
 extern color_when   opt_color_when;       ///< When to colorize.
 extern char const  *opt_comment_style[2]; ///< Comment delimiters to use.
 extern tidy_com_sym opt_comment_symbols;  ///< How to list symbols in comments.
-extern char const  *opt_compiler_path;    ///< Name/path to C/C++ compiler.
 extern bool         opt_config_layers;    ///< Do configuration file layering?
 extern char const  *opt_config_path;      ///< Configuration file path.
 extern bool         opt_debug;            ///< Print debugging output?

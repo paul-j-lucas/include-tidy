@@ -59,7 +59,6 @@ bool          opt_all_includes;
 color_when    opt_color_when = COLOR_NOT_FILE;
 char const   *opt_comment_style[2] = { "// ", "" };
 tidy_com_sym  opt_comment_symbols;
-char const   *opt_compiler_path = OPT_COMPILER_DEFAULT;
 bool          opt_config_layers = true;
 char const   *opt_config_path;
 bool          opt_debug;
