@@ -608,7 +608,7 @@ static char* make_symbols_comment( tidy_include const *include ) {
   if ( tidy_is_cxx ) {
     //
     // Since C++ allows function, operator, and template overloading, there can
-    // be multiple entires with the same name, so remove duplicates.
+    // be multiple entries with the same name, so remove duplicates.
     //
     array_dedup(
       &symbols_array, &tidy_symbol_ptr_cmp_by_name, /*free_fn=*/NULL
