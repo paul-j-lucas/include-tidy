@@ -56,7 +56,9 @@ Tidy has the following dependencies:
   package,
   if not from source).
 
-+ The [Clang](https://clang.llvm.org) compiler.
++ The [clang](https://clang.llvm.org)
+  or [gcc](https://gcc.gnu.org)
+  compiler.
 
 Although Clang and LLVM are often packaged seperately,
 their versions increment in lockstep,

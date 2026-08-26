@@ -7,6 +7,13 @@ See the end of the file for license conditions.
 
 * Changes in Include-tidy 2.2
 
+** `gcc` Support
+Since `gcc` accepts many of the same command-line options as `clang` (and all
+the options necessary for `include-tidy`), `gcc` is now officially supported.
+
+** `--clang` option renamed to `--compiler`
+Consequently, the `--clang` option has been renamed to `--compiler`.
+
 ** libclang errors
 Error messages from libclang are now marked so explicitly.
 

@@ -6,10 +6,6 @@ test_include_tidy -Xtidy --align-column=X
 test_include_tidy -Xtidy -a
 test_include_tidy -Xtidy -aX
 
-test_include_tidy -Xtidy --clang
-test_include_tidy -Xtidy --clang=
-test_include_tidy -Xtidy -C
-
 test_include_tidy -Xtidy --comment-style
 test_include_tidy -Xtidy --comment-style=
 test_include_tidy -Xtidy --comment-style=X
@@ -21,6 +17,10 @@ test_include_tidy -Xtidy --comment-symbols=
 test_include_tidy -Xtidy --comment-symbols=X
 test_include_tidy -Xtidy -S
 test_include_tidy -Xtidy -SX
+
+test_include_tidy -Xtidy --compiler
+test_include_tidy -Xtidy --compiler=
+test_include_tidy -Xtidy -C
 
 test_include_tidy -Xtidy --config
 test_include_tidy -Xtidy --config=

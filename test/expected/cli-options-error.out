@@ -13,15 +13,6 @@ include-tidy: error: "-a" requires an argument
 $ include-tidy -Xtidy -aX
 include-tidy: error: "X": invalid integer
 
-$ include-tidy -Xtidy --clang
-include-tidy: error: "--clang" requires an argument
-
-$ include-tidy -Xtidy --clang=
-include-tidy: error: "--clang" requires an argument
-
-$ include-tidy -Xtidy -C
-include-tidy: error: "-C" requires an argument
-
 $ include-tidy -Xtidy --comment-style
 include-tidy: error: "--comment-style/-s" requires an argument
 
@@ -51,6 +42,15 @@ include-tidy: error: "-S" requires an argument
 
 $ include-tidy -Xtidy -SX
 include-tidy: error: "X": invalid value for --comment-symbols/-S
+
+$ include-tidy -Xtidy --compiler
+include-tidy: error: "--compiler" requires an argument
+
+$ include-tidy -Xtidy --compiler=
+include-tidy: error: "--compiler" requires an argument
+
+$ include-tidy -Xtidy -C
+include-tidy: error: "-C" requires an argument
 
 $ include-tidy -Xtidy --config
 include-tidy: error: "--config/-c" requires an argument
@@ -86,16 +86,16 @@ $ include-tidy -Xtidy -lX
 include-tidy: error: "X": invalid integer
 
 $ include-tidy --help X
-usage: include-tidy [-Xtidy tidy-option]... [clang-option]... source-file
+usage: include-tidy [-Xtidy tidy-option]... [compiler-option]... source-file
        include-tidy other-option
 
 tidy options:
   --align-column=ARG    (-a) Align comments to this column; default=41.
   --all-includes        (-A) Print all includes, not just those in violation.
-  --clang=ARG           (-C) Path of clang to use or "none"; default="clang".
   --color=ARG           (-k) When to colorize output; default="not_file".
   --comment-style=ARG   (-s) Comment style: "//", "/*", or "none"; default="//".
   --comment-symbols=ARG (-S) Comment symbols sort order.
+  --compiler=ARG        (-C) Path of compiler to use or "none"; default="clang".
   --config=ARG          (-c) Configuration file path.
   --debug               (-D) Print include-tidy debug output.
   --directory=ARG       (-d) Change directory before tidying.
@@ -124,16 +124,16 @@ $ include-tidy -xX
 include-tidy: error: "X": invalid value for -x; must be either "c" or "c++"
 
 $ include-tidy --version X
-usage: include-tidy [-Xtidy tidy-option]... [clang-option]... source-file
+usage: include-tidy [-Xtidy tidy-option]... [compiler-option]... source-file
        include-tidy other-option
 
 tidy options:
   --align-column=ARG    (-a) Align comments to this column; default=41.
   --all-includes        (-A) Print all includes, not just those in violation.
-  --clang=ARG           (-C) Path of clang to use or "none"; default="clang".
   --color=ARG           (-k) When to colorize output; default="not_file".
   --comment-style=ARG   (-s) Comment style: "//", "/*", or "none"; default="//".
   --comment-symbols=ARG (-S) Comment symbols sort order.
+  --compiler=ARG        (-C) Path of compiler to use or "none"; default="clang".
   --config=ARG          (-c) Configuration file path.
   --debug               (-D) Print include-tidy debug output.
   --directory=ARG       (-d) Change directory before tidying.

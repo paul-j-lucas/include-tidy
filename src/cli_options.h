@@ -39,7 +39,7 @@
 #define OPT_ALIGN_COLUMN          a
 #define OPT_ALL_INCLUDES          A
 #define OPT_CONFIG                c
-#define OPT_CLANG                 C
+#define OPT_COMPILER              C
 #define OPT_DIRECTORY             d
 #define OPT_DEBUG                 D
 #define OPT_ERROR                 e

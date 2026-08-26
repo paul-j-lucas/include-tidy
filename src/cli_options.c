@@ -76,10 +76,10 @@
 static struct option const OPTIONS[] = {
   { "align-column",     required_argument,  NULL, COPT(ALIGN_COLUMN)      },
   { "all-includes",     no_argument,        NULL, COPT(ALL_INCLUDES)      },
-  { "clang",            required_argument,  NULL, COPT(CLANG)             },
   { "color",            required_argument,  NULL, COPT(COLOR)             },
   { "comment-style",    required_argument,  NULL, COPT(COMMENT_STYLE)     },
   { "comment-symbols",  required_argument,  NULL, COPT(COMMENT_SYMBOLS)   },
+  { "compiler",         required_argument,  NULL, COPT(COMPILER)          },
   { "config",           required_argument,  NULL, COPT(CONFIG)            },
   { "debug",            no_argument,        NULL, COPT(DEBUG)             },
   { "directory",        required_argument,  NULL, COPT(DIRECTORY)         },
@@ -103,10 +103,10 @@ static struct option const OPTIONS[] = {
 static char const *const OPTIONS_HELP[] = {
   [ COPT(ALIGN_COLUMN) ] = "Align comments to this column; default=" STRINGIFY(OPT_ALIGN_COLUMN_DEFAULT),
   [ COPT(ALL_INCLUDES) ] = "Print all includes, not just those in violation",
-  [ COPT(CLANG) ] = "Path of clang to use or \"none\"; default=\"" OPT_COMPILER_DEFAULT "\"",
   [ COPT(COLOR) ] = "When to colorize output; default=\"not_file\"",
   [ COPT(COMMENT_STYLE) ] = "Comment style: \"//\", \"/*\", or \"none\"; default=\"//\"",
   [ COPT(COMMENT_SYMBOLS) ] = "Comment symbols sort order",
+  [ COPT(COMPILER) ] = "Path of compiler to use or \"none\"; default=\"" OPT_COMPILER_DEFAULT "\"",
   [ COPT(CONFIG) ] = "Configuration file path",
   [ COPT(DEBUG) ] = "Print " PACKAGE " debug output",
   [ COPT(DIRECTORY) ] = "Change directory before tidying",
@@ -152,29 +152,30 @@ static bool         is_Xtidy_opt( int, char const *const[], int* );
 /////////// local functions ///////////////////////////////////////////////////
 
 /**
- * Calls **clang**(1) and parses its verbose output to get the list of include
- * search paths that are inserted into \a *pargv.
+ * Calls the C or C++ compiler, either **clang**(1) or **gcc**(1), and parses
+ * its verbose output to get the list of include search paths that are inserted
+ * into \a *pargv.
  *
  * @param pargc A pointer to the argument count from `main()`.  The count is
  * incremented by the number of include search paths inserted.
  * @param pargv A pointer to the argument values from `main()`.  An argument of
  * the form <tt>-isystem</tt><i>path</i> is inserted for each search path.
- * @param clang_path The path of **clang** to use.
+ * @param compiler_path The path of the C or C++ compiler to use.
  * @param source_lang The language to use, either `"c"` or `"c++"`.
  */
-static void add_clang_include_paths( int *pargc, char const **pargv[],
-                                     char const *clang_path,
+static void add_compiler_include_paths( int *pargc, char const **pargv[],
+                                     char const *compiler_path,
                                      char const *source_lang ) {
   assert(  pargc != NULL );
   assert( *pargc > 0 );
   assert(  pargv != NULL );
   assert( *pargv != NULL );
-  assert(  clang_path != NULL );
+  assert(  compiler_path != NULL );
   assert(  source_lang != NULL );
   ASSERT_RUN_ONCE();
 
   static char const COMMAND[] =
-    "%s"          // clang path
+    "%s"          // compiler path
     " -E"         // run only the preprocessor stage
     " -v"         // show verbose output
     " -x%s"       // set language: c or c++
@@ -183,7 +184,7 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
     " 2>&1";      // redirect stderr to stdout
 
   char *command = NULL;
-  check_asprintf( &command, COMMAND, clang_path, source_lang );
+  check_asprintf( &command, COMMAND, compiler_path, source_lang );
 
   FILE *const fcompiler = popen( command, "r" );
   free( command );
@@ -216,9 +217,10 @@ static void add_clang_include_paths( int *pargc, char const **pargv[],
       break;
 
 #ifdef __APPLE__
-    // On macOS, clang's include search paths include frameworks directories
-    // denoted by having paths followed by " (framework directory)".  These
-    // don't contain .h file directly, so there's no point in including them.
+    // On macOS, the C compiler's include search paths include frameworks
+    // directories denoted by having paths followed by " (framework
+    // directory)".  These don't contain .h file directly, so there's no point
+    // in including them.
     if ( strstr( line_buf, "(framework directory)" ) != NULL )
       continue;
 #endif /* __APPLE__ */
@@ -244,7 +246,7 @@ done:
 
 error:
   fatal_error( EX_UNAVAILABLE,
-    "\"%s\": invocation failed: %s\n", clang_path, STRERROR()
+    "\"%s\": invocation failed: %s\n", compiler_path, STRERROR()
   );
 }
 
@@ -308,18 +310,19 @@ static char const* get_compiler_path( int argc, char const *const argv[] ) {
   assert( argc > 0 );
   assert( argv != NULL );
 
-  struct option const *const clang_option = get_option( COPT(CLANG) );
-  assert( clang_option != NULL );
-  char const *const clang_long_opt = clang_option->name;
+  struct option const *const compiler_option = get_option( COPT(COMPILER) );
+  assert( compiler_option != NULL );
+  char const *const compiler_long_opt = compiler_option->name;
 
   for ( int i = 1; i < argc; ++i ) {
     if ( !is_Xtidy_opt( argc, argv, &i ) )
       continue;
-    char const *clang_path = get_short_opt_value( argc, argv, COPT(CLANG), &i );
-    if ( clang_path == NULL )
-      clang_path = get_long_opt_value( argc, argv, clang_long_opt, &i );
-    if ( clang_path != NULL )
-      return strcmp( clang_path, "none" ) == 0 ? NULL : clang_path;
+    char const *compiler_path =
+      get_short_opt_value( argc, argv, COPT(COMPILER), &i );
+    if ( compiler_path == NULL )
+      compiler_path = get_long_opt_value( argc, argv, compiler_long_opt, &i );
+    if ( compiler_path != NULL )
+      return strcmp( compiler_path, "none" ) == 0 ? NULL : compiler_path;
   } // for
 
   return OPT_COMPILER_DEFAULT;
@@ -491,11 +494,11 @@ static char const* get_source_path( int argc, char const *argv[] ) {
 }
 
 /**
- * Gets the language of clang's `-x` option, if given.
+ * Gets the language of the compiler's `-x` option, if given.
  *
  * @param argc The command-line argument count from `main()`.
  * @param argv The command-line argument values from `main()`.
- * @return Returns the language of clang's `-x` option, either `"c"` or
+ * @return Returns the language of the compiler's `-x` option, either `"c"` or
  * `"c++"`, or NULL if not given.
  */
 static char const* get_x_language( int argc, char const *const argv[] ) {
@@ -850,7 +853,7 @@ static void print_usage( int status ) {
   FILE *const fout = status == EX_OK ? stdout : stderr;
 
   fprintf( fout,
-    "usage: %s [-Xtidy tidy-option]... [clang-option]... source-file\n"
+    "usage: %s [-Xtidy tidy-option]... [compiler-option]... source-file\n"
     "       %s other-option\n"
     "\n"
     "tidy options:\n"
@@ -965,15 +968,15 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   // + The source file (typically the last argument) may be needed before
   //   parsing options because its language (based on its filename extension)
   //   affects the list of system include files and the corresponding
-  //   `-isystem` options needed by clang.
+  //   `-isystem` options needed by the compiler.
   //
-  // + We also need to pre-scan all options looking for clang's -x<language>
-  //   option because that has priority over whatever language is indicated by
-  //   the source file's extension.
+  // + We also need to pre-scan all options looking for the compiler's
+  //   -x<language> option because that has priority over whatever language is
+  //   indicated by the source file's extension.
   //
-  // + We have to call clang to get the list of system include paths it uses
-  //   and insert `-isystem` options for them since libclang doesn't start out
-  //   with any include paths.
+  // + We have to call the compiler to get the list of system include paths it
+  //   uses and insert `-isystem` options for them since libclang doesn't start
+  //   out with any include paths.
 
   tidy_source_path = get_source_path( *pargc, *pargv );
   char const *const compiler_path = get_compiler_path( *pargc, *pargv );
@@ -983,7 +986,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   if ( source_lang == NULL && source_ext != NULL )
     source_lang = get_ext_language( source_ext );
   if ( compiler_path != NULL && source_lang != NULL )
-    add_clang_include_paths( pargc, pargv, compiler_path, source_lang );
+    add_compiler_include_paths( pargc, pargv, compiler_path, source_lang );
 
   char const       *opt_directory = NULL;
   bool              opt_help = false;
@@ -1018,8 +1021,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       case COPT(ALL_INCLUDES):
         opt_all_includes = true;
         break;
-      case COPT(CLANG):                 // already handled
-        break;
       case COPT(COLOR):
         if ( !opt_color_parse( optarg ) ) {
           fatal_error( EX_USAGE,
@@ -1046,6 +1047,8 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
           );
         }
         opt_all_includes = true;
+        break;
+      case COPT(COMPILER):              // already handled
         break;
       case COPT(CONFIG):
         opt_config_path = optarg;
@@ -1108,7 +1111,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   check_options();
 
   // Keep a copy of *pargc as it is now before we add options we need to pass
-  // to clang.
+  // to libclang.
   int const argc = *pargc;
 
   // We have to add -I. manually since libclang doesn't start out with any
@@ -1116,12 +1119,14 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   // been checked.
   insert_argv( pargc, pargv, 1, 1, (char const *const[]){ "-I." } );
 
-  char const *const CLANG_ARGS[] = {
+  // These options are given only to libclang via clang_parseTranslationUnit2()
+  // in trans_unit.c.
+  char const *const LIBCLANG_ARGS[] = {
     "-D__include_tidy__",
     "-Qunused-arguments",
     "-Wno-unknown-warning-option",
   };
-  insert_argv( pargc, pargv, 1, ARRAY_SIZE( CLANG_ARGS ), CLANG_ARGS );
+  insert_argv( pargc, pargv, 1, ARRAY_SIZE( LIBCLANG_ARGS ), LIBCLANG_ARGS );
 
   if ( IS_VERBOSE( SRC_FILE_ALWAYS ) ) {
     verbose_section_begin( /*printed_header=*/NULL );
@@ -1129,7 +1134,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   }
 
   if ( IS_VERBOSE( ARGS ) ) {
-    verbose_print_argv( "clang", argc, *pargv );
+    verbose_print_argv( "libclang", argc, *pargv );
     verbose_print_argv( "tidy", tidy_argc, tidy_argv );
   }
 

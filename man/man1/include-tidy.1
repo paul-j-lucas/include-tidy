@@ -35,13 +35,13 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "August 20, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "August 25, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
 .B include-tidy
 .BI "[\-Xtidy " tidy-option ]...
-.BI [ clang-option ]...
+.BI [ compiler-option ]...
 .I source-file
 .br
 .B include-tidy
@@ -246,7 +246,9 @@ might include \f(CWarm64/foo.h\fP.
 .IP \n+[step].
 They aggregate headers for user convenience.
 For example,
-the Clang C library
+the
+.B libclang
+C library
 provides \f(CWIndex.h\fP
 that includes all other library headers
 so users can simply include it
@@ -293,8 +295,7 @@ has three kinds of command-line options:
 .BR include-tidy -specific
 options.
 .IP \n+[step].
-.BR clang (1)
-options.
+C or C++ compiler options.
 .IP \n+[step].
 Other options.
 .PD
@@ -305,9 +306,7 @@ option
 .I must
 be preceded by an
 .B \-Xtidy
-option to distinguish it from a
-.BR clang (1)
-option.
+option to distinguish it from a C or C++ compiler option.
 For example,
 in:
 .cS
@@ -320,8 +319,7 @@ is given only to
 .B include-tidy
 and the
 .B \-I../lib
-option is given only to
-.BR clang (1).
+option is given only to the C compiler.
 .PP
 For the options below,
 an option argument
@@ -380,22 +378,6 @@ unless overridden via
 (see
 .BR "Source Tables" ).
 .RE
-.TP
-.BI \-\-clang \f1=\fPf "\f1 | \fP" "" \-C " f"
-Specifies the path to
-.BR clang (1)
-to use;
-or
-.B none
-not to use
-.B clang
-in which case
-paths to system include directories
-must be specified explicitly
-via one or more of
-.BR \-I ,
-.BR \-isystem ,
-or related options.
 .TP
 .BI \-\-color \f1=\fPs "\f1 | \fP" "" \-k " s"
 Sets when to colorize output to
@@ -495,6 +477,28 @@ The default is
 This option implies
 .BR \-\-all-includes .
 .TP
+.BI \-\-compiler \f1=\fPf "\f1 | \fP" "" \-C " f"
+Specifies the path to either the C or C++ compiler to use;
+or
+.B none
+not to use any
+in which case
+paths to system include directories
+must be specified explicitly
+via one or more of
+.BR \-I ,
+.BR \-isystem ,
+or related options.
+While
+.BR clang (1)
+or
+.BR clang++ (1)
+are the preferred compilers,
+.BR gcc (1)
+or
+.BR g++ (1)
+are also supported.
+.TP
 .BI \-\-config \f1=\fPf "\f1 | \fP" "" \-c " f"
 Specifies the path of the configuration file to use first.
 .TP
@@ -573,7 +577,7 @@ are:
 Command-line arguments given to
 .B include-tidy
 and
-.BR clang .
+.BR libclang .
 .TP
 .B c
 Configuration files read or attempted.
@@ -628,21 +632,16 @@ Alternatively,
 or
 \f(CW-\fP may be given to mean ``none.''
 The default is none.
-.SS Clang Options
+.SS Compiler Options
 Options that are neither one of
 .B "Other Options"
 nor preceded by
 .B \-Xtidy
-are
-.BR clang (1)
-options
-and are passed to
-.B clang
+are C or C++ compiler
 .RB ( libclang )
-verbatim.
-Important
-.B clang
-options:
+options
+and are passed to it verbatim.
+Important C or C++ compiler options:
 .TP 6
 .BI \-x " s"
 Specifies the langauge
@@ -688,9 +687,7 @@ explicitly.
 .SS Other Options
 These options are given directly as-is
 since they would never be ambiguous
-with
-.BR clang (1)
-options.
+with C or C++ compiler options.
 .TP 6
 .BR \-\-help " | " \-h
 Prints a help message
@@ -1242,8 +1239,7 @@ has one or more errors.
 .IP 66
 Open file error.
 .IP 69
-Either could not invoke
-.BR clang (1)
+Either could not invoke the compiler
 or get the current working directory.
 .IP 70
 Internal software error.
