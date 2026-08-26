@@ -1,5 +1,6 @@
 2026-08-26  Paul J. Lucas <paul@lucasmail.org>
 
+   * update_test.sh: Fixed TIDY options.
    * hash_table.c: Moved assert() out of loop.
    * hash_table.h: Added NODISCARD.
    * config_file.c, symbols.c: s/PJL_DISCARD/PJL_DISCARD_RV/
