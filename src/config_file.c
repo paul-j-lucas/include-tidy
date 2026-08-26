@@ -1123,7 +1123,7 @@ static void ignore_parse( char const *config_path, toml_table const *table,
 
   if ( !bool_value_parse( config_path, "ignore", value ) )
     return;
-  PJL_DISCARD(
+  PJL_DISCARD_RV(
     ht_insert(
       &ignore_symbol_set, CONST_CAST( char*, table->name ),
       strlen( table->name ) + 1/*\0*/

@@ -602,7 +602,7 @@ static unsigned macro_get_params( CXToken const tokens[static 2],
 
     switch ( kind ) {
       case CXToken_Identifier:
-        PJL_DISCARD(
+        PJL_DISCARD_RV(
           ht_insert(
             param_set, CONST_CAST( char*, token_cs ),
             strlen( token_cs ) + 1/*\0*/
