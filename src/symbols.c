@@ -281,7 +281,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     .key = tidy_Cursor_getScopedDisplayName( name_csr ),
     .name = sym_name
   };
-  sym_name = NULL;
+  sym_name = NULL;                      // new_sym owns this now
   ht_insert_rv_t const hti = ht_insert( &symbol_set, &new_sym, sizeof new_sym );
   tidy_symbol *const sym = HT_DINT( hti.entry );
   ++sym->ref_count;
