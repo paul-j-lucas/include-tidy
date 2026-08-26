@@ -43,7 +43,7 @@ typedef struct tidy_symbol tidy_symbol;
 ////////// structs ////////////////////////////////////////////////////////////
 
 /**
- * A symbol used in a translation unit.
+ * A symbol referenced in a translation unit.
  */
 struct tidy_symbol {
   /**
