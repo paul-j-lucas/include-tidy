@@ -32,6 +32,10 @@
 #include <stddef.h>                     /* for max_align_t */
 #include <stdint.h>
 
+#ifndef NODISCARD
+# define NODISCARD                      /* nothing */
+#endif /* NODISCARD */
+
 /// @endcond
 
 /**
@@ -256,6 +260,7 @@ void ht_delete( hash_table_t *table, ht_entry_t *entry );
  * @param table The hash table to check.
  * @return Returns `true` only if \a table is empty.
  */
+NODISCARD
 inline bool ht_empty( hash_table_t const *table ) {
   return table->size == 0;
 }
@@ -288,6 +293,7 @@ inline void* ht_entry_data( hash_table_t const *table,
  * @return Returns a pointer to the entry containing \a data or NULL if not
  * found.
  */
+NODISCARD
 ht_entry_t* ht_find( hash_table_t const *table, void const *data );
 
 /**
@@ -321,6 +327,7 @@ void ht_init( hash_table_t *table, ht_dloc_t dloc, double max_lf,
  * having the same \ref ht_entry::data "data" and \ref ht_insert_rv::inserted
  * "inserted" is `true` only if \ref ht_entry::data "data" was inserted.
  */
+NODISCARD
 ht_insert_rv_t ht_insert( hash_table_t *table, void *data, size_t data_size );
 
 /**
@@ -342,6 +349,7 @@ void ht_iterator_init( ht_iterator_t *it, hash_table_t const *table );
  * @param it The hash table iterator.
  * @return Returns a pointer to the data of the next entry or NULL if none.
  */
+NODISCARD
 void* ht_iterator_next( ht_iterator_t *it );
 
 /**
@@ -350,6 +358,7 @@ void* ht_iterator_next( ht_iterator_t *it );
  * @param table The hash table to calculate the load factor of.
  * @return Returns the load factor of \a table.
  */
+NODISCARD
 inline double ht_load_factor( hash_table_t const *table ) {
   extern unsigned const HT_PRIME[];
   return (double)table->size / HT_PRIME[ table->prime_idx ];
