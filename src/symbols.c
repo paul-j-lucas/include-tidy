@@ -278,8 +278,8 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     goto done;
 
   tidy_symbol new_sym = {
-    .name = sym_name,
-    .name_key = tidy_Cursor_getScopedDisplayName( name_csr )
+    .key = tidy_Cursor_getScopedDisplayName( name_csr ),
+    .name = sym_name
   };
   sym_name = NULL;
   ht_insert_rv_t const hti = ht_insert( &symbol_set, &new_sym, sizeof new_sym );
@@ -306,7 +306,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     include_get_delims( include_added_to, delims );
     verbose_printf(
       "  \"%s\" -> %c%s%c\n",
-      sym->name_key, delims[0], include_added_to->abs_path, delims[1]
+      sym->key, delims[0], include_added_to->abs_path, delims[1]
     );
   }
 
@@ -893,8 +893,8 @@ skip_children:
 static void tidy_symbol_cleanup( tidy_symbol *sym ) {
   if ( sym == NULL )
     return;
+  FREE( sym->key );
   FREE( sym->name );
-  FREE( sym->name_key );
 }
 
 /**
@@ -1294,11 +1294,11 @@ void symbols_init( void ) {
 int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
   assert( i_sym != NULL );
   assert( j_sym != NULL );
-  return strcmp( i_sym->name_key, j_sym->name_key );
+  return strcmp( i_sym->key, j_sym->key );
 }
 
 ht_hash_val_t tidy_symbol_hash( tidy_symbol const *sym ) {
-  return fnv1a_s( sym->name_key );
+  return fnv1a_s( sym->key );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

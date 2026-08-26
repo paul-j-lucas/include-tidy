@@ -47,20 +47,22 @@ typedef struct tidy_symbol tidy_symbol;
  */
 struct tidy_symbol {
   /**
-   * The symbol name without signature (for functions or operators) or template
-   * parameters (for templates) used in `#include` comments.
-   *
-   * @note In C++, this is not guaranteed to be unique due to overloaded
-   * functions or specialized templates.
+   * The symbol name with signature (for functions or operators, e.g.,
+   * `sqrt(double)`) or template parameters (for templates, e.g.,
+   * `std::set<T>`) used as a unique key since C++ allows overloaded functions
+   * and instantiated templates.
    */
-  char const *name;
+  char const *key;
 
   /**
-   * The symbol name with signature (for functions or operators) or template
-   * parameters (for templates) used as a unique key since C++ allows
-   * overloading.
+   * The symbol name without signature (for functions or operators, e.g.,
+   * `sqrt`) or template parameters (for templates, e.g., `std::set`) used in
+   * `#include` comments.
+   *
+   * @note In C++, this is not guaranteed to be unique due to overloaded
+   * functions and instantiated templates.
    */
-  char const *name_key;
+  char const *name;
 
   unsigned    ref_count;                ///< Number of times referenced.
 };
