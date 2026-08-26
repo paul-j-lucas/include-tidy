@@ -196,7 +196,7 @@ void trans_unit_init( int argc, char const *const argv[] ) {
       exit( EX_DATAERR );
     case CXError_Success:
       //
-      // All a CXError_Success means is that clang's parser didn't crash; it
+      // All a CXError_Success means is that libclang's parser didn't crash; it
       // doesn't mean the code is valid, so we have to check for errors later
       // via trans_unit_check_for_errors().
       //
