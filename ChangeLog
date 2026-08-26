@@ -1,3 +1,9 @@
+2026-08-26  Paul J. Lucas <paul@lucasmail.org>
+
+   * hash_table.c: Moved assert() out of loop.
+   * hash_table.h: Added NODISCARD.
+   * config_file.c, symbols.c: s/PJL_DISCARD/PJL_DISCARD_RV/
+
 2026-08-25  Paul J. Lucas <paul@lucasmail.org>
 
    * man/man1/include-tidy.1, cli_options.c, cli_options.h, cli-help.out,
