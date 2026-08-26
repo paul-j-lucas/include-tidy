@@ -1,3 +1,10 @@
+2026-08-25  Paul J. Lucas <paul@lucasmail.org>
+
+   * man/man1/include-tidy.1, cli_options.c, cli_options.h, cli-help.out,
+     cli-options-error.out, cli-options-error.test: Officially supporting gcc.
+   * options.c: Now using strcasecmp() for "none".
+   * cli_options.c, options.c, options.h: Partially reverted opt_compiler_path.
+
 2026-08-24  Paul J. Lucas <paul@lucasmail.org>
 
    * configure.ac: Bumped version to 2.2.
