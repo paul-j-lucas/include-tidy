@@ -572,13 +572,11 @@ static char* make_symbols_comment( tidy_include const *include ) {
     // below, then use only the last element, but sorting is O(n log n),
     // whereas just iterating through the entire hash table is O(n).
     //
-    tidy_symbol const *sym = ht_iterator_next( &iter );
-    tidy_symbol const *most_ref_sym = sym;
-
-    while ( (sym = ht_iterator_next( &iter )) != NULL ) {
+    tidy_symbol const *most_ref_sym = ht_iterator_next( &iter );
+    for ( tidy_symbol const *sym; (sym = ht_iterator_next( &iter )) != NULL; ) {
       if ( sym->ref_count > most_ref_sym->ref_count )
         most_ref_sym = sym;
-    } // while
+    } // for
 
     return check_strdup( most_ref_sym->name );
   }
