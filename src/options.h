@@ -48,7 +48,7 @@
 enum tidy_comment {
   TIDY_COMMENT_SYM_ALPHA,               ///< Sorted alphabetically.
   TIDY_COMMENT_SYM_LENGTH,              ///< Sorted by name length, ascending.
-  TIDY_COMMENT_SYM_MOST_USED,           ///< Only most used symbol.
+  TIDY_COMMENT_SYM_MOST_REF,            ///< Only most-referenced symbol.
   TIDY_COMMENT_SYM_REF_COUNT            ///< Sorted by ref. count, descending.
 };
 

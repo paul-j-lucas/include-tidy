@@ -192,7 +192,7 @@ bool opt_comment_symbols_parse( char const *s ) {
     { "alpha",      TIDY_COMMENT_SYM_ALPHA      },
     { "length",     TIDY_COMMENT_SYM_LENGTH     },
     { "ref-count",  TIDY_COMMENT_SYM_REF_COUNT  },
-    { "most-used",  TIDY_COMMENT_SYM_MOST_USED  },
+    { "most-used",  TIDY_COMMENT_SYM_MOST_REF   },
   };
 
   assert( s != NULL );

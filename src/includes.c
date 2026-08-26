@@ -566,7 +566,7 @@ static char* make_symbols_comment( tidy_include const *include ) {
   ht_iterator_t iter;
   ht_iterator_init( &iter, &include->symbol_set );
 
-  if ( opt_comment_symbols == TIDY_COMMENT_SYM_MOST_USED ) {
+  if ( opt_comment_symbols == TIDY_COMMENT_SYM_MOST_REF ) {
     //
     // We could sort by ref_count as in the TIDY_COMMENT_SYM_REF_COUNT case
     // below, then use only the last element, but sorting is O(n log n),
@@ -598,7 +598,7 @@ static char* make_symbols_comment( tidy_include const *include ) {
     case TIDY_COMMENT_SYM_LENGTH:
       array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_name_length );
       break;
-    case TIDY_COMMENT_SYM_MOST_USED:
+    case TIDY_COMMENT_SYM_MOST_REF:
       unreachable();
     case TIDY_COMMENT_SYM_REF_COUNT:
       array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_ref_count );
