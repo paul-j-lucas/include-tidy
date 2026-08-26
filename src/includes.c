@@ -1097,7 +1097,7 @@ void includes_print( void ) {
           STATIC_CAST( unsigned, include->lines.len ) - 1;
       }
     }
-  } // while
+  } // for
 
   array_qsort( &include_array, &tidy_include_cmp_for_print );
 
