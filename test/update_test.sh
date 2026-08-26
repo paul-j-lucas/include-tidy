@@ -95,6 +95,7 @@ DATA_DIR="$srcdir/data"
 EXPECTED_DIR="$srcdir/expected"
 ACTUAL_OUTPUT="$TMPDIR/cdecl_test_output_$$_"
 
+TIDY_TEST_CXXFLAGS="-std=c++20"
 TIDY_TEST_CONFIG="-Xtidy --config=../$TOP_SRCDIR/etc/config.toml"
 TIDY_TEST_OPTIONS="-Xtidy --directory=data -Xtidy --no-config-layers"
 
