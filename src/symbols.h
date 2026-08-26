@@ -50,7 +50,7 @@ struct tidy_symbol {
    * The symbol name with signature (for functions or operators, e.g.,
    * `sqrt(double)`) or template parameters (for templates, e.g.,
    * `std::set<T>`) used as a unique key since C++ allows overloaded functions
-   * and instantiated templates.
+   * and specialized templates.
    */
   char const *key;
 
@@ -60,7 +60,7 @@ struct tidy_symbol {
    * `#include` comments.
    *
    * @note In C++, this is not guaranteed to be unique due to overloaded
-   * functions and instantiated templates.
+   * functions and specialized templates.
    */
   char const *name;
 
