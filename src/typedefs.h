@@ -54,11 +54,8 @@ typedef struct tidy_typedef tidy_typedef;
  * Maps a cursor for either a libclang `TypedefDecl` or a `TypeAliasDecl` to
  * its scoped alias name.
  *
- * @remarks
- * @parblock
- * It's necessary to keep a map of cursors for type aliases to their "pretty"
- * scoped alias names.
- * @endparblock
+ * @remarks It's necessary to keep a map of cursors for type aliases to their
+ * "pretty" scoped alias names.
  *
  * @par Example
  * @parblock
