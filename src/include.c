@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/includes.c
+**      src/include.c
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **
@@ -25,7 +25,7 @@
 
 // local
 #include "pjl_config.h"
-#include "includes.h"
+#include "include.h"
 #include "array.h"
 #include "clang_util.h"
 #include "cli_options.h"

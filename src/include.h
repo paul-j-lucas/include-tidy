@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/includes.h
+**      src/include.h
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **

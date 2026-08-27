@@ -59,7 +59,7 @@ include_tidy_SOURCES =	array.c array.h \
 			cxx.c cxx.h \
 			fnv1a.c fnv1a.h \
 			hash_table.c hash_table.h \
-			includes.c includes.h \
+			include.c include.h \
 			include-tidy.c include-tidy.h \
 			ipaths.c ipaths.h \
 			options.c options.h \
