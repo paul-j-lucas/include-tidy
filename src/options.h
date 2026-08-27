@@ -40,6 +40,19 @@
  * @{
  */
 
+////////// macros /////////////////////////////////////////////////////////////
+
+/**
+ * Convenience macro that checks whether being verbose about \a WHAT was
+ * requested.
+ *
+ * @param WHAT What to be verbose about without the `TIDY_VERBOSE_` prefix.
+ *
+ * @sa opt_verbose
+ * @sa tidy_verbose
+ */
+#define IS_VERBOSE(WHAT)          ((opt_verbose & TIDY_VERBOSE_ ## WHAT) != 0)
+
 ////////// enums //////////////////////////////////////////////////////////////
 
 /**
@@ -78,21 +91,10 @@ enum tidy_verbose {
   TIDY_VERBOSE_PROXIES_EXPLICIT     = 1 << 6,   ///< Explicit include proxies.
   TIDY_VERBOSE_PROXIES_IMPLICIT     = 1 << 7,   ///< Implicit include proxies.
   TIDY_VERBOSE_SRC_FILE_VIOLATIONS  = 1 << 8,   ///< Source file in violation.
-  TIDY_VERBOSE_SRC_FILE_ALWAYS      = 1 << 9,   ///< All source file.
+  TIDY_VERBOSE_SRC_FILE_ALWAYS      = 1 << 9,   ///< Always source file.
   TIDY_VERBOSE_STATISTICS           = 1 << 10,  ///< Print statistics?
   TIDY_VERBOSE_SYMBOLS              = 1 << 11,  ///< Symbols referenced.
 };
-
-/**
- * Convenience macro that checks whether being verbose about \a WHAT was
- * requested.
- *
- * @param WHAT What to be verbose about without the `TIDY_VERBOSE_` prefix.
- *
- * @sa opt_verbose
- * @sa tidy_verbose
- */
-#define IS_VERBOSE(WHAT)          ((opt_verbose & TIDY_VERBOSE_ ## WHAT) != 0)
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
