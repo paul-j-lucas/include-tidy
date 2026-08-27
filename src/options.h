@@ -192,7 +192,7 @@ bool opt_line_length_parse( char const *s );
  * @param verbose_format
  * @parblock
  * The null-terminated **include-tidy** verbose format string to parse.
- * Value format are:
+ * Valid formats are:
  *
  * Format | Be verbose about ...
  * -------|-----------------------------------------------------------------
