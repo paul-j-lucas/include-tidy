@@ -101,7 +101,36 @@ AC_CHECK_LIB([clang], [clang_createIndex], [:], [
 LDFLAGS="$save_LDFLAGS"
 LIBS="$save_LIBS"
 
+# Testing feature: Address Sanitizer (ASan)
+AC_ARG_ENABLE([asan],
+  AS_HELP_STRING([--enable-asan], [enable Address Sanitizer for debugging])
+)
+AS_IF([test "x$enable_asan" = xyes], [
+  AC_DEFINE([ENABLE_ASAN], [1], [Define to 1 if Address Sanitizer is enabled.])
+])
+
+# Testing feature: Memory Sanitizer (MSan)
+AC_ARG_ENABLE([msan],
+  AS_HELP_STRING([--enable-msan], [enable Memory Sanitizer for debugging])
+)
+AS_IF([test "x$enable_msan" = xyes], [
+  AC_DEFINE([ENABLE_MSAN], [1],
+    [Define to 1 if Memory Sanitizer is enabled.])
+])
+
+# Testing feature: Undefined Behavior Sanitizer (UBSan)
+AC_ARG_ENABLE([ubsan],
+  AS_HELP_STRING([--enable-ubsan], [enable Undefined Bahavior Sanitizer for debugging])
+)
+AS_IF([test "x$enable_ubsan" = xyes], [
+  AC_DEFINE([ENABLE_UBSAN], [1],
+    [Define to 1 if Undefined Bahavior Sanitizer is enabled.])
+])
+
 # Makefile conditionals.
+AM_CONDITIONAL([ENABLE_ASAN],   [test "x$enable_asan"   = xyes])
+AM_CONDITIONAL([ENABLE_MSAN],   [test "x$enable_msan"   = xyes])
+AM_CONDITIONAL([ENABLE_UBSAN],  [test "x$enable_ubsan"  = xyes])
 
 # Miscellaneous.
 AX_C___ATTRIBUTE__

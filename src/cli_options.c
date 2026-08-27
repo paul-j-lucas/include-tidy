@@ -943,6 +943,15 @@ static void print_version( bool verbose ) {
 #ifdef NDEBUG
   PUT_CONFIG_OPT( "disable-assert" );
 #endif /* NDEBUG */
+#ifdef ENABLE_ASAN
+  PUT_CONFIG_OPT( "enable-asan" );
+#endif /* ENABLE_ASAN */
+#ifdef ENABLE_MSAN
+  PUT_CONFIG_OPT( "enable-msan" );
+#endif /* ENABLE_MSAN */
+#ifdef ENABLE_UBSAN
+  PUT_CONFIG_OPT( "enable-ubsan" );
+#endif /* ENABLE_UBSAN */
   if ( !printed_opt )
     PUTS( " none" );
   putchar( '\n' );
