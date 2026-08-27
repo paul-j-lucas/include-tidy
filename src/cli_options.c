@@ -28,7 +28,7 @@
 #include "cli_options.h"
 #include "array.h"
 #include "include-tidy.h"
-#include "ipaths.h"
+#include "ipath.h"
 #include "options.h"
 #include "path_util.h"
 #include "print.h"

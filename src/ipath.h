@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/ipaths.h
+**      src/ipath.h
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **
@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef tidy_ipaths_h
-#define tidy_ipaths_h
+#ifndef tidy_ipath_h
+#define tidy_ipath_h
 
 /**
  * @file
@@ -103,5 +103,5 @@ void ipaths_init( void );
 
 /** @} */
 
-#endif /* tidy_ipaths_h */
+#endif /* tidy_ipath_h */
 /* vim:set et sw=2 ts=2: */

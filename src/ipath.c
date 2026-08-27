@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/ipaths.c
+**      src/ipath.c
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **
@@ -25,7 +25,7 @@
 
 // local
 #include "pjl_config.h"                 /* must go first */
-#include "ipaths.h"
+#include "ipath.h"
 #include "array.h"
 #include "path_util.h"
 #include "strbuf.h"

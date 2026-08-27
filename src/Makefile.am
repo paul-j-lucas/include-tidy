@@ -61,7 +61,7 @@ include_tidy_SOURCES =	array.c array.h \
 			hash_table.c hash_table.h \
 			include.c include.h \
 			include-tidy.c include-tidy.h \
-			ipaths.c ipaths.h \
+			ipath.c ipath.h \
 			options.c options.h \
 			path_util.c path_util.h \
 			pjl_config.h config.h \

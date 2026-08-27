@@ -32,7 +32,7 @@
 #include "color.h"
 #include "config_file.h"
 #include "hash_table.h"
-#include "ipaths.h"
+#include "ipath.h"
 #include "options.h"
 #include "path_util.h"
 #include "print.h"
