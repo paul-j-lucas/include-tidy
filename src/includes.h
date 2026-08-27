@@ -58,7 +58,7 @@
 enum tidy_handling {
   TIDY_HANDLE_DEFAULT,                  ///< Default handling.
   TIDY_HANDLE_ELIDE,                    ///< Elide even if necessary.
-  TIDY_HANDLE_KEEP                      ///< Keep even if unncessary.
+  TIDY_HANDLE_KEEP                      ///< Keep even if unnecessary.
 };
 
 /**
