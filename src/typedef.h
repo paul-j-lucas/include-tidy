@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/typedefs.h
+**      src/typedef.h
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **

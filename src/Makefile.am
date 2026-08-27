@@ -73,7 +73,7 @@ include_tidy_SOURCES =	array.c array.h \
 			tidy_util.c tidy_util.h \
 			toml_lite.c toml_lite.h \
 			trans_unit.c trans_unit.h \
-			typedefs.c typedefs.h \
+			typedef.c typedef.h \
 			type_traits.h \
 			util.c util.h
 

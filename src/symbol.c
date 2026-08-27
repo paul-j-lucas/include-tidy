@@ -36,7 +36,7 @@
 #include "options.h"
 #include "print.h"
 #include "trans_unit.h"
-#include "typedefs.h"
+#include "typedef.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE

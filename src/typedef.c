@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/typedefs.c
+**      src/typedef.c
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **
@@ -25,7 +25,7 @@
 
 // local
 #include "pjl_config.h"
-#include "typedefs.h"
+#include "typedef.h"
 #include "clang_util.h"
 #include "fnv1a.h"
 #include "hash_table.h"
