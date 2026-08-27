@@ -36,14 +36,14 @@ DOCS_DIR =		docs
 .PHONY: doc docs \
 	update-gnulib
 
-doc docs:
-	@./makedoc.sh $(PACKAGE) $(DOCS_DIR)
-
 clean-local:
 	rm -fr $(DOCS_DIR)
 
 dist-hook:
 	find $(distdir) -name .DS_Store -exec rm -f {} \;
+
+doc docs:
+	@./makedoc.sh $(PACKAGE) $(DOCS_DIR)
 
 update-gnulib:
 	gnulib-tool --add-import --no-vc-files
