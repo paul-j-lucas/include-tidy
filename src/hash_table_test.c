@@ -38,39 +38,36 @@ struct test_data {
   int   val;
 };
 
-#define TEST_DINT(ENTRY)      (test_data*)HT_DINT( (ENTRY) )
-#define TEST_INSERT(HT,KEY)   ht_insert( (HT), (void*)(KEY), sizeof(test_data) )
 #define TEST_LIT(KEY,VAL)     (test_data){ .key = (KEY), .val = (VAL) }
 
-#define TEST_ASSIGN(ENTRY,KEY,VAL) \
-  *TEST_DINT( (ENTRY) ) = TEST_LIT( (KEY), (VAL) )
-
-#define TEST_INSERT_ASSIGN(HT,KEY,VAL) \
-  TEST_ASSIGN( TEST_INSERT( (HT), (KEY) ).entry, (KEY), (VAL) )
+#define TEST_INSERT(TABLE,KEY,VAL) \
+  PJL_DISCARD_RV( ht_insert( (TABLE), &TEST_LIT( (KEY), (VAL) ), sizeof(test_data) ) )
 
 static double const TEST_LOAD_FACTOR_MAX = 1.0;
 
 ////////// local functions ////////////////////////////////////////////////////
 
-static ht_hash_val_t test_fnv1a( void const *data ) {
-  test_data const *const tdata = data;
-  return fnv1a64_mem( FNV1A_INIT, tdata->key, 1 );
+static int test_cmp( void const *iv, void const *jv ) {
+  test_data const *const it = iv;
+  test_data const *const jt = jv;
+  return strcmp( it->key, jt->key );
+}
+
+static ht_hash_val_t test_hash( void const *v ) {
+  test_data const *const t = v;
+  return fnv1a64_mem( FNV1A_INIT, t->key, 1 );
 }
 
 static void test_ht_fill( hash_table_t *table ) {
-  TEST_INSERT_ASSIGN( table, "A", 1 );
-  TEST_INSERT_ASSIGN( table, "B", 2 );
-  TEST_INSERT_ASSIGN( table, "C", 3 );
-  TEST_INSERT_ASSIGN( table, "D", 4 );
-  TEST_INSERT_ASSIGN( table, "E", 5 );
+  TEST_INSERT( table, "A", 1 );
+  TEST_INSERT( table, "B", 2 );
+  TEST_INSERT( table, "C", 3 );
+  TEST_INSERT( table, "D", 4 );
+  TEST_INSERT( table, "E", 5 );
 }
 
 static void test_ht_init( hash_table_t *table ) {
-  ht_init(
-    table, HT_DINT, TEST_LOAD_FACTOR_MAX, 0,
-    POINTER_CAST( ht_cmp_fn_t, &strcmp ),
-    &test_fnv1a
-  );
+  ht_init( table, HT_DINT, TEST_LOAD_FACTOR_MAX, 0, &test_cmp, &test_hash );
 }
 
 static void test_ht_seen( hash_table_t *table, bool seen[] ) {
@@ -95,10 +92,10 @@ static bool test_find_delete() {
   test_ht_fill( &table );
 
   ht_entry_t *entry;
-  entry = ht_find( &table, "X" );
+  entry = ht_find( &table, &TEST_LIT( "X", 0 ) );
   TEST( entry == NULL );
 
-  entry = ht_find( &table, "D" );
+  entry = ht_find( &table, &TEST_LIT( "D", 0 ) );
   if ( !TEST( entry != NULL ) )
     goto end_test;
 
@@ -124,19 +121,22 @@ static bool test_insert_delete() {
   hash_table_t table;
   test_ht_init( &table );
 
-  ht_insert_rv_t hti_rv = ht_insert( &table, (void*)"A", sizeof(test_data) );
-  if ( TEST( !ht_empty( &table ) ) && TEST( hti_rv.inserted ) )
+  ht_insert_rv_t hti =
+    ht_insert( &table, &TEST_LIT( "A", 0 ), sizeof(test_data) );
+  if ( TEST( !ht_empty( &table ) ) && TEST( hti.inserted ) )
     goto end_test;
-  TEST_ASSIGN( hti_rv.entry, "A", 1 );
+  test_data *t = HT_DINT( hti.entry );
+  TEST( strcmp( t->key, "A" ) == 0 );
+  TEST( t->val == 0 );
 
-  test_data const *data = TEST_DINT( hti_rv.entry );
-  TEST( strcmp( data->key, "A" ) == 0 );
-  TEST( data->val == 1 );
+  hti = ht_insert( &table, &TEST_LIT( "A", 1 ), sizeof(test_data) );
+  TEST( !hti.inserted );
 
-  hti_rv = ht_insert( &table, (void*)"A", sizeof(test_data) );
-  TEST( !hti_rv.inserted );
+  t = HT_DINT( hti.entry );
+  TEST( strcmp( t->key, "A" ) == 0 );
+  TEST( t->val == 0 );
 
-  ht_delete( &table, hti_rv.entry );
+  ht_delete( &table, hti.entry );
   TEST( ht_empty( &table ) );
 
 end_test:
