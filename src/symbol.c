@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/symbols.c
+**      src/symbol.c
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **
@@ -25,7 +25,7 @@
 
 // local
 #include "pjl_config.h"
-#include "symbols.h"
+#include "symbol.h"
 #include "clang_util.h"
 #include "cli_options.h"
 #include "cxx.h"

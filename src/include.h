@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef tidy_includes_h
-#define tidy_includes_h
+#ifndef tidy_include_h
+#define tidy_include_h
 
 /**
  * @file
@@ -31,7 +31,7 @@
 #include "hash_table.h"
 #include "red_black.h"
 #include "array.h"
-#include "symbols.h"
+#include "symbol.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -237,5 +237,5 @@ unsigned tidy_File_includes( CXFile ref_file, CXFile def_file );
 
 /** @} */
 
-#endif /* tidy_includes_h */
+#endif /* tidy_include_h */
 /* vim:set et sw=2 ts=2: */

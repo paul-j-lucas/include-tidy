@@ -38,7 +38,7 @@
 #include "print.h"
 #include "red_black.h"
 #include "strbuf.h"
-#include "symbols.h"
+#include "symbol.h"
 #include "tidy_util.h"
 #include "trans_unit.h"
 #include "util.h"
@@ -398,7 +398,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     array_init( &included->lines, sizeof(unsigned) );
     ht_init(
       // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
-      // symbol_set in symbols.c.
+      // symbol_set in symbol.c.
       &included->symbol_set, HT_DPTR, 2.0, 64,
       POINTER_CAST( ht_cmp_fn_t, &tidy_symbol_cmp ),
       POINTER_CAST( ht_hash_fn_t, &tidy_symbol_hash )

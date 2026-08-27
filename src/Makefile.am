@@ -69,7 +69,7 @@ include_tidy_SOURCES =	array.c array.h \
 			proxies.c proxies.h \
 			red_black.c red_black.h \
 			strbuf.c strbuf.h \
-			symbols.c symbols.h \
+			symbol.c symbol.h \
 			tidy_util.c tidy_util.h \
 			toml_lite.c toml_lite.h \
 			trans_unit.c trans_unit.h \

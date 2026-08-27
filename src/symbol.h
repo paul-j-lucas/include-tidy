@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/symbols.h
+**      src/symbol.h
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **
@@ -18,8 +18,8 @@
 **      along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef tidy_symbols_h
-#define tidy_symbols_h
+#ifndef tidy_symbol_h
+#define tidy_symbol_h
 
 /**
  * @file
@@ -99,5 +99,5 @@ ht_hash_val_t tidy_symbol_hash( tidy_symbol const *sym );
 
 /** @} */
 
-#endif /* tidy_symbols_h */
+#endif /* tidy_symbol_h */
 /* vim:set et sw=2 ts=2: */
