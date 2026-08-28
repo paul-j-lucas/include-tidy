@@ -1546,7 +1546,7 @@ static void symbol_includes_dump( void ) {
     bool comma = false;
     rb_iterator_t ti_iter;
     rb_iterator_init( &ti_iter, &si->to_include_set );
-    for ( tidy_include *to_include;
+    for ( tidy_include const *to_include;
           (to_include = rb_iterator_next( &ti_iter )) != NULL; ) {
       char delims[2];
       include_get_delims( to_include, delims );
