@@ -147,10 +147,10 @@ struct config_key {
  *  ```
  */
 struct symbol_includes {
-  char const *from_symbol_name;         ///< Symbol name.
+  char const *from_sym_name;            ///< Symbol name.
 
   /**
-   * The set of include file(s) that declare \ref from_symbol_name.
+   * The set of include file(s) that declare \ref from_sym_name.
    *
    * @remarks This is a red-black tree and not a hash table because, when we
    * iterate over it, we want it to be in sorted order.
@@ -1482,7 +1482,7 @@ static void std_cxx_includes_parse( char const *config_path,
 static void symbol_includes_cleanup( symbol_includes *si ) {
   if ( si == NULL )
     return;
-  FREE( si->from_symbol_name );
+  FREE( si->from_sym_name );
   rb_tree_cleanup( &si->to_include_set, /*free_fn=*/NULL );
 }
 
@@ -1500,27 +1500,27 @@ static int symbol_includes_cmp( symbol_includes const *i_si,
                                 symbol_includes const *j_si ) {
   assert( i_si != NULL );
   assert( j_si != NULL );
-  return strcmp( i_si->from_symbol_name, j_si->from_symbol_name );
+  return strcmp( i_si->from_sym_name, j_si->from_sym_name );
 }
 
 /**
- * Maps \a from_symbol_name to \a to_include_file so that if \a
- * from_symbol_name is referenced, it'll require \a to_include_file.
+ * Maps \a from_sym_name to \a to_include_file so that if \a from_sym_name is
+ * referenced, it'll require \a to_include_file.
  *
- * @param from_symbol_name The name of the symbol.
+ * @param from_sym_name The name of the symbol.
  * @param to_include The include file that supposedly declares it.
  */
-static void symbol_include_add( char const *from_symbol_name,
+static void symbol_include_add( char const *from_sym_name,
                                 tidy_include *to_include ) {
-  assert( from_symbol_name != NULL );
+  assert( from_sym_name != NULL );
   assert( to_include != NULL );
 
-  symbol_includes new_si = { .from_symbol_name = from_symbol_name };
+  symbol_includes new_si = { .from_sym_name = from_sym_name };
   rb_insert_rv_t const rbi =
     rb_tree_insert( &symbol_includes_map, &new_si, sizeof new_si );
   symbol_includes *const si = RB_DINT( rbi.node );
   if ( rbi.inserted ) {
-    si->from_symbol_name = check_strdup( from_symbol_name );
+    si->from_sym_name = check_strdup( from_sym_name );
     rb_tree_init(
       &si->to_include_set, RB_DPTR,
       POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_rel_path )
@@ -1541,7 +1541,7 @@ static void symbol_includes_dump( void ) {
   rb_iterator_init( &si_iter, &symbol_includes_map );
   for ( symbol_includes const *si;
         (si = rb_iterator_next( &si_iter )) != NULL; ) {
-    verbose_printf( "  \"%s\" -> [ ", si->from_symbol_name );
+    verbose_printf( "  \"%s\" -> [ ", si->from_sym_name );
 
     bool comma = false;
     rb_iterator_t ti_iter;
@@ -1622,10 +1622,10 @@ static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-CXFile config_get_symbol_include( char const *symbol_name ) {
-  assert( symbol_name != NULL );
+CXFile config_get_symbol_include( char const *sym_name ) {
+  assert( sym_name != NULL );
 
-  symbol_includes find_si = { .from_symbol_name = symbol_name };
+  symbol_includes find_si = { .from_sym_name = sym_name };
   rb_node_t const *const found_rb =
     rb_tree_find( &symbol_includes_map, &find_si );
   if ( found_rb == NULL )
