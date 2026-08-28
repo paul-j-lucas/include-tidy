@@ -122,7 +122,7 @@ static void   ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
 #endif /* NEED_II_MATRIX */
 
 NODISCARD
-static bool   is_assoc_header( tidy_include const*, char const* );
+static bool   is_associated_header( tidy_include const*, char const* );
 
 static void   print_statistics( void );
 
@@ -202,7 +202,9 @@ static tidy_include* get_associated_header( void ) {
     rb_iterator_init( &iter, &tidy_include_set );
     for ( tidy_include *include;
           (include = rb_iterator_next( &iter )) != NULL; ) {
-      if ( is_assoc_header( include, source_path_no_ext ) ) {
+      if ( !include->is_local )
+        continue;
+      if ( is_associated_header( include, source_path_no_ext ) ) {
         assoc_include = include;
         break;
       }
@@ -524,8 +526,8 @@ skip:
  * file currently being tidied.
  */
 NODISCARD
-static bool is_assoc_header( tidy_include const *include,
-                             char const *source_file_no_ext ) {
+static bool is_associated_header( tidy_include const *include,
+                                  char const *source_file_no_ext ) {
   assert( include != NULL );
   assert( source_file_no_ext != NULL );
 
@@ -539,9 +541,8 @@ static bool is_assoc_header( tidy_include const *include,
   char path_buf[ PATH_MAX ];
   char const *const include_no_ext = path_no_ext( include->rel_path, path_buf );
   //
-  // If this include file's name matches the source file's (without
-  // extensions), it's the .h associated with the .c, so sort this include file
-  // first, e.g.:
+  // If this include file's name matches the source file's (without extension),
+  // it's the .h associated with the .c, so sort this include file first, e.g.:
   //
   //      // foo.c
   //      #include "foo.h"              // associated header sorted first
