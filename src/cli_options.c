@@ -277,12 +277,12 @@ static bool check_optarg( int short_opt ) {
  * @param short_opt The option to check for.
  */
 static void check_opt_exclusive( int short_opt ) {
-  if ( !opt_is_set( short_opt ) )
+  if ( !option_is_set( short_opt ) )
     return;
   for ( int curr_opt = '0'; curr_opt < 128; ++curr_opt ) {
     if ( curr_opt == short_opt )
       continue;
-    if ( opt_is_set( curr_opt ) ) {
+    if ( option_is_set( curr_opt ) ) {
       fatal_error( EX_USAGE,
         "%s can be given only by itself\n",
         get_opt_format( short_opt )
@@ -1113,7 +1113,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       default:
         goto unhandled_opt;
     } // switch
-    opt_mark_set( short_opt );
+    option_mark_set( short_opt );
   } // for
   FREE( short_opts );
 
@@ -1224,13 +1224,13 @@ unhandled_opt:
   INTERNAL_ERROR( "%d: unhandled getopt_long() return value\n", short_opt );
 }
 
-bool opt_is_set( int short_opt ) {
+bool option_is_set( int short_opt ) {
   assert( short_opt > 0 );
   assert( STATIC_CAST( size_t, short_opt ) < ARRAY_SIZE( is_opt_set ) );
   return is_opt_set[ short_opt ];
 }
 
-void opt_mark_set( int short_opt ) {
+void option_mark_set( int short_opt ) {
   assert( short_opt > 0 );
   assert( STATIC_CAST( size_t, short_opt ) < ARRAY_SIZE( is_opt_set ) );
   assert( isalnum( short_opt ) );

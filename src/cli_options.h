@@ -89,19 +89,19 @@ void cli_options_init( int *pargc, char const **pargv[] );
  * @param short_opt The short option character.
  * @return Returns `true` only if the option has been set.
  *
- * @sa opt_mark_set()
+ * @sa option_mark_set()
  */
 NODISCARD
-bool opt_is_set( int short_opt );
+bool option_is_set( int short_opt );
 
 /**
  * Marks an option as having been set.
  *
  * @param short_opt The short option character.  It must be alphanumeric.
  *
- * @sa opt_is_set()
+ * @sa option_is_set()
  */
-void opt_mark_set( int short_opt );
+void option_mark_set( int short_opt );
 
 ///////////////////////////////////////////////////////////////////////////////
 

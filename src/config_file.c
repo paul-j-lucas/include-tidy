@@ -555,9 +555,9 @@ static void align_column_parse( char const *config_path,
     config_path, "align-column", value, 0, OPT_ALIGN_COLUMN_MAX
   );
 
-  if ( !opt_is_set( COPT(ALIGN_COLUMN) ) ) {
+  if ( !option_is_set( COPT(ALIGN_COLUMN) ) ) {
     opt_align_column = STATIC_CAST( unsigned, int_value );
-    opt_mark_set( COPT(ALIGN_COLUMN) );
+    option_mark_set( COPT(ALIGN_COLUMN) );
   }
 }
 
@@ -575,9 +575,9 @@ static void all_includes_parse( char const *config_path,
   (void)table;
   assert( value != NULL );
 
-  if ( !opt_is_set( COPT(ALL_INCLUDES) ) ) {
+  if ( !option_is_set( COPT(ALL_INCLUDES) ) ) {
     opt_all_includes = bool_value_parse( config_path, "all-includes", value );
-    opt_mark_set( COPT(ALL_INCLUDES) );
+    option_mark_set( COPT(ALL_INCLUDES) );
   }
 }
 
@@ -618,7 +618,7 @@ static void color_parse( char const *config_path, toml_table const *table,
   char const *const string_value =
     string_value_parse( config_path, "color", value );
 
-  if ( opt_is_set( COPT(COLOR) ) )
+  if ( option_is_set( COPT(COLOR) ) )
     return;
 
   if ( !opt_color_parse( string_value ) ) {
@@ -628,7 +628,7 @@ static void color_parse( char const *config_path, toml_table const *table,
     );
     exit( EX_CONFIG );
   }
-  opt_mark_set( COPT(COLOR) );
+  option_mark_set( COPT(COLOR) );
 }
 
 /**
@@ -662,7 +662,7 @@ static void comment_style_parse( char const *config_path,
   char const *const string_value =
     string_value_parse( config_path, "comment-style", value );
 
-  if ( opt_is_set( COPT(COMMENT_STYLE) ) )
+  if ( option_is_set( COPT(COMMENT_STYLE) ) )
     return;
 
   if ( !opt_comment_style_parse( string_value ) ) {
@@ -673,7 +673,7 @@ static void comment_style_parse( char const *config_path,
     );
     exit( EX_CONFIG );
   }
-  opt_mark_set( COPT(COMMENT_STYLE) );
+  option_mark_set( COPT(COMMENT_STYLE) );
 }
 
 /**
@@ -693,7 +693,7 @@ static void comment_symbols_parse( char const *config_path,
   char const *const string_value =
     string_value_parse( config_path, "comment-symbols", value );
 
-  if ( opt_is_set( COPT(COMMENT_SYMBOLS) ) )
+  if ( option_is_set( COPT(COMMENT_SYMBOLS) ) )
     return;
 
   if ( !opt_comment_symbols_parse( string_value ) ) {
@@ -704,7 +704,7 @@ static void comment_symbols_parse( char const *config_path,
     );
     exit( EX_CONFIG );
   }
-  opt_mark_set( COPT(COMMENT_SYMBOLS) );
+  option_mark_set( COPT(COMMENT_SYMBOLS) );
 }
 
 /**
@@ -1025,7 +1025,7 @@ static void error_parse( char const *config_path, toml_table const *table,
   char const *const string_value =
     string_value_parse( config_path, "error", value );
 
-  if ( opt_is_set( COPT(ERROR) ) )
+  if ( option_is_set( COPT(ERROR) ) )
     return;
 
   if ( !opt_error_parse( string_value ) ) {
@@ -1035,7 +1035,7 @@ static void error_parse( char const *config_path, toml_table const *table,
     );
     exit( EX_CONFIG );
   }
-  opt_mark_set( COPT(ERROR) );
+  option_mark_set( COPT(ERROR) );
 }
 
 /**
@@ -1410,9 +1410,9 @@ static void line_length_parse( char const *config_path,
     config_path, "line-length", value, 0, OPT_LINE_LENGTH_MAX
   );
 
-  if ( !opt_is_set( COPT(LINE_LENGTH) ) ) {
+  if ( !option_is_set( COPT(LINE_LENGTH) ) ) {
     opt_line_length = STATIC_CAST( unsigned, int_value );
-    opt_mark_set( COPT(LINE_LENGTH) );
+    option_mark_set( COPT(LINE_LENGTH) );
   }
 }
 
