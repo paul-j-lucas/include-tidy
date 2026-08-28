@@ -162,7 +162,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
     goto skip;
 
   // Remaining cases are valid only for paths that are just filenames.
-  if ( !path_is_file( included->rel_path ) )
+  if ( !path_is_filename( included->rel_path ) )
     goto skip;
 
   char cxx_path[ PATH_MAX ];

@@ -120,7 +120,7 @@ char const* path_ext( char const *path );
  * @return Returns `true` only if \a path is absolute.
  *
  * @sa path_is_relative()
- * @sa path_is_file()
+ * @sa path_is_filename()
  */
 NODISCARD
 inline bool path_is_absolute( char const *path ) {
@@ -137,7 +137,7 @@ inline bool path_is_absolute( char const *path ) {
  * @sa path_is_relative()
  */
 NODISCARD
-inline bool path_is_file( char const *path ) {
+inline bool path_is_filename( char const *path ) {
   return strchr( path, '/' ) == NULL;
 }
 
@@ -168,7 +168,7 @@ bool path_is_local( char const *abs_path );
  * @return Returns `true` only if \a path is relative.
  *
  * @sa path_is_absolute()
- * @sa path_is_file()
+ * @sa path_is_filename()
  */
 NODISCARD
 inline bool path_is_relative( char const *path ) {
