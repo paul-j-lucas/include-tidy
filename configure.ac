@@ -90,7 +90,7 @@ PJL_COMPILE([__VA_OPT__],
 )
 
 # Checks for library functions.
-AC_CHECK_FUNCS([geteuid getpwuid perror strerror strndup])
+AC_CHECK_FUNCS([geteuid getpwuid perror strerror])
 save_LDFLAGS="$LDFLAGS"
 save_LIBS="$LIBS"
 LDFLAGS="$LIBCLANG_LDFLAGS $LDFLAGS"
