@@ -240,7 +240,7 @@ void print_include( char const *sgr_color, char const delims[static 2],
   }
 
   color_end( stdout, sgr_color );
-  PUTC( '\n' );
+  putchar( '\n' );
 }
 
 void print_source_line( char const *path, unsigned line, unsigned col,

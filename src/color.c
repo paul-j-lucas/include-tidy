@@ -386,12 +386,12 @@ void colors_init( void ) {
 
 void color_end( FILE *file, char const *sgr_color ) {
   if ( sgr_color != NULL && file_in_color( file ) )
-    FPUTS( SGR_END SGR_EL, file );
+    fputs( SGR_END SGR_EL, file );
 }
 
 void color_start( FILE *file, char const *sgr_color ) {
   if ( sgr_color != NULL && file_in_color( file ) )
-    FPRINTF( file, SGR_START SGR_EL, sgr_color );
+    fprintf( file, SGR_START SGR_EL, sgr_color );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

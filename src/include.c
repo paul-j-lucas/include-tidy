@@ -714,7 +714,7 @@ static void maybe_print_include( tidy_include const *include,
   include_get_delims( include, delims );
   if ( do_print_include ) {
     if ( true_clear( &args->print_blank_line ) )
-      PUTC( '\n' );
+      putchar( '\n' );
     print_include( sgr_color, delims, include->rel_path, comment );
     args->printed_any_includes = true;
   }
@@ -725,7 +725,7 @@ static void maybe_print_include( tidy_include const *include,
       reset_opt_comment_style = true;
     }
     if ( true_clear( &args->print_blank_line ) )
-      PUTC( '\n' );
+      putchar( '\n' );
 
     unsigned const first_line = *(unsigned*)array_front_nc( &include->lines );
     for ( unsigned i = 1; i < include->lines.len; ++i ) {

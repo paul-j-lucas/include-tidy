@@ -284,7 +284,6 @@
  *
  * @sa #EPUTC()
  * @sa #EPUTS()
- * @sa #FPRINTF()
  */
 #define EPRINTF(...)              fprintf( stderr, __VA_ARGS__ )
 
@@ -295,10 +294,8 @@
  *
  * @sa #EPRINTF()
  * @sa #EPUTS()
- * @sa #FPUTC()
- * @sa #PUTC()
  */
-#define EPUTC(C)                  FPUTC( C, stderr )
+#define EPUTC(C)                  fputc( (C), stderr )
 
 /**
  * Shorthand for printing a C string to standard error.
@@ -307,7 +304,6 @@
  *
  * @sa #EPRINTF()
  * @sa #EPUTC()
- * @sa #FPUTS()
  * @sa #PUTS()
  */
 #define EPUTS(S)                  fputs( (S), stderr )
@@ -328,56 +324,13 @@
   for ( TYPE const *VAR = (ARRAY); VAR < ARRAY_END( (ARRAY) ); ++VAR )
 
 /**
- * Shorthand for printing to standard output.
- *
- * @param STREAM The `FILE` stream to print to.
- * @param ... The `printf()` arguments.
- *
- * @sa #EPRINTF()
- * @sa #FPUTC()
- * @sa #FPUTS()
- */
-#define FPRINTF(STREAM,...) \
-	PERROR_EXIT_IF( fprintf( (STREAM), __VA_ARGS__ ) < 0, EX_IOERR )
-
-/**
- * Calls **putc**(3), checks for an error, and exits if there was one.
- *
- * @param C The character to print.
- * @param STREAM The `FILE` stream to print to.
- *
- * @sa #EPUTC()
- * @sa #FPRINTF()
- * @sa #FPUTS()
- * @sa #PUTC()
- */
-#define FPUTC(C,STREAM) \
-	PERROR_EXIT_IF( putc( (C), (STREAM) ) == EOF, EX_IOERR )
-
-/**
  * Prints \a N spaces to \a STREAM.
  *
  * @param N The number of spaces to print.
  * @param STREAM The `FILE` stream to print to.
- *
- * @sa #FPUTS()
  */
 #define FPUTNSP(N,STREAM) \
-  FPRINTF( (STREAM), "%*s", STATIC_CAST( int, (N) ), "" )
-
-/**
- * Calls **fputs**(3), checks for an error, and exits if there was one.
- *
- * @param S The C string to print.
- * @param STREAM The `FILE` stream to print to.
- *
- * @sa #EPUTS()
- * @sa #FPRINTF()
- * @sa #FPUTC()
- * @sa #PUTS()
- */
-#define FPUTS(S,STREAM) \
-	PERROR_EXIT_IF( fputs( (S), (STREAM) ) == EOF, EX_IOERR )
+  fprintf( (STREAM), "%*s", STATIC_CAST( int, (N) ), "" )
 
 /**
  * Frees the given memory.
@@ -599,27 +552,13 @@
 #define POINTER_CAST(T,EXPR)      ((T)(uintptr_t)(EXPR))
 
 /**
- * Calls #FPUTC() with `stdout`.
- *
- * @param C The character to print.
- *
- * @sa #EPUTC()
- * @sa #FPUTC()
- * @sa #PUTS()
- */
-#define PUTC(C)                   FPUTC( (C), stdout )
-
-/**
- * Calls #FPUTS() with `stdout`.
+ * Calls **fputs**(3) with `stdout`.
  *
  * @param S The C string to print.
  *
  * @note Unlike **puts**(3), does _not_ print a newline.
- *
- * @sa #FPUTS()
- * @sa #PUTC()
  */
-#define PUTS(S)                   FPUTS( (S), stdout )
+#define PUTS(S)                   fputs( (S), stdout )
 
 /**
  * Convenience macro for calling check_realloc().
