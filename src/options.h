@@ -23,7 +23,7 @@
 
 /**
  * @file
- * Declares types, global variables, and functions for **include-tidy**(1)
+ * Declares types, global variables, and functions for **include-tidy**
  * options.
  */
 

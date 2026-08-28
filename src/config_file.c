@@ -20,7 +20,7 @@
 
 /**
  * @file
- * Defines functions for reading and querying an **include-tidy**(1)
+ * Defines functions for reading and querying an **include-tidy**
  * configuration file.
  */
 

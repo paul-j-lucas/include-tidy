@@ -23,7 +23,7 @@
 
 /**
  * @file
- * Declares functions for reading and querying an **include-tidy**(1)
+ * Declares functions for reading and querying an **include-tidy**
  * configuration file.
  */
 
@@ -42,7 +42,7 @@
 
 /**
  * @defgroup config-file-group Configuration File
- * Functions to read an **include-tidy**(1) configuration file and look-up
+ * Functions to read an **include-tidy** configuration file and look-up
  * information specified therein.
  * @{
  */
