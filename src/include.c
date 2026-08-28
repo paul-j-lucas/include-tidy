@@ -58,6 +58,7 @@
 #endif /* NEED_II_MATRIX */
 #include <stdbool.h>
 #include <stddef.h>                     /* unreachable() */
+#include <stdio.h>
 #include <stdlib.h>                     /* atexit() */
 #include <string.h>
 #include <sysexits.h>
