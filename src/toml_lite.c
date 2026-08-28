@@ -99,7 +99,7 @@ static void toml_value_cleanup( toml_value* );
  * Gets whether \a c is a binary digit.
  *
  * @param c The character to check.
- * @return Returns `true` only if \c is either `'0'` or `'1'`.
+ * @return Returns `true` only if \a c is either `'0'` or `'1'`.
  *
  * @sa is_ident()
  * @sa isodigit()
@@ -113,7 +113,7 @@ static inline bool isbdigit( int c ) {
  * Gets whether \a c is an octal digit.
  *
  * @param c The character to check.
- * @return Returns `true` only if \c is one of `01234567`.
+ * @return Returns `true` only if \a c is one of `01234567`.
  *
  * @sa is_ident()
  * @sa isbdigit()
@@ -127,7 +127,7 @@ static inline bool isodigit( int c ) {
  * Gets whether \a c is an identifier character, i.e., alphanumeric or `'_'`.
  *
  * @param c The character to check.
- * @return Returns `true` only if \c is an identifier character.
+ * @return Returns `true` only if \a c is an identifier character.
  *
  * @sa isbdigit()
  * @sa isodigit()
@@ -153,7 +153,7 @@ static bool is_toml_invalid_char( int c ) {
  * Checks whether \a c is a whitespace character according to TOML.
  *
  * @param c The character to check.
- * @return Returns `true` only if \a is a space.
+ * @return Returns `true` only if \a c is a space.
  */
 NODISCARD
 static inline bool is_toml_space( int c ) {
