@@ -60,15 +60,6 @@ extern bool         tidy_is_source_path_ignored;  ///< Ignore tidy_source_path?
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Gets the header file that \a sym_name maps to, if any.
- *
- * @param sym_name The symbol name.
- * @return Returns said header file or NULL if none.
- */
-NODISCARD
-CXFile config_get_symbol_include( char const *sym_name );
-
-/**
  * Reads an **include-tidy** configuration file, if any.
  *
  * @note This function must be called at most once.
@@ -88,13 +79,22 @@ NODISCARD
 bool config_is_standard_include( char const *rel_path );
 
 /**
+ * Gets the header file that \a sym_name maps to, if any.
+ *
+ * @param sym_name The symbol name.
+ * @return Returns said header file or NULL if none.
+ */
+NODISCARD
+CXFile config_symbol_get_include( char const *sym_name );
+
+/**
  * Gets whether \a sym_name should be ignored.
  *
  * @param sym_name The symbol name to check.
  * @return Returns `true` only if \a sym_name should be ignored.
  */
 NODISCARD
-bool config_is_symbol_ignored( char const *sym_name );
+bool config_symbol_is_ignored( char const *sym_name );
 
 ///////////////////////////////////////////////////////////////////////////////
 

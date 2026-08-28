@@ -1622,34 +1622,6 @@ static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-CXFile config_get_symbol_include( char const *sym_name ) {
-  assert( sym_name != NULL );
-
-  symbol_includes find_si = { .from_sym_name = sym_name };
-  rb_node_t const *const found_rb =
-    rb_tree_find( &symbol_includes_map, &find_si );
-  if ( found_rb == NULL )
-    return NULL;
-  symbol_includes const *const found_si = RB_DINT( found_rb );
-  if ( rb_tree_empty( &found_si->to_include_set ) )
-    return NULL;
-
-  rb_iterator_t iter;
-  rb_iterator_init( &iter, &found_si->to_include_set );
-
-  tidy_include const *best_include = NULL;
-  for ( tidy_include const *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
-    include = include_get_proxy( include );
-    if ( best_include == NULL || include->depth < best_include->depth )
-      best_include = include;
-    if ( best_include->depth == 0 )
-      break;
-  } // for
-
-  return best_include != NULL ? best_include->file : NULL;
-}
-
 void config_init( void ) {
   ASSERT_RUN_ONCE();
 
@@ -1695,7 +1667,35 @@ bool config_is_standard_include( char const *rel_path ) {
           is_standard_include( rel_path, &std_c_includes );
 }
 
-bool config_is_symbol_ignored( char const *sym_name ) {
+CXFile config_symbol_get_include( char const *sym_name ) {
+  assert( sym_name != NULL );
+
+  symbol_includes find_si = { .from_sym_name = sym_name };
+  rb_node_t const *const found_rb =
+    rb_tree_find( &symbol_includes_map, &find_si );
+  if ( found_rb == NULL )
+    return NULL;
+  symbol_includes const *const found_si = RB_DINT( found_rb );
+  if ( rb_tree_empty( &found_si->to_include_set ) )
+    return NULL;
+
+  rb_iterator_t iter;
+  rb_iterator_init( &iter, &found_si->to_include_set );
+
+  tidy_include const *best_include = NULL;
+  for ( tidy_include const *include;
+        (include = rb_iterator_next( &iter )) != NULL; ) {
+    include = include_get_proxy( include );
+    if ( best_include == NULL || include->depth < best_include->depth )
+      best_include = include;
+    if ( best_include->depth == 0 )
+      break;
+  } // for
+
+  return best_include != NULL ? best_include->file : NULL;
+}
+
+bool config_symbol_is_ignored( char const *sym_name ) {
   return ht_find( &ignore_symbol_set, sym_name ) != NULL;
 }
 

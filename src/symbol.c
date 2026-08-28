@@ -274,7 +274,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     check_strdup( found_tdef->alias_name ) :
     tidy_Cursor_getScopedSpelling( name_csr );
 
-  if ( config_is_symbol_ignored( sym_name ) )
+  if ( config_symbol_is_ignored( sym_name ) )
     goto done;
 
   tidy_symbol new_sym = {
@@ -286,7 +286,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
   tidy_symbol *const sym = HT_DINT( hti.entry );
   ++sym->ref_count;
 
-  CXFile include_file = config_get_symbol_include( sym->name );
+  CXFile include_file = config_symbol_get_include( sym->name );
   if ( include_file == NULL )
     include_file = sym_file;
   tidy_include const *const include_added_to =
