@@ -72,6 +72,7 @@ static char const *const TOML_ERROR_MSGS[] = {
   [ TOML_ERR_KEY_INVALID     ] = "invalid key",
   [ TOML_ERR_STR_INVALID     ] = "invalid string",
   [ TOML_ERR_TABLE_DUPLICATE ] = "duplicate table",
+  [ TOML_ERR_INVALID_CHAR    ] = "invalid character",
   [ TOML_ERR_UNEX_CHAR       ] = "unexpected character",
   [ TOML_ERR_UNEX_EOF        ] = "unexpected end of file",
   [ TOML_ERR_UNEX_NEWLINE    ] = "unexpected newline",
@@ -134,6 +135,18 @@ static inline bool isodigit( int c ) {
 NODISCARD
 static inline bool is_ident( int c ) {
   return isalnum( STATIC_CAST( unsigned char, c ) ) || c == '_';
+}
+
+/**
+ * Gets whether \a c is an invalid TOML character.
+ *
+ * @param c The character to check.
+ * @return Returns `true` only if \a c is invalid.
+ */
+NODISCARD
+static bool is_toml_invalid_char( int c ) {
+  return  (c >= 0x00 && c <= 0x08) || c == 0x0B || c == 0x0C ||
+          (c >= 0x0E && c <= 0x1F) || c == 0x7F;
 }
 
 /**
@@ -386,9 +399,19 @@ NODISCARD
 static int toml_getc( toml_file *toml ) {
   assert( toml != NULL );
 
+  int c;
   bool const is_newline_pending = toml->c_last == TOML_CHAR_PENDING_NEWLINE;
-  int const c = !is_newline_pending && toml->c_last != EOF ?
-    toml->c_last : fgetc( toml->file );
+
+  if ( !is_newline_pending && toml->c_last != EOF ) {
+    c = toml->c_last;
+  }
+  else {
+    c = fgetc( toml->file );
+    if ( is_toml_invalid_char( c ) ) {
+      toml->error = TOML_ERR_INVALID_CHAR;
+      return EOF;
+    }
+  }
 
   toml->c_last = EOF;
 

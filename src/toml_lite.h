@@ -100,6 +100,7 @@ enum toml_error {
   TOML_ERR_KEY_INVALID,                 ///< Invalid key.
   TOML_ERR_STR_INVALID,                 ///< Invalid string.
   TOML_ERR_TABLE_DUPLICATE,             ///< Duplicate table name.
+  TOML_ERR_INVALID_CHAR,                ///< Invalid character.
   TOML_ERR_UNEX_CHAR,                   ///< Unexpected character.
   TOML_ERR_UNEX_EOF,                    ///< Unexpected end of file.
   TOML_ERR_UNEX_NEWLINE,                ///< Unexpected newline.
