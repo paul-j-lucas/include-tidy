@@ -151,11 +151,9 @@ static inline bool is_toml_space( int c ) {
  * Increments the toml_file's column.
  *
  * @param toml The toml_file to use.
- * @param n How much to increment by.
  */
-static inline void toml_col_inc( toml_file *toml, unsigned n ) {
-  toml->col_prev = toml->loc.col;
-  toml->loc.col += n;
+static inline void toml_col_inc( toml_file *toml ) {
+  toml->col_prev = toml->loc.col++;
 }
 
 /**
@@ -324,7 +322,7 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
 
 error:
   toml->loc = start_loc;
-  toml_col_inc( toml, 1 );
+  toml_col_inc( toml );
   toml->error = TOML_ERR_UNEX_VALUE;
   return false;
 }
@@ -399,7 +397,7 @@ static int toml_getc( toml_file *toml ) {
       toml_newline( toml );
     if ( c == '\n' )
       toml->c_last = TOML_CHAR_PENDING_NEWLINE;
-    toml_col_inc( toml, 1 );
+    toml_col_inc( toml );
   }
 
   return c;
