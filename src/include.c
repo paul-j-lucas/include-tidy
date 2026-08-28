@@ -191,9 +191,7 @@ static tidy_include* get_associated_header( void ) {
     if ( ext == NULL )
       return NULL;
     char const *const lang = get_ext_language( ext );
-    if ( lang == NULL )
-      return NULL;
-    if ( tolower( ext[0] ) != 'c' )
+    if ( lang == NULL || tolower( ext[0] ) != 'c' )
       return NULL;
 
     char path_buf[ PATH_MAX ];
