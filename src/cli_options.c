@@ -1201,10 +1201,10 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   return;
 
-invalid_opt:;
+invalid_opt:
   // Determine whether the invalid option was short or long.
-  char const *const invalid_opt = tidy_argv[ optind - 1 ];
   EPRINTF( "%s: ", prog_name );
+  char const *const invalid_opt = tidy_argv[ optind - 1 ];
   if ( invalid_opt != NULL && STRNCMPLIT( invalid_opt, "--" ) == 0 )
     EPRINTF( "\"%s\"", invalid_opt + STRLITLEN( "--" ) );
   else
