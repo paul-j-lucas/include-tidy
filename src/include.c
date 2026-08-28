@@ -188,10 +188,10 @@ static tidy_include* get_associated_header( void ) {
 
   RUN_ONCE {
     char const *const ext = path_ext( tidy_source_path );
-    if ( ext == NULL )
+    if ( ext == NULL || tolower( ext[0] ) != 'c' )
       return NULL;
     char const *const lang = get_ext_language( ext );
-    if ( lang == NULL || tolower( ext[0] ) != 'c' )
+    if ( lang == NULL )
       return NULL;
 
     char path_buf[ PATH_MAX ];
