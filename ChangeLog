@@ -1,5 +1,7 @@
 2026-08-28  Paul J. Lucas <paul@lucasmail.org>
 
+   * toml_lite.c, toml_lite.h: Now checking whether characters are invalid in
+     TOML.
    * toml_lite.c: Eliminated "n" parameter from toml_col_inc() -- no longer
      needed.
    * toml_lite.c: Added cast to unsigned char for isalnum().
