@@ -44,7 +44,7 @@
  *
  * @remarks
  * @parblock
- * This implements a "lite" version of the TOML 1.0.0 specification in
+ * This implements a "lite" version of the TOML 1.1.0 specification in
  * that the following are **_not_** supported:
  *
  *  + Array of tables.
