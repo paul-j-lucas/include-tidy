@@ -57,7 +57,7 @@
 #define OPT_ALIGN_COLUMN_MAX      256     /**< Maximum column alignment. */
 #define OPT_COMPILER_DEFAULT      "clang" /**< Default compiler path. */
 #define OPT_LINE_LENGTH_DEFAULT   80      /**< Default line length. */
-#define OPT_LINE_LENGTH_MAX       256     /**< Maximum line length. */
+#define OPT_LINE_LENGTH_MAX       512     /**< Maximum line length. */
 #define OPT_VERBOSE_ALL           "acCdfFipPsSz" /**< All verbose values. */
 
 ////////// enums //////////////////////////////////////////////////////////////
