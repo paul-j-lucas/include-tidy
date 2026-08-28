@@ -69,7 +69,7 @@ NODISCARD
 CXFile config_get_symbol_include( char const *symbol_name );
 
 /**
- * Reads an **include-tidy**(5) configuration file, if any.
+ * Reads an **include-tidy** configuration file, if any.
  *
  * @note This function must be called at most once.
  */
