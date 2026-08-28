@@ -133,7 +133,7 @@ static inline bool isodigit( int c ) {
  */
 NODISCARD
 static inline bool is_ident( int c ) {
-  return isalnum( c ) || c == '_';
+  return isalnum( STATIC_CAST( unsigned char, c ) ) || c == '_';
 }
 
 /**
