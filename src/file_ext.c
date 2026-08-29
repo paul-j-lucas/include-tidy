@@ -32,7 +32,6 @@
 
 // standard
 #include <assert.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <strings.h>
 
@@ -52,18 +51,18 @@ static char const LANG_CXX[]  = "c++";  ///< C++.
  * Array of all common C/C++ filename extensions.
  */
 static tidy_file_ext const FILE_EXT[] = {
-  { "c",   false, LANG_C   },
-  { "c++", false, LANG_CXX },
-  { "cc",  false, LANG_CXX },
-  { "cp",  false, LANG_CXX },
-  { "cpp", false, LANG_CXX },
-  { "cxx", false, LANG_CXX },
-  { "h",   true,  LANG_C   },
-  { "h++", true,  LANG_CXX },
-  { "hh",  true,  LANG_CXX },
-  { "hp",  true,  LANG_CXX },
-  { "hpp", true,  LANG_CXX },
-  { "hxx", true,  LANG_CXX },
+  { "c",   LANG_C   },
+  { "c++", LANG_CXX },
+  { "cc",  LANG_CXX },
+  { "cp",  LANG_CXX },
+  { "cpp", LANG_CXX },
+  { "cxx", LANG_CXX },
+  { "h",   LANG_C   },
+  { "h++", LANG_CXX },
+  { "hh",  LANG_CXX },
+  { "hp",  LANG_CXX },
+  { "hpp", LANG_CXX },
+  { "hxx", LANG_CXX },
 };
 
 ////////// extern functions ///////////////////////////////////////////////////

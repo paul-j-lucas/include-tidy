@@ -29,9 +29,6 @@
 // local
 #include "pjl_config.h"                 /* must go first */
 
-// standard
-#include <stdbool.h>
-
 /**
  * @defgroup tidy-file-ext-group File Extensions
  * A structure and functions for supported C/C++ filename extensions.
@@ -59,7 +56,6 @@ typedef struct tidy_file_ext tidy_file_ext;
  */
 struct tidy_file_ext {
   char const *ext;                      ///< Extension (without the `'.'`).
-  bool        is_header;                ///< Is \ref ext for a header?
   char const *lang;                     ///< Language: either `"c"` or `"c++"`.
 };
 
