@@ -572,18 +572,15 @@ static void toml_key_cleanup( toml_key *key ) {
  * Parses a TOML key.
  *
  * @param toml The toml_file to use.
- * @param pkey The string to receive the key.  The caller is responsible for
- * freeing it.
- * @param pkey_col A pointer to receive the key's column.
+ * @param pkey A pointer to receive the key.
  * @param pkey_len If not NULL, a pointer to receive the key's length.
  * @return Returns `true` only if a key was parsed successfully.
  */
 NODISCARD
-static bool toml_key_parse( toml_file *toml, char **pkey, unsigned *pkey_col,
+static bool toml_key_parse( toml_file *toml, toml_key *pkey,
                             size_t *pkey_len ) {
   assert( toml != NULL );
   assert( pkey != NULL );
-  assert( pkey_col != NULL );
 
   static char const BARE_KEY_CHARS[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -597,8 +594,10 @@ static bool toml_key_parse( toml_file *toml, char **pkey, unsigned *pkey_col,
 
   switch ( c ) {
     case '"':
-      if ( !toml_string_parse( toml, pkey, &key_len ) )
+      if ( !toml_string_parse( toml, STATIC_CAST( char**, &pkey->name ),
+                               &key_len ) ) {
         return false;
+      }
       goto done;
     case '.':
       toml->error = TOML_ERR_KEY_INVALID;
@@ -647,11 +646,10 @@ static bool toml_key_parse( toml_file *toml, char **pkey, unsigned *pkey_col,
   }
 
   key_len = key_buf.len;
-  *pkey = strbuf_take( &key_buf );
+  pkey->name = strbuf_take( &key_buf );
 
 done:
-  if ( pkey_col != NULL )
-    *pkey_col = first_col;
+  pkey->loc.col = first_col;
   if ( pkey_len != NULL )
     *pkey_len = key_len;
   return true;
@@ -704,20 +702,19 @@ static ht_hash_val_t toml_key_value_hash( toml_key_value const *kv ) {
  * Parses a TOML _key_ `=` _value_.
  *
  * @param toml The toml_file to use.
- * @param kv The toml_key_value to receive the key and value.
+ * @param pkv The toml_key_value to receive the key and value.
  * @return Returns `true` only if both a key and value were successfully
  * parsed.
  */
 NODISCARD
-static bool toml_key_value_parse( toml_file *toml, toml_key_value *kv ) {
+static bool toml_key_value_parse( toml_file *toml, toml_key_value *pkv ) {
   assert( toml != NULL );
-  assert( kv != NULL );
+  assert( pkv != NULL );
 
-  char       *key_name = NULL;
-  toml_loc    key_loc = toml->loc;
+  toml_key    key = { .loc = toml->loc };
   toml_value  value = { 0 };
 
-  if ( !toml_key_parse( toml, &key_name, &key_loc.col, /*pkey_len=*/NULL ) )
+  if ( !toml_key_parse( toml, &key, /*pkey_len=*/NULL ) )
     return false;
 
   assert( !toml->in_key_value );
@@ -731,15 +728,10 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *kv ) {
 
   toml->in_key_value = false;
 
-  if ( ok ) {
-    *kv = (toml_key_value){
-      .key = { .name = key_name, .loc = key_loc },
-      .value = value
-    };
-  }
-  else {
-    free( key_name );
-  }
+  if ( ok )
+    *pkv = (toml_key_value){ .key = key, .value = value };
+  else
+    toml_key_cleanup( &key );
 
   return ok;
 }
@@ -873,24 +865,24 @@ error:
  * @note Assumes the caller has already parsed the `[`.
  */
 NODISCARD
-static bool toml_table_name_parse( toml_file *toml, char **pname,
-                                   unsigned *pname_col, size_t *pname_len ) {
+static bool toml_table_name_parse( toml_file *toml, toml_key *pkey,
+                                   size_t *pname_len ) {
   assert( toml != NULL );
-  assert( pname != NULL );
+  assert( pkey != NULL );
   assert( pname_len != NULL );
 
-  char *name = NULL;
+  toml_key key = { 0 };
 
   bool const ok =
     toml_space_skip( toml ) &&
-    toml_key_parse( toml, &name, pname_col, pname_len ) &&
+    toml_key_parse( toml, &key, pname_len ) &&
     toml_space_skip( toml ) &&
     toml_char_parse( toml, ']' );
 
   if ( ok )
-    *pname = name;
+    *pkey = key;
   else
-    free( name );
+    toml_key_cleanup( &key );
 
   return ok;
 }
@@ -1074,28 +1066,26 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
     return false;
   }
 
-  char     *table_name;
-  unsigned  table_name_col;
+  toml_key  table_key;
   size_t    table_name_len;
 
-  if ( !toml_table_name_parse( toml, &table_name, &table_name_col,
-                               &table_name_len ) ) {
+  if ( !toml_table_name_parse( toml, &table_key, &table_name_len ) )
     return false;
-  }
 
   toml_table_cleanup( table );
 
-  ht_insert_rv_t hti =
-    ht_insert( &toml->table_names, table_name, table_name_len + 1 );
+  ht_insert_rv_t hti = ht_insert(
+    &toml->table_names, CONST_CAST( char*, table_key.name ), table_name_len + 1
+  );
   if ( !hti.inserted ) {
-    free( table_name );
     toml->error = TOML_ERR_TABLE_DUPLICATE;
-    toml->loc.col = table_name_col;
+    toml->loc.col = table_key.loc.col;
+    toml_key_cleanup( &table_key );
     return false;
   }
 
   toml_table_init( table );
-  table->name = table_name;
+  table->name = table_key.name;
   table->loc = table_loc;
 
   for (;;) {
