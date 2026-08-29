@@ -104,7 +104,6 @@ static void fl_print_impl( fl_print_args const *flpa, char const *format,
   assert( flpa->tidy_file != NULL );
   assert( flpa->tidy_line > 0 );
   assert( flpa->what != NULL );
-  assert( flpa->what_color != NULL );
   assert( format != NULL );
 
   if ( flpa->is_libclang_message ) {
