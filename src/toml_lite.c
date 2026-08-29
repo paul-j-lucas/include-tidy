@@ -867,7 +867,7 @@ error:
  * @param pname A pointer to receive the table name.  The caller is responsible
  * for freeing it.
  * @param pname_col If not NULL, a pointer to receive the name's column.
- * @param pname_len If not NULL, a pointer to receive the name's length.
+ * @param pname_len A pointer to receive the name's length.
  * @return Returns `true` only if a table name was parsed successfully.
  *
  * @note Assumes the caller has already parsed the `[`.
@@ -877,6 +877,7 @@ static bool toml_table_name_parse( toml_file *toml, char **pname,
                                    unsigned *pname_col, size_t *pname_len ) {
   assert( toml != NULL );
   assert( pname != NULL );
+  assert( pname_len != NULL );
 
   char *name = NULL;
 
