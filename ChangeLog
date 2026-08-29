@@ -1,5 +1,16 @@
+2026-08-29  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c, test/Makefile.am, bad-associated-header.h,
+     bad-associated-header.toml, bad-associated-header.out,
+     bad-associated-header.test: Now checking that only .c/.cpp/etc files can
+     have an associated-header.
+   * print.c: Removed wrong assert().
+
 2026-08-28  Paul J. Lucas <paul@lucasmail.org>
 
+   * file_ext.c, file_ext.h: Don't need is_header member after all.
+   * src/Makefile.am, cli_options.c, include.c, util.h:
+     s/ext_lang_map/tidy_file_ext/
    * toml_lite.c, toml_lite.h: Now checking whether characters are invalid in
      TOML.
    * toml_lite.c: Eliminated "n" parameter from toml_col_inc() -- no longer
