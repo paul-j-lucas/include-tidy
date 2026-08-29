@@ -574,7 +574,7 @@ static void toml_key_cleanup( toml_key *key ) {
  * @param toml The toml_file to use.
  * @param pkey The string to receive the key.  The caller is responsible for
  * freeing it.
- * @param pkey_col If not NULL, a pointer to receive the key's column.
+ * @param pkey_col A pointer to receive the key's column.
  * @param pkey_len If not NULL, a pointer to receive the key's length.
  * @return Returns `true` only if a key was parsed successfully.
  */
@@ -583,6 +583,7 @@ static bool toml_key_parse( toml_file *toml, char **pkey, unsigned *pkey_col,
                             size_t *pkey_len ) {
   assert( toml != NULL );
   assert( pkey != NULL );
+  assert( pkey_col != NULL );
 
   static char const BARE_KEY_CHARS[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -712,14 +713,12 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *kv ) {
   assert( toml != NULL );
   assert( kv != NULL );
 
-  char           *key_name = NULL;
-  toml_loc const  key_loc = toml->loc;
-  toml_value      value = { 0 };
+  char       *key_name = NULL;
+  toml_loc    key_loc = toml->loc;
+  toml_value  value = { 0 };
 
-  if ( !toml_key_parse( toml, &key_name, /*pkey_col=*/NULL,
-                        /*pkey_len=*/NULL ) ) {
+  if ( !toml_key_parse( toml, &key_name, &key_loc.col, /*pkey_len=*/NULL ) )
     return false;
-  }
 
   assert( !toml->in_key_value );
   toml->in_key_value = true;
