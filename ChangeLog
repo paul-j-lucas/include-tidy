@@ -1,5 +1,7 @@
 2026-08-29  Paul J. Lucas <paul@lucasmail.org>
 
+   * toml_lite.c: toml_key_parse() now actually takes a toml_key*.
+   * toml_lite.c: pname_len must not be NULL.
    * config_file.c, bad-associated-header.out: Now using config_parse_fn_args.
    * toml_lite.c: Fixed 0-column key.
    * config_file.c, test/Makefile.am, bad-associated-header.h,
