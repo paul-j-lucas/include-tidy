@@ -31,6 +31,7 @@
 #include "cli_options.h"
 #include "color.h"
 #include "config_file.h"
+#include "file_ext.h"
 #include "hash_table.h"
 #include "ipath.h"
 #include "options.h"
@@ -39,7 +40,6 @@
 #include "red_black.h"
 #include "strbuf.h"
 #include "symbol.h"
-#include "tidy_util.h"
 #include "trans_unit.h"
 #include "util.h"
 
@@ -190,8 +190,8 @@ static tidy_include* get_associated_header( void ) {
     char const *const ext = path_ext( tidy_source_path );
     if ( ext == NULL || tolower( ext[0] ) != 'c' )
       return NULL;
-    char const *const lang = get_ext_language( ext );
-    if ( lang == NULL )
+    tidy_file_ext const *const file_ext = file_ext_find( ext );
+    if ( file_ext == NULL )
       return NULL;
 
     char path_buf[ PATH_MAX ];

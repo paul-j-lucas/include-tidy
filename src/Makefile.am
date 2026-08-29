@@ -57,6 +57,7 @@ include_tidy_SOURCES =	array.c array.h \
 			color.c color.h \
 			config_file.c config_file.h \
 			cxx.c cxx.h \
+			file_ext.c file_ext.h \
 			fnv1a.c fnv1a.h \
 			hash_table.c hash_table.h \
 			include.c include.h \
@@ -70,7 +71,6 @@ include_tidy_SOURCES =	array.c array.h \
 			red_black.c red_black.h \
 			strbuf.c strbuf.h \
 			symbol.c symbol.h \
-			tidy_util.c tidy_util.h \
 			toml_lite.c toml_lite.h \
 			trans_unit.c trans_unit.h \
 			typedef.c typedef.h \

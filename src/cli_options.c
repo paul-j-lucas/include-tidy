@@ -27,13 +27,13 @@
 #include "pjl_config.h"                 /* must go first */
 #include "cli_options.h"
 #include "array.h"
+#include "file_ext.h"
 #include "include-tidy.h"
 #include "ipath.h"
 #include "options.h"
 #include "path_util.h"
 #include "print.h"
 #include "strbuf.h"
-#include "tidy_util.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -485,8 +485,8 @@ static char const* get_source_path( int argc, char const *argv[] ) {
     char const *const ext = path_ext( argv_i );
     if ( ext == NULL )
       continue;
-    char const *const lang = get_ext_language( ext );
-    if ( lang != NULL )
+    tidy_file_ext const *const file_ext = file_ext_find( ext );
+    if ( file_ext != NULL )
       return argv_i;
   } // for
 
@@ -992,8 +992,11 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   char const *const source_ext =
     tidy_source_path != NULL ? path_ext( tidy_source_path ) : NULL;
   char const *source_lang = get_x_language( *pargc, *pargv );
-  if ( source_lang == NULL && source_ext != NULL )
-    source_lang = get_ext_language( source_ext );
+  if ( source_lang == NULL && source_ext != NULL ) {
+    tidy_file_ext const *const file_ext = file_ext_find( source_ext );
+    if ( file_ext != NULL )
+      source_lang = file_ext->lang;
+  }
   if ( compiler_path != NULL && source_lang != NULL )
     add_compiler_include_paths( pargc, pargv, compiler_path, source_lang );
 
@@ -1169,8 +1172,8 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       EPRINTF( "\"%s\": unknown", source_ext );
     EPUTS( " extension; must be one of " );
     bool comma = false;
-    for ( ext_lang_map const *m = EXT_LANG_MAP; m->ext != NULL; ++m )
-      EPRINTF( true_or_set( &comma ) ? ", %s" : "%s", m->ext );
+    FOREACH_FILE_EXT( file_ext )
+      EPRINTF( true_or_set( &comma ) ? ", %s" : "%s", file_ext->ext );
     EPUTS( "; or use -xc[++]\n" );
     exit( EX_USAGE );
   }

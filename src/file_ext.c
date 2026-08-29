@@ -1,6 +1,6 @@
 /*
 **      include-tidy -- #include tidier
-**      src/tidy_util.c
+**      src/file_ext.c
 **
 **      Copyright (C) 2026  Paul J. Lucas
 **
@@ -20,61 +20,67 @@
 
 /**
  * @file
- * Defines miscellanous **include-tidy**-specific constants and functions.
+ * Defines constsnts and functions for supported C/C++ filename extensions.
  */
 
 // local
 #include "pjl_config.h"                 /* must go first */
-#include "tidy_util.h"
+#include "file_ext.h"
+#include "util.h"
 
 /// @cond DOXYGEN_IGNORE
 
 // standard
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <strings.h>
 
 /// @endcond
 
 /**
- * @addtogroup tidy-util-group
+ * @addtogroup tidy-file-ext-group
  * @{
  */
 
-////////// extern constants ///////////////////////////////////////////////////
+////////// local constants ////////////////////////////////////////////////////
 
-/// @cond DOXYGEN_IGNORE
-/// Otherwise Doxygen generates two entries.
+static char const LANG_C[]    = "c";    ///< C.
+static char const LANG_CXX[]  = "c++";  ///< C++.
 
-ext_lang_map const EXT_LANG_MAP[] = {
-  { "c",   "c"   },
-  { "c++", "c++" },
-  { "cc",  "c++" },
-  { "cp",  "c++" },
-  { "cpp", "c++" },
-  { "cxx", "c++" },
-  { "h",   "c"   },
-  { "h++", "c++" },
-  { "hh",  "c++" },
-  { "hp",  "c++" },
-  { "hpp", "c++" },
-  { "hxx", "c++" },
-  { NULL,  NULL  }
+/**
+ * Array of all common C/C++ filename extensions.
+ */
+static tidy_file_ext const FILE_EXT[] = {
+  { "c",   false, LANG_C   },
+  { "c++", false, LANG_CXX },
+  { "cc",  false, LANG_CXX },
+  { "cp",  false, LANG_CXX },
+  { "cpp", false, LANG_CXX },
+  { "cxx", false, LANG_CXX },
+  { "h",   true,  LANG_C   },
+  { "h++", true,  LANG_CXX },
+  { "hh",  true,  LANG_CXX },
+  { "hp",  true,  LANG_CXX },
+  { "hpp", true,  LANG_CXX },
+  { "hxx", true,  LANG_CXX },
 };
-
-/// @endcond
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-char const* get_ext_language( char const *ext ) {
+tidy_file_ext const* file_ext_find( char const *ext ) {
   assert( ext != NULL );
 
-  for ( ext_lang_map const *m = EXT_LANG_MAP; m->ext != NULL; ++m ) {
-    if ( strcasecmp( ext, m->ext ) == 0 )
-      return m->lang;
+  FOREACH_FILE_EXT( fe ) {
+    if ( strcasecmp( ext, fe->ext ) == 0 )
+      return fe;
   } // for
 
   return NULL;
+}
+
+tidy_file_ext const* file_ext_next( tidy_file_ext const *fe ) {
+  return ARRAY_NEXT( FILE_EXT, fe );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
