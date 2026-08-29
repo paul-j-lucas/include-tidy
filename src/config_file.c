@@ -111,9 +111,9 @@ typedef struct  symbol_includes   symbol_includes;
  * @param table The current toml_table.
  * @param value The toml_value to parse.
  */
-typedef void (*config_parse_fn_t)( char const *config_path,
-                                   toml_table const *table,
-                                   toml_value const *value );
+typedef void (*config_parse_fn)( char const *config_path,
+                                 toml_table const *table,
+                                 toml_value const *value );
 
 ////////// structs ////////////////////////////////////////////////////////////
 
@@ -123,7 +123,7 @@ typedef void (*config_parse_fn_t)( char const *config_path,
 struct config_key {
   char const       *name;               ///< Key name.
   config_table_kind table_kinds;        ///< Table kind(s) allowed in.
-  config_parse_fn_t parse_fn;           ///< Value parsing function.
+  config_parse_fn   parse_fn;           ///< Value parsing function.
 };
 
 /**
@@ -432,7 +432,7 @@ static void string_or_string_array_parse( char const *config_path,
                                           toml_table const *table,
                                           char const *key_name,
                                           toml_value const *value,
-                                          config_parse_fn_t parse_fn ) {
+                                          config_parse_fn parse_fn ) {
   assert( config_path != NULL );
   assert( table != NULL );
   assert( value != NULL );
