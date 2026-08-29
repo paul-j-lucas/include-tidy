@@ -1,0 +1,2 @@
+[bad-associated-header.h]
+associated-header = "foo.h"

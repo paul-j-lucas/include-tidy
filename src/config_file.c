@@ -597,6 +597,17 @@ static void associated_header_parse( char const *config_path,
 
   if ( strcmp( table->name, tidy_source_path ) != 0 )
     return;
+
+  char const *const ext = path_ext( tidy_source_path );
+  if ( ext != NULL && ext[0] != 'c' ) {
+    print_file_error(
+      config_path, value->loc.line, value->loc.col,
+      "\"%s\": only non-header files may have an associated header\n",
+      table->name
+    );
+    exit( EX_CONFIG );
+  }
+
   char const *const string_value =
     string_value_parse( config_path, "associated-header", value );
   tidy_associated_header_rel_path = check_strdup( string_value );

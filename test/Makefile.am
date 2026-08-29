@@ -42,6 +42,7 @@ TESTS+=	tests/align-column.test \
 
 # Other tests
 TESTS+=	tests/associated-header.test \
+	tests/bad-associated-header.test \
 	tests/duplicate.test
 
 # Real-world C tests.
