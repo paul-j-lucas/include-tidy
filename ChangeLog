@@ -1,5 +1,7 @@
 2026-08-29  Paul J. Lucas <paul@lucasmail.org>
 
+   * config_file.c, bad-associated-header.out: Now using config_parse_fn_args.
+   * toml_lite.c: Fixed 0-column key.
    * config_file.c, test/Makefile.am, bad-associated-header.h,
      bad-associated-header.toml, bad-associated-header.out,
      bad-associated-header.test: Now checking that only .c/.cpp/etc files can
