@@ -74,7 +74,6 @@ static char const *const TOML_ERROR_MSGS[] = {
   [ TOML_ERR_INVALID_STRING   ] = "invalid string",
   [ TOML_ERR_UNEX_CHAR        ] = "unexpected character",
   [ TOML_ERR_UNEX_EOF         ] = "unexpected end of file",
-  [ TOML_ERR_UNEX_NEWLINE     ] = "unexpected newline",
   [ TOML_ERR_UNEX_VALUE       ] = "unexpected value",
 };
 
@@ -360,8 +359,8 @@ static bool toml_char_parse( toml_file *toml, char want_c ) {
       break;
     case '\n':
     case '\r':
-      toml->error = TOML_ERR_UNEX_NEWLINE;
-      break;
+      toml->error_msg = "unexpected newline";
+      FALLTHROUGH;
     default:
       toml->error = TOML_ERR_UNEX_CHAR;
       break;
@@ -535,8 +534,10 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
         break;
     } // switch
 
-    if ( buf_len + 1 == sizeof buf - 1 )
+    if ( buf_len + 1 == sizeof buf - 1 ) {
+      toml->error_msg = "integer had too many digits";
       goto error;
+    }
     buf[ buf_len++ ] = STATIC_CAST( char, c );
   } // for
 
@@ -766,7 +767,8 @@ static bool toml_space_skip( toml_file *toml ) {
   for ( int c; (c = toml_getc( toml )) != EOF; ) {
     if ( c == '\n' ) {
       if ( toml->in_key_value && toml->array_depth == 0 ) {
-        toml->error = TOML_ERR_UNEX_NEWLINE;
+        toml->error = TOML_ERR_UNEX_CHAR;
+        toml->error_msg = "unexpected newline";
         return false;
       }
     }
