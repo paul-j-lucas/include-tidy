@@ -641,14 +641,15 @@ NODISCARD
 static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
   assert( path_buf != NULL );
 
-  static unsigned case_num = 0;
+  static unsigned case_num = 1;
 
   FILE *config_file = NULL;
   char const *home = NULL;
 
-  switch ( ++case_num ) {
+  switch ( case_num ) {
     case 1:
       // Try --config/-c command-line option.
+      ++case_num;
       config_file = config_open( config_path, CONFIG_OPT_ERROR_IS_FATAL );
       if ( config_file != NULL ) {
         strbuf_reset( path_buf );
@@ -659,6 +660,7 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
 
     case 2:
       // Try $PWD/include-tidy.toml.
+      ++case_num;
       strbuf_reset( path_buf );
       size_t cwd_path_len;
       char const *const cwd_path = path_cwd( &cwd_path_len );
@@ -672,6 +674,7 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
     case 3:
       // Try $XDG_CONFIG_HOME/include-tidy/config.toml or
       // $HOME/.config/include-tidy/config.toml.
+      ++case_num;
       if ( (home = home_dir()) != NULL ) {
         strbuf_reset( path_buf );
         char const *const config_dir =
@@ -695,9 +698,10 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
       }
       FALLTHROUGH;
 
-    case 4:;
+    case 4:
       // Try $XDG_CONFIG_DIRS/include-tidy/config.toml or
       // /etc/xdg/include-tidy/config.toml.
+      ++case_num;
       char const *config_dirs = null_if_empty( getenv( "XDG_CONFIG_DIRS" ) );
       if ( config_dirs == NULL )
         config_dirs = "/etc/xdg";       // LCOV_EXCL_LINE
