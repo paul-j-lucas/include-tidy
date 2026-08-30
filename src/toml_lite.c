@@ -254,17 +254,16 @@ static void toml_array_cleanup( toml_array *array ) {
 /**
  * Parses a TOML array.
  *
- * @remarks Assumes the `'['` has already been parsed and is _not_ in the input
- * stream.
+ * @note Assumes the caller has already parsed the `[`.
  *
  * @param toml The toml_file to use.
- * @param pa The toml_array to parse into.
+ * @param rv_a The toml_array to parse into.
  * @return Returns `true` only if all values were parsed successfully.
  */
 NODISCARD
-static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
+static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
   assert( toml != NULL );
-  assert( pa != NULL );
+  assert( rv_a != NULL );
 
   unsigned    array_cap = TOML_ARRAY_CAP_MIN;
   toml_array  array = { .values = MALLOC( toml_value, array_cap ) };
@@ -317,7 +316,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *pa ) {
 done:
   --toml->array_depth;
   if ( ok )
-    *pa = array;
+    *rv_a = array;
   else
     toml_array_cleanup( &array );
   return ok;
@@ -327,13 +326,13 @@ done:
  * Parses a TOML Boolean value.
  *
  * @param toml The toml_file to use.
- * @param pb The Boolean to parse into.
+ * @param rv_b The `bool` to parse into.
  * @return Returns `true` only upon success.
  */
 NODISCARD
-static bool toml_bool_parse( toml_file *toml, bool *pb ) {
+static bool toml_bool_parse( toml_file *toml, bool *rv_b ) {
   assert( toml != NULL );
-  assert( pb != NULL );
+  assert( rv_b != NULL );
 
   toml_loc const start_loc = toml->loc;
 
@@ -346,12 +345,12 @@ static bool toml_bool_parse( toml_file *toml, bool *pb ) {
       goto error;
   } // for
 
-  // Ensure it's not part of a longer identifier (e.g., "truex").
+  // Ensure it's not part of a longer identifier (e.g., "truest").
   c = toml_peekc( toml );
   if ( c != EOF && is_ident( c ) )
     goto error;
 
-  *pb = is_t;
+  *rv_b = is_t;
   return true;
 
 error:
@@ -451,13 +450,13 @@ static int toml_getc( toml_file *toml ) {
  * Parses a TOML integer.
  *
  * @param toml The toml_file to use.
- * @param pi A pointer to receive the integer.
+ * @param rv_i The integer to parse into.
  * @return Returns `true` only if an integer was parsed successfully.
  */
 NODISCARD
-static bool toml_int_parse( toml_file *toml, long *pi ) {
+static bool toml_int_parse( toml_file *toml, long *rv_i ) {
   assert( toml != NULL );
-  assert( pi != NULL );
+  assert( rv_i != NULL );
 
   int     base = 10;
   char    buf[ MAX_DEC_INT_DIGITS( long ) + 1/*'\0'*/ ];
@@ -495,7 +494,7 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
           toml_ungetc( toml, c );
           FALLTHROUGH;
         case EOF:
-          *pi = 0;
+          *rv_i = 0;
           return true;
 
         default:
@@ -569,7 +568,7 @@ done:
   errno = 0;
   long const value = strtol( buf, /*endptr=*/NULL, base );
   if ( errno == 0 ) {
-    *pi = value;
+    *rv_i = value;
     return true;
   }
 
@@ -594,15 +593,15 @@ static void toml_key_cleanup( toml_key *key ) {
  * Parses a TOML key.
  *
  * @param toml The toml_file to use.
- * @param pkey A pointer to receive the key.
- * @param pkey_len If not NULL, a pointer to receive the key's length.
+ * @param rv_key The key to parse into.
+ * @param rv_key_len If not NULL, receives the key's length.
  * @return Returns `true` only if a key was parsed successfully.
  */
 NODISCARD
-static bool toml_key_parse( toml_file *toml, toml_key *pkey,
-                            size_t *pkey_len ) {
+static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
+                            size_t *rv_key_len ) {
   assert( toml != NULL );
-  assert( pkey != NULL );
+  assert( rv_key != NULL );
 
   static char const BARE_KEY_CHARS[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -665,10 +664,10 @@ static bool toml_key_parse( toml_file *toml, toml_key *pkey,
   }
 
 done:
-  if ( pkey_len != NULL )
-    *pkey_len = key_buf.len;
-  pkey->name = strbuf_take( &key_buf );
-  pkey->loc.col = first_col;
+  if ( rv_key_len != NULL )
+    *rv_key_len = key_buf.len;
+  rv_key->name = strbuf_take( &key_buf );
+  rv_key->loc.col = first_col;
   return true;
 
 error:
@@ -719,19 +718,19 @@ static ht_hash_val_t toml_key_value_hash( toml_key_value const *kv ) {
  * Parses a TOML _key_ `=` _value_.
  *
  * @param toml The toml_file to use.
- * @param pkv The toml_key_value to receive the key and value.
- * @return Returns `true` only if both a key and value were successfully
- * parsed.
+ * @param rv_kv The toml_key_value to parse into.
+ * @return Returns `true` only if both a key and value were parsed
+ * successfully.
  */
 NODISCARD
-static bool toml_key_value_parse( toml_file *toml, toml_key_value *pkv ) {
+static bool toml_key_value_parse( toml_file *toml, toml_key_value *rv_kv ) {
   assert( toml != NULL );
-  assert( pkv != NULL );
+  assert( rv_kv != NULL );
 
   toml_key    key = { .loc = toml->loc };
   toml_value  value = { 0 };
 
-  if ( !toml_key_parse( toml, &key, /*pkey_len=*/NULL ) )
+  if ( !toml_key_parse( toml, &key, /*rv_key_len=*/NULL ) )
     return false;
 
   assert( !toml->in_key_value );
@@ -746,7 +745,7 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *pkv ) {
   toml->in_key_value = false;
 
   if ( ok )
-    *pkv = (toml_key_value){ .key = key, .value = value };
+    *rv_kv = (toml_key_value){ .key = key, .value = value };
   else
     toml_key_cleanup( &key );
 
@@ -807,16 +806,16 @@ static bool toml_space_skip( toml_file *toml ) {
 /**
  * Parses a TOML string.
  *
- * @param toml The toml_file to use.
- * @param psbuf A pointer to a strbuf_t to receive the string.
- * @return Returns `true` only if a string was parsed successfully.
- *
  * @note Assumes the caller has already parsed the `"`.
+ *
+ * @param toml The toml_file to use.
+ * @param rv_sbuf The strbuf_t to parse the string into.
+ * @return Returns `true` only if a string was parsed successfully.
  */
 NODISCARD
-static bool toml_string_parse( toml_file *toml, strbuf_t *psbuf ) {
+static bool toml_string_parse( toml_file *toml, strbuf_t *rv_sbuf ) {
   assert( toml != NULL );
-  assert( psbuf != NULL );
+  assert( rv_sbuf != NULL );
 
   strbuf_t sbuf;
   strbuf_init( &sbuf );
@@ -857,7 +856,7 @@ static bool toml_string_parse( toml_file *toml, strbuf_t *psbuf ) {
   } // for
 
 done:
-  *psbuf = sbuf;
+  *rv_sbuf = sbuf;
   return true;
 
 eof:
@@ -870,30 +869,30 @@ error:
 /**
  * Parses a table header.
  *
- * @param toml The toml_file to use.
- * @param pkey A pointer to receive the table's key.
- * @param pname_len A pointer to receive the name's length.
- * @return Returns `true` only if a table name was parsed successfully.
- *
  * @note Assumes the caller has already parsed the `[`.
+ *
+ * @param toml The toml_file to use.
+ * @param rv_key The toml_key to parse into.
+ * @param rv_name_len Receives the table name's length.
+ * @return Returns `true` only if a table name was parsed successfully.
  */
 NODISCARD
-static bool toml_table_header_parse( toml_file *toml, toml_key *pkey,
-                                     size_t *pname_len ) {
+static bool toml_table_header_parse( toml_file *toml, toml_key *rv_key,
+                                     size_t *rv_name_len ) {
   assert( toml != NULL );
-  assert( pkey != NULL );
-  assert( pname_len != NULL );
+  assert( rv_key != NULL );
+  assert( rv_name_len != NULL );
 
   toml_key key = { 0 };
 
   bool const ok =
     toml_space_skip( toml ) &&
-    toml_key_parse( toml, &key, pname_len ) &&
+    toml_key_parse( toml, &key, rv_name_len ) &&
     toml_space_skip( toml ) &&
     toml_char_parse( toml, ']' );
 
   if ( ok )
-    *pkey = key;
+    *rv_key = key;
   else
     toml_key_cleanup( &key );
 
@@ -903,21 +902,21 @@ static bool toml_table_header_parse( toml_file *toml, toml_key *pkey,
 /**
  * Cleans-up a toml_value.
  *
- * @param pv The toml_value to clean-up.  If NULL, does nothing.
+ * @param value The toml_value to clean-up.  If NULL, does nothing.
  */
-static void toml_value_cleanup( toml_value *pv ) {
-  if ( pv == NULL )
+static void toml_value_cleanup( toml_value *value ) {
+  if ( value == NULL )
     return;
-  switch ( pv->type ) {
+  switch ( value->type ) {
     case TOML_ARRAY:
-      toml_array_cleanup( &pv->a );
+      toml_array_cleanup( &value->a );
       break;
     case TOML_BOOL:
     case TOML_INT:
       // nothing to do
       break;
     case TOML_STRING:
-      free( pv->s );
+      free( value->s );
       break;
   } // switch
 }
@@ -926,13 +925,13 @@ static void toml_value_cleanup( toml_value *pv ) {
  * Parses a TOML value.
  *
  * @param toml The toml_file to use.
- * @param pv The toml_value to receive into.
+ * @param rv_value The toml_value to parse into.
  * @return Returns `true` only if the value parsed successfully.
  */
 NODISCARD
-static bool toml_value_parse( toml_file *toml, toml_value *pv ) {
+static bool toml_value_parse( toml_file *toml, toml_value *rv_value ) {
   assert( toml != NULL );
-  assert( pv != NULL );
+  assert( rv_value != NULL );
 
   for (;;) {
     int const c = toml_getc( toml );
@@ -943,7 +942,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *pv ) {
         strbuf_init( &sbuf );
         if ( !toml_string_parse( toml, &sbuf ) )
           return false;
-        *pv = (toml_value){
+        *rv_value = (toml_value){
           .type = TOML_STRING,
           .loc = value_loc,
           .s = strbuf_take( &sbuf )
@@ -970,7 +969,11 @@ static bool toml_value_parse( toml_file *toml, toml_value *pv ) {
         long i;
         if ( !toml_int_parse( toml, &i ) )
           return false;
-        *pv = (toml_value){ .type = TOML_INT, .loc = value_loc, .i = i };
+        *rv_value = (toml_value){
+          .type = TOML_INT,
+          .loc = value_loc,
+          .i = i
+        };
         return true;
 
       case 'f':
@@ -979,14 +982,22 @@ static bool toml_value_parse( toml_file *toml, toml_value *pv ) {
         bool b;
         if ( !toml_bool_parse( toml, &b ) )
           return false;
-        *pv = (toml_value){ .type = TOML_BOOL, .loc = value_loc, .b = b };
+        *rv_value = (toml_value){
+          .type = TOML_BOOL,
+          .loc = value_loc,
+          .b = b
+        };
         return true;
 
       case '[':;
-        toml_array array;
-        if ( !toml_array_parse( toml, &array ) )
+        toml_array a;
+        if ( !toml_array_parse( toml, &a ) )
           return false;
-        *pv = (toml_value){ .type = TOML_ARRAY, .loc = value_loc, .a = array };
+        *rv_value = (toml_value){
+          .type = TOML_ARRAY,
+          .loc = value_loc,
+          .a = a
+        };
         return true;
 
       default:
