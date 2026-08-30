@@ -642,9 +642,7 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
   assert( path_buf != NULL );
 
   static unsigned case_num = 1;
-
   FILE *config_file = NULL;
-  char const *home = NULL;
 
   switch ( case_num ) {
     case 1:
@@ -675,7 +673,8 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
       // Try $XDG_CONFIG_HOME/include-tidy/config.toml or
       // $HOME/.config/include-tidy/config.toml.
       ++case_num;
-      if ( (home = home_dir()) != NULL ) {
+      char const *const home = home_dir();
+      if ( home != NULL ) {
         strbuf_reset( path_buf );
         char const *const config_dir =
           null_if_empty( getenv( "XDG_CONFIG_HOME" ) );
