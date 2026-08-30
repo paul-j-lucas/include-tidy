@@ -83,7 +83,7 @@ static char const *const TOML_ERROR_MSGS[] = {
 
 NODISCARD
 static bool toml_space_skip( toml_file* ),
-            toml_string_parse( toml_file*, char**, size_t* ),
+            toml_string_parse( toml_file*, strbuf_t* ),
             toml_value_parse( toml_file*, toml_value* );
 
 NODISCARD
@@ -591,14 +591,14 @@ static bool toml_key_parse( toml_file *toml, toml_key *pkey,
 
   int             c = toml_getc( toml );
   unsigned const  first_col = toml->loc.col;
-  size_t          key_len;
+  strbuf_t        key_buf;
+
+  strbuf_init( &key_buf );
 
   switch ( c ) {
     case '"':
-      if ( !toml_string_parse( toml, STATIC_CAST( char**, &pkey->name ),
-                               &key_len ) ) {
+      if ( !toml_string_parse( toml, &key_buf ) )
         return false;
-      }
       goto done;
     case '.':
       toml->error = TOML_ERR_KEY_INVALID;
@@ -608,10 +608,7 @@ static bool toml_key_parse( toml_file *toml, toml_key *pkey,
       return false;
   } // switch
 
-  strbuf_t  key_buf;
-  char      c_prev = '\0';
-
-  strbuf_init( &key_buf );
+  char c_prev = '\0';
 
   do {
     if ( is_toml_space( c ) ) {
@@ -646,13 +643,11 @@ static bool toml_key_parse( toml_file *toml, toml_key *pkey,
     goto error;
   }
 
-  key_len = key_buf.len;
-  pkey->name = strbuf_take( &key_buf );
-
 done:
-  pkey->loc.col = first_col;
   if ( pkey_len != NULL )
-    *pkey_len = key_len;
+    *pkey_len = key_buf.len;
+  pkey->name = strbuf_take( &key_buf );
+  pkey->loc.col = first_col;
   return true;
 
 error:
@@ -791,16 +786,15 @@ static bool toml_space_skip( toml_file *toml ) {
  * Parses a TOML string.
  *
  * @param toml The toml_file to use.
- * @param ps A pointer to receive the string.
- * @param ps_len If not NULL, a pointer to receive the strings's length.
+ * @param psbuf A pointer to a strbuf_t to receive the string.
  * @return Returns `true` only if a string was parsed successfully.
  *
  * @note Assumes the caller has already parsed the `"`.
  */
 NODISCARD
-static bool toml_string_parse( toml_file *toml, char **ps, size_t *ps_len ) {
+static bool toml_string_parse( toml_file *toml, strbuf_t *psbuf ) {
   assert( toml != NULL );
-  assert( ps != NULL );
+  assert( psbuf != NULL );
 
   strbuf_t sbuf;
   strbuf_init( &sbuf );
@@ -841,9 +835,7 @@ static bool toml_string_parse( toml_file *toml, char **ps, size_t *ps_len ) {
   } // for
 
 done:
-  if ( ps_len != NULL )
-    *ps_len = sbuf.len;
-  *ps = strbuf_take( &sbuf );
+  *psbuf = sbuf;
   return true;
 
 eof:
@@ -925,10 +917,15 @@ static bool toml_value_parse( toml_file *toml, toml_value *pv ) {
     toml_loc const value_loc = toml->loc;
     switch ( c ) {
       case '"':;
-        char *s;
-        if ( !toml_string_parse( toml, &s, /*ps_len=*/NULL ) )
+        strbuf_t sbuf;
+        strbuf_init( &sbuf );
+        if ( !toml_string_parse( toml, &sbuf ) )
           return false;
-        *pv = (toml_value){ .type = TOML_STRING, .loc = value_loc, .s = s };
+        *pv = (toml_value){
+          .type = TOML_STRING,
+          .loc = value_loc,
+          .s = strbuf_take( &sbuf )
+        };
         return true;
 
       case '#':
