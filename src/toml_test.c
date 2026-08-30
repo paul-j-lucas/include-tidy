@@ -188,7 +188,7 @@ static bool test_key_duplicate( void ) {
   TEST_FUNC_END();
 }
 
-static bool test_table_names_duplicate( void ) {
+static bool test_table_name_duplicate( void ) {
   TEST_FUNC_BEGIN();
 
   toml_test test;
@@ -210,7 +210,7 @@ static bool test_table_names_duplicate( void ) {
   TEST_FUNC_END();
 }
 
-static bool test_table_names_valid( void ) {
+static bool test_table_name_valid( void ) {
   TEST_FUNC_BEGIN();
 
   static char const *const VALID_TABLE_NAMES[] = {
@@ -503,8 +503,8 @@ int main( int argc, char const *const argv[] ) {
     test_key_bad_trailing_dot();
     test_key_duplicate();
 
-    test_table_names_duplicate();
-    test_table_names_valid();
+    test_table_name_duplicate();
+    test_table_name_valid();
 
     test_value_array();
     test_value_array_bad_comma();
