@@ -52,7 +52,7 @@ typedef struct tidy_file_ext tidy_file_ext;
 ////////// structs ////////////////////////////////////////////////////////////
 
 /**
- * Information about supported C/C++ source file extensions.
+ * A source file extension and the language it corresponds to.
  */
 struct tidy_file_ext {
   char const *ext;                      ///< Extension (without the `'.'`).
