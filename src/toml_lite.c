@@ -854,20 +854,18 @@ error:
 }
 
 /**
- * Parses a table name.
+ * Parses a table header.
  *
  * @param toml The toml_file to use.
- * @param pname A pointer to receive the table name.  The caller is responsible
- * for freeing it.
- * @param pname_col If not NULL, a pointer to receive the name's column.
+ * @param pkey A pointer to receive the table's key.
  * @param pname_len A pointer to receive the name's length.
  * @return Returns `true` only if a table name was parsed successfully.
  *
  * @note Assumes the caller has already parsed the `[`.
  */
 NODISCARD
-static bool toml_table_name_parse( toml_file *toml, toml_key *pkey,
-                                   size_t *pname_len ) {
+static bool toml_table_header_parse( toml_file *toml, toml_key *pkey,
+                                     size_t *pname_len ) {
   assert( toml != NULL );
   assert( pkey != NULL );
   assert( pname_len != NULL );
@@ -1068,7 +1066,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   toml_key  table_key;
   size_t    table_name_len;
 
-  if ( !toml_table_name_parse( toml, &table_key, &table_name_len ) )
+  if ( !toml_table_header_parse( toml, &table_key, &table_name_len ) )
     return false;
 
   toml_table_cleanup( table );
