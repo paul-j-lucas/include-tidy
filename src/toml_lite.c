@@ -201,6 +201,9 @@ static inline void toml_newline( toml_file *toml ) {
 /**
  * Ungets \a c.
  *
+ * @remarks Storing the "ungotten" character ourselves is significantly faster
+ * than calling **ungetc**(3).
+ *
  * @param toml The toml_file to unget \a c.
  * @param c The character to unget.
  *
