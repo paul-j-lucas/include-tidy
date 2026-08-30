@@ -68,12 +68,12 @@ char const* path_basename( char const *path_name );
 /**
  * Gets the absolute path of the current working directory.
  *
- * @param plen If not NULL, the length of the path is put here.
+ * @param rv_len If not NULL, the length of the path is put here.
  * @return Returns the absolute path of the current working directory.  The
  * path is guaranteed to end with `'/'`.
  */
 NODISCARD
-char const* path_cwd( size_t *plen );
+char const* path_cwd( size_t *rv_len );
 
 /**
  * Gets whether \a path ends with \a end_path.

@@ -390,21 +390,21 @@ static CXFile get_symbol_file( CXCursor sym_csr,
  * @param cursor The cursor to visit.
  * @param parent The parent cursor of \a cursor.
  * @param dec_csr The declaration cursor of \a cursor.
- * @param pdef_csr A pointer to receieve the definition cursor of \a cursor
+ * @param rv_def_csr A pointer to receieve the definition cursor of \a cursor
  * only if the definition is needed.
  * @return Returns `true` only if the definition is needed.
  */
 NODISCARD
 static bool is_symbol_definition_needed( CXCursor cursor, CXCursor parent,
                                          CXCursor dec_csr,
-                                         CXCursor *pdef_csr ) {
-  assert( pdef_csr != NULL );
+                                         CXCursor *rv_def_csr ) {
+  assert( rv_def_csr != NULL );
 
   CXCursor cls_csr;
 
   if ( tidy_is_cxx &&
        tidy_Cursor_isOutOfLineDefinition( cursor, parent, &cls_csr ) ) {
-    *pdef_csr = clang_getCursorDefinition( cls_csr );
+    *rv_def_csr = clang_getCursorDefinition( cls_csr );
     return true;
   }
 
@@ -451,7 +451,7 @@ static bool is_symbol_definition_needed( CXCursor cursor, CXCursor parent,
   if ( tidy_Cursor_isBeforeInTranslationUnit( def_csr, dec_csr ) )
     return false;
 
-  *pdef_csr = def_csr;
+  *rv_def_csr = def_csr;
   return true;
 }
 

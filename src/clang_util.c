@@ -399,13 +399,13 @@ static CXCursor tidy_Cursor_skipLinkageSpec( CXCursor cursor ) {
  * it's not a reference rather than the null cursor.
  *
  * @param cursor The cursor to get the reference of.
- * @param pkind If not NULL, receives the (referenced) kind of cursor.
+ * @param rv_kind If not NULL, receives the (referenced) kind of cursor.
  * @return Returns the cursor referenced by \a cursor or \a cursor if it's not
  * a reference.
  */
 NODISCARD
 static CXCursor tidy_getCursorReferenced( CXCursor cursor,
-                                          enum CXCursorKind *pkind ) {
+                                          enum CXCursorKind *rv_kind ) {
   enum CXCursorKind kind = clang_getCursorKind( cursor );
   switch ( kind ) {
     case CXCursor_DeclRefExpr:
@@ -421,8 +421,8 @@ static CXCursor tidy_getCursorReferenced( CXCursor cursor,
       /* suppress warning */;
   } // switch
 
-  if ( pkind != NULL )
-    *pkind = kind;
+  if ( rv_kind != NULL )
+    *rv_kind = kind;
   return cursor;
 }
 
@@ -658,7 +658,7 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_csr ) {
 }
 
 bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
-                                                CXCursor *pcls_csr ) {
+                                                CXCursor *rv_cls_csr ) {
   expr_csr = tidy_Cursor_getVarInit( expr_csr );
   expr_csr = tidy_Cursor_skipUnexposedDown( expr_csr );
 
@@ -691,13 +691,13 @@ bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
   if ( !tidy_Cursor_isInheritedFrom( obj_cls_csr, mbr_fn_cls_csr ) )
     return false;
 
-  if ( pcls_csr != NULL )
-    *pcls_csr = mbr_fn_cls_csr;
+  if ( rv_cls_csr != NULL )
+    *rv_cls_csr = mbr_fn_cls_csr;
   return true;
 }
 
 bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
-                                        CXCursor *pcls_csr ) {
+                                        CXCursor *rv_cls_csr ) {
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   switch ( kind ) {
     case CXCursor_Constructor:
@@ -708,8 +708,8 @@ bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
       if ( clang_isCursorDefinition( cursor ) ) {
         CXCursor const cls_csr = clang_getCursorSemanticParent( cursor );
         bool const is_out_of_line = !clang_equalCursors( parent, cls_csr );
-        if ( is_out_of_line && pcls_csr != NULL )
-          *pcls_csr = cls_csr;
+        if ( is_out_of_line && rv_cls_csr != NULL )
+          *rv_cls_csr = cls_csr;
         return is_out_of_line;
       }
       break;

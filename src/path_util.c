@@ -58,7 +58,7 @@ char const* path_basename( char const *path_name ) {
   return path_name;
 }
 
-char const* path_cwd( size_t *plen ) {
+char const* path_cwd( size_t *rv_len ) {
   static char   cwd_path_buf[ PATH_MAX ];
   static size_t cwd_path_len;
 
@@ -74,8 +74,8 @@ char const* path_cwd( size_t *plen ) {
       strcpy( cwd_path_buf + cwd_path_len++, "/" );
   }
 
-  if ( plen != NULL )
-    *plen = cwd_path_len;
+  if ( rv_len != NULL )
+    *rv_len = cwd_path_len;
   return cwd_path_buf;
 }
 
