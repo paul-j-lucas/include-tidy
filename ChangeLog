@@ -1,3 +1,10 @@
+2026-08-30  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.c, toml_lite.h: Added error message constants.
+   * toml_lite.c: Eliminated TOML_ERR_UNEX_NEWLINE.
+   * toml_lite.c, toml_lite.h: Eliminated TOML_ERR_INT_OUT_OF_RANGE.
+   * toml_lite.c, toml_test.c: Fixed duplicate key error location.
+
 2026-08-29  Paul J. Lucas <paul@lucasmail.org>
 
    * toml_lite.c: toml_string_parse() now takes a strbuf_t*.
