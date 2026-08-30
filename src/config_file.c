@@ -673,27 +673,27 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
       // Try $XDG_CONFIG_HOME/include-tidy/config.toml or
       // $HOME/.config/include-tidy/config.toml.
       ++case_num;
-      char const *const home = home_dir();
-      if ( home != NULL ) {
-        strbuf_reset( path_buf );
-        char const *const config_dir =
-          null_if_empty( getenv( "XDG_CONFIG_HOME" ) );
-        if ( config_dir != NULL ) {
-          strbuf_puts( path_buf, config_dir );
-        }
-        else if ( home != NULL ) {
+      strbuf_reset( path_buf );
+      char const *const config_home =
+        null_if_empty( getenv( "XDG_CONFIG_HOME" ) );
+      if ( config_home != NULL ) {
+        strbuf_puts( path_buf, config_home );
+      }
+      else {
+        char const *const home = home_dir();
+        if ( home != NULL ) {
           // LCOV_EXCL_START
           strbuf_puts( path_buf, home );
           strbuf_paths( path_buf, ".config" );
           // LCOV_EXCL_STOP
         }
-        if ( path_buf->len > 0 ) {
-          strbuf_paths( path_buf, PACKAGE );
-          strbuf_paths( path_buf, "config.toml" );
-          config_file = config_open( path_buf->str, CONFIG_OPT_IGNORE_ENOENT );
-          if ( config_file != NULL )
-            break;
-        }
+      }
+      if ( path_buf->len > 0 ) {
+        strbuf_paths( path_buf, PACKAGE );
+        strbuf_paths( path_buf, "config.toml" );
+        config_file = config_open( path_buf->str, CONFIG_OPT_IGNORE_ENOENT );
+        if ( config_file != NULL )
+          break;
       }
       FALLTHROUGH;
 
