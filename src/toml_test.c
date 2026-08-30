@@ -140,7 +140,7 @@ static bool test_key_bad_leading_dot( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_KEY_INVALID )
+    && TEST( test.toml.error == TOML_ERR_INVALID_KEY )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 1 );
 
@@ -159,7 +159,7 @@ static bool test_key_bad_trailing_dot( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_KEY_INVALID )
+    && TEST( test.toml.error == TOML_ERR_INVALID_KEY )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 4 );
 
@@ -181,7 +181,7 @@ static bool test_table_names_duplicate( void ) {
 
   TEST( toml_table_next( &test.toml, &test.table ) )
     && TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_TABLE_DUPLICATE )
+    && TEST( test.toml.error == TOML_ERR_DUPLICATE_TABLE )
     && TEST( test.toml.loc.line == 3 )
     && TEST( test.toml.loc.col == 2 );
 
@@ -397,7 +397,7 @@ static bool test_value_int_bad_base( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_INT_INVALID )
+    && TEST( test.toml.error == TOML_ERR_INVALID_INT )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 6 );
 
@@ -416,7 +416,7 @@ static bool test_value_int_bad_binary( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_INT_INVALID )
+    && TEST( test.toml.error == TOML_ERR_INVALID_INT )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 7 );
 
@@ -435,7 +435,7 @@ static bool test_value_int_bad_underscore( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_INT_INVALID )
+    && TEST( test.toml.error == TOML_ERR_INVALID_INT )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 6 );
 

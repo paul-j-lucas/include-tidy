@@ -65,18 +65,18 @@
  * with a more specific one.
  */
 static char const *const TOML_ERROR_MSGS[] = {
-  [ TOML_ERR_NONE            ] = "no error",
-  [ TOML_ERR_INT_INVALID     ] = "invalid integer",
-  [ TOML_ERR_INT_RANGE       ] = "integer out of range",
-  [ TOML_ERR_KEY_DUPLICATE   ] = "duplicate key",
-  [ TOML_ERR_KEY_INVALID     ] = "invalid key",
-  [ TOML_ERR_STR_INVALID     ] = "invalid string",
-  [ TOML_ERR_TABLE_DUPLICATE ] = "duplicate table",
-  [ TOML_ERR_INVALID_CHAR    ] = "invalid character",
-  [ TOML_ERR_UNEX_CHAR       ] = "unexpected character",
-  [ TOML_ERR_UNEX_EOF        ] = "unexpected end of file",
-  [ TOML_ERR_UNEX_NEWLINE    ] = "unexpected newline",
-  [ TOML_ERR_UNEX_VALUE      ] = "unexpected value",
+  [ TOML_ERR_NONE             ] = "no error",
+  [ TOML_ERR_DUPLICATE_KEY    ] = "duplicate key",
+  [ TOML_ERR_DUPLICATE_TABLE  ] = "duplicate table",
+  [ TOML_ERR_INT_OUT_OF_RANGE ] = "integer out of range",
+  [ TOML_ERR_INVALID_CHAR     ] = "invalid character",
+  [ TOML_ERR_INVALID_INT      ] = "invalid integer",
+  [ TOML_ERR_INVALID_KEY      ] = "invalid key",
+  [ TOML_ERR_INVALID_STRING   ] = "invalid string",
+  [ TOML_ERR_UNEX_CHAR        ] = "unexpected character",
+  [ TOML_ERR_UNEX_EOF         ] = "unexpected end of file",
+  [ TOML_ERR_UNEX_NEWLINE     ] = "unexpected newline",
+  [ TOML_ERR_UNEX_VALUE       ] = "unexpected value",
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -478,7 +478,7 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
           return true;
 
         default:
-          toml->error = TOML_ERR_INT_INVALID;
+          toml->error = TOML_ERR_INVALID_INT;
           return false;
       } // switch
       break;
@@ -537,7 +537,7 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
     } // switch
 
     if ( buf_len + 1 == sizeof buf - 1 ) {
-      toml->error = TOML_ERR_INT_RANGE;
+      toml->error = TOML_ERR_INT_OUT_OF_RANGE;
       return false;
     }
     buf[ buf_len++ ] = STATIC_CAST( char, c );
@@ -553,7 +553,7 @@ done:
   }
 
 error:
-  toml->error = TOML_ERR_INT_INVALID;
+  toml->error = TOML_ERR_INVALID_INT;
   return false;
 }
 
@@ -601,7 +601,7 @@ static bool toml_key_parse( toml_file *toml, toml_key *pkey,
         return false;
       goto done;
     case '.':
-      toml->error = TOML_ERR_KEY_INVALID;
+      toml->error = TOML_ERR_INVALID_KEY;
       toml->error_msg = "bare key can not begin with '.'";
       return false;
     case EOF:
@@ -631,14 +631,14 @@ static bool toml_key_parse( toml_file *toml, toml_key *pkey,
   } while ( c != EOF );
 
   if ( key_buf.len == 0 ) {
-    toml->error = TOML_ERR_KEY_INVALID;
+    toml->error = TOML_ERR_INVALID_KEY;
     toml->error_msg = "empty key";
     goto error;
   }
 
   if ( key_buf.str[ key_buf.len - 1 ] == '.' ) {
     toml->loc.col = first_col + STATIC_CAST( unsigned, key_buf.len ) - 1;
-    toml->error = TOML_ERR_KEY_INVALID;
+    toml->error = TOML_ERR_INVALID_KEY;
     toml->error_msg = "bare key can not end with '.'";
     goto error;
   }
@@ -806,7 +806,7 @@ static bool toml_string_parse( toml_file *toml, strbuf_t *psbuf ) {
         goto eof;
       case '\r':
       case '\n':
-        toml->error = TOML_ERR_STR_INVALID;
+        toml->error = TOML_ERR_INVALID_STRING;
         toml->error_msg = "unterminated string";
         goto error;
       case '"':
@@ -824,7 +824,7 @@ static bool toml_string_parse( toml_file *toml, strbuf_t *psbuf ) {
           case 't'  : c = '\t'; break;
           case '\\' : c = '\\'; break;
           default:
-            toml->error = TOML_ERR_STR_INVALID;
+            toml->error = TOML_ERR_INVALID_STRING;
             toml->error_msg = "invalid escape sequence";
             goto error;
         } // switch
@@ -1072,7 +1072,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
     &toml->table_names, CONST_CAST( char*, table_key.name ), table_name_len + 1
   );
   if ( !hti.inserted ) {
-    toml->error = TOML_ERR_TABLE_DUPLICATE;
+    toml->error = TOML_ERR_DUPLICATE_TABLE;
     toml->loc.col = table_key.loc.col;
     toml_key_cleanup( &table_key );
     return false;
@@ -1094,7 +1094,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
     hti = ht_insert( &table->keys_values, &kv, sizeof kv );
     if ( !hti.inserted ) {
       toml_key_value_cleanup( &kv );
-      toml->error = TOML_ERR_KEY_DUPLICATE;
+      toml->error = TOML_ERR_DUPLICATE_KEY;
       break;
     }
   } // for
