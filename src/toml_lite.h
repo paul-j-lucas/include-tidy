@@ -197,8 +197,7 @@ struct toml_key_value {
  * TOML table.
  */
 struct toml_table {
-  char const   *name;                   ///< Table name, if any.
-  toml_loc      loc;                    ///< Table's source location.
+  toml_key      key;                    ///< Table key.
   hash_table_t  keys_values;            ///< Keys & values.
 };
 

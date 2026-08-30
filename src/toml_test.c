@@ -209,10 +209,10 @@ static bool test_table_names_valid( void ) {
     toml_test test;
     toml_test_init( &test, *ptable_name );
     if ( TEST( toml_table_next( &test.toml, &test.table ) ) &&
-         TEST( test.table.name != NULL ) ) {
+         TEST( test.table.key.name != NULL ) ) {
       char *const expected_name = strdup( *ptable_name );
       strip_table_name( expected_name );
-      TEST( strcmp( test.table.name, expected_name ) == 0 );
+      TEST( strcmp( test.table.key.name, expected_name ) == 0 );
       free( expected_name );
     }
     toml_error_print( &test.toml );

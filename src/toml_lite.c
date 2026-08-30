@@ -566,6 +566,7 @@ static void toml_key_cleanup( toml_key *key ) {
   if ( key == NULL )
     return;
   FREE( key->name );
+  key->name = NULL;
 }
 
 /**
@@ -1023,8 +1024,7 @@ void toml_file_init( toml_file *toml, FILE *file ) {
 void toml_table_cleanup( toml_table *table ) {
   if ( table == NULL )
     return;
-  FREE( table->name );
-  table->name = NULL;
+  toml_key_cleanup( &table->key );
   ht_cleanup(
     &table->keys_values,
     POINTER_CAST( ht_free_fn_t, &toml_key_value_cleanup )
@@ -1045,8 +1045,7 @@ toml_value const* toml_table_find( toml_table const *table, char const *key ) {
 
 void toml_table_init( toml_table *table ) {
   assert( table != NULL );
-  table->name = NULL;
-  table->loc = (toml_loc){ 0 };
+  table->key = (toml_key){ 0 };
   ht_init(
     &table->keys_values, HT_DINT, 2.0, 64,
     POINTER_CAST( ht_cmp_fn_t, &toml_key_value_cmp ),
@@ -1059,7 +1058,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   assert( table != NULL );
 
   toml_space_comments_skip( toml );
-  toml_loc const table_loc = toml->loc;
+  toml_loc const header_loc = toml->loc;
   int c = toml_getc( toml );
   if ( c != '[' ) {
     toml_ungetc( toml, c );
@@ -1085,8 +1084,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   }
 
   toml_table_init( table );
-  table->name = table_key.name;
-  table->loc = table_loc;
+  table->key = (toml_key){ .name = table_key.name, .loc = header_loc };
 
   for (;;) {
     toml_space_comments_skip( toml );

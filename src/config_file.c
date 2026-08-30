@@ -516,7 +516,7 @@ static void all_includes_parse( config_parse_fn_args const *args ) {
 static void associated_header_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
-  if ( strcmp( args->table->name, tidy_source_path ) != 0 )
+  if ( strcmp( args->table->key.name, tidy_source_path ) != 0 )
     return;
 
   char const *const ext = path_ext( tidy_source_path );
@@ -524,7 +524,7 @@ static void associated_header_parse( config_parse_fn_args const *args ) {
     print_file_error(
       args->config_path, args->key->loc.line, args->key->loc.col,
       "\"%s\": only non-header files may have an associated header\n",
-      args->table->name
+      args->table->key.name
     );
     exit( EX_CONFIG );
   }
@@ -805,7 +805,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   toml_table_init( &table );
 
   while ( toml_table_next( &toml, &table ) ) {
-    if ( table.name == NULL ) {
+    if ( table.key.name == NULL ) {
       print_file_error(
         config_path, toml.loc.line, toml.loc.col,
         "required table name missing\n"
@@ -814,14 +814,15 @@ static void config_parse( char const *config_path, FILE *config_file ) {
     }
     if ( toml_table_empty( &table ) ) {
       print_file_error(
-        config_path, table.loc.line, table.loc.col,
-        "\"%s\": empty table\n", table.name
+        config_path, table.key.loc.line, table.key.loc.col,
+        "\"%s\": empty table\n", table.key.name
       );
       exit( EX_CONFIG );
     }
 
-    config_table_kind table_kinds = strcmp( table.name, "include-tidy" ) == 0 ?
-      TABLE_INCLUDE_TIDY : TABLE_NONE;
+    config_table_kind table_kinds =
+      strcmp( table.key.name, "include-tidy" ) == 0 ?
+        TABLE_INCLUDE_TIDY : TABLE_NONE;
 
     toml_iterator iter;
     toml_iterator_init( &iter, &table );
@@ -831,7 +832,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       if ( ckey == NULL ) {
         print_file_error(
           config_path, kv->key.loc.line, kv->key.loc.col,
-          "\"%s\": unknown key\n", table.name
+          "\"%s\": unknown key\n", table.key.name
         );
         exit( EX_CONFIG );
       }
@@ -903,7 +904,7 @@ static void elide_include_parse_string( config_parse_fn_args const *args ) {
 static void elide_includes_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
-  if ( strcmp( args->table->name, tidy_source_path ) == 0 )
+  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
     string_or_string_array_parse( args, &elide_include_parse_string );
 }
 
@@ -939,13 +940,15 @@ static void first_parse( config_parse_fn_args const *args ) {
     return;
 
   rb_iterator_t iter;
-  size_t const  rel_path_len = strlen( args->table->name );
+  size_t const  rel_path_len = strlen( args->table->key.name );
 
   rb_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( path_ends_with( include->abs_path, args->table->name, rel_path_len ) )
+    if ( path_ends_with( include->abs_path, args->table->key.name,
+                         rel_path_len ) ) {
       include->sort_rank = TIDY_SORT_FIRST;
+    }
   } // for
 }
 
@@ -980,7 +983,7 @@ static char const* home_dir( void ) {
 static void ignore_as_argument_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
-  if ( strcmp( args->table->name, tidy_source_path ) != 0 )
+  if ( strcmp( args->table->key.name, tidy_source_path ) != 0 )
     return;
   if ( bool_value_parse( args ) )
     tidy_is_source_path_ignored = true;
@@ -995,8 +998,8 @@ static void ignore_parse( config_parse_fn_args const *args ) {
   if ( bool_value_parse( args ) ) {
     PJL_DISCARD_RV(
       ht_insert(
-        &ignore_symbol_set, CONST_CAST( char*, args->table->name ),
-        strlen( args->table->name ) + 1/*\0*/
+        &ignore_symbol_set, CONST_CAST( char*, args->table->key.name ),
+        strlen( args->table->key.name ) + 1/*\0*/
       )
     );
   }
@@ -1012,7 +1015,7 @@ static void ignore_parse( config_parse_fn_args const *args ) {
 static void ignore_symbols_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
-  if ( strcmp( args->table->name, tidy_source_path ) == 0 )
+  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
     string_or_string_array_parse( args, &ignore_symbols_parse_string );
 }
 
@@ -1049,7 +1052,7 @@ static void include_add_explicit_proxy( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
   tidy_include *const to_include =
-    include_find_by_rel_path( args->table->name );
+    include_find_by_rel_path( args->table->key.name );
   if ( to_include == NULL )
     return;
 
@@ -1132,7 +1135,7 @@ static void includes_parse_string( config_parse_fn_args const *args ) {
 
   tidy_include *const to_include = include_find_by_rel_path( args->value->s );
   if ( to_include != NULL )
-    symbol_include_add( args->table->name, to_include );
+    symbol_include_add( args->table->key.name, to_include );
 }
 
 /**
@@ -1195,7 +1198,7 @@ static void keep_include_parse_string( config_parse_fn_args const *args ) {
 static void keep_includes_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
-  if ( strcmp( args->table->name, tidy_source_path ) == 0 )
+  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
     string_or_string_array_parse( args, &keep_include_parse_string );
 }
 
@@ -1206,7 +1209,7 @@ static void keep_includes_parse( config_parse_fn_args const *args ) {
  */
 static void keep_parse( config_parse_fn_args const *args ) {
   if ( bool_value_parse( args ) )
-    include_handle( args->table->name, TIDY_HANDLE_KEEP );
+    include_handle( args->table->key.name, TIDY_HANDLE_KEEP );
 }
 
 /**
@@ -1361,7 +1364,7 @@ static void symbols_parse_string( config_parse_fn_args const *args ) {
   assert( args->value->type == TOML_STRING );
 
   tidy_include *const to_include =
-    include_find_by_rel_path( args->table->name );
+    include_find_by_rel_path( args->table->key.name );
   if ( to_include != NULL )
     symbol_include_add( args->value->s, to_include );
 }
