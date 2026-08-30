@@ -1,5 +1,6 @@
 2026-08-30  Paul J. Lucas <paul@lucasmail.org>
 
+   * config_file.c: Revert "Simplified case_num handling."
    * config_file.c: Simplified case_num handling.
    * toml_lite.c, toml_lite.h: Added error message constants.
    * toml_lite.c: Eliminated TOML_ERR_UNEX_NEWLINE.
