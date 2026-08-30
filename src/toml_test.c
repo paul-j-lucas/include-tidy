@@ -492,20 +492,26 @@ static bool test_value_string( void ) {
 int main( int argc, char const *const argv[] ) {
   test_prog_init( argc, argv );
 
-  test_table_names_duplicate();
-  test_table_names_valid();
-  test_value_bool();
   test_comments();
+
+  test_value_bool();
   test_value_int();
   test_value_string();
+
   if ( test_failures == 0 ) {
     test_key_bad_leading_dot();
     test_key_bad_trailing_dot();
     test_key_duplicate();
+
+    test_table_names_duplicate();
+    test_table_names_valid();
+
     test_value_array();
     test_value_array_bad_comma();
     test_value_array_unex_eof();
+
     test_value_bool_bad_false();
+
     test_value_int_bad_base();
     test_value_int_bad_binary();
     test_value_int_bad_underscore();
