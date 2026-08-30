@@ -156,13 +156,22 @@ static inline bool is_ident( int c ) {
 }
 
 /**
+ * Increments the toml_file's column.
+ *
+ * @param toml The toml_file to use.
+ */
+static inline void toml_col_inc( toml_file *toml ) {
+  toml->col_prev = toml->loc.col++;
+}
+
+/**
  * Gets whether \a c is an invalid TOML character.
  *
  * @param c The character to check.
  * @return Returns `true` only if \a c is invalid.
  */
 NODISCARD
-static bool is_toml_invalid_char( int c ) {
+static bool toml_is_invalid_char( int c ) {
   return  (c >= 0x00 && c <= 0x08) || c == 0x0B || c == 0x0C ||
           (c >= 0x0E && c <= 0x1F) || c == 0x7F;
 }
@@ -174,17 +183,8 @@ static bool is_toml_invalid_char( int c ) {
  * @return Returns `true` only if \a c is a space.
  */
 NODISCARD
-static inline bool is_toml_space( int c ) {
+static inline bool toml_is_space( int c ) {
   return c == ' ' || c == '\t';
-}
-
-/**
- * Increments the toml_file's column.
- *
- * @param toml The toml_file to use.
- */
-static inline void toml_col_inc( toml_file *toml ) {
-  toml->col_prev = toml->loc.col++;
 }
 
 /**
@@ -425,7 +425,7 @@ static int toml_getc( toml_file *toml ) {
   }
   else {
     c = fgetc( toml->file );
-    if ( is_toml_invalid_char( c ) ) {
+    if ( toml_is_invalid_char( c ) ) {
       toml->error = TOML_ERR_INVALID_CHAR;
       return EOF;
     }
@@ -629,7 +629,7 @@ static bool toml_key_parse( toml_file *toml, toml_key *pkey,
   char c_prev = '\0';
 
   do {
-    if ( is_toml_space( c ) ) {
+    if ( toml_is_space( c ) ) {
       PJL_DISCARD_RV( toml_space_skip( toml ) );
       c = toml_getc( toml );
       if ( c_prev != '.' && c != '.' ) {
@@ -792,7 +792,7 @@ static bool toml_space_skip( toml_file *toml ) {
         return false;
       }
     }
-    else if ( !is_toml_space( c ) ) {
+    else if ( !toml_is_space( c ) ) {
       toml_ungetc( toml, c );
       break;
     }
