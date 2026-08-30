@@ -96,7 +96,6 @@ enum toml_error {
   TOML_ERR_NONE,                        ///< No error.
   TOML_ERR_DUPLICATE_KEY,               ///< Duplicate key.
   TOML_ERR_DUPLICATE_TABLE,             ///< Duplicate table name.
-  TOML_ERR_INT_OUT_OF_RANGE,            ///< Integer out of range.
   TOML_ERR_INVALID_CHAR,                ///< Invalid character.
   TOML_ERR_INVALID_INT,                 ///< Invalid integer.
   TOML_ERR_INVALID_KEY,                 ///< Invalid key.

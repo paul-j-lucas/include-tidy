@@ -68,7 +68,6 @@ static char const *const TOML_ERROR_MSGS[] = {
   [ TOML_ERR_NONE             ] = "no error",
   [ TOML_ERR_DUPLICATE_KEY    ] = "duplicate key",
   [ TOML_ERR_DUPLICATE_TABLE  ] = "duplicate table",
-  [ TOML_ERR_INT_OUT_OF_RANGE ] = "integer out of range",
   [ TOML_ERR_INVALID_CHAR     ] = "invalid character",
   [ TOML_ERR_INVALID_INT      ] = "invalid integer",
   [ TOML_ERR_INVALID_KEY      ] = "invalid key",
@@ -536,10 +535,8 @@ static bool toml_int_parse( toml_file *toml, long *pi ) {
         break;
     } // switch
 
-    if ( buf_len + 1 == sizeof buf - 1 ) {
-      toml->error = TOML_ERR_INT_OUT_OF_RANGE;
-      return false;
-    }
+    if ( buf_len + 1 == sizeof buf - 1 )
+      goto error;
     buf[ buf_len++ ] = STATIC_CAST( char, c );
   } // for
 
