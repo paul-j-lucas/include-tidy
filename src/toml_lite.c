@@ -1093,8 +1093,9 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
 
     hti = ht_insert( &table->keys_values, &kv, sizeof kv );
     if ( !hti.inserted ) {
-      toml_key_value_cleanup( &kv );
+      toml->loc = kv.key.loc;
       toml->error = TOML_ERR_DUPLICATE_KEY;
+      toml_key_value_cleanup( &kv );
       break;
     }
   } // for
