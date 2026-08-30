@@ -75,7 +75,7 @@
  *
  *  toml_table_cleanup( &table );
  *  if ( toml.error )
- *    // complain
+ *    fprintf( stderr, "%s\n", toml_error_msg( toml ) );
  *  toml_file_cleanup( &toml );
  *  fclose( ftoml );
  *  ```
