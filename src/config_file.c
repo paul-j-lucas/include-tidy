@@ -1055,18 +1055,18 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
 }
 
 /**
- * Parses a configuration key string.
+ * Attempts to find the config_key having \a key_name.
  *
- * @param s The string to parse.
- * @return Returns a pointer to the corresponding config_key or NULL if \a s
- * does not correspond to a key.
+ * @param key_name The name of the configuration key to find.
+ * @return Returns a pointer to the corresponding config_key or NULL if \a
+ * key_name does not correspond to a config_key.
  */
 NODISCARD
-static config_key const* config_key_parse( char const *s ) {
-  assert( s != NULL );
+static config_key const* config_key_find( char const *key_name ) {
+  assert( key_name != NULL );
 
   FOREACH_ARRAY_ELEMENT( config_key, key, CONFIG_KEYS ) {
-    if ( strcmp( s, key->name ) == 0 )
+    if ( strcmp( key_name, key->name ) == 0 )
       return key;
   } // for
 
@@ -1155,8 +1155,8 @@ static void config_parse( char const *config_path, FILE *config_file ) {
     toml_iterator_init( &iter, &table );
     for ( toml_key_value const *kv;
           (kv = toml_iterator_next( &iter )) != NULL; ) {
-      config_key const *const ckey = config_key_parse( kv->key.name );
-      if ( ckey == NULL ) {
+      config_key const *const found_key = config_key_find( kv->key.name );
+      if ( found_key == NULL ) {
         print_file_error(
           config_path, kv->key.loc.line, kv->key.loc.col,
           "\"%s\": unknown key\n", table.key.name
@@ -1165,19 +1165,19 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       }
 
       if ( table_kinds == TABLE_NONE ||
-           is_0n_bit_only_in_set( ckey->table_kinds, table_kinds ) ) {
-        table_kinds = ckey->table_kinds;
+           is_0n_bit_only_in_set( found_key->table_kinds, table_kinds ) ) {
+        table_kinds = found_key->table_kinds;
       }
-      else if ( (ckey->table_kinds & table_kinds) == 0 ) {
+      else if ( (found_key->table_kinds & table_kinds) == 0 ) {
         assert( table_kinds < ARRAY_SIZE( TABLE_KINDS ) );
         print_file_error(
           config_path, kv->key.loc.line, kv->key.loc.col,
           "\"%s\": key not allowed in %s table%s; allowed only in %s table%s\n",
-          ckey->name,
+          found_key->name,
           TABLE_KINDS[ table_kinds ],
           is_1_bit( table_kinds ) ? "" : "s",
-          TABLE_KINDS[ ckey->table_kinds ],
-          is_1_bit( ckey->table_kinds ) ? "" : "s"
+          TABLE_KINDS[ found_key->table_kinds ],
+          is_1_bit( found_key->table_kinds ) ? "" : "s"
         );
         exit( EX_CONFIG );
       }
@@ -1188,7 +1188,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
         .key = &kv->key,
         .value = &kv->value
       };
-      (*ckey->parse_fn)( &args );
+      (*found_key->parse_fn)( &args );
     } // for
   } // while
 
