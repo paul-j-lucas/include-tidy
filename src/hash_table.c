@@ -212,6 +212,8 @@ void ht_iterator_init( ht_iterator_t *it, hash_table_t const *table ) {
 
   *it = (ht_iterator_t){
     .table = table,
+    // Initialize to -1 so the first time ht_iterator_next() is called, it will
+    // be incremented and wrap around to 0.
     .bucket_idx = (unsigned)-1,
     .n_buckets = HT_PRIME[ table->prime_idx ]
   };
