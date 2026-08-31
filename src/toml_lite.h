@@ -59,8 +59,10 @@
  *  ```
  *  void read_toml_file( char const *toml_path ) {
  *    FILE *const ftoml = fopen( toml_path, "r" );
- *    if ( ftoml == NULL )
- *      // complain
+ *    if ( ftoml == NULL ) {
+ *      fprintf( stderr, "%s: %s\n", toml_path, strerror( errno ) );
+ *      return;
+ *    }
  *    toml_file toml;
  *    toml_file_init( &toml, ftoml );
  *    toml_table table;
