@@ -57,27 +57,33 @@
  *
  * @par Example
  *  ```
- *  FILE *const ftoml = fopen( "example.toml", "r" );
- *  if ( ftoml == NULL )
- *    // complain
- *  toml_file toml;
- *  toml_file_init( &toml, ftoml );
- *  toml_table table;
- *  toml_table_init( &table );
+ *  void read_toml_file( char const *toml_path ) {
+ *    FILE *const ftoml = fopen( toml_path, "r" );
+ *    if ( ftoml == NULL )
+ *      // complain
+ *    toml_file toml;
+ *    toml_file_init( &toml, ftoml );
+ *    toml_table table;
+ *    toml_table_init( &table );
  *
- *  while ( toml_table_next( &toml, &table ) ) {
- *    // ...
- *    // Use toml_table_find() for specific keys or
- *    // toml_iterator_init() and toml_iterator_next()
- *    // for all keys.
- *    // ...
+ *    while ( toml_table_next( &toml, &table ) ) {
+ *      // ...
+ *      // Use toml_table_find() for specific keys or
+ *      // toml_iterator_init() and toml_iterator_next()
+ *      // for all keys.
+ *      // ...
+ *    }
+ *
+ *    toml_table_cleanup( &table );
+ *    if ( toml.error ) {
+ *      fprintf( stderr,
+ *        "%s:%u,%u: %s\n",
+ *        toml_path, toml.loc.line, toml.loc.col, toml_error_msg( toml )
+ *      );
+ *    }
+ *    toml_file_cleanup( &toml );
+ *    fclose( ftoml );
  *  }
- *
- *  toml_table_cleanup( &table );
- *  if ( toml.error )
- *    fprintf( stderr, "%s\n", toml_error_msg( toml ) );
- *  toml_file_cleanup( &toml );
- *  fclose( ftoml );
  *  ```
  *
  * @sa [TOML](https://toml.io/)
