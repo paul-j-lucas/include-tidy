@@ -463,6 +463,8 @@ static char const* toml_string_parse( config_parse_fn_args const *args ) {
  * Parses the value of an `"add-c-includes"` key.
  *
  * @param args The config_parse_fn_args to use.
+ *
+ * @sa add_cxx_includes_parse()
  */
 static void add_c_includes_parse( config_parse_fn_args const *args ) {
   array_t add_c_includes = toml_string_array_parse( args );
@@ -474,6 +476,8 @@ static void add_c_includes_parse( config_parse_fn_args const *args ) {
  * Parses the value of an `"add-cxx-includes"` key.
  *
  * @param args The config_parse_fn_args to use.
+ *
+ * @sa add_c_includes_parse()
  */
 static void add_cxx_includes_parse( config_parse_fn_args const *args ) {
   array_t add_cxx_includes = toml_string_array_parse( args );
@@ -604,7 +608,6 @@ static void comment_symbols_parse( config_parse_fn_args const *args ) {
  * @param args The config_parse_fn_args to use.
  *
  * @sa elide_include_parse_string()
- * @sa include_handle()
  */
 static void elide_includes_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
@@ -773,7 +776,6 @@ static void includes_parse_string( config_parse_fn_args const *args ) {
  *
  * @param args The config_parse_fn_args to use.
  *
- * @sa include_handle()
  * @sa keep_includes_parse_string()
  */
 static void keep_includes_parse( config_parse_fn_args const *args ) {
@@ -802,6 +804,8 @@ static void keep_includes_parse_string( config_parse_fn_args const *args ) {
  * Parses the value of a `"keep"` key.
  *
  * @param args The config_parse_fn_args to use.
+ *
+ * @sa include_handle()
  */
 static void keep_parse( config_parse_fn_args const *args ) {
   if ( toml_bool_parse( args ) )
