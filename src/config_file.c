@@ -177,13 +177,10 @@ static void         comment_style_parse( config_parse_fn_args const* );
 static void         comment_symbols_parse( config_parse_fn_args const* );
 
 NODISCARD
-static config_key const*
-                    config_key_parse( char const* );
-
-NODISCARD
 static FILE*        config_open( char const*, config_opts );
 
 static void         elide_includes_parse( config_parse_fn_args const* );
+static void         elide_include_parse_string( config_parse_fn_args const* );
 static void         error_parse( config_parse_fn_args const* );
 static void         first_parse( config_parse_fn_args const* );
 
@@ -197,11 +194,12 @@ static void         ignore_symbols_parse_string( config_parse_fn_args const* );
 static void         include_handle( char const*, tidy_handling );
 static void         includes_parse( config_parse_fn_args const* );
 static void         includes_parse_string( config_parse_fn_args const* );
-static void         keep_include_parse_string( config_parse_fn_args const* );
 static void         keep_includes_parse( config_parse_fn_args const* );
+static void         keep_includes_parse_string( config_parse_fn_args const* );
 static void         keep_parse( config_parse_fn_args const* );
 static void         line_length_parse( config_parse_fn_args const* );
 static void         proxy_parse( config_parse_fn_args const* );
+static void         proxy_parse_string( config_parse_fn_args const* );
 static void         std_c_includes_parse( config_parse_fn_args const* );
 static void         std_cxx_includes_parse( config_parse_fn_args const* );
 static void         symbol_include_add( char const*, tidy_include* );
@@ -459,7 +457,7 @@ static char const* string_value_parse( config_parse_fn_args const *args ) {
   return args->value->s;
 }
 
-////////// local functions ////////////////////////////////////////////////////
+////////// local configutation key parsing functions //////////////////////////
 
 /**
  * Parses the value of an `"add-c-includes"` key.
@@ -556,20 +554,6 @@ static void color_parse( config_parse_fn_args const *args ) {
 }
 
 /**
- * Cleans-up all configuration data.
- */
-static void config_cleanup( void ) {
-  FREE( tidy_associated_header_rel_path );
-  array_cleanup( &std_c_includes, &free_pptr );
-  array_cleanup( &std_cxx_includes, &free_pptr );
-  ht_cleanup( &ignore_symbol_set, /*free_fn=*/NULL );
-  rb_tree_cleanup(
-    &symbol_includes_map,
-    POINTER_CAST( rb_free_fn_t, &symbol_includes_cleanup )
-  );
-}
-
-/**
  * Parses the value of an `"comment-style"` key.
  *
  * @param args The config_parse_fn_args to use.
@@ -612,6 +596,349 @@ static void comment_symbols_parse( config_parse_fn_args const *args ) {
     exit( EX_CONFIG );
   }
   option_mark_set( COPT(COMMENT_SYMBOLS) );
+}
+
+/**
+ * Parses the value of an `"elide-includes"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ *
+ * @sa elide_include_parse_string()
+ * @sa include_handle()
+ */
+static void elide_includes_parse( config_parse_fn_args const *args ) {
+  assert( args != NULL );
+
+  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
+    string_or_string_array_parse( args, &elide_include_parse_string );
+}
+
+/**
+ * Parses a single string value of an `"elide-includes"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ *
+ * @sa elide_includes_parse()
+ * @sa include_handle()
+ */
+static void elide_include_parse_string( config_parse_fn_args const *args ) {
+  assert( args != NULL );
+  assert( args->value->type == TOML_STRING );
+
+  include_handle( args->value->s, TIDY_HANDLE_ELIDE );
+}
+
+/**
+ * Parses the value of a `"error"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ */
+static void error_parse( config_parse_fn_args const *args ) {
+  char const *const string_value = string_value_parse( args );
+
+  if ( option_is_set( COPT(ERROR) ) )
+    return;
+
+  if ( !opt_error_parse( string_value ) ) {
+    print_file_error(
+      args->config_path, args->value->loc.line, args->value->loc.col,
+      "invalid value for \"%s\"\n",
+      args->key->name
+    );
+    exit( EX_CONFIG );
+  }
+  option_mark_set( COPT(ERROR) );
+}
+
+/**
+ * Parses the value of an `"first"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ */
+static void first_parse( config_parse_fn_args const *args ) {
+  if ( !bool_value_parse( args ) )
+    return;
+
+  rb_iterator_t iter;
+  size_t const  rel_path_len = strlen( args->table->key.name );
+
+  rb_iterator_init( &iter, &tidy_include_set );
+  for ( tidy_include *include;
+        (include = rb_iterator_next( &iter )) != NULL; ) {
+    if ( path_ends_with( include->abs_path, args->table->key.name,
+                         rel_path_len ) ) {
+      include->sort_rank = TIDY_SORT_FIRST;
+    }
+  } // for
+}
+
+/**
+ * Parses the value of an `"ignore-as-argument"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ */
+static void ignore_as_argument_parse( config_parse_fn_args const *args ) {
+  assert( args != NULL );
+
+  if ( strcmp( args->table->key.name, tidy_source_path ) != 0 )
+    return;
+  if ( bool_value_parse( args ) )
+    tidy_is_source_path_ignored = true;
+};
+
+/**
+ * Parses the value of an `"ignore"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ */
+static void ignore_parse( config_parse_fn_args const *args ) {
+  if ( bool_value_parse( args ) ) {
+    PJL_DISCARD_RV(
+      ht_insert(
+        &ignore_symbol_set, CONST_CAST( char*, args->table->key.name ),
+        strlen( args->table->key.name ) + 1/*\0*/
+      )
+    );
+  }
+}
+
+/**
+ * Parses the value of an `"ignore-symbols"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ *
+ * @sa ignore_symbols_parse_string()
+ */
+static void ignore_symbols_parse( config_parse_fn_args const *args ) {
+  assert( args != NULL );
+
+  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
+    string_or_string_array_parse( args, &ignore_symbols_parse_string );
+}
+
+/**
+ * Parses a single string value of an `"ignore-symbols"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ *
+ * @sa ignore_symbols_parse()
+ */
+static void ignore_symbols_parse_string( config_parse_fn_args const *args ) {
+  assert( args != NULL );
+  assert( args->value->type == TOML_STRING );
+
+  ht_insert_rv_t const hti = ht_insert(
+    &ignore_symbol_set, CONST_CAST( char*, args->value->s ),
+    strlen( args->value->s ) + 1/*\0*/
+  );
+  if ( !hti.inserted ) {
+    print_file_warning(
+      args->config_path, args->value->loc.line, args->value->loc.col,
+      "\"%s\" already ignored\n",
+      args->value->s
+    );
+  }
+}
+
+/**
+ * Parses the value of an `"includes"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ *
+ * @sa includes_parse_string()
+ */
+static void includes_parse( config_parse_fn_args const *args ) {
+  string_or_string_array_parse( args, &includes_parse_string );
+}
+
+/**
+ * Parses a single string value of an `"includes"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ *
+ * @sa includes_parse()
+ * @sa symbols_parse_string()
+ */
+static void includes_parse_string( config_parse_fn_args const *args ) {
+  assert( args != NULL );
+  assert( args->value->type == TOML_STRING );
+
+  tidy_include *const to_include = include_find_by_rel_path( args->value->s );
+  if ( to_include != NULL )
+    symbol_include_add( args->table->key.name, to_include );
+}
+
+/**
+ * Parses the value of an `"keep-includes"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ *
+ * @sa include_handle()
+ * @sa keep_includes_parse_string()
+ */
+static void keep_includes_parse( config_parse_fn_args const *args ) {
+  assert( args != NULL );
+
+  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
+    string_or_string_array_parse( args, &keep_includes_parse_string );
+}
+
+/**
+ * Parses a single string value of a `"keep-includes"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ *
+ * @sa include_handle()
+ * @sa keep_includes_parse()
+ */
+static void keep_includes_parse_string( config_parse_fn_args const *args ) {
+  assert( args != NULL );
+  assert( args->value->type == TOML_STRING );
+
+  include_handle( args->value->s, TIDY_HANDLE_KEEP );
+}
+
+/**
+ * Parses the value of a `"keep"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ */
+static void keep_parse( config_parse_fn_args const *args ) {
+  if ( bool_value_parse( args ) )
+    include_handle( args->table->key.name, TIDY_HANDLE_KEEP );
+}
+
+/**
+ * Parses the value of a `"line-length"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ */
+static void line_length_parse( config_parse_fn_args const *args ) {
+  long const int_value = int_value_parse( args, 0, OPT_LINE_LENGTH_MAX );
+  if ( !option_is_set( COPT(LINE_LENGTH) ) ) {
+    opt_line_length = STATIC_CAST( unsigned, int_value );
+    option_mark_set( COPT(LINE_LENGTH) );
+  }
+}
+
+/**
+ * Parses the value of a `"proxy"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ */
+static void proxy_parse( config_parse_fn_args const *args ) {
+  string_or_string_array_parse( args, &proxy_parse_string );
+}
+
+/**
+ * Parses a single string value of a `"proxy"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ */
+static void proxy_parse_string( config_parse_fn_args const *args ) {
+  assert( args != NULL );
+
+  tidy_include *const to_include =
+    include_find_by_rel_path( args->table->key.name );
+  if ( to_include == NULL )
+    return;
+
+  rb_iterator_t iter;
+  size_t const  rel_path_len = strlen( args->value->s );
+
+  rb_iterator_init( &iter, &tidy_include_set );
+  for ( tidy_include *from_include;
+        (from_include = rb_iterator_next( &iter )) != NULL; ) {
+    if ( !path_ends_with( from_include->abs_path, args->value->s,
+                          rel_path_len ) ) {
+      continue;
+    }
+    if ( from_include->proxy != NULL ) {
+      //
+      // At some point, we may need to store all configured proxies then later
+      // choose which of those to use based on the symbols referenced.  For
+      // now, just pick the one that's more directly included.
+      //
+      if ( to_include->depth < from_include->proxy->depth )
+        from_include->proxy = to_include;
+    }
+    else if ( include_proxy_would_cycle( from_include, to_include ) ) {
+      print_file_warning(
+        args->config_path, args->value->loc.line, args->value->loc.col,
+        "\"%s\": proxy cycle detected\n",
+        from_include->rel_path
+      );
+    }
+    else {
+      from_include->proxy = to_include;
+      from_include->is_proxy_explicit = true;
+    }
+  } // for
+}
+
+/**
+ * Parses the value of an `"std-c-includes"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ */
+static void std_c_includes_parse( config_parse_fn_args const *args ) {
+  if ( std_c_includes.len == 0 )
+    std_c_includes = string_array_value_parse( args );
+}
+
+/**
+ * Parses the value of an `"std-cxx-includes"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ */
+static void std_cxx_includes_parse( config_parse_fn_args const *args ) {
+  if ( std_cxx_includes.len == 0 )
+    std_cxx_includes = string_array_value_parse( args );
+}
+
+/**
+ * Parses the value of a `"symbols"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ *
+ * @sa symbols_parse_string()
+ */
+static void symbols_parse( config_parse_fn_args const *args ) {
+  string_or_string_array_parse( args, &symbols_parse_string );
+}
+
+/**
+ * Parses a single string value of a `"symbols"` key.
+ *
+ * @param args The config_parse_fn_args to use.
+ *
+ * @sa includes_parse_string()
+ * @sa symbols_parse()
+ */
+static void symbols_parse_string( config_parse_fn_args const *args ) {
+  assert( args != NULL );
+  assert( args->value->type == TOML_STRING );
+
+  tidy_include *const to_include =
+    include_find_by_rel_path( args->table->key.name );
+  if ( to_include != NULL )
+    symbol_include_add( args->value->s, to_include );
+}
+
+////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Cleans-up all configuration data.
+ */
+static void config_cleanup( void ) {
+  FREE( tidy_associated_header_rel_path );
+  array_cleanup( &std_c_includes, &free_pptr );
+  array_cleanup( &std_cxx_includes, &free_pptr );
+  ht_cleanup( &ignore_symbol_set, /*free_fn=*/NULL );
+  rb_tree_cleanup(
+    &symbol_includes_map,
+    POINTER_CAST( rb_free_fn_t, &symbol_includes_cleanup )
+  );
 }
 
 /**
@@ -734,6 +1061,7 @@ static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
  * @return Returns a pointer to the corresponding config_key or NULL if \a s
  * does not correspond to a key.
  */
+NODISCARD
 static config_key const* config_key_parse( char const *s ) {
   assert( s != NULL );
 
@@ -878,80 +1206,6 @@ static void config_parse( char const *config_path, FILE *config_file ) {
 }
 
 /**
- * Parses a single string value of an `"elide-includes"` key.
- *
- * @param args The config_parse_fn_args to use.
- *
- * @sa elide_includes_parse()
- * @sa include_handle()
- */
-static void elide_include_parse_string( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-  assert( args->value->type == TOML_STRING );
-
-  include_handle( args->value->s, TIDY_HANDLE_ELIDE );
-}
-
-/**
- * Parses the value of an `"elide-includes"` key.
- *
- * @param args The config_parse_fn_args to use.
- *
- * @sa elide_include_parse_string()
- * @sa include_handle()
- */
-static void elide_includes_parse( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-
-  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
-    string_or_string_array_parse( args, &elide_include_parse_string );
-}
-
-/**
- * Parses the value of a `"error"` key.
- *
- * @param args The config_parse_fn_args to use.
- */
-static void error_parse( config_parse_fn_args const *args ) {
-  char const *const string_value = string_value_parse( args );
-
-  if ( option_is_set( COPT(ERROR) ) )
-    return;
-
-  if ( !opt_error_parse( string_value ) ) {
-    print_file_error(
-      args->config_path, args->value->loc.line, args->value->loc.col,
-      "invalid value for \"%s\"\n",
-      args->key->name
-    );
-    exit( EX_CONFIG );
-  }
-  option_mark_set( COPT(ERROR) );
-}
-
-/**
- * Parses the value of an `"first"` key.
- *
- * @param args The config_parse_fn_args to use.
- */
-static void first_parse( config_parse_fn_args const *args ) {
-  if ( !bool_value_parse( args ) )
-    return;
-
-  rb_iterator_t iter;
-  size_t const  rel_path_len = strlen( args->table->key.name );
-
-  rb_iterator_init( &iter, &tidy_include_set );
-  for ( tidy_include *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( path_ends_with( include->abs_path, args->table->key.name,
-                         rel_path_len ) ) {
-      include->sort_rank = TIDY_SORT_FIRST;
-    }
-  } // for
-}
-
-/**
  * Gets the full path of the user's home directory.
  *
  * @return Returns said directory or NULL if it is not obtainable.
@@ -975,120 +1229,6 @@ static char const* home_dir( void ) {
 }
 
 /**
- * Parses the value of an `"ignore-as-argument"` key.
- *
- * @param args The config_parse_fn_args to use.
- */
-static void ignore_as_argument_parse( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-
-  if ( strcmp( args->table->key.name, tidy_source_path ) != 0 )
-    return;
-  if ( bool_value_parse( args ) )
-    tidy_is_source_path_ignored = true;
-};
-
-/**
- * Parses the value of an `"ignore"` key.
- *
- * @param args The config_parse_fn_args to use.
- */
-static void ignore_parse( config_parse_fn_args const *args ) {
-  if ( bool_value_parse( args ) ) {
-    PJL_DISCARD_RV(
-      ht_insert(
-        &ignore_symbol_set, CONST_CAST( char*, args->table->key.name ),
-        strlen( args->table->key.name ) + 1/*\0*/
-      )
-    );
-  }
-}
-
-/**
- * Parses the value of an `"ignore-symbols"` key.
- *
- * @param args The config_parse_fn_args to use.
- *
- * @sa ignore_symbols_parse_string()
- */
-static void ignore_symbols_parse( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-
-  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
-    string_or_string_array_parse( args, &ignore_symbols_parse_string );
-}
-
-/**
- * Parses a single string value of an `"ignore-symbols"` key.
- *
- * @param args The config_parse_fn_args to use.
- *
- * @sa ignore_symbols_parse()
- */
-static void ignore_symbols_parse_string( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-  assert( args->value->type == TOML_STRING );
-
-  ht_insert_rv_t const hti = ht_insert(
-    &ignore_symbol_set, CONST_CAST( char*, args->value->s ),
-    strlen( args->value->s ) + 1/*\0*/
-  );
-  if ( !hti.inserted ) {
-    print_file_warning(
-      args->config_path, args->value->loc.line, args->value->loc.col,
-      "\"%s\" already ignored\n",
-      args->value->s
-    );
-  }
-}
-
-/**
- * Adds an explicit proxy from \a from_include_file to \a to_include_file.
- *
- * @param args The config_parse_fn_args to use.
- */
-static void include_add_explicit_proxy( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-
-  tidy_include *const to_include =
-    include_find_by_rel_path( args->table->key.name );
-  if ( to_include == NULL )
-    return;
-
-  rb_iterator_t iter;
-  size_t const  rel_path_len = strlen( args->value->s );
-
-  rb_iterator_init( &iter, &tidy_include_set );
-  for ( tidy_include *from_include;
-        (from_include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( !path_ends_with( from_include->abs_path, args->value->s,
-                          rel_path_len ) ) {
-      continue;
-    }
-    if ( from_include->proxy != NULL ) {
-      //
-      // At some point, we may need to store all configured proxies then later
-      // choose which of those to use based on the symbols referenced.  For
-      // now, just pick the one that's more directly included.
-      //
-      if ( to_include->depth < from_include->proxy->depth )
-        from_include->proxy = to_include;
-    }
-    else if ( include_proxy_would_cycle( from_include, to_include ) ) {
-      print_file_warning(
-        args->config_path, args->value->loc.line, args->value->loc.col,
-        "\"%s\": proxy cycle detected\n",
-        from_include->rel_path
-      );
-    }
-    else {
-      from_include->proxy = to_include;
-      from_include->is_proxy_explicit = true;
-    }
-  } // for
-}
-
-/**
  * Sets the \ref tidy_include::handling "handling" field of the include file(s)
  * having \a rel_path to \a handling.
  *
@@ -1107,34 +1247,6 @@ static void include_handle( char const *rel_path, tidy_handling handling ) {
     if ( path_ends_with( include->abs_path, rel_path, rel_path_len ) )
       include->handling = handling;
   } // for
-}
-
-/**
- * Parses the value of an `"includes"` key.
- *
- * @param args The config_parse_fn_args to use.
- *
- * @sa includes_parse_string()
- */
-static void includes_parse( config_parse_fn_args const *args ) {
-  string_or_string_array_parse( args, &includes_parse_string );
-}
-
-/**
- * Parses a single string value of an `"includes"` key.
- *
- * @param args The config_parse_fn_args to use.
- *
- * @sa includes_parse()
- * @sa symbols_parse_string()
- */
-static void includes_parse_string( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-  assert( args->value->type == TOML_STRING );
-
-  tidy_include *const to_include = include_find_by_rel_path( args->value->s );
-  if ( to_include != NULL )
-    symbol_include_add( args->table->key.name, to_include );
 }
 
 /**
@@ -1169,88 +1281,6 @@ static bool is_standard_include( char const *rel_path,
   } // for
 
   return false;
-}
-
-/**
- * Parses a single string value of a `"keep-includes"` key.
- *
- * @param args The config_parse_fn_args to use.
- *
- * @sa include_handle()
- * @sa keep_includes_parse()
- */
-static void keep_include_parse_string( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-  assert( args->value->type == TOML_STRING );
-
-  include_handle( args->value->s, TIDY_HANDLE_KEEP );
-}
-
-/**
- * Parses the value of an `"keep-includes"` key.
- *
- * @param args The config_parse_fn_args to use.
- *
- * @sa include_handle()
- * @sa keep_include_parse_string()
- */
-static void keep_includes_parse( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-
-  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
-    string_or_string_array_parse( args, &keep_include_parse_string );
-}
-
-/**
- * Parses the value of a `"keep"` key.
- *
- * @param args The config_parse_fn_args to use.
- */
-static void keep_parse( config_parse_fn_args const *args ) {
-  if ( bool_value_parse( args ) )
-    include_handle( args->table->key.name, TIDY_HANDLE_KEEP );
-}
-
-/**
- * Parses the value of a `"line-length"` key.
- *
- * @param args The config_parse_fn_args to use.
- */
-static void line_length_parse( config_parse_fn_args const *args ) {
-  long const int_value = int_value_parse( args, 0, OPT_LINE_LENGTH_MAX );
-  if ( !option_is_set( COPT(LINE_LENGTH) ) ) {
-    opt_line_length = STATIC_CAST( unsigned, int_value );
-    option_mark_set( COPT(LINE_LENGTH) );
-  }
-}
-
-/**
- * Parses the value of a `"proxy"` key.
- *
- * @param args The config_parse_fn_args to use.
- */
-static void proxy_parse( config_parse_fn_args const *args ) {
-  string_or_string_array_parse( args, &include_add_explicit_proxy );
-}
-
-/**
- * Parses the value of an `"std-c-includes"` key.
- *
- * @param args The config_parse_fn_args to use.
- */
-static void std_c_includes_parse( config_parse_fn_args const *args ) {
-  if ( std_c_includes.len == 0 )
-    std_c_includes = string_array_value_parse( args );
-}
-
-/**
- * Parses the value of an `"std-cxx-includes"` key.
- *
- * @param args The config_parse_fn_args to use.
- */
-static void std_cxx_includes_parse( config_parse_fn_args const *args ) {
-  if ( std_cxx_includes.len == 0 )
-    std_cxx_includes = string_array_value_parse( args );
 }
 
 /**
@@ -1337,35 +1367,6 @@ static void symbol_includes_dump( void ) {
     } // for
     puts( " ]" );
   }
-}
-
-/**
- * Parses the value of a `"symbols"` key.
- *
- * @param args The config_parse_fn_args to use.
- *
- * @sa symbols_parse_string()
- */
-static void symbols_parse( config_parse_fn_args const *args ) {
-  string_or_string_array_parse( args, &symbols_parse_string );
-}
-
-/**
- * Parses a single string value of a `"symbols"` key.
- *
- * @param args The config_parse_fn_args to use.
- *
- * @sa includes_parse_string()
- * @sa symbols_parse()
- */
-static void symbols_parse_string( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-  assert( args->value->type == TOML_STRING );
-
-  tidy_include *const to_include =
-    include_find_by_rel_path( args->table->key.name );
-  if ( to_include != NULL )
-    symbol_include_add( args->value->s, to_include );
 }
 
 /**
