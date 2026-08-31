@@ -282,13 +282,13 @@ static rb_tree_t symbol_includes_map;
 ////////// local TOML type parsing functions //////////////////////////////////
 
 /**
- * Parses a bool value.
+ * Parses a TOML bool value.
  *
  * @param args The config_parse_fn_args to use.
  * @return Returns the parsed bool value.
  */
 NODISCARD
-static bool bool_value_parse( config_parse_fn_args const *args ) {
+static bool toml_bool_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
   if ( args->value->type != TOML_BOOL ) {
@@ -304,7 +304,7 @@ static bool bool_value_parse( config_parse_fn_args const *args ) {
 }
 
 /**
- * Parses an integer value.
+ * Parses a TOML integer value.
  *
  * @param args The config_parse_fn_args to use.
  * @param value_min The minimum allowed value.
@@ -312,8 +312,8 @@ static bool bool_value_parse( config_parse_fn_args const *args ) {
  * @return Returns the parsed integer value.
  */
 NODISCARD
-static long int_value_parse( config_parse_fn_args const *args,
-                             long value_min, long value_max ) {
+static long toml_int_parse( config_parse_fn_args const *args, long value_min,
+                            long value_max ) {
   assert( args != NULL );
 
   if ( args->value->type != TOML_INT ) {
@@ -338,16 +338,16 @@ static long int_value_parse( config_parse_fn_args const *args,
 }
 
 /**
- * Parses an array of strings values.
+ * Parses a TOML array of strings values.
  *
  * @param args The config_parse_fn_args to use.
  * @return Returns an array of the parsed string values.
  *
- * @sa string_or_string_array_parse()
- * @sa string_value_parse()
+ * @sa toml_string_or_string_array_parse()
+ * @sa toml_string_parse()
  */
 NODISCARD
-static array_t string_array_value_parse( config_parse_fn_args const *args ) {
+static array_t toml_string_array_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
   if ( args->value->type != TOML_ARRAY ) {
@@ -383,16 +383,16 @@ static array_t string_array_value_parse( config_parse_fn_args const *args ) {
 }
 
 /**
- * Parses either a string value or an array of string values.
+ * Parses either a TOML string value or an array of string values.
  *
  * @param args The config_parse_fn_args to use.
  * @param parse_fn The parse function to use.
  *
- * @sa string_array_value_parse()
- * @sa string_value_parse()
+ * @sa toml_string_array_parse()
+ * @sa toml_string_parse()
  */
-static void string_or_string_array_parse( config_parse_fn_args const *args,
-                                          config_parse_fn parse_fn ) {
+static void toml_string_or_string_array_parse( config_parse_fn_args const *args,
+                                               config_parse_fn parse_fn ) {
   assert( args != NULL );
   assert( parse_fn != NULL );
 
@@ -433,16 +433,16 @@ static void string_or_string_array_parse( config_parse_fn_args const *args,
 }
 
 /**
- * Parses a string value.
+ * Parses a TOML string value.
  *
  * @param args The config_parse_fn_args to use.
  * @return Returns the parsed string value.
  *
- * @sa string_array_value_parse()
- * @sa string_or_string_array_parse()
+ * @sa toml_string_array_parse()
+ * @sa toml_string_or_string_array_parse()
  */
 NODISCARD
-static char const* string_value_parse( config_parse_fn_args const *args ) {
+static char const* toml_string_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
   if ( args->value->type != TOML_STRING ) {
@@ -465,7 +465,7 @@ static char const* string_value_parse( config_parse_fn_args const *args ) {
  * @param args The config_parse_fn_args to use.
  */
 static void add_c_includes_parse( config_parse_fn_args const *args ) {
-  array_t add_c_includes = string_array_value_parse( args );
+  array_t add_c_includes = toml_string_array_parse( args );
   array_push_array_back( &std_c_includes, &add_c_includes );
   array_cleanup( &add_c_includes, /*free_fn=*/NULL );
 }
@@ -476,7 +476,7 @@ static void add_c_includes_parse( config_parse_fn_args const *args ) {
  * @param args The config_parse_fn_args to use.
  */
 static void add_cxx_includes_parse( config_parse_fn_args const *args ) {
-  array_t add_cxx_includes = string_array_value_parse( args );
+  array_t add_cxx_includes = toml_string_array_parse( args );
   array_push_array_back( &std_cxx_includes, &add_cxx_includes );
   array_cleanup( &add_cxx_includes, /*free_fn=*/NULL );
 }
@@ -487,7 +487,7 @@ static void add_cxx_includes_parse( config_parse_fn_args const *args ) {
  * @param args The config_parse_fn_args to use.
  */
 static void align_column_parse( config_parse_fn_args const *args ) {
-  long const int_value = int_value_parse( args, 0, OPT_ALIGN_COLUMN_MAX );
+  long const int_value = toml_int_parse( args, 0, OPT_ALIGN_COLUMN_MAX );
   if ( !option_is_set( COPT(ALIGN_COLUMN) ) ) {
     opt_align_column = STATIC_CAST( unsigned, int_value );
     option_mark_set( COPT(ALIGN_COLUMN) );
@@ -501,7 +501,7 @@ static void align_column_parse( config_parse_fn_args const *args ) {
  */
 static void all_includes_parse( config_parse_fn_args const *args ) {
   if ( !option_is_set( COPT(ALL_INCLUDES) ) ) {
-    opt_all_includes = bool_value_parse( args );
+    opt_all_includes = toml_bool_parse( args );
     option_mark_set( COPT(ALL_INCLUDES) );
   }
 }
@@ -527,7 +527,7 @@ static void associated_header_parse( config_parse_fn_args const *args ) {
     exit( EX_CONFIG );
   }
 
-  char const *const string_value = string_value_parse( args );
+  char const *const string_value = toml_string_parse( args );
   tidy_associated_header_rel_path = check_strdup( string_value );
 }
 
@@ -537,7 +537,7 @@ static void associated_header_parse( config_parse_fn_args const *args ) {
  * @param args The config_parse_fn_args to use.
  */
 static void color_parse( config_parse_fn_args const *args ) {
-  char const *const string_value = string_value_parse( args );
+  char const *const string_value = toml_string_parse( args );
 
   if ( option_is_set( COPT(COLOR) ) )
     return;
@@ -559,7 +559,7 @@ static void color_parse( config_parse_fn_args const *args ) {
  * @param args The config_parse_fn_args to use.
  */
 static void comment_style_parse( config_parse_fn_args const *args ) {
-  char const *const string_value = string_value_parse( args );
+  char const *const string_value = toml_string_parse( args );
 
   if ( option_is_set( COPT(COMMENT_STYLE) ) )
     return;
@@ -581,7 +581,7 @@ static void comment_style_parse( config_parse_fn_args const *args ) {
  * @param args The config_parse_fn_args to use.
  */
 static void comment_symbols_parse( config_parse_fn_args const *args ) {
-  char const *const string_value = string_value_parse( args );
+  char const *const string_value = toml_string_parse( args );
 
   if ( option_is_set( COPT(COMMENT_SYMBOLS) ) )
     return;
@@ -610,7 +610,7 @@ static void elide_includes_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
   if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
-    string_or_string_array_parse( args, &elide_include_parse_string );
+    toml_string_or_string_array_parse( args, &elide_include_parse_string );
 }
 
 /**
@@ -634,7 +634,7 @@ static void elide_include_parse_string( config_parse_fn_args const *args ) {
  * @param args The config_parse_fn_args to use.
  */
 static void error_parse( config_parse_fn_args const *args ) {
-  char const *const string_value = string_value_parse( args );
+  char const *const string_value = toml_string_parse( args );
 
   if ( option_is_set( COPT(ERROR) ) )
     return;
@@ -656,7 +656,7 @@ static void error_parse( config_parse_fn_args const *args ) {
  * @param args The config_parse_fn_args to use.
  */
 static void first_parse( config_parse_fn_args const *args ) {
-  if ( !bool_value_parse( args ) )
+  if ( !toml_bool_parse( args ) )
     return;
 
   rb_iterator_t iter;
@@ -682,7 +682,7 @@ static void ignore_as_argument_parse( config_parse_fn_args const *args ) {
 
   if ( strcmp( args->table->key.name, tidy_source_path ) != 0 )
     return;
-  if ( bool_value_parse( args ) )
+  if ( toml_bool_parse( args ) )
     tidy_is_source_path_ignored = true;
 };
 
@@ -692,7 +692,7 @@ static void ignore_as_argument_parse( config_parse_fn_args const *args ) {
  * @param args The config_parse_fn_args to use.
  */
 static void ignore_parse( config_parse_fn_args const *args ) {
-  if ( bool_value_parse( args ) ) {
+  if ( toml_bool_parse( args ) ) {
     PJL_DISCARD_RV(
       ht_insert(
         &ignore_symbol_set, CONST_CAST( char*, args->table->key.name ),
@@ -713,7 +713,7 @@ static void ignore_symbols_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
   if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
-    string_or_string_array_parse( args, &ignore_symbols_parse_string );
+    toml_string_or_string_array_parse( args, &ignore_symbols_parse_string );
 }
 
 /**
@@ -748,7 +748,7 @@ static void ignore_symbols_parse_string( config_parse_fn_args const *args ) {
  * @sa includes_parse_string()
  */
 static void includes_parse( config_parse_fn_args const *args ) {
-  string_or_string_array_parse( args, &includes_parse_string );
+  toml_string_or_string_array_parse( args, &includes_parse_string );
 }
 
 /**
@@ -780,7 +780,7 @@ static void keep_includes_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
   if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
-    string_or_string_array_parse( args, &keep_includes_parse_string );
+    toml_string_or_string_array_parse( args, &keep_includes_parse_string );
 }
 
 /**
@@ -804,7 +804,7 @@ static void keep_includes_parse_string( config_parse_fn_args const *args ) {
  * @param args The config_parse_fn_args to use.
  */
 static void keep_parse( config_parse_fn_args const *args ) {
-  if ( bool_value_parse( args ) )
+  if ( toml_bool_parse( args ) )
     include_handle( args->table->key.name, TIDY_HANDLE_KEEP );
 }
 
@@ -814,7 +814,7 @@ static void keep_parse( config_parse_fn_args const *args ) {
  * @param args The config_parse_fn_args to use.
  */
 static void line_length_parse( config_parse_fn_args const *args ) {
-  long const int_value = int_value_parse( args, 0, OPT_LINE_LENGTH_MAX );
+  long const int_value = toml_int_parse( args, 0, OPT_LINE_LENGTH_MAX );
   if ( !option_is_set( COPT(LINE_LENGTH) ) ) {
     opt_line_length = STATIC_CAST( unsigned, int_value );
     option_mark_set( COPT(LINE_LENGTH) );
@@ -827,7 +827,7 @@ static void line_length_parse( config_parse_fn_args const *args ) {
  * @param args The config_parse_fn_args to use.
  */
 static void proxy_parse( config_parse_fn_args const *args ) {
-  string_or_string_array_parse( args, &proxy_parse_string );
+  toml_string_or_string_array_parse( args, &proxy_parse_string );
 }
 
 /**
@@ -883,7 +883,7 @@ static void proxy_parse_string( config_parse_fn_args const *args ) {
  */
 static void std_c_includes_parse( config_parse_fn_args const *args ) {
   if ( std_c_includes.len == 0 )
-    std_c_includes = string_array_value_parse( args );
+    std_c_includes = toml_string_array_parse( args );
 }
 
 /**
@@ -893,7 +893,7 @@ static void std_c_includes_parse( config_parse_fn_args const *args ) {
  */
 static void std_cxx_includes_parse( config_parse_fn_args const *args ) {
   if ( std_cxx_includes.len == 0 )
-    std_cxx_includes = string_array_value_parse( args );
+    std_cxx_includes = toml_string_array_parse( args );
 }
 
 /**
@@ -904,7 +904,7 @@ static void std_cxx_includes_parse( config_parse_fn_args const *args ) {
  * @sa symbols_parse_string()
  */
 static void symbols_parse( config_parse_fn_args const *args ) {
-  string_or_string_array_parse( args, &symbols_parse_string );
+  toml_string_or_string_array_parse( args, &symbols_parse_string );
 }
 
 /**
