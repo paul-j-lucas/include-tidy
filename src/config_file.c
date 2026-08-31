@@ -965,7 +965,7 @@ static void config_cleanup( void ) {
  * not.
  */
 NODISCARD
-static FILE* config_find( char const *config_path, strbuf_t *path_buf ) {
+static FILE* config_file_find( char const *config_path, strbuf_t *path_buf ) {
   assert( path_buf != NULL );
 
   static unsigned case_num = 1;
@@ -1406,7 +1406,7 @@ void config_init( void ) {
   strbuf_t path_buf;
   strbuf_init( &path_buf );
   do {
-    FILE *const config_file = config_find( opt_config_path, &path_buf );
+    FILE *const config_file = config_file_find( opt_config_path, &path_buf );
     if ( config_file == NULL )
       break;
     config_parse( path_buf.str, config_file );
