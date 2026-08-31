@@ -145,8 +145,8 @@ tidy_include const* include_add_symbol( CXFile include_file,
                                         tidy_symbol const *sym );
 
 /**
- * Attempts to find \a file by its unique file ID among the set of files
- * included.
+ * Attempts to find an include file having \a file by its unique file ID among
+ * the set of files included.
  *
  * @param file The file to find.
  * @return Returns the corresponding tidy_include if found or NULL if not.
@@ -157,7 +157,7 @@ NODISCARD
 tidy_include* include_find_by_File( CXFile file );
 
 /**
- * Attempts to find an include file by its relative path.
+ * Attempts to find an include file by \a rel_path.
  *
  * @remarks
  * @parblock
