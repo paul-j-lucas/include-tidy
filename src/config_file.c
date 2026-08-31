@@ -968,7 +968,10 @@ NODISCARD
 static FILE* config_file_find( char const *config_path, strbuf_t *path_buf ) {
   assert( path_buf != NULL );
 
+  // This must be incremented in every case below and not just once initally
+  // due to the fallthroughs between cases.
   static unsigned case_num = 1;
+
   FILE *config_file = NULL;
 
   switch ( case_num ) {
@@ -1065,6 +1068,7 @@ NODISCARD
 static config_key const* config_key_find( char const *key_name ) {
   assert( key_name != NULL );
 
+  // For such a small set, linear search is good enough.
   FOREACH_ARRAY_ELEMENT( config_key, key, CONFIG_KEYS ) {
     if ( strcmp( key_name, key->name ) == 0 )
       return key;
