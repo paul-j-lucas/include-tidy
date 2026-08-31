@@ -97,6 +97,7 @@ inline CXCursor tidy_Cursor_getCanonicalTypeDeclaration( CXCursor cursor ) {
  *      void f() {
  *        Derived::iterator i;
  *        // ...
+ *      }
  *
  * the cursor for `i` would be of type `Base::iterator` because `Derived`
  * doesn't contain `iterator` and instead inherits it from `Base`.  But in some
@@ -180,6 +181,9 @@ CXCursor tidy_Cursor_getFunctionScope( CXCursor fn_csr );
  *          class B {
  *            void f();
  *            // ...
+ *          };
+ *        };
+ *      }
  *
  * then the outermost class for `f()` would be `A`.
  * @endparblock
@@ -339,6 +343,7 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_csr );
  *        Derived d;
  *        d.f();                        // f() is inherited from Base
  *        // ...
+ *      }
  *
  * the member function `f()` isn't declared in `Derived`, but declared in and
  * inherited from `Base`.
