@@ -920,7 +920,7 @@ static void print_usage( int status ) {
  * @param OPT The option string literal to print (without the leading `--`).
  */
 #define PUT_CONFIG_OPT(OPT) BLOCK( \
-  fputs( "\n  --" OPT, stdout ); printed_opt = true; )
+  PUTS( "\n  --" OPT ); printed_opt = true; )
 
 /**
  * Prints the **include-tidy** version.
