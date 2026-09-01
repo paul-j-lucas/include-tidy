@@ -1,5 +1,7 @@
 2026-09-01  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c, cli_options.h, options.c, options.h, trans_unit.c: Moved
+     tidy_source_path.
    * cli_options.c: Eliminated call to insert_argv(); fixed verbose printing of
      arguments.
 
