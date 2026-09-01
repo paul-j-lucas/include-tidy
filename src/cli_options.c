@@ -1122,6 +1122,11 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   check_options();
 
+  if ( IS_VERBOSE( SRC_FILE_ALWAYS ) ) {
+    verbose_section_begin( /*printed_header=*/NULL );
+    verbose_printf( "source file: \"%s\"\n", tidy_source_path );
+  }
+
   // Keep a copy of *pargc as it is now for --help and --version below before
   // adding options for libclang via clang_parseTranslationUnit2() in
   // trans_unit.c.  Do this now so --verbose=a prints all command-line
@@ -1134,11 +1139,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     "-I.",                              // libclang has no paths by default
   };
   insert_argv( pargc, pargv, 1, ARRAY_SIZE( LIBCLANG_ARGS ), LIBCLANG_ARGS );
-
-  if ( IS_VERBOSE( SRC_FILE_ALWAYS ) ) {
-    verbose_section_begin( /*printed_header=*/NULL );
-    verbose_printf( "source file: \"%s\"\n", tidy_source_path );
-  }
 
   if ( IS_VERBOSE( ARGS ) ) {
     verbose_print_argv( "libclang", *pargc, *pargv );
