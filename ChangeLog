@@ -1,3 +1,8 @@
+2026-09-01  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c: Eliminated call to insert_argv(); fixed verbose printing of
+     arguments.
+
 2026-08-30  Paul J. Lucas <paul@lucasmail.org>
 
    * config_file.c: Fixed $XDG_CONFIG_HOME / $HOME case config file handling.
