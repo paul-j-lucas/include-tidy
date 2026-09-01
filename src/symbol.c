@@ -235,6 +235,9 @@ struct symbols_init_data {
 
 ////////// local functions ////////////////////////////////////////////////////
 
+NODISCARD
+static bool     symbol_is_excluded( CXCursor );
+
 static void     tidy_symbol_cleanup( tidy_symbol* );
 
 NODISCARD
@@ -456,79 +459,6 @@ static bool is_symbol_definition_needed( CXCursor cursor, CXCursor parent,
 }
 
 /**
- * Gets whether \a sym_csr should be excluded from the global set.
- *
- * @param sym_csr The symbol's cursor to check.
- * @return Returns `true` only if \a sym_csr is excluded.
- */
-NODISCARD
-static bool is_symbol_excluded( CXCursor sym_csr ) {
-  if ( tidy_Cursor_isInvalid( sym_csr ) )
-    return true;
-  enum CXCursorKind const sym_kind = clang_getCursorKind( sym_csr );
-  switch ( sym_kind ) {
-    case CXCursor_CXXMethod:
-    case CXCursor_Constructor:
-    case CXCursor_ConversionFunction:
-    case CXCursor_Destructor:
-      //
-      // Even though the switch in symbols_init_visitor() doesn't include cases
-      // for all of these, the referenced cursor obtained in visit_most_kinds()
-      // may turn out to be one of these.
-      //
-      // However, adding the symbol for one of these would trigger a false-
-      // positive include dependency for merely _calling_ the symbol when
-      // inherited, e.g.:
-      //
-      //      // Base.hpp
-      //      struct Base {
-      //        void f();
-      //      };
-      //
-      //      // Derived.hpp
-      //      #include "Base.hpp"
-      //      struct Derived : Base {
-      //        void g();
-      //      };
-      //
-      //      // Derived.cpp
-      //      #include "Derived.hpp"
-      //      void Derived::g() {
-      //        f();
-      //      }
-      //
-      // If these cases weren't skipped, then the call of f() in Derived.cpp
-      // would trigger a dependency on Base.hpp because that's where f() is
-      // declared.
-      //
-      // However, since Derived is derived from Base, that means the definition
-      // of Base was available via Derived.hpp including Base.hpp and that's
-      // sufficient --- an exception to IWYU.
-      //
-      return true;
-
-    case CXCursor_NonTypeTemplateParameter:
-    case CXCursor_TemplateTemplateParameter:
-    case CXCursor_TemplateTypeParameter:
-      //
-      // These are local to the template definition, so don't need to be added
-      // to symbol_set.
-      //
-      return true;
-
-    case CXCursor_ParmDecl:
-      //
-      // These are local to a function, so don't need to be added to
-      // symbol_set.
-      //
-      return true;
-
-    default:
-      return false;
-  } // switch
-}
-
-/**
  * For a macro, gets the cursor for the identifier given by \a token within \a
  * scope_csr, but only if \a token actually is an identifier, neither
  * `__VA_ARGS__` nor `__VA_OPT__`, nor one of the current macro's parameters.
@@ -683,7 +613,7 @@ CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
  * as necessary.
  *
  * @remarks This is a convenience function for the common case of calling
- * is_symbol_excluded(), get_symbol_file(), and add_symbol().
+ * symbol_is_excluded(), get_symbol_file(), and add_symbol().
  *
  * @param name_csr The cursor to use for the name of the symbol.  It may be
  * (and often is) the same as \a sym_csr.
@@ -692,7 +622,7 @@ CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
  */
 static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
                               symbols_init_data *sid ) {
-  if ( is_symbol_excluded( sym_csr ) )
+  if ( symbol_is_excluded( sym_csr ) )
     return;
   CXFile const sym_file = get_symbol_file( sym_csr, sid );
   if ( sym_file == NULL )
@@ -713,14 +643,6 @@ static void print_statistics( void ) {
     ht_load_factor( &symbol_set )
   );
   verbose_printf( "    ss-size = %u\n", symbol_set.size );
-}
-
-/**
- * Cleans-up all symbols.
- */
-static void symbols_cleanup( void ) {
-  print_statistics();
-  ht_cleanup( &symbol_set, POINTER_CAST( ht_free_fn_t, &tidy_symbol_cleanup ) );
 }
 
 /**
@@ -748,6 +670,87 @@ static CXCursor sid_cxx_scope( symbols_init_data const *sid,
     return sid->cxx_statement_cls_csr;
 
   return else_csr;
+}
+
+/**
+ * Gets whether \a sym_csr should be excluded from the global set.
+ *
+ * @param sym_csr The symbol's cursor to check.
+ * @return Returns `true` only if \a sym_csr is excluded.
+ */
+NODISCARD
+static bool symbol_is_excluded( CXCursor sym_csr ) {
+  if ( tidy_Cursor_isInvalid( sym_csr ) )
+    return true;
+  enum CXCursorKind const sym_kind = clang_getCursorKind( sym_csr );
+  switch ( sym_kind ) {
+    case CXCursor_CXXMethod:
+    case CXCursor_Constructor:
+    case CXCursor_ConversionFunction:
+    case CXCursor_Destructor:
+      //
+      // Even though the switch in symbols_init_visitor() doesn't include cases
+      // for all of these, the referenced cursor obtained in visit_most_kinds()
+      // may turn out to be one of these.
+      //
+      // However, adding the symbol for one of these would trigger a false-
+      // positive include dependency for merely _calling_ the symbol when
+      // inherited, e.g.:
+      //
+      //      // Base.hpp
+      //      struct Base {
+      //        void f();
+      //      };
+      //
+      //      // Derived.hpp
+      //      #include "Base.hpp"
+      //      struct Derived : Base {
+      //        void g();
+      //      };
+      //
+      //      // Derived.cpp
+      //      #include "Derived.hpp"
+      //      void Derived::g() {
+      //        f();
+      //      }
+      //
+      // If these cases weren't skipped, then the call of f() in Derived.cpp
+      // would trigger a dependency on Base.hpp because that's where f() is
+      // declared.
+      //
+      // However, since Derived is derived from Base, that means the definition
+      // of Base was available via Derived.hpp including Base.hpp and that's
+      // sufficient --- an exception to IWYU.
+      //
+      return true;
+
+    case CXCursor_NonTypeTemplateParameter:
+    case CXCursor_TemplateTemplateParameter:
+    case CXCursor_TemplateTypeParameter:
+      //
+      // These are local to the template definition, so don't need to be added
+      // to symbol_set.
+      //
+      return true;
+
+    case CXCursor_ParmDecl:
+      //
+      // These are local to a function, so don't need to be added to
+      // symbol_set.
+      //
+      return true;
+
+    default:
+      return false;
+  } // switch
+}
+
+/**
+ * Cleans-up all symbols.
+ */
+static void symbols_cleanup( void ) {
+  print_statistics();
+  ht_cleanup( &symbol_set, POINTER_CAST( ht_free_fn_t, &tidy_symbol_cleanup ) );
 }
 
 /**
@@ -1133,10 +1136,10 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     return;
 
   //
-  // Explicitly call is_symbol_excluded() and get_symbol_file() so we can avoid
+  // Explicitly call symbol_is_excluded() and get_symbol_file() so we can avoid
   // calling the expensive is_cxx_iwyu_exception() unless necessary.
   //
-  if ( !is_symbol_excluded( dec_csr ) ) {
+  if ( !symbol_is_excluded( dec_csr ) ) {
     CXFile const dec_file = get_symbol_file( dec_csr, sid );
     if ( dec_file != NULL ) {
       if ( tidy_source_is_cxx ) {
