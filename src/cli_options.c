@@ -127,7 +127,8 @@ static bool is_opt_set[ 128 ];          ///< Table of options that were set.
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-bool tidy_is_cxx;
+bool        tidy_is_cxx;
+char const *tidy_source_path;
 
 /// @endcond
 

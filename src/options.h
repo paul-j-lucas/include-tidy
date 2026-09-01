@@ -126,10 +126,6 @@ extern tidy_error   opt_error;            ///< When to exit with non-zero.
 extern unsigned     opt_line_length;      ///< Line length.
 extern tidy_verbose opt_verbose;          ///< Print verbose output?
 
-////////// extern argument variables //////////////////////////////////////////
-
-extern char const  *tidy_source_path;   ///< The file being tidied.
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**

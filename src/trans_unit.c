@@ -26,8 +26,8 @@
 // local
 #include "pjl_config.h"
 #include "trans_unit.h"
+#include "cli_options.h"
 #include "include-tidy.h"
-#include "options.h"
 #include "print.h"
 #include "util.h"
 
