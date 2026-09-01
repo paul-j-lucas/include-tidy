@@ -158,7 +158,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   }
 
   // Remaining cases are valid only for C++.
-  if ( !tidy_is_cxx )
+  if ( !tidy_source_is_cxx )
     goto skip;
 
   // Remaining cases are valid only for paths that are just filenames.

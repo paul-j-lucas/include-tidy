@@ -1437,7 +1437,8 @@ bool config_is_standard_include( char const *rel_path ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
-  return  (tidy_is_cxx && is_standard_include( rel_path, &std_cxx_includes )) ||
+  return  (tidy_source_is_cxx &&
+            is_standard_include( rel_path, &std_cxx_includes )) ||
           is_standard_include( rel_path, &std_c_includes );
 }
 

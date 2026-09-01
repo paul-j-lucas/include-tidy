@@ -127,7 +127,7 @@ static bool is_opt_set[ 128 ];          ///< Table of options that were set.
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-bool        tidy_is_cxx;
+bool        tidy_source_is_cxx;
 char const *tidy_source_path;
 
 /// @endcond
@@ -1183,7 +1183,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
   }
 
-  tidy_is_cxx = strcmp( source_lang, "c++" ) == 0;
+  tidy_source_is_cxx = strcmp( source_lang, "c++" ) == 0;
 
   // tmp_include_paths is needed because we have to defer calling ipath_add()
   // until after chdir() (if called).

@@ -92,7 +92,7 @@
 NODISCARD
 static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
                                      CXCursor scope_csr ) {
-  assert( tidy_is_cxx );
+  assert( tidy_source_is_cxx );
 
   CXSourceLocation const cursor_loc = clang_getCursorLocation( cursor );
   unsigned cursor_offset = tidy_getSpellingLocation_offset( cursor_loc );
@@ -198,7 +198,7 @@ done:
  */
 NODISCARD
 static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
-  assert( tidy_is_cxx );
+  assert( tidy_source_is_cxx );
 
   CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( call_csr );
   // Ensure the callee is a member function, e.g., obj.f() or ptr->f().
@@ -244,7 +244,7 @@ static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
 ////////// extern functions ///////////////////////////////////////////////////
 
 bool is_cxx_arrow_iwyu_exception( CXCursor call_csr, CXCursor mbr_cls_csr ) {
-  assert( tidy_is_cxx );
+  assert( tidy_source_is_cxx );
 
   enum CXCursorKind const kind = clang_getCursorKind( call_csr );
   if ( kind != CXCursor_CallExpr )
@@ -275,7 +275,7 @@ bool is_cxx_arrow_iwyu_exception( CXCursor call_csr, CXCursor mbr_cls_csr ) {
 }
 
 bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
-  assert( tidy_is_cxx );
+  assert( tidy_source_is_cxx );
 
   enum CXCursorKind const fn_kind = clang_getCursorKind( fn_csr );
   switch ( fn_kind ) {
@@ -406,7 +406,7 @@ bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
 }
 
 bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
-  assert( tidy_is_cxx );
+  assert( tidy_source_is_cxx );
 
   if ( tidy_Cursor_isInvalid( obj_csr ) )
     return false;
@@ -491,7 +491,7 @@ bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
 
 bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent, CXCursor dec_csr,
                             CXCursor scope_csr ) {
-  assert( tidy_is_cxx );
+  assert( tidy_source_is_cxx );
 
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
 

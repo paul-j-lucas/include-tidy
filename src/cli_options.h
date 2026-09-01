@@ -69,7 +69,7 @@
 
 ////////// extern variables  //////////////////////////////////////////////////
 
-extern bool         tidy_is_cxx;        ///< Is source file C++?
+extern bool         tidy_source_is_cxx; ///< Is \ref tidy_source_path C++?
 extern char const  *tidy_source_path;   ///< The file being tidied.
 
 ////////// extern functions ///////////////////////////////////////////////////

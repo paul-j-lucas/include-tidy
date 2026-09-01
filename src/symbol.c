@@ -402,7 +402,7 @@ static bool is_symbol_definition_needed( CXCursor cursor, CXCursor parent,
 
   CXCursor cls_csr;
 
-  if ( tidy_is_cxx &&
+  if ( tidy_source_is_cxx &&
        tidy_Cursor_isOutOfLineDefinition( cursor, parent, &cls_csr ) ) {
     *rv_def_csr = clang_getCursorDefinition( cls_csr );
     return true;
@@ -786,7 +786,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   if ( IS_VERBOSE( CURSORS ) )
     verbose_print_cursor( cursor );
 
-  if ( tidy_is_cxx ) {
+  if ( tidy_source_is_cxx ) {
     //
     // Since a non-null value of cxx_statement_cls_csr must span across
     // multiple calls to symbols_init_visitor() for siblings, we have to know
@@ -843,7 +843,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       /* suppress warning */;
   } // switch
 
-  if ( tidy_is_cxx ) {
+  if ( tidy_source_is_cxx ) {
     //
     // If it's a class scope, set cxx_statement_cls_csr.
     //
@@ -862,7 +862,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 skip:;
   // See the comment for symbols_init_data::cxx_current_fn_cls_csr.
   CXCursor const prev_cxx_current_fn_cls_csr = sid->cxx_current_fn_cls_csr;
-  if ( tidy_is_cxx && tidy_Cursor_isFunctionDecl( cursor ) ) {
+  if ( tidy_source_is_cxx && tidy_Cursor_isFunctionDecl( cursor ) ) {
     CXCursor const fn_cls_csr = clang_getCursorSemanticParent( cursor );
     sid->cxx_current_fn_cls_csr = tidy_Cursor_isClassDecl( fn_cls_csr ) ?
       fn_cls_csr :
@@ -955,7 +955,7 @@ static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
                             symbols_init_data *sid ) {
   assert( sid != NULL );
 
-  if ( tidy_is_cxx ) {
+  if ( tidy_source_is_cxx ) {
     CXCursor const child_csr = tidy_Cursor_getFirstChild( call_csr );
     if ( !tidy_Cursor_isInvalid( child_csr ) ) {
       enum CXCursorKind const child_kind = clang_getCursorKind( child_csr );
@@ -988,7 +988,7 @@ static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
   }
 
   visit_most_kinds( call_csr, parent, sid );
-  return tidy_is_cxx;
+  return tidy_source_is_cxx;
 }
 
 /**
@@ -1139,7 +1139,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   if ( !is_symbol_excluded( dec_csr ) ) {
     CXFile const dec_file = get_symbol_file( dec_csr, sid );
     if ( dec_file != NULL ) {
-      if ( tidy_is_cxx ) {
+      if ( tidy_source_is_cxx ) {
         // See the comment for symbols_init_data::cxx_deferred_fn_csr.
         if ( clang_equalCursors( dec_csr, sid->cxx_deferred_fn_csr ) )
           return;
@@ -1183,7 +1183,7 @@ static void visit_MemberRefExpr( CXCursor mbr_ref_csr, CXCursor parent,
   if ( tidy_Cursor_isInvalid( obj_csr ) )
     goto skip;
 
-  if ( tidy_is_cxx ) {
+  if ( tidy_source_is_cxx ) {
     if ( is_cxx_arrow_iwyu_exception( obj_csr, mbr_cls_csr ) )
       return;
     if ( is_cxx_mbr_ref_iwyu_exception( obj_csr ) )

@@ -605,7 +605,7 @@ static char* make_symbols_comment( tidy_include const *include ) {
       break;
   } // switch
 
-  if ( tidy_is_cxx ) {
+  if ( tidy_source_is_cxx ) {
     //
     // Since C++ allows function, operator, and template overloading, there can
     // be multiple entries with the same name, so remove duplicates.
