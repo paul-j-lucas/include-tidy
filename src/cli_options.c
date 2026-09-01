@@ -1122,21 +1122,16 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   check_options();
 
-  // Keep a copy of *pargc as it is now before we add options we need to pass
-  // to libclang.
+  // Keep a copy of *pargc as it is now for --help and --version below before
+  // adding options for libclang via clang_parseTranslationUnit2() in
+  // trans_unit.c.  Do this now so --verbose=a prints all command-line
+  // arguments including these.
   int const argc = *pargc;
-
-  // We have to add -I. manually since libclang doesn't start out with any
-  // include paths.  We also have to do this after --help and --version have
-  // been checked.
-  insert_argv( pargc, pargv, 1, 1, (char const *const[]){ "-I." } );
-
-  // These options are given only to libclang via clang_parseTranslationUnit2()
-  // in trans_unit.c.
   char const *const LIBCLANG_ARGS[] = {
     "-D__include_tidy__",
     "-Qunused-arguments",
     "-Wno-unknown-warning-option",
+    "-I.",                              // libclang has no paths by default
   };
   insert_argv( pargc, pargv, 1, ARRAY_SIZE( LIBCLANG_ARGS ), LIBCLANG_ARGS );
 
@@ -1146,7 +1141,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   }
 
   if ( IS_VERBOSE( ARGS ) ) {
-    verbose_print_argv( "libclang", argc, *pargv );
+    verbose_print_argv( "libclang", *pargc, *pargv );
     verbose_print_argv( "tidy", tidy_argc, tidy_argv );
   }
 
