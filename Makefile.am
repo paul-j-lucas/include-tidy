@@ -31,13 +31,48 @@ EXTRA_DIST =		bootstrap \
 			src/include-tidy.toml \
 			README.md
 
+COVERAGE_INFO =		$(top_builddir)/coverage.info
+COVERAGE_DIR =		coverage
+
 DOCS_DIR =		docs
 
-.PHONY: doc docs \
+LCOV_FLAGS =		--capture \
+			--config-file "$(top_srcdir)/lcovrc" \
+			--directory "$(abs_top_builddir)" \
+			--exclude "*/color.c" \
+			--output-file $(COVERAGE_INFO)
+
+GENHTML_FLAGS =	--legend \
+		--title "$(PACKAGE_NAME)-$(PACKAGE_VERSION) Code Coverage" \
+		--output-directory $(top_builddir)/$(COVERAGE_DIR)
+
+.PHONY:	clean-coverage clean-coverage-local \
+	distclean-coverage distclean-coverage-local \
+	doc docs \
 	update-gnulib
 
-clean-local:
+check-coverage:
+if ENABLE_COVERAGE
+	$(MAKE) $(AM_MAKEFLAGS) check
+	$(LCOV) $(LCOV_FLAGS)
+	$(GENHTML) $(GENHTML_FLAGS) $(COVERAGE_INFO)
+	@echo "file://$(abs_builddir)/$(COVERAGE_DIR)/index.html"
+else
+	@echo "Code coverage not enabled; to enable:"
+	@echo
+	@echo "    ./configure --enable-coverage"
+endif
+
+clean-local: clean-coverage-local
 	rm -fr $(DOCS_DIR)
+
+clean-coverage-local:
+	rm -f $(COVERAGE_INFO)
+
+distclean-local: distclean-coverage-local
+
+distclean-coverage-local:
+	rm -fr $(COVERAGE_DIR)
 
 dist-hook:
 	find $(distdir) -name .DS_Store -exec rm -f {} \;

@@ -1,4 +1,6 @@
 /*.dSYM
+/*.gcda
+/*.gcno
 /*_test
 /config.h
 /include-tidy

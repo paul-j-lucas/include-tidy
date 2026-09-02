@@ -24,6 +24,28 @@ AC_PREREQ([2.70])
 AC_INIT([include-tidy], [2.2], [https://github.com/paul-j-lucas/include-tidy/issues],,[https://github.com/paul-j-lucas/include-tidy])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
+AM_EXTRA_RECURSIVE_TARGETS([clean-coverage distclean-coverage])
+
+# Testing feature: code coverage (disabled by default)
+AC_ARG_ENABLE([coverage],
+  AS_HELP_STRING([--enable-coverage], [enable code coverage])
+)
+AS_IF([test "x$enable_coverage" = xyes],
+  #
+  # When code coverage is desired, we have to set CFLAGS so it doesn't include
+  # -O2 (so we can add -O0 later in src/Makefile.am) before AC_PROG_CC is
+  # called as directed by "Autconf 5.10.3: C Compiler Characteristics":
+  #
+  #     If output variable CFLAGS was not already set, set it to -g -O2 for the
+  #     GNU C compiler ....  If your package does not like this default, then
+  #     it is acceptable to insert the line ': ${CFLAGS=""}' after AC_INIT and
+  #     before AC_PROG_CC to select an empty default instead.
+  #
+  # There's still more to do after AC_PROG_CC is called and sets $GCC.  This is
+  # handed below in part 2.
+  #
+  [: ${CFLAGS=""}]
+)
 
 # Checks for programs.
 AC_LANG(C)
@@ -127,10 +149,31 @@ AS_IF([test "x$enable_ubsan" = xyes], [
     [Define to 1 if Undefined Bahavior Sanitizer is enabled.])
 ])
 
+# Testing feature: code coverage, part 2
+AS_IF([test "x$enable_coverage" = xyes], [
+  AS_IF([test "x$GCC" != xyes], [
+    AC_MSG_ERROR([gcc is required for code coverage])
+  ])
+  AC_CHECK_TOOL([GCOV], [gcov], [gcov])
+  AS_IF([test "x$GCOV" = "x:"], [
+    AC_MSG_ERROR([required program "gcov" for code coverage not found])
+  ])
+  AC_CHECK_PROG([LCOV], [lcov], [lcov])
+  AS_IF([test "x$LCOV" = x], [
+    AC_MSG_ERROR([required program "lcov" for code coverage not found])
+  ])
+  AC_CHECK_PROG([GENHTML], [genhtml], [genhtml])
+  AS_IF([test "x$GENHTML" = x], [
+    AC_MSG_ERROR([required program "genhtml" for code coverage not found])
+  ])
+  AC_DEFINE([ENABLE_COVERAGE], [1], [Define to 1 if code coverage is enabled.])
+])
+
 # Makefile conditionals.
-AM_CONDITIONAL([ENABLE_ASAN],   [test "x$enable_asan"   = xyes])
-AM_CONDITIONAL([ENABLE_MSAN],   [test "x$enable_msan"   = xyes])
-AM_CONDITIONAL([ENABLE_UBSAN],  [test "x$enable_ubsan"  = xyes])
+AM_CONDITIONAL([ENABLE_ASAN],     [test "x$enable_asan"     = xyes])
+AM_CONDITIONAL([ENABLE_COVERAGE], [test "x$enable_coverage" = xyes])
+AM_CONDITIONAL([ENABLE_MSAN],     [test "x$enable_msan"     = xyes])
+AM_CONDITIONAL([ENABLE_UBSAN],    [test "x$enable_ubsan"    = xyes])
 
 # Miscellaneous.
 AX_C___ATTRIBUTE__

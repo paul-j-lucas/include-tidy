@@ -1,15 +1,17 @@
 *.a
+*.core
 *.gz
 *.in
 *.log
 *.o
 *.trs
 *~
-.*.swp
 .deps/
-.dirstamp
 .DS_Store
 Makefile
+
+.*.s[a-v][a-z]
+.*.sw[a-p]
 
 /aclocal.m4
 /ar-lib
@@ -22,6 +24,7 @@ Makefile
 /config.sub
 /configure
 /conftest*
+/coverage*
 /depcomp
 /docs
 /INSTALL

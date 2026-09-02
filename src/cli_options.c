@@ -947,6 +947,9 @@ static void print_version( bool verbose ) {
 #ifdef ENABLE_ASAN
   PUT_CONFIG_OPT( "enable-asan" );
 #endif /* ENABLE_ASAN */
+#ifdef ENABLE_COVERAGE
+  PUT_CONFIG_OPT( "enable-coverage" );
+#endif /* ENABLE_COVERAGE */
 #ifdef ENABLE_MSAN
   PUT_CONFIG_OPT( "enable-msan" );
 #endif /* ENABLE_MSAN */

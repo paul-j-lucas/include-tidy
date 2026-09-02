@@ -46,6 +46,11 @@ if ENABLE_UBSAN
 AM_CFLAGS +=		-fsanitize=undefined -fno-sanitize-recover=all
 endif
 
+if ENABLE_COVERAGE
+AM_CFLAGS +=		--coverage -g -O0
+AM_LDFLAGS +=		--coverage
+endif
+
 TIDY_FLAGS =		-Xtidy --verbose=f -Xtidy --error=never
 TIDY_CFLAGS =		$(CFLAGS) $(AM_CFLAGS) $(CPPFLAGS) $(AM_CPPFLAGS)
 
@@ -104,10 +109,18 @@ toml_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 			toml_lite.c toml_lite.h \
 			toml_test.c
 
+check-local: clean-coverage-local
+
 tidy: include-tidy
 	@for file in *.h *.c; do \
 	  [ ! -f "$$file" ] || \
 	    include-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) "$$file" || exit $$?; \
 	done
+
+clean-coverage-local:
+	rm -f *.gcda
+
+distclean-coverage-local: clean-coverage-local
+	rm -f *.gcno
 
 # vim:set noet sw=8 ts=8:
