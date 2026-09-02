@@ -128,8 +128,8 @@ typedef struct array array_t;
 typedef int (*array_cmp_fn_t)( void const *i_element, void const *j_element );
 
 /**
- * The signature for a function passed to array_cleanup() used to free an
- * element (if necessary).
+ * The signature for a function passed to either array_cleanup() or
+ * array_dedup() used to free an element (if necessary).
  *
  * @param element A pointer to the element to free.
  */
@@ -358,12 +358,12 @@ inline void* array_bsearch( array_t *array, void const *key,
  * De-duplicates a sorted array by overwriting element _i_ with element _i_ +
  * { 1 ... _n_-1 } where the elements compare equal.
  *
- * @note This is an O(N) operation.
- *
  * @param array The sorted array to dedup.
  * @param cmp_fn The comparison function to use.
  * @param free_fn A pointer to a function used to free duplicate elements or
  * NULL if unnecessary.
+ *
+ * @note This is an O(N) operation.
  */
 void array_dedup( array_t *array, array_cmp_fn_t cmp_fn,
                   array_free_fn_t free_fn );
