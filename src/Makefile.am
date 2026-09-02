@@ -22,7 +22,8 @@
 .MAKE.JOB.PREFIX=
 
 bin_PROGRAMS =		include-tidy
-check_PROGRAMS =	hash_table_test \
+check_PROGRAMS =	array_test \
+			hash_table_test \
 			path_util_test \
 			red_black_test \
 			strbuf_test \
@@ -89,6 +90,9 @@ BASE_TEST_SOURCES =	pjl_config.h config.h \
 			type_traits.h \
 			util.c util.h \
 			unit_test.c unit_test.h
+
+array_test_SOURCES =	$(BASE_TEST_SOURCES) \
+			array_test.c
 
 hash_table_test_SOURCES=$(BASE_TEST_SOURCES) \
 			hash_table.c hash_table.h \
