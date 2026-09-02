@@ -30,7 +30,6 @@
 #include "pjl_config.h"
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 #define NEED_MATRIX_NEW
-#include "bit_util.h"                   /* for is_1_bit() */
 #endif /* NEED_II_MATRIX */
 #include "type_traits.h"
 

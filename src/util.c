@@ -26,6 +26,9 @@
 // local
 #include "pjl_config.h"
 #include "util.h"
+#ifdef NEED_MATRIX_NEW
+#include "bit_util.h"                   /* for is_1_bit() */
+#endif /* NEED_MATRIX_NEW */
 #include "include-tidy.h"
 
 /// @cond DOXYGEN_IGNORE
