@@ -23,6 +23,14 @@
 #include "array.h"
 #include "unit_test.h"
 
+/// @cond DOXYGEN_IGNORE
+
+// standard
+#include <stdbool.h>
+#include <stdio.h>
+
+/// @endcond
+
 ////////// local variables ////////////////////////////////////////////////////
 
 static unsigned test_cleanup_called;
