@@ -35,15 +35,15 @@ LDADD =			$(LIBCLANG_LIBS) $(top_builddir)/lib/libgnu.a
 TESTS =			$(check_PROGRAMS)
 
 if ENABLE_ASAN
-AM_CFLAGS +=            -fsanitize=address -fno-sanitize-recover=all
+AM_CFLAGS +=		-fsanitize=address -fno-sanitize-recover=all
 endif
 
 if ENABLE_MSAN
-AM_CFLAGS +=            -fsanitize=memory -fno-sanitize-recover=all
+AM_CFLAGS +=		-fsanitize=memory -fno-sanitize-recover=all
 endif
 
 if ENABLE_UBSAN
-AM_CFLAGS +=            -fsanitize=undefined -fno-sanitize-recover=all
+AM_CFLAGS +=		-fsanitize=undefined -fno-sanitize-recover=all
 endif
 
 TIDY_FLAGS =		-Xtidy --verbose=f -Xtidy --error=never
