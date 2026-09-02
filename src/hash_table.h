@@ -130,11 +130,16 @@ typedef struct ht_iterator    ht_iterator_t;
 /**
  * The signature for a function passed to ht_init() used to compare entry data.
  *
+ * @remarks This function need only compare for equality; neither less nor
+ * greater than comparisons are necessary.
+ *
  * @param i_data A pointer to data.
  * @param j_data A pointer to data.
- * @return Returns an integer less than, equal to, or greater than 0, according
- * to whether the data pointed to by \a i_data is less than, equal to, or
- * greater than the data pointed to by \a j_data.
+ * @return Returns 0 only if the data pointed to by \a i_data equals that
+ * pointed to by \a j_data; non-zero otherwise.
+ *
+ * @note The return value of 0 meaning equal allows a 3-way comparison function
+ * like **strcmp**(3) to be used directly when the data are strings.
  */
 typedef int (*ht_cmp_fn_t)( void const *i_data, void const *j_data );
 
