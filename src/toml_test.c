@@ -516,6 +516,8 @@ int main( int argc, char const *const argv[] ) {
     test_value_int_bad_binary();
     test_value_int_bad_underscore();
   }
+
+  return test_exit_status;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

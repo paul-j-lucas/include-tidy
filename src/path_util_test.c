@@ -146,6 +146,8 @@ int main( int argc, char const *const argv[] ) {
   test_path_no_dot_slash();
   test_path_no_ext();
   test_path_normalize();
+
+  return test_exit_status;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

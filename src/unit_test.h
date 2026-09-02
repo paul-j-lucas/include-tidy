@@ -67,6 +67,7 @@
 
 ////////// extern variables ///////////////////////////////////////////////////
 
+extern int      test_exit_status;       ///< The test's exit status.
 extern unsigned test_failures;          ///< Test failure count.
 
 ////////// extern functions ///////////////////////////////////////////////////

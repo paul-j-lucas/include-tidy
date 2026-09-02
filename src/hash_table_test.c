@@ -171,6 +171,8 @@ int main( int argc, char const *const argv[] ) {
   (void)(test_insert_delete() &&
          test_iter() &&
          test_find_delete());
+
+  return test_exit_status;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -225,6 +225,8 @@ int main( int argc, char const *const argv[] ) {
     test_array_push_array_back();
     test_array_sort_dedup_bsearch();
   }
+
+  return test_exit_status;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

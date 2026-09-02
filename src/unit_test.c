@@ -40,6 +40,7 @@
 /// Otherwise Doxygen generates two entries.
 
 char const *prog_name;
+int         test_exit_status;
 unsigned    test_failures;
 
 /// @endcond
@@ -53,17 +54,15 @@ unsigned    test_failures;
 
 /**
  * Called at unit-test program termination via **atexit**(3) to print the
- * number of test failures and exits with either `EX_OK` if all tests passed or
- * `EX_SOFTWARE` if at least one test failed.
+ * number of test failures and set \ref test_exit_status.
  *
  * @note This function is called only via **atexit**(3).
  *
  * @sa test_prog_init()
  */
-_Noreturn
-static void test_prog_exit( void ) {
+static void test_prog_atexit( void ) {
   printf( "%u failures\n", test_failures );
-  _Exit( test_failures > 0 ? EX_SOFTWARE : EX_OK );
+  test_exit_status = test_failures > 0 ? EX_SOFTWARE : EX_OK;
 }
 
 /**
@@ -92,7 +91,7 @@ void test_prog_init( int argc, char const *const argv[] ) {
   prog_name = path_basename( argv[0] );
   if ( --argc != 0 )
     test_prog_usage();                  // LCOV_EXCL_LINE
-  ATEXIT( &test_prog_exit );
+  ATEXIT( &test_prog_atexit );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
