@@ -239,16 +239,15 @@ static inline int toml_peekc( toml_file *toml ) {
  * @param array The toml_array to clean up.  If NULL, does nothing.
  */
 static void toml_array_cleanup( toml_array *array ) {
-  if ( array == NULL )
-    return;
+  if ( array != NULL ) {
+    // Force hoist of array-> out of loop.
+    size_t const size = array->size;
+    toml_value *const values = array->values;
 
-  // Force hoist of array-> out of loop.
-  size_t const size = array->size;
-  toml_value *const values = array->values;
-
-  for ( unsigned i = 0; i < size; ++i )
-    toml_value_cleanup( &values[i] );
-  free( values );
+    for ( unsigned i = 0; i < size; ++i )
+      toml_value_cleanup( &values[i] );
+    free( values );
+  }
 }
 
 /**
@@ -583,10 +582,10 @@ error:
  * @param key The toml_key to clean-up. If NULL, does nothing.
  */
 static void toml_key_cleanup( toml_key *key ) {
-  if ( key == NULL )
-    return;
-  FREE( key->name );
-  key->name = NULL;
+  if ( key != NULL ) {
+    FREE( key->name );
+    key->name = NULL;
+  }
 }
 
 /**
@@ -681,10 +680,10 @@ error:
  * @param kv The toml_key_value to clean-up. If NULL, does nothing.
  */
 static void toml_key_value_cleanup( toml_key_value *kv ) {
-  if ( kv == NULL )
-    return;
-  toml_key_cleanup( &kv->key );
-  toml_value_cleanup( &kv->value );
+  if ( kv != NULL ) {
+    toml_key_cleanup( &kv->key );
+    toml_value_cleanup( &kv->value );
+  }
 }
 
 /**
@@ -905,20 +904,20 @@ static bool toml_table_header_parse( toml_file *toml, toml_key *rv_key,
  * @param value The toml_value to clean-up.  If NULL, does nothing.
  */
 static void toml_value_cleanup( toml_value *value ) {
-  if ( value == NULL )
-    return;
-  switch ( value->type ) {
-    case TOML_ARRAY:
-      toml_array_cleanup( &value->a );
-      break;
-    case TOML_BOOL:
-    case TOML_INT:
-      // nothing to do
-      break;
-    case TOML_STRING:
-      free( value->s );
-      break;
-  } // switch
+  if ( value != NULL ) {
+    switch ( value->type ) {
+      case TOML_ARRAY:
+        toml_array_cleanup( &value->a );
+        break;
+      case TOML_BOOL:
+      case TOML_INT:
+        // nothing to do
+        break;
+      case TOML_STRING:
+        free( value->s );
+        break;
+    } // switch
+  }
 }
 
 /**
@@ -1020,11 +1019,11 @@ char const* toml_error_msg( toml_file const *toml ) {
 }
 
 void toml_file_cleanup( toml_file *toml ) {
-  if ( toml == NULL )
-    return;
-  // Table names are copied into the entries, so nothing to free.
-  ht_cleanup( &toml->table_names, /*free_fn=*/NULL );
-  *toml = (toml_file){ 0 };
+  if ( toml != NULL ) {
+    // Table names are copied into the entries, so nothing to free.
+    ht_cleanup( &toml->table_names, /*free_fn=*/NULL );
+    *toml = (toml_file){ 0 };
+  }
 }
 
 void toml_file_init( toml_file *toml, FILE *file ) {
@@ -1050,13 +1049,13 @@ void toml_file_init( toml_file *toml, FILE *file ) {
 }
 
 void toml_table_cleanup( toml_table *table ) {
-  if ( table == NULL )
-    return;
-  toml_key_cleanup( &table->key );
-  ht_cleanup(
-    &table->keys_values,
-    POINTER_CAST( ht_free_fn_t, &toml_key_value_cleanup )
-  );
+  if ( table != NULL ) {
+    toml_key_cleanup( &table->key );
+    ht_cleanup(
+      &table->keys_values,
+      POINTER_CAST( ht_free_fn_t, &toml_key_value_cleanup )
+    );
+  }
 }
 
 toml_value const* toml_table_find( toml_table const *table, char const *key ) {

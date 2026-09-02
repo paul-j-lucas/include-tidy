@@ -64,9 +64,11 @@ char const* path_cwd( size_t *rv_len ) {
 
   if ( cwd_path_len == 0 ) {
     if ( getcwd( cwd_path_buf, sizeof cwd_path_buf - 1 ) == NULL ) {
+      // LCOV_EXCL_START
       fatal_error( EX_UNAVAILABLE,
         "could not get current working directory: %s\n", STRERROR()
       );
+      // LCOV_EXCL_STOP
     }
     cwd_path_len = strlen( cwd_path_buf );
     assert( cwd_path_len > 0 );

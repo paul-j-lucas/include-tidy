@@ -143,8 +143,10 @@ bool array_reserve( array_t *array, size_t res_len ) {
   while ( array->cap < min_cap ) {
     size_t const delta = array->cap >> 1; // grow by ~1.5x
     if ( unlikely( array->cap > max_cap - delta ) ) {
+      // LCOV_EXCL_START
       array->cap = min_cap;
       break;
+      // LCOV_EXCL_STOP
     }
     array->cap += delta;
   }

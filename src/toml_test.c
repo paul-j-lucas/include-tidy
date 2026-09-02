@@ -72,11 +72,11 @@ static void toml_error_print( toml_file const *toml ) {
 }
 
 static void toml_test_cleanup( toml_test *test ) {
-  if ( test == NULL )
-    return;
-  toml_table_cleanup( &test->table );
-  fclose( test->toml.file );
-  toml_file_cleanup( &test->toml );
+  if ( test != NULL ) {
+    toml_table_cleanup( &test->table );
+    fclose( test->toml.file );
+    toml_file_cleanup( &test->toml );
+  }
 }
 
 static void toml_test_init( toml_test *test, char const *buf ) {

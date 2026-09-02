@@ -63,9 +63,8 @@ static array_t ipaths = ARRAY_INIT( sizeof(tidy_ipath) );
  * @param ipath The tidy_ipath to clean up.  If NULL, does nothing.
  */
 static void ipath_cleanup( tidy_ipath *ipath ) {
-  if ( ipath == NULL )
-    return;
-  free( ipath->abs_path );
+  if ( ipath != NULL )
+    free( ipath->abs_path );
 }
 
 /**

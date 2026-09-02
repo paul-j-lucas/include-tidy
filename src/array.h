@@ -227,10 +227,12 @@ inline void const* array_at_nc( array_t const *array, size_t index ) {
 }
 
 /// @cond DOXYGEN_IGNORE
+// LCOV_EXCL_START
 NODISCARD
 inline void* nonconst_array_at_nc( array_t *array, size_t index ) {
   return CONST_CAST( void*, array_at_nc( array, index ) );
 }
+// LCOV_EXCL_STOP
 
 #define array_at_nc(ARRAY,INDEX) \
   NONCONST_OVERLOAD( array_at_nc, (ARRAY), (INDEX) )
@@ -260,10 +262,12 @@ inline void const* array_at( array_t const *array, size_t index ) {
 }
 
 /// @cond DOXYGEN_IGNORE
+// LCOV_EXCL_START
 NODISCARD
 inline void* nonconst_array_at( array_t *array, size_t index ) {
   return CONST_CAST( void*, array_at( array, index ) );
 }
+// LCOV_EXCL_STOP
 
 #define array_at(ARRAY,INDEX) \
   NONCONST_OVERLOAD( array_at, (ARRAY), (INDEX) )
@@ -296,10 +300,12 @@ inline void const* array_back_nc( array_t const *array ) {
 }
 
 /// @cond DOXYGEN_IGNORE
+// LCOV_EXCL_START
 NODISCARD
 inline void* nonconst_array_back_nc( array_t *array ) {
   return CONST_CAST( void*, array_back_nc( array ) );
 }
+// LCOV_EXCL_STOP
 
 #define array_back_nc(ARRAY) \
   NONCONST_OVERLOAD( array_back_nc, (ARRAY) )
@@ -330,10 +336,12 @@ inline void const* array_back( array_t const *array ) {
 }
 
 /// @cond DOXYGEN_IGNORE
+// LCOV_EXCL_START
 NODISCARD
 inline void* nonconst_array_back( array_t *array ) {
   return CONST_CAST( void*, array_back( array ) );
 }
+// LCOV_EXCL_STOP
 
 #define array_back(ARRAY) \
   NONCONST_OVERLOAD( array_back, (ARRAY) )
@@ -392,10 +400,12 @@ inline void const* array_front_nc( array_t const *array ) {
 }
 
 /// @cond DOXYGEN_IGNORE
+// LCOV_EXCL_START
 NODISCARD
 inline void* nonconst_array_front_nc( array_t *array ) {
   return CONST_CAST( void*, array_front_nc( array ) );
 }
+// LCOV_EXCL_STOP
 
 #define array_front_nc(ARRAY) \
   NONCONST_OVERLOAD( array_front_nc, (ARRAY) )
@@ -424,10 +434,12 @@ inline void const* array_front( array_t const *array ) {
 }
 
 /// @cond DOXYGEN_IGNORE
+// LCOV_EXCL_START
 NODISCARD
 inline void* nonconst_array_front( array_t *array ) {
   return CONST_CAST( void*, array_front( array ) );
 }
+// LCOV_EXCL_STOP
 
 #define array_front(ARRAY) \
   NONCONST_OVERLOAD( array_front, (ARRAY) )

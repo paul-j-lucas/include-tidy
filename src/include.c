@@ -857,15 +857,14 @@ static char* tidy_File_getRelativePath( CXFile file ) {
  * @param include The tidy_include to clean up.  If NULL, does nothing.
  */
 static void tidy_include_cleanup( tidy_include *include ) {
-  if ( include == NULL )
-    return;
+  if ( include != NULL ) {
+    FREE( include->abs_path );
+    FREE( include->rel_path );
+    array_cleanup( &include->lines, /*free_fn=*/NULL );
 
-  FREE( include->abs_path );
-  FREE( include->rel_path );
-  array_cleanup( &include->lines, /*free_fn=*/NULL );
-
-  // Because the nodes point to existing tidy_symbol objects, use NULL.
-  ht_cleanup( &include->symbol_set, /*free_fn=*/NULL );
+    // Because the nodes point to existing tidy_symbol objects, use NULL.
+    ht_cleanup( &include->symbol_set, /*free_fn=*/NULL );
+  }
 }
 
 /**

@@ -894,10 +894,10 @@ skip_children:
  * @param sym The tidy_symbol to clean up.  If NULL, does nothing.
  */
 static void tidy_symbol_cleanup( tidy_symbol *sym ) {
-  if ( sym == NULL )
-    return;
-  FREE( sym->key );
-  FREE( sym->name );
+  if ( sym != NULL ) {
+    FREE( sym->key );
+    FREE( sym->name );
+  }
 }
 
 /**

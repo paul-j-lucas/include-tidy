@@ -76,9 +76,8 @@ static void print_statistics( void ) {
  * @param tdef The tidy_typedef to clean up.  If NULL, does nothing.
  */
 static void tidy_typedef_cleanup( tidy_typedef *tdef ) {
-  if ( tdef == NULL )
-    return;
-  FREE( tdef->alias_name );
+  if ( tdef != NULL )
+    FREE( tdef->alias_name );
 }
 
 /**

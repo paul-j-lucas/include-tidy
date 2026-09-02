@@ -59,6 +59,9 @@ static bool test_array_basics( void ) {
   TEST( a.len == 0 );
   TEST( a.cap == 0 );
 
+  TEST( array_front( &a ) == NULL );
+  TEST( array_back( &a ) == NULL );
+
   void *e = array_push_back( &a );
   TEST( a.elements != NULL );
   TEST( a.len == 1 );
@@ -67,6 +70,10 @@ static bool test_array_basics( void ) {
     *(int*)e = 42;
 
   e = array_front( &a );
+  if ( TEST( e != NULL ) )
+    TEST( *(int*)e == 42 );
+
+  e = array_back( &a );
   if ( TEST( e != NULL ) )
     TEST( *(int*)e == 42 );
 
@@ -219,6 +226,8 @@ static bool test_array_sort_dedup_bsearch( void ) {
     TEST( *(int*)e == 3 );
 
   array_cleanup( &a, NULL );
+  array_dedup( &a, &test_int_cmp, &test_cleanup );
+
   TEST_FUNC_END();
 }
 

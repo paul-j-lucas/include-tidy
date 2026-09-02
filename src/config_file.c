@@ -1297,10 +1297,10 @@ static bool is_standard_include( char const *rel_path,
  * @param si The symbol_includes to clean up.  If NULL, does nothing.
  */
 static void symbol_includes_cleanup( symbol_includes *si ) {
-  if ( si == NULL )
-    return;
-  FREE( si->from_sym_name );
-  rb_tree_cleanup( &si->to_include_set, /*free_fn=*/NULL );
+  if ( si != NULL ) {
+    FREE( si->from_sym_name );
+    rb_tree_cleanup( &si->to_include_set, /*free_fn=*/NULL );
+  }
 }
 
 /**

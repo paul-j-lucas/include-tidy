@@ -172,6 +172,7 @@ void trans_unit_init( int argc, char const *const argv[] ) {
   );
 
   switch ( error_code ) {
+    // LCOV_EXCL_START
     case CXError_ASTReadError:
       print_file_error( tidy_source_path, 0, 0, "libclang AST error\n" );
       exit( EX_UNAVAILABLE );
@@ -181,6 +182,7 @@ void trans_unit_init( int argc, char const *const argv[] ) {
     case CXError_InvalidArguments:
       print_error( "invalid arguments given to libclang\n" );
       exit( EX_SOFTWARE );
+    // LCOV_EXCL_STOP
     case CXError_Failure:
       //
       // Libclang isn't specific about the cause of a failure, so see if the

@@ -85,7 +85,7 @@ static char const* get_cxx_header( char const *c_name,
   char const *const dot = c_ext - 1;
   size_t const base_len = STATIC_CAST( size_t, dot - c_name );
   if ( base_len + 1/*'c'*/ + 1/*'\0'*/ > PATH_MAX )
-    return NULL;
+    return NULL;                        // LCOV_EXCL_LINE
 
   path_buf[0] = 'c';
   memcpy( path_buf + 1, c_name, base_len );

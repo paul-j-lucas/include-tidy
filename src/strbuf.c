@@ -66,9 +66,10 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 void strbuf_cleanup( strbuf_t *sbuf ) {
-  assert( sbuf != NULL );
-  free( sbuf->str );
-  strbuf_init( sbuf );
+  if ( sbuf != NULL ) {
+    free( sbuf->str );
+    strbuf_init( sbuf );
+  }
 }
 
 char* strbuf_paths( strbuf_t *sbuf, char const *component ) {
