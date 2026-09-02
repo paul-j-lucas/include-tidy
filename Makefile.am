@@ -40,6 +40,7 @@ LCOV_FLAGS =		--capture \
 			--config-file "$(top_srcdir)/lcovrc" \
 			--directory "$(abs_top_builddir)" \
 			--exclude "*/color.c" \
+			--gcov-tool "$(GCOV)" \
 			--output-file $(COVERAGE_INFO)
 
 GENHTML_FLAGS =	--legend \
@@ -53,6 +54,7 @@ GENHTML_FLAGS =	--legend \
 
 check-coverage:
 if ENABLE_COVERAGE
+	$(MAKE) $(AM_MAKEFLAGS) clean-coverage
 	$(MAKE) $(AM_MAKEFLAGS) check
 	$(LCOV) $(LCOV_FLAGS)
 	$(GENHTML) $(GENHTML_FLAGS) $(COVERAGE_INFO)

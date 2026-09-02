@@ -113,8 +113,6 @@ toml_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 			toml_lite.c toml_lite.h \
 			toml_test.c
 
-check-local: clean-coverage-local
-
 tidy: include-tidy
 	@for file in *.h *.c; do \
 	  [ ! -f "$$file" ] || \
