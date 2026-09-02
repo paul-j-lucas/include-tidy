@@ -29,6 +29,10 @@ check_PROGRAMS =	hash_table_test \
 			toml_test
 
 AM_CFLAGS =		$(INCLUDE_TIDY_CFLAGS) $(LIBCLANG_CPPFLAGS)
+AM_CPPFLAGS =		-I$(top_srcdir)/lib -I$(top_builddir)/lib
+AM_LDFLAGS =		$(LIBCLANG_LDFLAGS) -Wl,-rpath,$(LIBCLANG_LIBDIR)
+LDADD =			$(LIBCLANG_LIBS) $(top_builddir)/lib/libgnu.a
+TESTS =			$(check_PROGRAMS)
 
 if ENABLE_ASAN
 AM_CFLAGS +=            -fsanitize=address -fno-sanitize-recover=all
@@ -41,11 +45,6 @@ endif
 if ENABLE_UBSAN
 AM_CFLAGS +=            -fsanitize=undefined -fno-sanitize-recover=all
 endif
-
-AM_CPPFLAGS =		-I$(top_srcdir)/lib -I$(top_builddir)/lib
-AM_LDFLAGS =		$(LIBCLANG_LDFLAGS) -Wl,-rpath,$(LIBCLANG_LIBDIR)
-LDADD =			$(LIBCLANG_LIBS) $(top_builddir)/lib/libgnu.a
-TESTS =         	$(check_PROGRAMS)
 
 TIDY_FLAGS =		-Xtidy --verbose=f -Xtidy --error=never
 TIDY_CFLAGS =		$(CFLAGS) $(AM_CFLAGS) $(CPPFLAGS) $(AM_CPPFLAGS)
