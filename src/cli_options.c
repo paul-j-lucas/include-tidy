@@ -481,13 +481,7 @@ static char const* get_source_path( int argc, char const *argv[] ) {
   // The source path tends to be last (or near it), so iterate backwards.
   for ( int i = argc - 1; i >= 1; --i ) {
     char const *const argv_i = argv[i];
-    if ( unlikely( argv_i[0] == '\0' ) || argv_i[0] == '-' )
-      continue;
-    char const *const ext = path_ext( argv_i );
-    if ( ext == NULL )
-      continue;
-    tidy_file_ext const *const file_ext = file_ext_find( ext );
-    if ( file_ext != NULL )
+    if ( argv_i[0] != '\0' && argv_i[0] != '-' )
       return argv_i;
   } // for
 

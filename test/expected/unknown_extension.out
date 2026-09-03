@@ -1,0 +1,3 @@
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml unknown.x
+include-tidy: "x": unknown extension; must be one of c, c++, cc, cp, cpp, cxx, h, h++, hh, hp, hpp, hxx; or use -xc[++]
+
