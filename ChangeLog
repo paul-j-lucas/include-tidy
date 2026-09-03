@@ -1,5 +1,13 @@
 2026-09-03  Paul J. Lucas <paul@lucasmail.org>
 
+   * test/Makefile.am, error.c, error.out, error.test: Now testing syntax error
+     in source file.
+   * trans_unit.c: Now exiting with EX_NOINPUT when access() returns -1.
+   * test/Makefile.am, enoent.out, enoent.test: Now checking for a missing
+     source file.
+   * toml_test.c: Code coverage improvements.
+   * toml_lite.c: Removed unncessary check for invalid char.
+   * toml_lite.c: Added TOML_ERR_MSG_EXTRA_COMMA.
    * toml_lite.c: Now checking c_last for an invalid char.
    * toml_lite.c, toml_test.c: Now always catching invalid characters.
    * toml_lite.c, toml_test.c: Code coverage improvements.
