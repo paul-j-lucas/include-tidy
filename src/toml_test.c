@@ -206,6 +206,27 @@ static bool test_invalid_char( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_invalid_char_in_array( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]     \n"
+    "a = [\033  \n"
+    " 1         \n"
+    "]          \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_CHAR )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col == 6 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_table_name_duplicate( void ) {
   TEST_FUNC_BEGIN();
 
@@ -465,9 +486,11 @@ static bool test_value_int( void ) {
     "[test-int]     \n"
     "i2 = 0b101010  \n"
     "i8 = 0o52      \n"
-    "i10 = 42       \n"
+    "i10 = +42      \n"
     "i16 = 0x2A     \n"
     "i10_us = 4_2   \n"
+    "n10 = -42      \n"
+    "z = 0#         \n"
   );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
@@ -497,6 +520,16 @@ static bool test_value_int( void ) {
     TEST( value != NULL ) &&
       TEST( value->type == TOML_INT ) &&
       TEST( value->i == 42 );
+
+    value = toml_table_find( &test.table, "n10" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == -42 );
+
+    value = toml_table_find( &test.table, "z" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 0 );
   }
 
   toml_error_print( &test.toml );
@@ -566,8 +599,9 @@ static bool test_value_string( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-string]  \n"
-    "s1 = \"ab\"    \n"
+    "[test]               \n"
+    "s1 = \"ab\"          \n"
+    "s2 = \"\\\"ab\\\"\"  \n"
   );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
@@ -577,6 +611,11 @@ static bool test_value_string( void ) {
     TEST( value != NULL ) &&
       TEST( value->type == TOML_STRING ) &&
       TEST( strcmp( value->s, "ab" ) == 0 );
+
+    value = toml_table_find( &test.table, "s2" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "\"ab\"" ) == 0 );
   }
 
   toml_error_print( &test.toml );
@@ -604,6 +643,7 @@ int main( int argc, char const *const argv[] ) {
     test_table_name_valid();
 
     test_invalid_char();
+    test_invalid_char_in_array();
     test_unex_char();
     test_unex_eof();
 
