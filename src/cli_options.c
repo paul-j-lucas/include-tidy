@@ -165,8 +165,8 @@ static bool         is_Xtidy_opt( int, char const *const[], int* );
  * @param source_lang The language to use, either `"c"` or `"c++"`.
  */
 static void add_compiler_include_paths( int *pargc, char const **pargv[],
-                                     char const *compiler_path,
-                                     char const *source_lang ) {
+                                        char const *compiler_path,
+                                        char const *source_lang ) {
   assert(  pargc != NULL );
   assert( *pargc > 0 );
   assert(  pargv != NULL );
