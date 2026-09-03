@@ -22,8 +22,11 @@
 #include "pjl_config.h"                 /* must go first */
 #include "fnv1a.h"
 #include "hash_table.h"
+#include "unit_test.h"
+#include "util.h"
 
 // standard
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
@@ -38,9 +41,6 @@ struct test_data {
 };
 
 #define TEST_LIT(KEY,VAL)     (test_data){ .key = (KEY), .val = (VAL) }
-
-#define TEST_INSERT(TABLE,KEY,VAL) \
-  PJL_DISCARD_RV( ht_insert( (TABLE), &TEST_LIT( (KEY), (VAL) ), sizeof(test_data) ) )
 
 static double const TEST_LOAD_FACTOR_MAX = 1.0;
 
@@ -57,12 +57,15 @@ static ht_hash_val_t test_hash( void const *v ) {
   return fnv1a64_mem( FNV1A_INIT, t->key, 1 );
 }
 
-static void test_ht_fill( hash_table_t *table ) {
-  TEST_INSERT( table, "A", 1 );
-  TEST_INSERT( table, "B", 2 );
-  TEST_INSERT( table, "C", 3 );
-  TEST_INSERT( table, "D", 4 );
-  TEST_INSERT( table, "E", 5 );
+static void test_ht_fill( hash_table_t *table, unsigned n ) {
+  assert( n >= 1 && n <= 26 );
+  test_data data;
+  data.key[1] = '\0';
+  data.val = 1;
+  for ( unsigned i = 0; i < n; ++i ) {
+    data.key[0] = STATIC_CAST( char, 'A' + i );
+    PJL_DISCARD_RV( ht_insert( table, &data, sizeof data ) );
+  } // for
 }
 
 static void test_ht_init( hash_table_t *table ) {
@@ -81,14 +84,13 @@ static void test_ht_seen( hash_table_t *table, bool seen[] ) {
 
 ////////// test functions /////////////////////////////////////////////////////
 
-#include "unit_test.h"
-
 static bool test_find_delete() {
   TEST_FUNC_BEGIN();
 
   hash_table_t table;
   test_ht_init( &table );
-  test_ht_fill( &table );
+  test_ht_fill( &table, 5 );
+  TEST( table.size == 5 );
 
   ht_entry_t *entry;
   entry = ht_find( &table, &TEST_LIT( "X", 0 ) );
@@ -143,12 +145,55 @@ end_test:
   TEST_FUNC_END();
 }
 
+static bool test_grow() {
+  TEST_FUNC_BEGIN();
+
+  hash_table_t table;
+  test_ht_init( &table );
+  test_ht_fill( &table, 26 );
+  TEST( table.size == 26 );
+
+  bool seen[ 128 ];
+  test_ht_seen( &table, seen );
+
+  TEST( seen[ 'A' ] );
+  TEST( seen[ 'B' ] );
+  TEST( seen[ 'C' ] );
+  TEST( seen[ 'D' ] );
+  TEST( seen[ 'E' ] );
+  TEST( seen[ 'F' ] );
+  TEST( seen[ 'G' ] );
+  TEST( seen[ 'H' ] );
+  TEST( seen[ 'I' ] );
+  TEST( seen[ 'J' ] );
+  TEST( seen[ 'K' ] );
+  TEST( seen[ 'L' ] );
+  TEST( seen[ 'M' ] );
+  TEST( seen[ 'N' ] );
+  TEST( seen[ 'O' ] );
+  TEST( seen[ 'P' ] );
+  TEST( seen[ 'Q' ] );
+  TEST( seen[ 'R' ] );
+  TEST( seen[ 'S' ] );
+  TEST( seen[ 'T' ] );
+  TEST( seen[ 'U' ] );
+  TEST( seen[ 'V' ] );
+  TEST( seen[ 'W' ] );
+  TEST( seen[ 'X' ] );
+  TEST( seen[ 'Y' ] );
+  TEST( seen[ 'Z' ] );
+
+  ht_cleanup( &table, /*free_fn=*/NULL );
+  TEST_FUNC_END();
+}
+
 static bool test_iter() {
   TEST_FUNC_BEGIN();
 
   hash_table_t table;
   test_ht_init( &table );
-  test_ht_fill( &table );
+  test_ht_fill( &table, 5 );
+  TEST( table.size == 5 );
 
   bool seen[ 128 ];
   test_ht_seen( &table, seen );
@@ -170,7 +215,8 @@ int main( int argc, char const *const argv[] ) {
 
   (void)(test_insert_delete() &&
          test_iter() &&
-         test_find_delete());
+         test_find_delete() &&
+         test_grow());
 
   return test_exit_status;
 }

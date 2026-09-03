@@ -45,6 +45,7 @@ static bool test_path_ends_with( void ) {
 
   TEST(  path_ends_with( "/var/bar/x.log", STR_STRLEN( "bar/x.log" ) ) );
   TEST( !path_ends_with( "/var/bar/x.log", STR_STRLEN( "foobar/x.log" ) ) );
+  TEST( !path_ends_with( "/var/bar/x.log", STR_STRLEN( "foobarbaz/x.log" ) ) );
 
   TEST_FUNC_END();
 }

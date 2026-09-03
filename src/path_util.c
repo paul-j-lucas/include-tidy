@@ -154,9 +154,12 @@ char* path_normalize( char const *path ) {
   if ( path_is_relative( path ) ) {
     path = path_no_dot_slash( path );
     if ( strstr( path, "../" ) != NULL ) {
+      // LCOV_EXCL_START
+      // This can't be coverage tested because cwd isn't fixed.
       size_t cwd_path_len;
       char const *const cwd_path = path_cwd( &cwd_path_len );
       strbuf_putsn( &in_path, cwd_path, cwd_path_len );
+      // LCOV_EXCL_STOP
     }
   }
   strbuf_paths( &in_path, path );
