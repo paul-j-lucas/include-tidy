@@ -1,0 +1,6 @@
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml error.c
+"error.c":2,8: error: expected ';' at end of declaration
+    2 |   int x
+      |        ^
+include-tidy: 1 error generated
+

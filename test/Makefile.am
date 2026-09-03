@@ -44,7 +44,8 @@ TESTS+=	tests/align-column.test \
 TESTS+=	tests/associated-header.test \
 	tests/bad-associated-header.test \
 	tests/duplicate.test \
-	tests/enoent.test
+	tests/enoent.test \
+	tests/error.test
 
 # Real-world C tests.
 TESTS+=	tests/c_ast.test \
