@@ -191,11 +191,14 @@ void trans_unit_init( int argc, char const *const argv[] ) {
       // Yes, this is TOCTAU (well, TAUTOC since we're checking after the
       // fact), but it's better than nothing.
       //
-      if ( access( tidy_source_path, R_OK ) == -1 )
+      if ( access( tidy_source_path, R_OK ) == -1 ) {
         print_file_error( tidy_source_path, 0, 0, "%s\n", STRERROR() );
-      else
-        print_file_error( tidy_source_path, 0, 0, "libclang failed\n" );
+        exit( EX_NOINPUT );
+      }
+      // LCOV_EXCL_START
+      print_file_error( tidy_source_path, 0, 0, "libclang failed\n" );
       exit( EX_DATAERR );
+      // LCOV_EXCL_STOP
     case CXError_Success:
       //
       // All a CXError_Success means is that libclang's parser didn't crash; it
