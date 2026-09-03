@@ -83,19 +83,19 @@ static char const *const TOML_ERROR_MSGS[] = {
 
 /// @cond DOXYGEN_IGNORE
 
-static char const TOML_ERR_BARE_KEY_NO_BEGIN_DOT[] =
+static char const TOML_ERR_MSG_BARE_KEY_NO_BEGIN_DOT[] =
   "bare key can not begin with '.'";
-static char const TOML_ERR_BARE_KEY_NO_END_DOT[] =
+static char const TOML_ERR_MSG_BARE_KEY_NO_END_DOT[] =
   "bare key can not end with '.'";
-static char const TOML_ERR_EMPTY_KEY[] = "empty key";
-static char const TOML_ERR_INT_TOO_MANY_DIGITS[] =
+static char const TOML_ERR_MSG_EMPTY_KEY[] = "empty key";
+static char const TOML_ERR_MSG_INT_TOO_MANY_DIGITS[] =
   "integer has too many digits";
-static char const TOML_ERR_INVALID_ESCAPE_SEQUENCE[] =
+static char const TOML_ERR_MSG_INVALID_ESCAPE_SEQUENCE[] =
   "invalid escape sequence";
-static char const TOML_ERR_MISSING_COMMA[] =
+static char const TOML_ERR_MSG_MISSING_COMMA[] =
   "unexpected character (missing ',')";
-static char const TOML_ERR_UNEX_NEWLINE[] = "unexpected newline";
-static char const TOML_ERR_UNTERMINATED_STRING[] = "unterminated string";
+static char const TOML_ERR_MSG_UNEX_NEWLINE[] = "unexpected newline";
+static char const TOML_ERR_MSG_UNTERMINATED_STRING[] = "unterminated string";
 
 /// @endcond
 
@@ -297,7 +297,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
       default:
         if ( need_comma ) {
           toml->error = TOML_ERR_UNEX_CHAR;
-          toml->error_msg = TOML_ERR_MISSING_COMMA;
+          toml->error_msg = TOML_ERR_MSG_MISSING_COMMA;
           goto done;
         }
         toml_ungetc( toml, c );
@@ -555,7 +555,7 @@ static bool toml_int_parse( toml_file *toml, long *rv_i ) {
     } // switch
 
     if ( buf_len + 1 == sizeof buf - 1 ) {
-      toml->error_msg = TOML_ERR_INT_TOO_MANY_DIGITS;
+      toml->error_msg = TOML_ERR_MSG_INT_TOO_MANY_DIGITS;
       goto error;
     }
     buf[ buf_len++ ] = STATIC_CAST( char, c );
@@ -620,7 +620,7 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
       goto done;
     case '.':
       toml->error = TOML_ERR_INVALID_KEY;
-      toml->error_msg = TOML_ERR_BARE_KEY_NO_BEGIN_DOT;
+      toml->error_msg = TOML_ERR_MSG_BARE_KEY_NO_BEGIN_DOT;
       return false;
     case EOF:
       return false;
@@ -650,14 +650,14 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
 
   if ( key_buf.len == 0 ) {
     toml->error = TOML_ERR_INVALID_KEY;
-    toml->error_msg = TOML_ERR_EMPTY_KEY;
+    toml->error_msg = TOML_ERR_MSG_EMPTY_KEY;
     goto error;
   }
 
   if ( key_buf.str[ key_buf.len - 1 ] == '.' ) {
     toml->loc.col = first_col + STATIC_CAST( unsigned, key_buf.len ) - 1;
     toml->error = TOML_ERR_INVALID_KEY;
-    toml->error_msg = TOML_ERR_BARE_KEY_NO_END_DOT;
+    toml->error_msg = TOML_ERR_MSG_BARE_KEY_NO_END_DOT;
     goto error;
   }
 
@@ -788,7 +788,7 @@ static bool toml_space_skip( toml_file *toml ) {
     if ( c == '\n' ) {
       if ( toml->in_key_value && toml->array_depth == 0 ) {
         toml->error = TOML_ERR_UNEX_CHAR;
-        toml->error_msg = TOML_ERR_UNEX_NEWLINE;
+        toml->error_msg = TOML_ERR_MSG_UNEX_NEWLINE;
         return false;
       }
     }
@@ -826,7 +826,7 @@ static bool toml_string_parse( toml_file *toml, strbuf_t *rv_sbuf ) {
       case '\r':
       case '\n':
         toml->error = TOML_ERR_INVALID_STRING;
-        toml->error_msg = TOML_ERR_UNTERMINATED_STRING;
+        toml->error_msg = TOML_ERR_MSG_UNTERMINATED_STRING;
         goto error;
       case '"':
         goto done;
@@ -844,7 +844,7 @@ static bool toml_string_parse( toml_file *toml, strbuf_t *rv_sbuf ) {
           case '\\' : c = '\\'; break;
           default:
             toml->error = TOML_ERR_INVALID_STRING;
-            toml->error_msg = TOML_ERR_INVALID_ESCAPE_SEQUENCE;
+            toml->error_msg = TOML_ERR_MSG_INVALID_ESCAPE_SEQUENCE;
             goto error;
         } // switch
         break;
