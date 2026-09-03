@@ -458,18 +458,15 @@ NODISCARD
 static int toml_getc( toml_file *toml ) {
   assert( toml != NULL );
 
-  int c;
   bool const is_newline_pending = toml->c_last == TOML_CHAR_PENDING_NEWLINE;
 
-  if ( !is_newline_pending && toml->c_last != EOF ) {
-    c = toml->c_last;
-  }
-  else {
-    c = fgetc( toml->file );
-    if ( toml_is_invalid_char( c ) ) {
-      toml->error = TOML_ERR_INVALID_CHAR;
-      c = TOML_CHAR_INVALID;
-    }
+  int c = !is_newline_pending && toml->c_last != EOF ?
+    toml->c_last :
+    fgetc( toml->file );
+
+  if ( toml_is_invalid_char( c ) ) {
+    toml->error = TOML_ERR_INVALID_CHAR;
+    c = TOML_CHAR_INVALID;
   }
 
   toml->c_last = EOF;
