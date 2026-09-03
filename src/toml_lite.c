@@ -92,6 +92,8 @@ static char const TOML_ERR_INT_TOO_MANY_DIGITS[] =
   "integer has too many digits";
 static char const TOML_ERR_INVALID_ESCAPE_SEQUENCE[] =
   "invalid escape sequence";
+static char const TOML_ERR_MISSING_COMMA[] =
+  "unexpected character (missing ',')";
 static char const TOML_ERR_UNEX_NEWLINE[] = "unexpected newline";
 static char const TOML_ERR_UNTERMINATED_STRING[] = "unterminated string";
 
@@ -295,6 +297,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
       default:
         if ( need_comma ) {
           toml->error = TOML_ERR_UNEX_CHAR;
+          toml->error_msg = TOML_ERR_MISSING_COMMA;
           goto done;
         }
         toml_ungetc( toml, c );
@@ -378,10 +381,6 @@ static bool toml_char_parse( toml_file *toml, char want_c ) {
     case EOF:
       toml->error = TOML_ERR_UNEX_EOF;
       break;
-    case '\n':
-    case '\r':
-      toml->error_msg = TOML_ERR_UNEX_NEWLINE;
-      FALLTHROUGH;
     default:
       toml->error = TOML_ERR_UNEX_CHAR;
       break;

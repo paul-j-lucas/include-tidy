@@ -96,7 +96,7 @@ static bool test_comments( void ) {
   TEST_FUNC_BEGIN();
 
   toml_test test;
-  toml_test_init( &test, 
+  toml_test_init( &test,
     "#1                   \n"
     " #2                  \n"
     "[test-comments]  #3  \n"
@@ -242,6 +242,44 @@ static bool test_table_name_valid( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_unex_char( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]\n"
+    "value 42\n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 7 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_unex_eof( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]\n"
+    "value"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 5 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_value_array( void ) {
   TEST_FUNC_BEGIN();
 
@@ -286,6 +324,28 @@ static bool test_value_array_bad_comma( void ) {
   TEST( !toml_table_next( &test.toml, &test.table ) )
     && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
     && TEST( test.toml.loc.line == 3 )
+    && TEST( test.toml.loc.col  == 3 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_value_array_missing_comma( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]     \n"
+    "array = [  \n"
+    "  1        \n"
+    "  2        \n"
+    "]          \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
+    && TEST( test.toml.loc.line == 4 )
     && TEST( test.toml.loc.col  == 3 );
 
   toml_error_print( &test.toml );
@@ -341,7 +401,7 @@ static bool test_value_bool( void ) {
   TEST_FUNC_END();
 }
 
-static bool test_value_bool_bad_false( void ) {
+static bool test_value_bool_bad_value( void ) {
   TEST_FUNC_BEGIN();
 
   toml_test test;
@@ -354,6 +414,25 @@ static bool test_value_bool_bad_false( void ) {
     && TEST( test.toml.error == TOML_ERR_UNEX_VALUE )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 5 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_value_bool_extra_chars( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]       \n"
+    "bool = truest\n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_VALUE )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 8 );
 
   toml_error_print( &test.toml );
   toml_test_cleanup( &test );
@@ -506,11 +585,16 @@ int main( int argc, char const *const argv[] ) {
     test_table_name_duplicate();
     test_table_name_valid();
 
+    test_unex_char();
+    test_unex_eof();
+
     test_value_array();
     test_value_array_bad_comma();
+    test_value_array_missing_comma();
     test_value_array_unex_eof();
 
-    test_value_bool_bad_false();
+    test_value_bool_bad_value();
+    test_value_bool_extra_chars();
 
     test_value_int_bad_base();
     test_value_int_bad_binary();
