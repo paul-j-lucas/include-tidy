@@ -39,7 +39,8 @@ DOCS_DIR =		docs
 LCOV_FLAGS =		--capture \
 			--config-file "$(top_srcdir)/lcovrc" \
 			--directory "$(abs_top_builddir)" \
-			--exclude "*/color.c" \
+			--exclude "src/color.c" \
+			--exclude "src/unit_test.c" \
 			--gcov-tool "$(GCOV)" \
 			--output-file $(COVERAGE_INFO)
 
