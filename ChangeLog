@@ -1,5 +1,6 @@
 2026-09-03  Paul J. Lucas <paul@lucasmail.org>
 
+   * toml_lite.c: Now checking c_last for an invalid char.
    * toml_lite.c, toml_test.c: Now always catching invalid characters.
    * toml_lite.c, toml_test.c: Code coverage improvements.
    * hash_table_test.c, path_util.c, path_util_test.c, strbuf_test.c: Code
