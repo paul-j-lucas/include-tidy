@@ -113,7 +113,7 @@ void fatal_error( int status, char const *format, ... ) {
   va_start( args, format );
   vfprintf( stderr, format, args );
   va_end( args );
-  _Exit( status );
+  exit( status );
 }
 
 void fputs_quoted( char const *s, char quote, FILE *fout ) {
