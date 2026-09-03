@@ -308,7 +308,21 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
     if ( !toml_value_parse( toml, &value ) )
       break;
     if ( array.size + 1 >= array_cap ) {
-      array_cap += array_cap >> 1;      // grow by ~1.5x
+      //
+      // Why not grow by 2x?  The problem is that the size of each new
+      // allocation is always > the sum of all previous allocations combined,
+      // which means malloc can't reuse even a block coalesced from previous
+      // allocations.
+      //
+      // For example, given the previous allocations of 4, 8, and 16 (summing
+      // to 28), the next allocation will be 32, but 32 > 28, so malloc can't
+      // reuse that block.
+      //
+      // In contrast, growing by 1.5x yields allocations 4, 6, and 9 (summing
+      // to 19), and the next allocation will be 13, and 13 <= 19, so malloc
+      // can reuse that block.
+      //
+      array_cap += array_cap >> 1;
       REALLOC( array.values, array_cap );
     }
     array.values[ array.size++ ] = value;
