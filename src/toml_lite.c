@@ -96,6 +96,8 @@ static char const TOML_ERR_MSG_BARE_KEY_NO_BEGIN_DOT[] =
 static char const TOML_ERR_MSG_BARE_KEY_NO_END_DOT[] =
   "bare key can not end with '.'";
 static char const TOML_ERR_MSG_EMPTY_KEY[] = "empty key";
+static char const TOML_ERR_MSG_EXTRA_COMMA[] =
+  "unexpected character (extra ',')";
 static char const TOML_ERR_MSG_INT_TOO_MANY_DIGITS[] =
   "integer has too many digits";
 static char const TOML_ERR_MSG_INVALID_ESCAPE_SEQUENCE[] =
@@ -304,6 +306,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
       case ',':
         if ( !need_comma ) {
           toml->error = TOML_ERR_UNEX_CHAR;
+          toml->error_msg = TOML_ERR_MSG_EXTRA_COMMA;
           goto done;
         }
         need_comma = false;
