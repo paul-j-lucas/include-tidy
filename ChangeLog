@@ -1,5 +1,22 @@
+2026-09-03  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.c, toml_test.c: Now always catching invalid characters.
+   * toml_lite.c, toml_test.c: Code coverage improvements.
+   * hash_table_test.c, path_util.c, path_util_test.c, strbuf_test.c: Code
+     coverage improvements.
+
 2026-09-02  Paul J. Lucas <paul@lucasmail.org>
 
+   * lcovrc, array.c, array.h, array_test.c, config_file.c, include.c, ipath.c,
+     path_util.c, proxies.c, strbuf.c, symbol.c, toml_lite.c, toml_test.c,
+     trans_unit.c, typedef.c: Code coverage improvements.
+   * array_test.c: Header fixes.
+   * array_test.c, hash_table_test.c, path_util_test.c, red_black_test.c,
+     strbuf_test.c, toml_test.c, unit_test.c, unit_test.h: No longer calling
+     _Exit().
+   * Makefile.am, src/Makefile.am: Code coverage fixes.
+   * src/Makefile.am, array_test.c: Added array_test.c.
+   * util.c, util.h: No longer including bit_util.h in util.h.
    * Makefile.am, configure.ac, lcovrc, src/Makefile.am, cli_options.c: Added
      code coverage.
 
