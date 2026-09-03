@@ -372,10 +372,7 @@ static bool toml_bool_parse( toml_file *toml, bool *rv_b ) {
 
   toml_loc const start_loc = toml->loc;
 
-  int c = toml_getc( toml );
-  if ( c == TOML_CHAR_INVALID )
-    goto error;
-
+  int         c = toml_getc( toml );    // guaranteed valid
   bool const  is_t = c == 't';
   char const *want = is_t ? "rue" : "alse";
 
