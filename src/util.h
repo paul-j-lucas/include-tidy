@@ -826,10 +826,12 @@ inline char const* empty_if_null( char const *s ) {
 }
 
 /// @cond DOXYGEN_IGNORE
+// LCOV_EXCL_START
 NODISCARD
 inline char* nonconst_empty_if_null( char *s ) {
   return CONST_CAST( char*, empty_if_null( s ) );
 }
+// LCOV_EXCL_STOP
 
 #define empty_if_null(S)          NONCONST_OVERLOAD( empty_if_null, (S) )
 /// @endcond
@@ -916,10 +918,12 @@ inline char const* null_if_empty( char const *s ) {
 }
 
 /// @cond DOXYGEN_IGNORE
+// LCOV_EXCL_START
 NODISCARD
 inline char* nonconst_null_if_empty( char *s ) {
   return CONST_CAST( char*, null_if_empty( s ) );
 }
+// LCOV_EXCL_STOP
 
 #define nonconst_null_if_empty(S) \
   NONCONST_OVERLOAD( nonconst_null_if_empty, (S) )
