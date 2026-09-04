@@ -186,13 +186,6 @@ void perror_exit( int status ) {
   exit( status );
 }
 
-char const* (strchr_nul)( char const *s, int c ) {
-  assert( s != NULL );
-  while ( *s != '\0' && *s != (char)c )
-    ++s;
-  return s;
-}
-
 char* str_trim( char *s ) {
   assert( s != NULL );
   SKIP_WS( s );
@@ -215,7 +208,6 @@ extern inline bool false_set( bool* );
 // See comment for NONCONST_OVERLOAD regarding ().
 extern inline char* (nonconst_null_if_empty)( char* );
 extern inline char* (nonconst_empty_if_null)( char* );
-extern inline char* (nonconst_strchr_nul)( char*, int );
 extern inline char const* (null_if_empty)( char const* );
 
 extern inline char* strncpy_0( char*, char const*, size_t );
