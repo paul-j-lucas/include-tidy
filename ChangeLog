@@ -1,5 +1,16 @@
 2026-09-03  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c, config_file.c: Code coverage exclusion comments.
+   * cli_options.c, test/Makefile.am, cli-compiler-no-exists.out,
+     cli-compiler-no-exists.test: Now properly handling popen/pclose.
+   * no-include-cc.sh: New file.
+   * cli_options.c, print.h, test/Makefile.am, f.c, no-include-cc.sh,
+     cli-compiler-no-include.out, cli-compiler-no-include.test: Now printing
+     warning if compiler doesn't emit #include <...> paths.
+   * Makefile.am: Now excluding unit_test.c from test coverage.
+   * util.c: Now calling exit() and not _Exit().
+   * cli_options.c, test/Makefile.am, unknown.x, unknown_extension.out,
+     unknown_extension.test: get_source_path() no longer checks file extension.
    * test/Makefile.am, error.c, error.out, error.test: Now testing syntax error
      in source file.
    * trans_unit.c: Now exiting with EX_NOINPUT when access() returns -1.
