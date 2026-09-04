@@ -192,16 +192,22 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
   if ( fcompiler == NULL )
     goto error;
 
-  bool    found_paths = false;
+  bool    found_include_paths = false;
   char   *line_buf = NULL;
   size_t  line_cap = 0;
 
-  while ( !found_paths && getline( &line_buf, &line_cap, fcompiler ) != -1 ) {
-    if ( strcmp( line_buf, "#include <...> search starts here:\n" ) == 0 )
-      found_paths = true;
+  while ( getline( &line_buf, &line_cap, fcompiler ) != -1 ) {
+    if ( strcmp( line_buf, "#include <...> search starts here:\n" ) == 0 ) {
+      found_include_paths = true;
+      break;
+    }
   } // while
-  if ( !found_paths )
+  if ( !found_include_paths ) {
+    print_warning(
+      "#include <...> paths not found in \"%s\" output\n", compiler_path
+    );
     goto done;
+  }
 
   // Find the index to insert the new -isystem option before the last argv that
   // is not an option (the filename).

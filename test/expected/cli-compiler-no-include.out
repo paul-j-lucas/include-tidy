@@ -1,0 +1,3 @@
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --compiler=no-include-cc.sh f.c
+include-tidy: warning: #include <...> paths not found in "no-include-cc.sh" output
+

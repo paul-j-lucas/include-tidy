@@ -97,7 +97,7 @@
   )
 
 /**
- * Prints an warning message to standard error.
+ * Prints an warning message about \a SOURCE_PATH to standard error.
  *
  * @note In debug mode, also prints the file & line where the function was
  * called from.
@@ -112,11 +112,31 @@
  * @sa fl_print_warning()
  * @sa #print_error()
  * @sa #print_file_error()
+ * @sa #print_warning()
  */
 #define print_file_warning(SOURCE_PATH, SOURCE_LINE, SOURCE_COL, FORMAT, ...) \
   fl_print_warning( __FILE__, __LINE__,                                       \
     (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), (FORMAT)                      \
     VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__                                    \
+  )
+
+/**
+ * Prints an warning message to standard error.
+ *
+ * @note In debug mode, also prints the file & line where the function was
+ * called from.
+ * @note A newline is _not_ printed.
+ *
+ * @param FORMAT The `printf()` style format string.
+ * @param ... The `printf()` arguments.
+ *
+ * @sa fl_print_warning()
+ * @sa #print_file_warning()
+ */
+#define print_warning(FORMAT, ...)          \
+  fl_print_warning( __FILE__, __LINE__,     \
+    NULL, 0, 0, (FORMAT)                    \
+    VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__  \
   )
 
 /**
