@@ -234,7 +234,7 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
 
     char const *const include_path = str_trim( line_buf );
     if ( unlikely( path_is_relative( include_path ) ) )
-      continue;
+      continue;                         // LCOV_EXCL_LINE
 
     char *new_arg = NULL;
     check_asprintf( &new_arg, "-isystem%s", include_path );
