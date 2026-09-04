@@ -33,6 +33,7 @@
 #include "fnv1a.h"
 #include "hash_table.h"
 #include "include.h"
+#include "include-tidy.h"
 #include "options.h"
 #include "path_util.h"
 #include "print.h"
@@ -265,9 +266,11 @@ bool              tidy_is_source_path_ignored;
 
 ////////// local variables ////////////////////////////////////////////////////
 
+static unsigned     error_count;          ///< Configuration file error count.
 static hash_table_t ignore_symbol_set;    ///< Set of symbols to ignore.
 static array_t      std_c_includes;       ///< Standard-ish C include files.
 static array_t      std_cxx_includes;     ///< Standard C++ include files.
+static unsigned     warning_count;        ///< Configuration file warning count.
 
 /**
  * Mapping from symbols to the include file(s) they're declared in.
@@ -297,7 +300,8 @@ static bool toml_bool_parse( config_parse_fn_args const *args ) {
       "invalid value for \"%s\"; expected boolean\n",
       args->key->name
     );
-    exit( EX_CONFIG );
+    ++error_count;
+    return false;
   }
 
   return args->value->b;
@@ -322,7 +326,8 @@ static long toml_int_parse( config_parse_fn_args const *args, long value_min,
       "invalid value for \"%s\"; expected integer\n",
       args->key->name
     );
-    exit( EX_CONFIG );
+    ++error_count;
+    return 0;
   }
 
   if ( args->value->i < value_min || args->value->i > value_max ) {
@@ -331,7 +336,8 @@ static long toml_int_parse( config_parse_fn_args const *args, long value_min,
       "\"%ld\": invalid value for \"%s\"; must be %ld-%ld\n",
       args->value->i, args->key->name, value_min, value_max
     );
-    exit( EX_CONFIG );
+    ++error_count;
+    return 0;
   }
 
   return args->value->i;
@@ -350,16 +356,17 @@ NODISCARD
 static array_t toml_string_array_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
+  array_t array = ARRAY_INIT( sizeof(char*) );
+
   if ( args->value->type != TOML_ARRAY ) {
     print_file_error(
       args->config_path, args->value->loc.line, args->value->loc.col,
       "invalid value for \"%s\"; expected array\n",
       args->key->name
     );
-    exit( EX_CONFIG );
+    ++error_count;
+    goto done;
   }
-
-  array_t array = ARRAY_INIT( sizeof(char*) );
 
   if ( args->value->a.size > 0 ) {
     array_reserve( &array, args->value->a.size );
@@ -372,13 +379,15 @@ static array_t toml_string_array_parse( config_parse_fn_args const *args ) {
           "invalid value for \"%s\"; expected string\n",
           args->key->name
         );
-        exit( EX_CONFIG );
+        ++error_count;
+        continue;
       }
       *(char**)array_push_back( &array ) = a_value->s;
       a_value->s = NULL;                // steal value's string
     } // for
   }
 
+done:
   return array;
 }
 
@@ -410,7 +419,8 @@ static void toml_string_or_string_array_parse( config_parse_fn_args const *args,
             "invalid value for \"%s\" key array; expected string\n",
             args->key->name
           );
-          exit( EX_CONFIG );
+          ++error_count;
+          continue;
         }
         config_parse_fn_args const a_value_args = {
           .config_path = args->config_path,
@@ -428,7 +438,7 @@ static void toml_string_or_string_array_parse( config_parse_fn_args const *args,
         "invalid value for \"%s\" key; expected string or array\n",
         args->key->name
       );
-      exit( EX_CONFIG );
+      ++error_count;
   } // switch
 }
 
@@ -451,7 +461,8 @@ static char const* toml_string_parse( config_parse_fn_args const *args ) {
       "invalid value for \"%s\"; expected string\n",
       args->key->name
     );
-    exit( EX_CONFIG );
+    ++error_count;
+    return "";
   }
 
   return args->value->s;
@@ -468,7 +479,8 @@ static char const* toml_string_parse( config_parse_fn_args const *args ) {
  */
 static void add_c_includes_parse( config_parse_fn_args const *args ) {
   array_t add_c_includes = toml_string_array_parse( args );
-  array_push_array_back( &std_c_includes, &add_c_includes );
+  if ( error_count == 0 )
+    array_push_array_back( &std_c_includes, &add_c_includes );
   array_cleanup( &add_c_includes, /*free_fn=*/NULL );
 }
 
@@ -481,7 +493,8 @@ static void add_c_includes_parse( config_parse_fn_args const *args ) {
  */
 static void add_cxx_includes_parse( config_parse_fn_args const *args ) {
   array_t add_cxx_includes = toml_string_array_parse( args );
-  array_push_array_back( &std_cxx_includes, &add_cxx_includes );
+  if ( error_count == 0 )
+    array_push_array_back( &std_cxx_includes, &add_cxx_includes );
   array_cleanup( &add_cxx_includes, /*free_fn=*/NULL );
 }
 
@@ -492,7 +505,7 @@ static void add_cxx_includes_parse( config_parse_fn_args const *args ) {
  */
 static void align_column_parse( config_parse_fn_args const *args ) {
   long const int_value = toml_int_parse( args, 0, OPT_ALIGN_COLUMN_MAX );
-  if ( !option_is_set( COPT(ALIGN_COLUMN) ) ) {
+  if ( error_count == 0 && !option_is_set( COPT(ALIGN_COLUMN) ) ) {
     opt_align_column = STATIC_CAST( unsigned, int_value );
     option_mark_set( COPT(ALIGN_COLUMN) );
   }
@@ -518,21 +531,21 @@ static void all_includes_parse( config_parse_fn_args const *args ) {
 static void associated_header_parse( config_parse_fn_args const *args ) {
   assert( args != NULL );
 
-  if ( strcmp( args->table->key.name, tidy_source_path ) != 0 )
-    return;
-
-  char const *const ext = path_ext( tidy_source_path );
+  char const *const ext = path_ext( args->table->key.name );
   if ( ext != NULL && ext[0] != 'c' ) {
     print_file_error(
       args->config_path, args->key->loc.line, args->key->loc.col,
       "\"%s\": only non-header files may have an associated header\n",
       args->table->key.name
     );
-    exit( EX_CONFIG );
+    ++error_count;
   }
 
   char const *const string_value = toml_string_parse( args );
-  tidy_associated_header_rel_path = check_strdup( string_value );
+  if ( error_count > 0 )
+    return;
+  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
+    tidy_associated_header_rel_path = check_strdup( string_value );
 }
 
 /**
@@ -543,6 +556,8 @@ static void associated_header_parse( config_parse_fn_args const *args ) {
 static void color_parse( config_parse_fn_args const *args ) {
   char const *const string_value = toml_string_parse( args );
 
+  if ( error_count > 0 )
+    return;
   if ( option_is_set( COPT(COLOR) ) )
     return;
 
@@ -552,7 +567,7 @@ static void color_parse( config_parse_fn_args const *args ) {
       "invalid value for \"%s\"\n",
       args->key->name
     );
-    exit( EX_CONFIG );
+    ++error_count;
   }
   option_mark_set( COPT(COLOR) );
 }
@@ -565,6 +580,8 @@ static void color_parse( config_parse_fn_args const *args ) {
 static void comment_style_parse( config_parse_fn_args const *args ) {
   char const *const string_value = toml_string_parse( args );
 
+  if ( error_count > 0 )
+    return;
   if ( option_is_set( COPT(COMMENT_STYLE) ) )
     return;
 
@@ -574,7 +591,7 @@ static void comment_style_parse( config_parse_fn_args const *args ) {
       "invalid value for \"%s\"; must be one of \"//\", \"/*\", or \"none\"\n",
       args->key->name
     );
-    exit( EX_CONFIG );
+    ++error_count;
   }
   option_mark_set( COPT(COMMENT_STYLE) );
 }
@@ -587,6 +604,8 @@ static void comment_style_parse( config_parse_fn_args const *args ) {
 static void comment_symbols_parse( config_parse_fn_args const *args ) {
   char const *const string_value = toml_string_parse( args );
 
+  if ( error_count > 0 )
+    return;
   if ( option_is_set( COPT(COMMENT_SYMBOLS) ) )
     return;
 
@@ -597,7 +616,7 @@ static void comment_symbols_parse( config_parse_fn_args const *args ) {
       "\"alpha\", \"length\", \"ref-count\", or \"most-used\"\n",
       args->key->name
     );
-    exit( EX_CONFIG );
+    ++error_count;
   }
   option_mark_set( COPT(COMMENT_SYMBOLS) );
 }
@@ -639,6 +658,8 @@ static void elide_include_parse_string( config_parse_fn_args const *args ) {
 static void error_parse( config_parse_fn_args const *args ) {
   char const *const string_value = toml_string_parse( args );
 
+  if ( error_count > 0 )
+    return;
   if ( option_is_set( COPT(ERROR) ) )
     return;
 
@@ -648,7 +669,7 @@ static void error_parse( config_parse_fn_args const *args ) {
       "invalid value for \"%s\"\n",
       args->key->name
     );
-    exit( EX_CONFIG );
+    ++error_count;
   }
   option_mark_set( COPT(ERROR) );
 }
@@ -660,6 +681,8 @@ static void error_parse( config_parse_fn_args const *args ) {
  */
 static void first_parse( config_parse_fn_args const *args ) {
   if ( !toml_bool_parse( args ) )
+    return;
+  if ( error_count > 0 )
     return;
 
   rb_iterator_t iter;
@@ -740,6 +763,7 @@ static void ignore_symbols_parse_string( config_parse_fn_args const *args ) {
       "\"%s\" already ignored\n",
       args->value->s
     );
+    ++warning_count;
   }
 }
 
@@ -819,7 +843,7 @@ static void keep_parse( config_parse_fn_args const *args ) {
  */
 static void line_length_parse( config_parse_fn_args const *args ) {
   long const int_value = toml_int_parse( args, 0, OPT_LINE_LENGTH_MAX );
-  if ( !option_is_set( COPT(LINE_LENGTH) ) ) {
+  if ( error_count == 0 && !option_is_set( COPT(LINE_LENGTH) ) ) {
     opt_line_length = STATIC_CAST( unsigned, int_value );
     option_mark_set( COPT(LINE_LENGTH) );
   }
@@ -872,6 +896,7 @@ static void proxy_parse_string( config_parse_fn_args const *args ) {
         "\"%s\": proxy cycle detected\n",
         from_include->rel_path
       );
+      ++warning_count;
     }
     else {
       from_include->proxy = to_include;
@@ -1116,6 +1141,7 @@ static FILE* config_open( char const *path, config_opts opts ) {
           exit( EX_NOINPUT );
         }
         print_file_warning( path, 0, 0, "%s\n", STRERROR() );
+        ++warning_count;
         break;
     } // switch
   }
@@ -1145,14 +1171,16 @@ static void config_parse( char const *config_path, FILE *config_file ) {
         config_path, toml.loc.line, toml.loc.col,
         "required table name missing\n"
       );
-      exit( EX_CONFIG );
+      ++error_count;
+      continue;
     }
     if ( toml_table_empty( &table ) ) {
       print_file_error(
         config_path, table.key.loc.line, table.key.loc.col,
         "\"%s\": empty table\n", table.key.name
       );
-      exit( EX_CONFIG );
+      ++error_count;
+      continue;
     }
 
     config_table_kind table_kinds =
@@ -1169,7 +1197,8 @@ static void config_parse( char const *config_path, FILE *config_file ) {
           config_path, kv->key.loc.line, kv->key.loc.col,
           "\"%s\": unknown key\n", table.key.name
         );
-        exit( EX_CONFIG );
+        ++error_count;
+        continue;
       }
 
       if ( table_kinds == TABLE_NONE ||
@@ -1187,7 +1216,8 @@ static void config_parse( char const *config_path, FILE *config_file ) {
           TABLE_KINDS[ found_key->table_kinds ],
           is_1_bit( found_key->table_kinds ) ? "" : "s"
         );
-        exit( EX_CONFIG );
+        ++error_count;
+        continue;
       }
 
       config_parse_fn_args const args = {
@@ -1207,10 +1237,23 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       config_path, toml.loc.line, toml.loc.col,
       "%s\n", toml_error_msg( &toml )
     );
-    exit( EX_CONFIG );
+    ++error_count;
   }
 
   toml_file_cleanup( &toml );
+
+  if ( warning_count > 0 || error_count > 0 ) {
+    EPRINTF( "%s: ", prog_name );
+    if ( warning_count > 0 )
+      EPRINTF( "%u warning%s", warning_count, plural_s( warning_count ) );
+    if ( error_count > 0 ) {
+      if ( warning_count > 0 )
+        EPUTS( " and " );
+      EPRINTF( "%u error%s", error_count, plural_s( error_count ) );
+    }
+    EPUTS( " generated\n" );
+    exit( EX_CONFIG );
+  }
 }
 
 // LCOV_EXCL_START

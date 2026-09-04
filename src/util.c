@@ -210,6 +210,7 @@ extern inline char* (nonconst_null_if_empty)( char* );
 extern inline char* (nonconst_empty_if_null)( char* );
 extern inline char const* (null_if_empty)( char const* );
 
+extern inline char const* plural_s( unsigned long long );
 extern inline char* strncpy_0( char*, char const*, size_t );
 extern inline bool true_or_set( bool* );
 extern inline bool true_clear( bool* );

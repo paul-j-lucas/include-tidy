@@ -942,6 +942,17 @@ inline char* nonconst_null_if_empty( char *s ) {
 _Noreturn void perror_exit( int status );
 
 /**
+ * Returns an `"s"` or not based on \a n to pluralize a word.
+ *
+ * @param n A quantity.
+ * @return Returns the empty string only if \a n == 1; otherwise returns `"s"`.
+ */
+NODISCARD
+inline char const* plural_s( unsigned long long n ) {
+  return n == 1 ? "" : "s";
+}
+
+/**
  * A variant of **strncpy**(3) that always null-terminates \a dst.
  *
  * @param dst A pointer to receive the copy of \a src.  It _must_ be at least

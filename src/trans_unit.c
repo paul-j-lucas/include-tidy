@@ -63,19 +63,6 @@ CXTranslationUnit         tidy_tu;
 
 /// @endcond
 
-////////// inline functions ///////////////////////////////////////////////////
-
-/**
- * Returns an `"s"` or not based on \a n to pluralize a word.
- *
- * @param n A quantity.
- * @return Returns the empty string only if \a n == 1; otherwise returns `"s"`.
- */
-NODISCARD
-static inline char const* plural_s( unsigned long long n ) {
-  return n == 1 ? "" : "s";
-}
-
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
