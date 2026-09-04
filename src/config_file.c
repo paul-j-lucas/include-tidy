@@ -268,9 +268,17 @@ bool              tidy_is_source_path_ignored;
 
 static unsigned     error_count;          ///< Configuration file error count.
 static hash_table_t ignore_symbol_set;    ///< Set of symbols to ignore.
-static array_t      std_c_includes;       ///< Standard-ish C include files.
-static array_t      std_cxx_includes;     ///< Standard C++ include files.
 static unsigned     warning_count;        ///< Configuration file warning count.
+
+/**
+ * Standard-ish C include files.
+ */
+static array_t      std_c_includes = ARRAY_INIT( sizeof(char*) );
+
+/**
+ * Standard C++ include files.
+ */
+static array_t      std_cxx_includes = ARRAY_INIT( sizeof(char*) );
 
 /**
  * Mapping from symbols to the include file(s) they're declared in.
@@ -480,8 +488,7 @@ static char const* toml_string_parse( config_parse_fn_args const *config ) {
  */
 static void add_c_includes_parse( config_parse_fn_args const *config ) {
   array_t add_c_includes = toml_string_array_parse( config );
-  if ( error_count == 0 )
-    array_push_array_back( &std_c_includes, &add_c_includes );
+  array_push_array_back( &std_c_includes, &add_c_includes );
   array_cleanup( &add_c_includes, /*free_fn=*/NULL );
 }
 
@@ -494,8 +501,7 @@ static void add_c_includes_parse( config_parse_fn_args const *config ) {
  */
 static void add_cxx_includes_parse( config_parse_fn_args const *config ) {
   array_t add_cxx_includes = toml_string_array_parse( config );
-  if ( error_count == 0 )
-    array_push_array_back( &std_cxx_includes, &add_cxx_includes );
+  array_push_array_back( &std_cxx_includes, &add_cxx_includes );
   array_cleanup( &add_cxx_includes, /*free_fn=*/NULL );
 }
 
@@ -506,7 +512,7 @@ static void add_cxx_includes_parse( config_parse_fn_args const *config ) {
  */
 static void align_column_parse( config_parse_fn_args const *config ) {
   long const int_value = toml_int_parse( config, 0, OPT_ALIGN_COLUMN_MAX );
-  if ( error_count == 0 && !option_is_set( COPT(ALIGN_COLUMN) ) ) {
+  if ( !option_is_set( COPT(ALIGN_COLUMN) ) ) {
     opt_align_column = STATIC_CAST( unsigned, int_value );
     option_mark_set( COPT(ALIGN_COLUMN) );
   }
@@ -844,7 +850,7 @@ static void keep_parse( config_parse_fn_args const *config ) {
  */
 static void line_length_parse( config_parse_fn_args const *config ) {
   long const int_value = toml_int_parse( config, 0, OPT_LINE_LENGTH_MAX );
-  if ( error_count == 0 && !option_is_set( COPT(LINE_LENGTH) ) ) {
+  if ( !option_is_set( COPT(LINE_LENGTH) ) ) {
     opt_line_length = STATIC_CAST( unsigned, int_value );
     option_mark_set( COPT(LINE_LENGTH) );
   }
