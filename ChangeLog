@@ -1,5 +1,14 @@
+2026-09-04  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c, trans_unit.c, util.c, util.h, bad-associated-header.out:
+     Now allowing more than one error in configuration file; printing warning
+     and error count.
+
 2026-09-03  Paul J. Lucas <paul@lucasmail.org>
 
+   * util.h: Code coverage exclusion comments.
+   * util.c, util.h: Eliminated strchr_nul() -- not used.
+   * symbol.c: Code coverage exclusion comments.
    * cli_options.c, config_file.c: Code coverage exclusion comments.
    * cli_options.c, test/Makefile.am, cli-compiler-no-exists.out,
      cli-compiler-no-exists.test: Now properly handling popen/pclose.
