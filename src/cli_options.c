@@ -192,7 +192,7 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
   FILE *const fcompiler = popen( command, "r" );
   free( command );
   if ( fcompiler == NULL )
-    goto error;
+    goto error;                         // LCOV_EXCL_LINE
 
   bool    found_include_paths = false;
   char   *line_buf = NULL;
@@ -249,7 +249,7 @@ done:
   free( line_buf );
   int status = pclose( fcompiler );
   if ( status == -1 )
-    goto error;
+    goto error;                         // LCOV_EXCL_LINE
 
   if ( WIFEXITED( status ) ) {
     status = WEXITSTATUS( status );
@@ -265,12 +265,15 @@ done:
         errno = ENOENT;
         goto error;
       default:
+        // LCOV_EXCL_START
         fatal_error( EX_UNAVAILABLE,
           "\"%s\": invocation failed with status %d\n", compiler_path, status
         );
+        // LCOV_EXCL_STOP
     } // switch
   }
 
+  // LCOV_EXCL_START
   if ( WIFSIGNALED( status ) ) {
     int const sig = WTERMSIG( status );
     fatal_error( EX_UNAVAILABLE,
@@ -284,6 +287,7 @@ done:
       compiler_path
     );
   }
+  // LCOV_EXCL_STOP
 
 error:
   fatal_error( EX_UNAVAILABLE,
@@ -577,8 +581,8 @@ static void insert_argv( int *pargc, char const **pargv[], size_t argi,
   assert( *pargv != NULL );
   assert(  argi <= STATIC_CAST( size_t, *pargc ) );
 
-  if ( args_len == 0 )
-    return;
+  if ( unlikely( args_len == 0 ) )
+    return;                             // LCOV_EXCL_LINE
 
   size_t const old_argc = STATIC_CAST( size_t, *pargc );
   size_t const new_argc = old_argc + args_len;
@@ -957,6 +961,7 @@ static void print_usage( int status ) {
 #define PUT_CONFIG_OPT(OPT) BLOCK( \
   PUTS( "\n  --" OPT ); printed_opt = true; )
 
+// LCOV_EXCL_START
 /**
  * Prints the **include-tidy** version.
  *
@@ -994,6 +999,7 @@ static void print_version( bool verbose ) {
     PUTS( " none" );
   putchar( '\n' );
 }
+// LCOV_EXCL_STOP
 
 ////////// extern functions ///////////////////////////////////////////////////
 
@@ -1255,9 +1261,11 @@ missing_arg:
   );
 
 unhandled_opt:
+  // LCOV_EXCL_START
   if ( isprint( short_opt ) )
     INTERNAL_ERROR( "'%c': unhandled getopt_long() return value\n", short_opt );
   INTERNAL_ERROR( "%d: unhandled getopt_long() return value\n", short_opt );
+  // LCOV_EXCL_STOP
 }
 
 bool option_is_set( int short_opt ) {

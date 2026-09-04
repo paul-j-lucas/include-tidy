@@ -1213,6 +1213,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   toml_file_cleanup( &toml );
 }
 
+// LCOV_EXCL_START
 /**
  * Gets the full path of the user's home directory.
  *
@@ -1235,6 +1236,7 @@ static char const* home_dir( void ) {
 
   return home;
 }
+// LCOV_EXCL_STOP
 
 /**
  * Sets the \ref tidy_include::handling "handling" field of the include file(s)
