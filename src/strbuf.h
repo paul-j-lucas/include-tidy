@@ -32,6 +32,7 @@
 /// @cond DOXYGEN_IGNORE
 
 // standard
+#include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -116,6 +117,7 @@ char* strbuf_paths( strbuf_t *sbuf, char const *component );
  * @sa strbuf_putc()
  * @sa strbuf_puts()
  * @sa strbuf_putsn()
+ * @sa strbuf_vprintf()
  */
 PJL_DISCARD PJL_PRINTF_LIKE_FUNC(2)
 char* strbuf_printf( strbuf_t *sbuf, char const *format, ... );
@@ -285,6 +287,20 @@ inline char* strbuf_take( strbuf_t *sbuf ) {
   strbuf_init( sbuf );
   return rv_str;
 }
+
+/**
+ * Using \a format, appends \a args onto the end of \a sbuf growing the buffer
+ * if necessary.
+ *
+ * @param sbuf A pointer to the \ref strbuf to append onto.
+ * @param format The `printf()` style format string.
+ * @param args The arguments.
+ * @return Returns \ref strbuf::str "sbuf->str".
+ *
+ * @sa strbuf_printf()
+ */
+PJL_DISCARD
+char* strbuf_vprintf( strbuf_t *sbuf, char const *format, va_list args );
 
 ///////////////////////////////////////////////////////////////////////////////
 
