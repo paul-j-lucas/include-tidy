@@ -109,9 +109,9 @@ typedef struct  symbol_includes       symbol_includes;
  * @note Functions ending in `_string` are functions that assume the \ref
  * toml_value::type "type" of \a value is #TOML_STRING.
  *
- * @param args The arguments to use.
+ * @param config The configuration arguments to use.
  */
-typedef void (*config_parse_fn)( config_parse_fn_args const *args );
+typedef void (*config_parse_fn)( config_parse_fn_args const *config );
 
 ////////// structs ////////////////////////////////////////////////////////////
 
@@ -287,97 +287,97 @@ static rb_tree_t symbol_includes_map;
 /**
  * Parses a TOML bool value.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  * @return Returns the parsed bool value.
  */
 NODISCARD
-static bool toml_bool_parse( config_parse_fn_args const *args ) {
-  assert( args != NULL );
+static bool toml_bool_parse( config_parse_fn_args const *config ) {
+  assert( config != NULL );
 
-  if ( args->value->type != TOML_BOOL ) {
+  if ( config->value->type != TOML_BOOL ) {
     print_file_error(
-      args->config_path, args->value->loc.line, args->value->loc.col,
+      config->config_path, config->value->loc.line, config->value->loc.col,
       "invalid value for \"%s\"; expected boolean\n",
-      args->key->name
+      config->key->name
     );
     ++error_count;
     return false;
   }
 
-  return args->value->b;
+  return config->value->b;
 }
 
 /**
  * Parses a TOML integer value.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  * @param value_min The minimum allowed value.
  * @param value_max The maximum allowed value.
  * @return Returns the parsed integer value.
  */
 NODISCARD
-static long toml_int_parse( config_parse_fn_args const *args, long value_min,
+static long toml_int_parse( config_parse_fn_args const *config, long value_min,
                             long value_max ) {
-  assert( args != NULL );
+  assert( config != NULL );
 
-  if ( args->value->type != TOML_INT ) {
+  if ( config->value->type != TOML_INT ) {
     print_file_error(
-      args->config_path, args->value->loc.line, args->value->loc.col,
+      config->config_path, config->value->loc.line, config->value->loc.col,
       "invalid value for \"%s\"; expected integer\n",
-      args->key->name
+      config->key->name
     );
     ++error_count;
     return 0;
   }
 
-  if ( args->value->i < value_min || args->value->i > value_max ) {
+  if ( config->value->i < value_min || config->value->i > value_max ) {
     print_file_error(
-      args->config_path, args->value->loc.line, args->value->loc.col,
+      config->config_path, config->value->loc.line, config->value->loc.col,
       "\"%ld\": invalid value for \"%s\"; must be %ld-%ld\n",
-      args->value->i, args->key->name, value_min, value_max
+      config->value->i, config->key->name, value_min, value_max
     );
     ++error_count;
     return 0;
   }
 
-  return args->value->i;
+  return config->value->i;
 }
 
 /**
  * Parses a TOML array of strings values.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  * @return Returns an array of the parsed string values.
  *
  * @sa toml_string_or_string_array_parse()
  * @sa toml_string_parse()
  */
 NODISCARD
-static array_t toml_string_array_parse( config_parse_fn_args const *args ) {
-  assert( args != NULL );
+static array_t toml_string_array_parse( config_parse_fn_args const *config ) {
+  assert( config != NULL );
 
   array_t array = ARRAY_INIT( sizeof(char*) );
 
-  if ( args->value->type != TOML_ARRAY ) {
+  if ( config->value->type != TOML_ARRAY ) {
     print_file_error(
-      args->config_path, args->value->loc.line, args->value->loc.col,
+      config->config_path, config->value->loc.line, config->value->loc.col,
       "invalid value for \"%s\"; expected array\n",
-      args->key->name
+      config->key->name
     );
     ++error_count;
     goto done;
   }
 
-  if ( args->value->a.size > 0 ) {
-    array_reserve( &array, args->value->a.size );
+  if ( config->value->a.size > 0 ) {
+    array_reserve( &array, config->value->a.size );
 
-    for ( unsigned i = 0; i < args->value->a.size; ++i ) {
-      toml_value *const a_value = &args->value->a.values[i];
+    for ( unsigned i = 0; i < config->value->a.size; ++i ) {
+      toml_value *const a_value = &config->value->a.values[i];
       if ( a_value->type != TOML_STRING ) {
         print_file_error(
-          args->config_path, a_value->loc.line, a_value->loc.col,
+          config->config_path, a_value->loc.line, a_value->loc.col,
           "invalid value for \"%s\"; expected string\n",
-          args->key->name
+          config->key->name
         );
         ++error_count;
         continue;
@@ -394,49 +394,50 @@ done:
 /**
  * Parses either a TOML string value or an array of string values.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  * @param parse_fn The parse function to use.
  *
  * @sa toml_string_array_parse()
  * @sa toml_string_parse()
  */
-static void toml_string_or_string_array_parse( config_parse_fn_args const *args,
-                                               config_parse_fn parse_fn ) {
-  assert( args != NULL );
+static
+void toml_string_or_string_array_parse( config_parse_fn_args const *config,
+                                        config_parse_fn parse_fn ) {
+  assert( config != NULL );
   assert( parse_fn != NULL );
 
-  switch ( args->value->type ) {
+  switch ( config->value->type ) {
     case TOML_STRING:
-      (*parse_fn)( args );
+      (*parse_fn)( config );
       break;
 
     case TOML_ARRAY:
-      for ( unsigned i = 0; i < args->value->a.size; ++i ) {
-        toml_value const *const a_value = &args->value->a.values[i];
+      for ( unsigned i = 0; i < config->value->a.size; ++i ) {
+        toml_value const *const a_value = &config->value->a.values[i];
         if ( a_value->type != TOML_STRING ) {
           print_file_error(
-            args->config_path, a_value->loc.line, a_value->loc.col,
+            config->config_path, a_value->loc.line, a_value->loc.col,
             "invalid value for \"%s\" key array; expected string\n",
-            args->key->name
+            config->key->name
           );
           ++error_count;
           continue;
         }
-        config_parse_fn_args const a_value_args = {
-          .config_path = args->config_path,
-          .table = args->table,
-          .key = args->key,
+        config_parse_fn_args const a_value_config = {
+          .config_path = config->config_path,
+          .table = config->table,
+          .key = config->key,
           .value = a_value
         };
-        (*parse_fn)( &a_value_args );
+        (*parse_fn)( &a_value_config );
       } // for
       break;
 
     default:
       print_file_error(
-        args->config_path, args->value->loc.line, args->value->loc.col,
+        config->config_path, config->value->loc.line, config->value->loc.col,
         "invalid value for \"%s\" key; expected string or array\n",
-        args->key->name
+        config->key->name
       );
       ++error_count;
   } // switch
@@ -445,27 +446,27 @@ static void toml_string_or_string_array_parse( config_parse_fn_args const *args,
 /**
  * Parses a TOML string value.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  * @return Returns the parsed string value.
  *
  * @sa toml_string_array_parse()
  * @sa toml_string_or_string_array_parse()
  */
 NODISCARD
-static char const* toml_string_parse( config_parse_fn_args const *args ) {
-  assert( args != NULL );
+static char const* toml_string_parse( config_parse_fn_args const *config ) {
+  assert( config != NULL );
 
-  if ( args->value->type != TOML_STRING ) {
+  if ( config->value->type != TOML_STRING ) {
     print_file_error(
-      args->config_path, args->value->loc.line, args->value->loc.col,
+      config->config_path, config->value->loc.line, config->value->loc.col,
       "invalid value for \"%s\"; expected string\n",
-      args->key->name
+      config->key->name
     );
     ++error_count;
     return "";
   }
 
-  return args->value->s;
+  return config->value->s;
 }
 
 ////////// local configutation key parsing functions //////////////////////////
@@ -473,12 +474,12 @@ static char const* toml_string_parse( config_parse_fn_args const *args ) {
 /**
  * Parses the value of an `"add-c-includes"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  *
  * @sa add_cxx_includes_parse()
  */
-static void add_c_includes_parse( config_parse_fn_args const *args ) {
-  array_t add_c_includes = toml_string_array_parse( args );
+static void add_c_includes_parse( config_parse_fn_args const *config ) {
+  array_t add_c_includes = toml_string_array_parse( config );
   if ( error_count == 0 )
     array_push_array_back( &std_c_includes, &add_c_includes );
   array_cleanup( &add_c_includes, /*free_fn=*/NULL );
@@ -487,12 +488,12 @@ static void add_c_includes_parse( config_parse_fn_args const *args ) {
 /**
  * Parses the value of an `"add-cxx-includes"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  *
  * @sa add_c_includes_parse()
  */
-static void add_cxx_includes_parse( config_parse_fn_args const *args ) {
-  array_t add_cxx_includes = toml_string_array_parse( args );
+static void add_cxx_includes_parse( config_parse_fn_args const *config ) {
+  array_t add_cxx_includes = toml_string_array_parse( config );
   if ( error_count == 0 )
     array_push_array_back( &std_cxx_includes, &add_cxx_includes );
   array_cleanup( &add_cxx_includes, /*free_fn=*/NULL );
@@ -501,10 +502,10 @@ static void add_cxx_includes_parse( config_parse_fn_args const *args ) {
 /**
  * Parses the value of an `"align-column"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void align_column_parse( config_parse_fn_args const *args ) {
-  long const int_value = toml_int_parse( args, 0, OPT_ALIGN_COLUMN_MAX );
+static void align_column_parse( config_parse_fn_args const *config ) {
+  long const int_value = toml_int_parse( config, 0, OPT_ALIGN_COLUMN_MAX );
   if ( error_count == 0 && !option_is_set( COPT(ALIGN_COLUMN) ) ) {
     opt_align_column = STATIC_CAST( unsigned, int_value );
     option_mark_set( COPT(ALIGN_COLUMN) );
@@ -514,11 +515,11 @@ static void align_column_parse( config_parse_fn_args const *args ) {
 /**
  * Parses the value of an `"all-includes"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void all_includes_parse( config_parse_fn_args const *args ) {
+static void all_includes_parse( config_parse_fn_args const *config ) {
   if ( !option_is_set( COPT(ALL_INCLUDES) ) ) {
-    opt_all_includes = toml_bool_parse( args );
+    opt_all_includes = toml_bool_parse( config );
     option_mark_set( COPT(ALL_INCLUDES) );
   }
 }
@@ -526,35 +527,35 @@ static void all_includes_parse( config_parse_fn_args const *args ) {
 /**
  * Parses the value of an `"associated-header"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void associated_header_parse( config_parse_fn_args const *args ) {
-  assert( args != NULL );
+static void associated_header_parse( config_parse_fn_args const *config ) {
+  assert( config != NULL );
 
-  char const *const ext = path_ext( args->table->key.name );
+  char const *const ext = path_ext( config->table->key.name );
   if ( ext != NULL && ext[0] != 'c' ) {
     print_file_error(
-      args->config_path, args->key->loc.line, args->key->loc.col,
+      config->config_path, config->key->loc.line, config->key->loc.col,
       "\"%s\": only non-header files may have an associated header\n",
-      args->table->key.name
+      config->table->key.name
     );
     ++error_count;
   }
 
-  char const *const string_value = toml_string_parse( args );
+  char const *const string_value = toml_string_parse( config );
   if ( error_count > 0 )
     return;
-  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
+  if ( strcmp( config->table->key.name, tidy_source_path ) == 0 )
     tidy_associated_header_rel_path = check_strdup( string_value );
 }
 
 /**
  * Parses the value of an `"color"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void color_parse( config_parse_fn_args const *args ) {
-  char const *const string_value = toml_string_parse( args );
+static void color_parse( config_parse_fn_args const *config ) {
+  char const *const string_value = toml_string_parse( config );
 
   if ( error_count > 0 )
     return;
@@ -563,9 +564,9 @@ static void color_parse( config_parse_fn_args const *args ) {
 
   if ( !opt_color_parse( string_value ) ) {
     print_file_error(
-      args->config_path, args->value->loc.line, args->value->loc.col,
+      config->config_path, config->value->loc.line, config->value->loc.col,
       "invalid value for \"%s\"\n",
-      args->key->name
+      config->key->name
     );
     ++error_count;
   }
@@ -575,10 +576,10 @@ static void color_parse( config_parse_fn_args const *args ) {
 /**
  * Parses the value of an `"comment-style"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void comment_style_parse( config_parse_fn_args const *args ) {
-  char const *const string_value = toml_string_parse( args );
+static void comment_style_parse( config_parse_fn_args const *config ) {
+  char const *const string_value = toml_string_parse( config );
 
   if ( error_count > 0 )
     return;
@@ -587,9 +588,9 @@ static void comment_style_parse( config_parse_fn_args const *args ) {
 
   if ( !opt_comment_style_parse( string_value ) ) {
     print_file_error(
-      args->config_path, args->value->loc.line, args->value->loc.col,
+      config->config_path, config->value->loc.line, config->value->loc.col,
       "invalid value for \"%s\"; must be one of \"//\", \"/*\", or \"none\"\n",
-      args->key->name
+      config->key->name
     );
     ++error_count;
   }
@@ -599,10 +600,10 @@ static void comment_style_parse( config_parse_fn_args const *args ) {
 /**
  * Parses the value of an `"comment-symbols"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void comment_symbols_parse( config_parse_fn_args const *args ) {
-  char const *const string_value = toml_string_parse( args );
+static void comment_symbols_parse( config_parse_fn_args const *config ) {
+  char const *const string_value = toml_string_parse( config );
 
   if ( error_count > 0 )
     return;
@@ -611,10 +612,10 @@ static void comment_symbols_parse( config_parse_fn_args const *args ) {
 
   if ( !opt_comment_symbols_parse( string_value ) ) {
     print_file_error(
-      args->config_path, args->value->loc.line, args->value->loc.col,
+      config->config_path, config->value->loc.line, config->value->loc.col,
       "invalid value for \"%s\"; must be one of "
       "\"alpha\", \"length\", \"ref-count\", or \"most-used\"\n",
-      args->key->name
+      config->key->name
     );
     ++error_count;
   }
@@ -624,39 +625,39 @@ static void comment_symbols_parse( config_parse_fn_args const *args ) {
 /**
  * Parses the value of an `"elide-includes"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  *
  * @sa elide_include_parse_string()
  */
-static void elide_includes_parse( config_parse_fn_args const *args ) {
-  assert( args != NULL );
+static void elide_includes_parse( config_parse_fn_args const *config ) {
+  assert( config != NULL );
 
-  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
-    toml_string_or_string_array_parse( args, &elide_include_parse_string );
+  if ( strcmp( config->table->key.name, tidy_source_path ) == 0 )
+    toml_string_or_string_array_parse( config, &elide_include_parse_string );
 }
 
 /**
  * Parses a single string value of an `"elide-includes"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  *
  * @sa elide_includes_parse()
  * @sa include_handle()
  */
-static void elide_include_parse_string( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-  assert( args->value->type == TOML_STRING );
+static void elide_include_parse_string( config_parse_fn_args const *config ) {
+  assert( config != NULL );
+  assert( config->value->type == TOML_STRING );
 
-  include_handle( args->value->s, TIDY_HANDLE_ELIDE );
+  include_handle( config->value->s, TIDY_HANDLE_ELIDE );
 }
 
 /**
  * Parses the value of a `"error"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void error_parse( config_parse_fn_args const *args ) {
-  char const *const string_value = toml_string_parse( args );
+static void error_parse( config_parse_fn_args const *config ) {
+  char const *const string_value = toml_string_parse( config );
 
   if ( error_count > 0 )
     return;
@@ -665,9 +666,9 @@ static void error_parse( config_parse_fn_args const *args ) {
 
   if ( !opt_error_parse( string_value ) ) {
     print_file_error(
-      args->config_path, args->value->loc.line, args->value->loc.col,
+      config->config_path, config->value->loc.line, config->value->loc.col,
       "invalid value for \"%s\"\n",
-      args->key->name
+      config->key->name
     );
     ++error_count;
   }
@@ -677,21 +678,21 @@ static void error_parse( config_parse_fn_args const *args ) {
 /**
  * Parses the value of an `"first"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void first_parse( config_parse_fn_args const *args ) {
-  if ( !toml_bool_parse( args ) )
+static void first_parse( config_parse_fn_args const *config ) {
+  if ( !toml_bool_parse( config ) )
     return;
   if ( error_count > 0 )
     return;
 
   rb_iterator_t iter;
-  size_t const  rel_path_len = strlen( args->table->key.name );
+  size_t const  rel_path_len = strlen( config->table->key.name );
 
   rb_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( path_ends_with( include->abs_path, args->table->key.name,
+    if ( path_ends_with( include->abs_path, config->table->key.name,
                          rel_path_len ) ) {
       include->sort_rank = TIDY_SORT_FIRST;
     }
@@ -701,28 +702,28 @@ static void first_parse( config_parse_fn_args const *args ) {
 /**
  * Parses the value of an `"ignore-as-argument"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void ignore_as_argument_parse( config_parse_fn_args const *args ) {
-  assert( args != NULL );
+static void ignore_as_argument_parse( config_parse_fn_args const *config ) {
+  assert( config != NULL );
 
-  if ( strcmp( args->table->key.name, tidy_source_path ) != 0 )
+  if ( strcmp( config->table->key.name, tidy_source_path ) != 0 )
     return;
-  if ( toml_bool_parse( args ) )
+  if ( toml_bool_parse( config ) )
     tidy_is_source_path_ignored = true;
 };
 
 /**
  * Parses the value of an `"ignore"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void ignore_parse( config_parse_fn_args const *args ) {
-  if ( toml_bool_parse( args ) ) {
+static void ignore_parse( config_parse_fn_args const *config ) {
+  if ( toml_bool_parse( config ) ) {
     PJL_DISCARD_RV(
       ht_insert(
-        &ignore_symbol_set, CONST_CAST( char*, args->table->key.name ),
-        strlen( args->table->key.name ) + 1/*\0*/
+        &ignore_symbol_set, CONST_CAST( char*, config->table->key.name ),
+        strlen( config->table->key.name ) + 1/*\0*/
       )
     );
   }
@@ -731,37 +732,37 @@ static void ignore_parse( config_parse_fn_args const *args ) {
 /**
  * Parses the value of an `"ignore-symbols"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  *
  * @sa ignore_symbols_parse_string()
  */
-static void ignore_symbols_parse( config_parse_fn_args const *args ) {
-  assert( args != NULL );
+static void ignore_symbols_parse( config_parse_fn_args const *config ) {
+  assert( config != NULL );
 
-  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
-    toml_string_or_string_array_parse( args, &ignore_symbols_parse_string );
+  if ( strcmp( config->table->key.name, tidy_source_path ) == 0 )
+    toml_string_or_string_array_parse( config, &ignore_symbols_parse_string );
 }
 
 /**
  * Parses a single string value of an `"ignore-symbols"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  *
  * @sa ignore_symbols_parse()
  */
-static void ignore_symbols_parse_string( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-  assert( args->value->type == TOML_STRING );
+static void ignore_symbols_parse_string( config_parse_fn_args const *config ) {
+  assert( config != NULL );
+  assert( config->value->type == TOML_STRING );
 
   ht_insert_rv_t const hti = ht_insert(
-    &ignore_symbol_set, CONST_CAST( char*, args->value->s ),
-    strlen( args->value->s ) + 1/*\0*/
+    &ignore_symbol_set, CONST_CAST( char*, config->value->s ),
+    strlen( config->value->s ) + 1/*\0*/
   );
   if ( !hti.inserted ) {
     print_file_warning(
-      args->config_path, args->value->loc.line, args->value->loc.col,
+      config->config_path, config->value->loc.line, config->value->loc.col,
       "\"%s\" already ignored\n",
-      args->value->s
+      config->value->s
     );
     ++warning_count;
   }
@@ -770,79 +771,79 @@ static void ignore_symbols_parse_string( config_parse_fn_args const *args ) {
 /**
  * Parses the value of an `"includes"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  *
  * @sa includes_parse_string()
  */
-static void includes_parse( config_parse_fn_args const *args ) {
-  toml_string_or_string_array_parse( args, &includes_parse_string );
+static void includes_parse( config_parse_fn_args const *config ) {
+  toml_string_or_string_array_parse( config, &includes_parse_string );
 }
 
 /**
  * Parses a single string value of an `"includes"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  *
  * @sa includes_parse()
  * @sa symbols_parse_string()
  */
-static void includes_parse_string( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-  assert( args->value->type == TOML_STRING );
+static void includes_parse_string( config_parse_fn_args const *config ) {
+  assert( config != NULL );
+  assert( config->value->type == TOML_STRING );
 
-  tidy_include *const to_include = include_find_by_rel_path( args->value->s );
+  tidy_include *const to_include = include_find_by_rel_path( config->value->s );
   if ( to_include != NULL )
-    symbol_include_add( args->table->key.name, to_include );
+    symbol_include_add( config->table->key.name, to_include );
 }
 
 /**
  * Parses the value of an `"keep-includes"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  *
  * @sa keep_includes_parse_string()
  */
-static void keep_includes_parse( config_parse_fn_args const *args ) {
-  assert( args != NULL );
+static void keep_includes_parse( config_parse_fn_args const *config ) {
+  assert( config != NULL );
 
-  if ( strcmp( args->table->key.name, tidy_source_path ) == 0 )
-    toml_string_or_string_array_parse( args, &keep_includes_parse_string );
+  if ( strcmp( config->table->key.name, tidy_source_path ) == 0 )
+    toml_string_or_string_array_parse( config, &keep_includes_parse_string );
 }
 
 /**
  * Parses a single string value of a `"keep-includes"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  *
  * @sa include_handle()
  * @sa keep_includes_parse()
  */
-static void keep_includes_parse_string( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-  assert( args->value->type == TOML_STRING );
+static void keep_includes_parse_string( config_parse_fn_args const *config ) {
+  assert( config != NULL );
+  assert( config->value->type == TOML_STRING );
 
-  include_handle( args->value->s, TIDY_HANDLE_KEEP );
+  include_handle( config->value->s, TIDY_HANDLE_KEEP );
 }
 
 /**
  * Parses the value of a `"keep"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  *
  * @sa include_handle()
  */
-static void keep_parse( config_parse_fn_args const *args ) {
-  if ( toml_bool_parse( args ) )
-    include_handle( args->table->key.name, TIDY_HANDLE_KEEP );
+static void keep_parse( config_parse_fn_args const *config ) {
+  if ( toml_bool_parse( config ) )
+    include_handle( config->table->key.name, TIDY_HANDLE_KEEP );
 }
 
 /**
  * Parses the value of a `"line-length"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void line_length_parse( config_parse_fn_args const *args ) {
-  long const int_value = toml_int_parse( args, 0, OPT_LINE_LENGTH_MAX );
+static void line_length_parse( config_parse_fn_args const *config ) {
+  long const int_value = toml_int_parse( config, 0, OPT_LINE_LENGTH_MAX );
   if ( error_count == 0 && !option_is_set( COPT(LINE_LENGTH) ) ) {
     opt_line_length = STATIC_CAST( unsigned, int_value );
     option_mark_set( COPT(LINE_LENGTH) );
@@ -852,32 +853,32 @@ static void line_length_parse( config_parse_fn_args const *args ) {
 /**
  * Parses the value of a `"proxy"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void proxy_parse( config_parse_fn_args const *args ) {
-  toml_string_or_string_array_parse( args, &proxy_parse_string );
+static void proxy_parse( config_parse_fn_args const *config ) {
+  toml_string_or_string_array_parse( config, &proxy_parse_string );
 }
 
 /**
  * Parses a single string value of a `"proxy"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void proxy_parse_string( config_parse_fn_args const *args ) {
-  assert( args != NULL );
+static void proxy_parse_string( config_parse_fn_args const *config ) {
+  assert( config != NULL );
 
   tidy_include *const to_include =
-    include_find_by_rel_path( args->table->key.name );
+    include_find_by_rel_path( config->table->key.name );
   if ( to_include == NULL )
     return;
 
   rb_iterator_t iter;
-  size_t const  rel_path_len = strlen( args->value->s );
+  size_t const  rel_path_len = strlen( config->value->s );
 
   rb_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *from_include;
         (from_include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( !path_ends_with( from_include->abs_path, args->value->s,
+    if ( !path_ends_with( from_include->abs_path, config->value->s,
                           rel_path_len ) ) {
       continue;
     }
@@ -892,7 +893,7 @@ static void proxy_parse_string( config_parse_fn_args const *args ) {
     }
     else if ( include_proxy_would_cycle( from_include, to_include ) ) {
       print_file_warning(
-        args->config_path, args->value->loc.line, args->value->loc.col,
+        config->config_path, config->value->loc.line, config->value->loc.col,
         "\"%s\": proxy cycle detected\n",
         from_include->rel_path
       );
@@ -908,50 +909,50 @@ static void proxy_parse_string( config_parse_fn_args const *args ) {
 /**
  * Parses the value of an `"std-c-includes"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void std_c_includes_parse( config_parse_fn_args const *args ) {
+static void std_c_includes_parse( config_parse_fn_args const *config ) {
   if ( std_c_includes.len == 0 )
-    std_c_includes = toml_string_array_parse( args );
+    std_c_includes = toml_string_array_parse( config );
 }
 
 /**
  * Parses the value of an `"std-cxx-includes"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  */
-static void std_cxx_includes_parse( config_parse_fn_args const *args ) {
+static void std_cxx_includes_parse( config_parse_fn_args const *config ) {
   if ( std_cxx_includes.len == 0 )
-    std_cxx_includes = toml_string_array_parse( args );
+    std_cxx_includes = toml_string_array_parse( config );
 }
 
 /**
  * Parses the value of a `"symbols"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  *
  * @sa symbols_parse_string()
  */
-static void symbols_parse( config_parse_fn_args const *args ) {
-  toml_string_or_string_array_parse( args, &symbols_parse_string );
+static void symbols_parse( config_parse_fn_args const *config ) {
+  toml_string_or_string_array_parse( config, &symbols_parse_string );
 }
 
 /**
  * Parses a single string value of a `"symbols"` key.
  *
- * @param args The config_parse_fn_args to use.
+ * @param config The config_parse_fn_args to use.
  *
  * @sa includes_parse_string()
  * @sa symbols_parse()
  */
-static void symbols_parse_string( config_parse_fn_args const *args ) {
-  assert( args != NULL );
-  assert( args->value->type == TOML_STRING );
+static void symbols_parse_string( config_parse_fn_args const *config ) {
+  assert( config != NULL );
+  assert( config->value->type == TOML_STRING );
 
   tidy_include *const to_include =
-    include_find_by_rel_path( args->table->key.name );
+    include_find_by_rel_path( config->table->key.name );
   if ( to_include != NULL )
-    symbol_include_add( args->value->s, to_include );
+    symbol_include_add( config->value->s, to_include );
 }
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -1220,13 +1221,13 @@ static void config_parse( char const *config_path, FILE *config_file ) {
         continue;
       }
 
-      config_parse_fn_args const args = {
+      config_parse_fn_args const config = {
         .config_path = config_path,
         .table = &table,
         .key = &kv->key,
         .value = &kv->value
       };
-      (*found_key->parse_fn)( &args );
+      (*found_key->parse_fn)( &config );
     } // for
   } // while
 
