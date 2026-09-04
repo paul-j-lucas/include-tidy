@@ -41,11 +41,13 @@
 // standard
 #include <assert.h>
 #include <ctype.h>                      /* for isalnum(), isprint() */
+#include <errno.h>
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for exit() */
 #include <string.h>                     /* for str...() */
+#include <sys/wait.h>
 #include <sysexits.h>
 #include <unistd.h>                     /* for chdir(2) */
 
@@ -202,12 +204,8 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
       break;
     }
   } // while
-  if ( !found_include_paths ) {
-    print_warning(
-      "#include <...> paths not found in \"%s\" output\n", compiler_path
-    );
+  if ( !found_include_paths )
     goto done;
-  }
 
   // Find the index to insert the new -isystem option before the last argv that
   // is not an option (the filename).
@@ -245,11 +243,47 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
   (*pargv)[ *pargc ] = NULL;
 
 done:
+  // To prevent a SIGPIPE, drain the pipe by reading any remaining output.
+  while ( getline( &line_buf, &line_cap, fcompiler ) != -1 )
+    ;
   free( line_buf );
-  if ( ferror( fcompiler ) )
+  int status = pclose( fcompiler );
+  if ( status == -1 )
     goto error;
-  pclose( fcompiler );
-  return;
+
+  if ( WIFEXITED( status ) ) {
+    status = WEXITSTATUS( status );
+    switch ( status ) {
+      case 0:
+        if ( !found_include_paths ) {
+          print_warning(
+            "#include <...> paths not found in \"%s\" output\n", compiler_path
+          );
+        }
+        return;
+      case 127:                         // POSIX shell "file not found"
+        errno = ENOENT;
+        goto error;
+      default:
+        fatal_error( EX_UNAVAILABLE,
+          "\"%s\": invocation failed with status %d\n", compiler_path, status
+        );
+    } // switch
+  }
+
+  if ( WIFSIGNALED( status ) ) {
+    int const sig = WTERMSIG( status );
+    fatal_error( EX_UNAVAILABLE,
+      "shell executing \"%s\" killed by signal %d: %s\n",
+      compiler_path, sig, strsignal( sig )
+    );
+  }
+  else {
+    fatal_error( EX_UNAVAILABLE,
+      "shell executing \"%s\" terminated abnormally\n",
+      compiler_path
+    );
+  }
 
 error:
   fatal_error( EX_UNAVAILABLE,

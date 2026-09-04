@@ -1,0 +1,3 @@
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --compiler=no-exists-cc f.c
+include-tidy: error: "no-exists-cc": invocation failed: No such file or directory
+
