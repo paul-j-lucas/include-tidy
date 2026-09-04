@@ -26,6 +26,7 @@
 // local
 #include "pjl_config.h"
 #include "toml_lite.h"
+#include "array.h"
 #include "fnv1a.h"
 #include "hash_table.h"
 #include "strbuf.h"
@@ -1117,6 +1118,7 @@ void toml_table_cleanup( toml_table *table ) {
       &table->keys_values,
       POINTER_CAST( ht_free_fn_t, &toml_key_value_cleanup )
     );
+    array_cleanup( &table->ordered_kv_ptrs, /*free_fn=*/NULL );
   }
 }
 
@@ -1140,6 +1142,7 @@ void toml_table_init( toml_table *table ) {
     POINTER_CAST( ht_cmp_fn_t, &toml_key_value_cmp ),
     POINTER_CAST( ht_hash_fn_t, &toml_key_value_hash )
   );
+  array_init( &table->ordered_kv_ptrs, sizeof(toml_key_value*) );
 }
 
 bool toml_table_next( toml_file *toml, toml_table *table ) {
@@ -1183,17 +1186,19 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
     if ( c == EOF || c == '[' )
       return true;
 
-    toml_key_value kv;
-    if ( !toml_key_value_parse( toml, &kv ) )
+    toml_key_value new_kv;
+    if ( !toml_key_value_parse( toml, &new_kv ) )
       break;
 
-    hti = ht_insert( &table->keys_values, &kv, sizeof kv );
+    hti = ht_insert( &table->keys_values, &new_kv, sizeof new_kv );
     if ( !hti.inserted ) {
-      toml->loc = kv.key.loc;
+      toml->loc = new_kv.key.loc;
       toml->error = TOML_ERR_DUPLICATE_KEY;
-      toml_key_value_cleanup( &kv );
+      toml_key_value_cleanup( &new_kv );
       break;
     }
+    toml_key_value *const kv = HT_DINT( hti.entry );
+    *(toml_key_value**)array_push_back( &table->ordered_kv_ptrs ) = kv;
   } // while
 
   toml_table_cleanup( table );

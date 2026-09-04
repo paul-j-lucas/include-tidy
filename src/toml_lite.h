@@ -28,6 +28,7 @@
 
 // local
 #include "pjl_config.h"
+#include "array.h"
 #include "hash_table.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -128,7 +129,7 @@ enum toml_type {
 typedef struct  toml_array      toml_array;
 typedef enum    toml_error      toml_error;
 typedef struct  toml_file       toml_file;
-typedef ht_iterator_t           toml_iterator;
+typedef struct  toml_iterator   toml_iterator;
 typedef struct  toml_key        toml_key;
 typedef struct  toml_key_value  toml_key_value;
 typedef struct  toml_loc        toml_loc;
@@ -144,6 +145,14 @@ typedef struct  toml_value      toml_value;
 struct toml_array {
   toml_value *values;                   ///< Values.
   unsigned    size;                     ///< Size of \ref values.
+};
+
+/**
+ * TOML table iterator.
+ */
+struct toml_iterator {
+  toml_table const *table;              ///< The TOML table being iterated.
+  unsigned          next_idx;           ///< The next index.
 };
 
 /**
@@ -205,6 +214,12 @@ struct toml_key_value {
 struct toml_table {
   toml_key      key;                    ///< Table key.
   hash_table_t  keys_values;            ///< Keys & values.
+
+  /**
+   * An array of toml_key_value pointers pointing at entries in \ref
+   * keys_values in file occurrence order.
+   */
+  array_t       ordered_kv_ptrs;
 };
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -249,7 +264,7 @@ void toml_file_init( toml_file *toml, FILE *file );
  * @sa toml_iterator_next()
  */
 inline void toml_iterator_init( toml_iterator *iter, toml_table *table ) {
-  ht_iterator_init( iter, &table->keys_values );
+  *iter = (toml_iterator){ .table = table };
 }
 
 /**
@@ -265,7 +280,10 @@ inline void toml_iterator_init( toml_iterator *iter, toml_table *table ) {
  */
 NODISCARD
 inline toml_key_value const* toml_iterator_next( toml_iterator *iter ) {
-  return ht_iterator_next( iter );
+  array_t const *const ordered_kv_ptrs = &iter->table->ordered_kv_ptrs;
+  return iter->next_idx < ordered_kv_ptrs->len ?
+    *(toml_key_value**)array_at_nc( ordered_kv_ptrs, iter->next_idx++ ) :
+    NULL;
 }
 
 /**
@@ -285,7 +303,7 @@ void toml_table_cleanup( toml_table *table );
  */
 NODISCARD
 inline bool toml_table_empty( toml_table const *table ) {
-  return ht_empty( &table->keys_values );
+  return table->ordered_kv_ptrs.len == 0;
 }
 
 /**
