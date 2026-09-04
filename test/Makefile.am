@@ -43,8 +43,11 @@ TESTS+=	tests/align-column.test \
 	tests/comment-style.test
 
 # Other tests
-TESTS+=	tests/associated-header.test \
-	tests/bad-associated-header.test \
+TESTS+=	tests/associated-header.test
+
+# Error tests
+TESTS+=	tests/bad-associated-header.test \
+	tests/bad-semantics.test \
 	tests/duplicate.test \
 	tests/enoent.test \
 	tests/error.test \
