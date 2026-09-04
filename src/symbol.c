@@ -1031,7 +1031,7 @@ static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
   unsigned token_count;
   clang_tokenize( tidy_tu, field_range, &tokens, &token_count );
   if ( unlikely( token_count == 0 ) )
-    return;
+    return;                             // LCOV_EXCL_LINE
 
   CXString const    field_name_cxs = clang_getCursorSpelling( field_csr );
   char const *const field_name_cs  = clang_getCString( field_name_cxs );
@@ -1090,7 +1090,7 @@ static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
   unsigned token_count;
   clang_tokenize( tidy_tu, macro_range, &tokens, &token_count );
   if ( unlikely( token_count == 0 ) )
-    return;
+    return;                             // LCOV_EXCL_LINE
 
   //
   // While iterating over all tokens of the macro, we have to skip identifers
