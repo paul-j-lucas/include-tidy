@@ -1,5 +1,6 @@
 [include-tidy]
 add-c-includes = false
+add-cxx-includes = [ false ]
 align-column = false
 comment-symbols = "foo"
 line-length = 1000

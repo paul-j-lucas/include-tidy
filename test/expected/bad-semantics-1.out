@@ -1,8 +1,9 @@
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=bad-semantics-1.toml f.c
 "bad-semantics-1.toml":2,18: error: "false": invalid value for "add-c-includes"; expected array
-"bad-semantics-1.toml":3,16: error: "false": invalid value for "align-column"; expected integer
-"bad-semantics-1.toml":5,15: error: "1000": invalid value for "line-length"; must be 0-512
-"bad-semantics-1.toml":6,1: error: "unknown": unknown key
-"bad-semantics-1.toml":9,9: error: "0": invalid value for "first"; expected boolean
-include-tidy: 5 errors generated
+"bad-semantics-1.toml":3,22: error: "false": invalid value for "add-cxx-includes"; expected string
+"bad-semantics-1.toml":4,16: error: "false": invalid value for "align-column"; expected integer
+"bad-semantics-1.toml":6,15: error: "1000": invalid value for "line-length"; must be 0-512
+"bad-semantics-1.toml":7,1: error: "unknown": unknown key
+"bad-semantics-1.toml":10,9: error: "0": invalid value for "first"; expected boolean
+include-tidy: 6 errors generated
 

@@ -1133,8 +1133,8 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   while ( toml_table_next( &toml, &table ) ) {
     if ( table.key.name == NULL ) {
       print_file_error(
-        config_path, toml.loc.line, toml.loc.col,
-        "required table name missing\n"
+        config_path, toml.loc.line, 1,
+        "required table header missing\n"
       );
       ++error_count;
       continue;
@@ -1308,8 +1308,8 @@ static bool is_standard_include( char const *rel_path,
  * @param value The toml_value to use.  If NULL, then \a config's \ref
  * config_parse_fn_args::value "value" is used instead.
  * @param expected The expected type.  If not equal to \a value's type, then
- * <tt>&quot;; expected </tt><i>type</i><tt>&quot;</tt> followed by a newline
- * is printed; otherwise no newline is printed.
+ * <tt>&quot;; expected </tt><i>type</i><tt>&quot;</tt> is printed followed by
+ * a newline; otherwise no newline is printed.
  *
  * @note \ref error_count is incremented.
  */

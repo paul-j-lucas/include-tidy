@@ -1,2 +1,1 @@
-[include-tidy]
-add-c-includes = [ 42 ]
+align-column = 35

@@ -1149,36 +1149,47 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   assert( toml != NULL );
   assert( table != NULL );
 
+  toml_table_cleanup( table );
+
   if ( !toml_space_comments_skip( toml ) )
     return false;
-  toml_loc const header_loc = toml->loc;
-  int c = toml_getc( toml );
-  if ( c == TOML_CHAR_INVALID )
-    return false;
-  if ( c != '[' ) {
-    toml_ungetc( toml, c );
-    return false;
-  }
 
   toml_key  table_key;
   size_t    table_name_len;
 
-  if ( !toml_table_header_parse( toml, &table_key, &table_name_len ) )
-    return false;
+  toml_loc const header_loc = toml->loc;
+  int c = toml_getc( toml );
 
-  toml_table_cleanup( table );
+  switch ( c ) {
+    case EOF:
+    case TOML_CHAR_INVALID:
+      return false;
+    case '[':
+      if ( !toml_table_header_parse( toml, &table_key, &table_name_len ) )
+        return false;
+      break;
+    default:
+      toml_ungetc( toml, c );
+      table_key = (toml_key){ .name = NULL };
+      table_name_len = 0;
+      break;
+  } // switch
 
-  ht_insert_rv_t hti = ht_insert(
-    &toml->table_names, CONST_CAST( char*, table_key.name ), table_name_len + 1
-  );
-  if ( !hti.inserted ) {
-    toml->error = TOML_ERR_DUPLICATE_TABLE;
-    toml->loc.col = table_key.loc.col;
-    toml_key_cleanup( &table_key );
-    return false;
+  if ( table_key.name != NULL ) {
+    ht_insert_rv_t const hti = ht_insert(
+      &toml->table_names,
+      CONST_CAST( char*, table_key.name ), table_name_len + 1
+    );
+    if ( !hti.inserted ) {
+      toml->error = TOML_ERR_DUPLICATE_TABLE;
+      toml->loc.col = table_key.loc.col;
+      toml_key_cleanup( &table_key );
+      return false;
+    }
   }
 
   toml_table_init( table );
+  // Note: table->key takes ownership of table_key.name.
   table->key = (toml_key){ .name = table_key.name, .loc = header_loc };
 
   while ( toml_space_comments_skip( toml ) ) {
@@ -1190,7 +1201,8 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
     if ( !toml_key_value_parse( toml, &new_kv ) )
       break;
 
-    hti = ht_insert( &table->keys_values, &new_kv, sizeof new_kv );
+    ht_insert_rv_t const hti =
+      ht_insert( &table->keys_values, &new_kv, sizeof new_kv );
     if ( !hti.inserted ) {
       toml->loc = new_kv.key.loc;
       toml->error = TOML_ERR_DUPLICATE_KEY;
