@@ -1,5 +1,29 @@
+2026-09-05  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c: No longer exiting if warnings but no errors.
+   * config_file.c: Reworked parse TOML functions to return success/failure.
+   * bad-semantics-1.out: Updated expected test result.
+   * bad-semantics-1.toml, bad-semantics-1.out: Another TOML semantics test.
+   * config_file.c, toml_lite.c, bad-semantics-1.toml, bad-semantics-2.toml,
+     bad-semantics-1.out, bad-semantics-2.out: Now correctly handling missing
+     TOML table names.
+   * config_file.c, bad-semantics-1.out, bad-semantics-2.out: Now including
+     offending value in config. file error messages.
+
 2026-09-04  Paul J. Lucas <paul@lucasmail.org>
 
+   * toml_lite.c, toml_lite.h: Added toml_type_name.
+   * test/Makefile.am, bad-semantics-2.toml, bad-semantics-2.out,
+     bad-semantics-2.test: Another config. TOML semantics test.
+   * config_file.c, bad-semantics.toml, bad-semantics.out: Fixed "unknown key"
+     error message.
+   * test/Makefile.am, bad-semantics.toml, bad-semantics.out,
+     bad-semantics.test: Test for bad config. file semantics.
+   * config_file.c: Added missint ARRAY_INIT() for std_c_includes and
+     std_cxx_includes.
+   * toml_lite.c, toml_lite.h: Added ordered_kv_ptrs so toml_iterator iterates
+     over keys in file order.
+   * strbuf.c, strbuf.h: Added strbuf_vprintf().
    * config_file.c, trans_unit.c, util.c, util.h, bad-associated-header.out:
      Now allowing more than one error in configuration file; printing warning
      and error count.
