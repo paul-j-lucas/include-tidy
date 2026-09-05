@@ -1205,6 +1205,15 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   return false;
 }
 
+char const* toml_type_name( toml_type type ) {
+  switch ( type ) {
+    case TOML_BOOL  : return "boolean";
+    case TOML_INT   : return "integer";
+    case TOML_STRING: return "string";
+    case TOML_ARRAY : return "array";
+  } // switch
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */

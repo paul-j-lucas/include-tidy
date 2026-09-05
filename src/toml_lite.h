@@ -339,6 +339,15 @@ void toml_table_init( toml_table *table );
 NODISCARD
 bool toml_table_next( toml_file *toml, toml_table *table );
 
+/**
+ * Gets the name for \a type.
+ *
+ * @param type The type to get the name for.
+ * @return Returns said name.
+ */
+NODISCARD
+char const* toml_type_name( toml_type type );
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */
