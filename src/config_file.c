@@ -1202,7 +1202,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       if ( found_key == NULL ) {
         print_file_error(
           config_path, kv->key.loc.line, kv->key.loc.col,
-          "\"%s\": unknown key\n", table.key.name
+          "\"%s\": unknown key\n", kv->key.name
         );
         ++error_count;
         continue;
