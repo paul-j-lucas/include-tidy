@@ -3,6 +3,7 @@ add-c-includes = false
 add-cxx-includes = [ false ]
 align-column = false
 comment-symbols = "foo"
+error = 0
 line-length = 1000
 unknown = 0
 
