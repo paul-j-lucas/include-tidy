@@ -1246,7 +1246,8 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       EPRINTF( "%u error%s", error_count, plural_s( error_count ) );
     }
     EPUTS( " generated\n" );
-    exit( EX_CONFIG );
+    if ( error_count > 0 )
+      exit( EX_CONFIG );
   }
 }
 
