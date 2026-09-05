@@ -1,4 +1,4 @@
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=bad-semantics-2.toml f.c
-"bad-semantics-2.toml":2,20: error: invalid value for "add-c-includes"; expected string
+"bad-semantics-2.toml":2,20: error: "42": invalid value for "add-c-includes"; expected string
 include-tidy: 1 error generated
 

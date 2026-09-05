@@ -199,6 +199,8 @@ static void         keep_includes_parse( config_parse_fn_args const* );
 static void         keep_includes_parse_string( config_parse_fn_args const* );
 static void         keep_parse( config_parse_fn_args const* );
 static void         line_length_parse( config_parse_fn_args const* );
+static void         print_invalid_value( config_parse_fn_args const*,
+                                         toml_value const*, toml_type );
 static void         proxy_parse( config_parse_fn_args const* );
 static void         proxy_parse_string( config_parse_fn_args const* );
 static void         std_c_includes_parse( config_parse_fn_args const* );
@@ -303,12 +305,7 @@ static bool toml_bool_parse( config_parse_fn_args const *config ) {
   assert( config != NULL );
 
   if ( config->value->type != TOML_BOOL ) {
-    print_file_error(
-      config->config_path, config->value->loc.line, config->value->loc.col,
-      "invalid value for \"%s\"; expected boolean\n",
-      config->key->name
-    );
-    ++error_count;
+    print_invalid_value( config, /*value=*/NULL, TOML_BOOL );
     return false;
   }
 
@@ -329,22 +326,13 @@ static long toml_int_parse( config_parse_fn_args const *config, long value_min,
   assert( config != NULL );
 
   if ( config->value->type != TOML_INT ) {
-    print_file_error(
-      config->config_path, config->value->loc.line, config->value->loc.col,
-      "invalid value for \"%s\"; expected integer\n",
-      config->key->name
-    );
-    ++error_count;
+    print_invalid_value( config, /*value=*/NULL, TOML_INT );
     return 0;
   }
 
   if ( config->value->i < value_min || config->value->i > value_max ) {
-    print_file_error(
-      config->config_path, config->value->loc.line, config->value->loc.col,
-      "\"%ld\": invalid value for \"%s\"; must be %ld-%ld\n",
-      config->value->i, config->key->name, value_min, value_max
-    );
-    ++error_count;
+    print_invalid_value( config, /*value=*/NULL, TOML_INT );
+    EPRINTF( "; must be %ld-%ld\n", value_min, value_max );
     return 0;
   }
 
@@ -367,12 +355,7 @@ static array_t toml_string_array_parse( config_parse_fn_args const *config ) {
   array_t array = ARRAY_INIT( sizeof(char*) );
 
   if ( config->value->type != TOML_ARRAY ) {
-    print_file_error(
-      config->config_path, config->value->loc.line, config->value->loc.col,
-      "invalid value for \"%s\"; expected array\n",
-      config->key->name
-    );
-    ++error_count;
+    print_invalid_value( config, /*value=*/NULL, TOML_ARRAY );
     goto done;
   }
 
@@ -382,12 +365,7 @@ static array_t toml_string_array_parse( config_parse_fn_args const *config ) {
     for ( unsigned i = 0; i < config->value->a.size; ++i ) {
       toml_value *const a_value = &config->value->a.values[i];
       if ( a_value->type != TOML_STRING ) {
-        print_file_error(
-          config->config_path, a_value->loc.line, a_value->loc.col,
-          "invalid value for \"%s\"; expected string\n",
-          config->key->name
-        );
-        ++error_count;
+        print_invalid_value( config, a_value, TOML_STRING );
         continue;
       }
       *(char**)array_push_back( &array ) = a_value->s;
@@ -423,12 +401,7 @@ void toml_string_or_string_array_parse( config_parse_fn_args const *config,
       for ( unsigned i = 0; i < config->value->a.size; ++i ) {
         toml_value const *const a_value = &config->value->a.values[i];
         if ( a_value->type != TOML_STRING ) {
-          print_file_error(
-            config->config_path, a_value->loc.line, a_value->loc.col,
-            "invalid value for \"%s\" key array; expected string\n",
-            config->key->name
-          );
-          ++error_count;
+          print_invalid_value( config, a_value, TOML_STRING );
           continue;
         }
         config_parse_fn_args const a_value_config = {
@@ -465,12 +438,7 @@ static char const* toml_string_parse( config_parse_fn_args const *config ) {
   assert( config != NULL );
 
   if ( config->value->type != TOML_STRING ) {
-    print_file_error(
-      config->config_path, config->value->loc.line, config->value->loc.col,
-      "invalid value for \"%s\"; expected string\n",
-      config->key->name
-    );
-    ++error_count;
+    print_invalid_value( config, /*value=*/NULL, TOML_STRING );
     return "";
   }
 
@@ -571,8 +539,8 @@ static void color_parse( config_parse_fn_args const *config ) {
   if ( !opt_color_parse( string_value ) ) {
     print_file_error(
       config->config_path, config->value->loc.line, config->value->loc.col,
-      "invalid value for \"%s\"\n",
-      config->key->name
+      "\"%s\": invalid value for \"%s\"\n",
+      string_value, config->key->name
     );
     ++error_count;
   }
@@ -593,12 +561,8 @@ static void comment_style_parse( config_parse_fn_args const *config ) {
     return;
 
   if ( !opt_comment_style_parse( string_value ) ) {
-    print_file_error(
-      config->config_path, config->value->loc.line, config->value->loc.col,
-      "invalid value for \"%s\"; must be one of \"//\", \"/*\", or \"none\"\n",
-      config->key->name
-    );
-    ++error_count;
+    print_invalid_value( config, /*value=*/NULL, TOML_STRING );
+    EPUTS( "; must be one of \"//\", \"/*\", or \"none\"\n" );
   }
   option_mark_set( COPT(COMMENT_STYLE) );
 }
@@ -617,13 +581,11 @@ static void comment_symbols_parse( config_parse_fn_args const *config ) {
     return;
 
   if ( !opt_comment_symbols_parse( string_value ) ) {
-    print_file_error(
-      config->config_path, config->value->loc.line, config->value->loc.col,
-      "invalid value for \"%s\"; must be one of "
-      "\"alpha\", \"length\", \"ref-count\", or \"most-used\"\n",
-      config->key->name
+    print_invalid_value( config, /*value=*/NULL, TOML_STRING );
+    EPUTS(
+      "; must be one of "
+      "\"alpha\", \"length\", \"ref-count\", or \"most-used\"\n"
     );
-    ++error_count;
   }
   option_mark_set( COPT(COMMENT_SYMBOLS) );
 }
@@ -671,12 +633,8 @@ static void error_parse( config_parse_fn_args const *config ) {
     return;
 
   if ( !opt_error_parse( string_value ) ) {
-    print_file_error(
-      config->config_path, config->value->loc.line, config->value->loc.col,
-      "invalid value for \"%s\"\n",
-      config->key->name
-    );
-    ++error_count;
+    print_invalid_value( config, /*value=*/NULL, TOML_STRING );
+    EPUTS( "; must be one of \"always\", \"never\", or \"violations\"\n" );
   }
   option_mark_set( COPT(ERROR) );
 }
@@ -1341,6 +1299,48 @@ static bool is_standard_include( char const *rel_path,
   } // for
 
   return false;
+}
+
+/**
+ * Prints an error message saying that \a value is invalid.
+ *
+ * @param config The config_parse_fn_args to use.
+ * @param value The toml_value to use.  If NULL, then \a config's \ref
+ * config_parse_fn_args::value "value" is used instead.
+ * @param expected The expected type.  If not equal to \a value's type, then
+ * <tt>&quot;; expected </tt><i>type</i><tt>&quot;</tt> followed by a newline
+ * is printed; otherwise no newline is printed.
+ *
+ * @note \ref error_count is incremented.
+ */
+static void print_invalid_value( config_parse_fn_args const *config,
+                                 toml_value const *value, toml_type expected ) {
+  assert( config != NULL );
+  if ( value == NULL )
+    value = config->value;
+
+  print_file_error( config->config_path, value->loc.line, value->loc.col, "" );
+
+  switch ( value->type ) {
+    case TOML_BOOL:
+      EPRINTF( "\"%s\"", value->b ? "true" : "false" );
+      break;
+    case TOML_INT:
+      EPRINTF( "\"%ld\"", value->i );
+      break;
+    case TOML_STRING:
+      EPRINTF( "\"%s\"", value->s );
+      break;
+    case TOML_ARRAY:
+      EPUTS( "array" );
+      break;
+  } // switch
+
+  EPRINTF( ": invalid value for \"%s\"", config->key->name );
+  if ( value->type != expected )
+    EPRINTF( "; expected %s\n", toml_type_name( expected ) );
+
+  ++error_count;
 }
 
 /**
