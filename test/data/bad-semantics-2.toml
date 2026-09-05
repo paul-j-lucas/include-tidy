@@ -1,0 +1,2 @@
+[include-tidy]
+add-c-includes = [ 42 ]

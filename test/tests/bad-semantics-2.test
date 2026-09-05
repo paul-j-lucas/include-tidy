@@ -1,0 +1,5 @@
+EXPECTED_EXIT=78
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    -Xtidy --config=bad-semantics-2.toml \
+    f.c
