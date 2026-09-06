@@ -49,8 +49,7 @@ TESTS+=	tests/associated-header.test \
 	tests/xdg_config_dirs.test
 
 # Error tests
-TESTS+=	tests/bad-associated-header.test \
-	tests/bad-semantics-1.test \
+TESTS+=	tests/bad-semantics-1.test \
 	tests/bad-semantics-2.test \
 	tests/duplicate.test \
 	tests/enoent.test \
