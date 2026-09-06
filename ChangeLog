@@ -1,3 +1,28 @@
+2026-09-06  Paul J. Lucas <paul@lucasmail.org>
+
+   * options.c: Code coverage exclusion comments.
+   * hello.out, hello.test: Added test for --verbose=f.
+   * test/Makefile.am: Eliminated redundant test.
+   * hello.out, hello.test: Added --comment-style tests.
+   * cli-options-error.out, cli-options-error.test: Added --verbose tests.
+   * cli_options.c, cli-options-error.out, cli-options-error.test: Now checking
+     that -Xtidy is followed by -whatever.
+   * options.c: Code coverage exclusion comments.
+   * hello.out, hello.test: Now testing --verbose=F.
+   * print.c, print.h: Code coverage exclusion comments.
+   * bad-semantics-1.toml, bad-semantics-1.out: Another TOML semantics test.
+   * man/man1/include-tidy.1: Put C++ header extensions first.
+   * config_file.c, bad-semantics-1.toml, bad-semantics-1.out: Empty tables are
+     now warnings.
+   * config_file.c, bad-semantics-1.out: Now printing invalid value in
+     toml_string_or_string_array_parse().
+   * bad-semantics-1.toml, bad-semantics-2.toml, bad-semantics-1.out,
+     bad-semantics-2.out: More comprehensive TOML semantics tests.
+   * config_file.c, bad-semantics-1.toml, bad-semantics-1.out: Added negative
+     test for "color".
+   * test/Makefile.am, bad-semantics-1.toml, bad-semantics-1.out: Folded in
+     test.
+
 2026-09-05  Paul J. Lucas <paul@lucasmail.org>
 
    * config_file.c, test/Makefile.am, xdg_config_dirs.out,
