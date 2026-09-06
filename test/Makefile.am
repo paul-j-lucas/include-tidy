@@ -43,7 +43,8 @@ TESTS+=	tests/align-column.test \
 	tests/comment-style.test
 
 # Other tests
-TESTS+=	tests/associated-header.test
+TESTS+=	tests/associated-header.test \
+	tests/xdg_config_home.test
 
 # Error tests
 TESTS+=	tests/bad-associated-header.test \
