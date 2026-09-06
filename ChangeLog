@@ -1,5 +1,9 @@
 2026-09-06  Paul J. Lucas <paul@lucasmail.org>
 
+   * man/man1/include-tidy.1, config_file.c, include-tidy.c, include-tidy.h,
+     run_test.sh, home.test, xdg_config_dirs.test, update_test.sh: Added "x" to
+     INCLUDE_TIDY_TEST.
+   * run_test.sh: Removed run_script_test -- not used.
    * options.c: Code coverage exclusion comments.
    * hello.out, hello.test: Added test for --verbose=f.
    * test/Makefile.am: Eliminated redundant test.
