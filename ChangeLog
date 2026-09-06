@@ -1,5 +1,14 @@
 2026-09-05  Paul J. Lucas <paul@lucasmail.org>
 
+   * man/man1/include-tidy.1, config_file.c, include-tidy.c, include-tidy.h,
+     options.c, options.h: Added INCLUDE_TIDY_TEST.
+   * config_file.c, test/Makefile.am, home.out,
+     .config/include-tidy/config.toml, home.test: HOME test.
+   * run_test.sh, update_test.sh: Now unsetting XDG_CONFIG_HOME
+     XDG_CONFIG_DIRS.
+   * test/Makefile.am, xdg_config_home.out, xdg_config_home.test,
+     include-tidy/config.toml: XDG_CONFIG_HOME test.
+   * cli_options.c: Fixed no command-line arguments -> usage.
    * config_file.c: No longer exiting if warnings but no errors.
    * config_file.c: Reworked parse TOML functions to return success/failure.
    * bad-semantics-1.out: Updated expected test result.
