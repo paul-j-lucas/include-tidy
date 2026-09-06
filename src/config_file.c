@@ -1055,13 +1055,13 @@ static FILE* config_file_find( char const *config_path, strbuf_t *path_buf ) {
       char const *config_dirs = null_if_empty( getenv( "XDG_CONFIG_DIRS" ) );
       if ( config_dirs == NULL )
         config_dirs = "/etc/xdg";       // LCOV_EXCL_LINE
-      strbuf_reset( path_buf );
       for (;;) {
         char const *const next_sep = strchr( config_dirs, ':' );
         size_t const dir_len = next_sep != NULL ?
           STATIC_CAST( size_t, next_sep - config_dirs ) :
           strlen( config_dirs );
         if ( dir_len > 0 ) {
+          strbuf_reset( path_buf );
           strbuf_putsn( path_buf, config_dirs, dir_len );
           strbuf_paths( path_buf, PACKAGE );
           strbuf_paths( path_buf, "config.toml" );

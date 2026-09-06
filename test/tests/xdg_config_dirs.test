@@ -1,0 +1,10 @@
+EXPECTED_EXIT=0
+
+INCLUDE_TIDY_TEST=h
+export INCLUDE_TIDY_TEST
+
+XDG_CONFIG_DIRS="/does/not/exist:$PWD/xdg_config_home"
+export XDG_CONFIG_DIRS
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    hello.c

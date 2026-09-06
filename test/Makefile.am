@@ -45,7 +45,8 @@ TESTS+=	tests/align-column.test \
 # Other tests
 TESTS+=	tests/associated-header.test \
 	tests/home.test \
-	tests/xdg_config_home.test
+	tests/xdg_config_home.test \
+	tests/xdg_config_dirs.test
 
 # Error tests
 TESTS+=	tests/bad-associated-header.test \

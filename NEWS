@@ -23,6 +23,9 @@ Now correctly printing verbose arguments.
 ** libclang errors
 Error messages from libclang are now marked so explicitly.
 
+** `XDG_CONFIG_DIRS`
+More than one path is now handled correctly.
+
 
 * Changes in Include-tidy 2.1.1
 
