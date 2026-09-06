@@ -61,9 +61,24 @@
  */
 #define TIDY_AUTHOR               "Paul J. Lucas"
 
+////////// enums //////////////////////////////////////////////////////////////
+
+/**
+ * Test mode.
+ */
+enum tidy_test {
+  TIDY_TEST_NONE    = 0,                ///< Not being tested.
+  TIDY_TEST_NO_HOME = 1 << 0            ///< Don't read anything under `$HOME`.
+};
+
+////////// typedefs ///////////////////////////////////////////////////////////
+
+typedef enum tidy_test tidy_test_t;
+
 ////////// extern variables ///////////////////////////////////////////////////
 
-extern char const *prog_name;           ///< Program name.
+extern char const  *prog_name;          ///< Program name.
+extern tidy_test_t  tidy_test;          ///< Is **include-tidy** being tested?
 
 ///////////////////////////////////////////////////////////////////////////////
 

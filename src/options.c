@@ -94,29 +94,6 @@ static unsigned long long parse_ull( char const *s ) {
   fatal_error( EX_USAGE, "\"%s\": invalid integer\n", s );
 }
 
-/**
- * If \a *pformat is:
- *
- *  + `"*"`: sets \a *pformat to \a all_value.
- *  + `"-"`: sets \a *pformat to `""` (the empty string).
- *
- * Otherwise does nothing.
- *
- * @param pformat A pointer to the format string to possibly set.
- * @param all_value The "all" value for when \a *pformat is `"*"`.
- */
-static void set_all_or_none( char const **pformat, char const *all_value ) {
-  assert( pformat != NULL );
-  assert( *pformat != NULL );
-  assert( all_value != NULL );
-  assert( all_value[0] != '\0' );
-
-  if ( strcmp( *pformat, "*" ) == 0 )
-    *pformat = all_value;
-  else if ( strcmp( *pformat, "-" ) == 0 )
-    *pformat = "";
-}
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 bool opt_align_column_parse( char const *s ) {
@@ -242,7 +219,7 @@ bool opt_line_length_parse( char const *s ) {
 bool opt_verbose_parse( char const *verbose_format ) {
   assert( verbose_format != NULL );
 
-  set_all_or_none( &verbose_format, OPT_VERBOSE_ALL );
+  optstr_set_all_or_none( &verbose_format, OPT_VERBOSE_ALL );
   tidy_verbose verbose = TIDY_VERBOSE_NONE;
 
     for ( char const *s = verbose_format; *s != '\0'; ++s ) {
@@ -293,6 +270,18 @@ bool opt_verbose_parse( char const *verbose_format ) {
 
   opt_verbose = verbose;
   return true;
+}
+
+void optstr_set_all_or_none( char const **pformat, char const *all_value ) {
+  assert( pformat != NULL );
+  assert( *pformat != NULL );
+  assert( all_value != NULL );
+  assert( all_value[0] != '\0' );
+
+  if ( strcmp( *pformat, "*" ) == 0 )
+    *pformat = all_value;
+  else if ( strcmp( *pformat, "-" ) == 0 )
+    *pformat = "";
 }
 
 ///////////////////////////////////////////////////////////////////////////////

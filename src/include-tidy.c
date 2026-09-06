@@ -35,8 +35,11 @@
 #include "proxies.h"
 #include "symbol.h"
 #include "trans_unit.h"
+#include "util.h"
 
 // system
+#include <assert.h>
+#include <stdlib.h>
 #include <sysexits.h>
 
 ////////// enums //////////////////////////////////////////////////////////////
@@ -54,7 +57,8 @@ enum {
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-char const *prog_name;
+char const   *prog_name;
+tidy_test_t   tidy_test;
 
 /// @endcond
 
@@ -76,6 +80,51 @@ static int tidy_status( void ) {
   return EX_OK;
 }
 
+/**
+ * Parses the value of the test environment variable.
+ *
+ * @param env_var
+ * @parblock
+ * The name of the environment variable containing an **include-tidy** test
+ * format string (case sensitive) to parse.  Valid formats are:
+ *
+ * Format | Meaning
+ * -------|-----------------------------------------------------------------
+ * `h`    | Do not read any file under `$HOME` by default.
+ *
+ * Multiple formats may be given, one immediately after the other, e.g., `h`.
+ * Alternatively, `*` may be given to mean "all" or either the empty string or
+ * `-` may be given to mean "none."
+ * @endparblock
+ * @return Returns the parsed value.
+ */
+NODISCARD
+static tidy_test_t tidy_test_parse( char const *env_var ) {
+  assert( env_var != NULL );
+
+  char const *test_format = null_if_empty( getenv( env_var ) );
+  if ( test_format == NULL )
+    return TIDY_TEST_NONE;
+
+  optstr_set_all_or_none( &test_format, "h" );
+  tidy_test_t t = TIDY_TEST_NONE;
+
+  for ( char const *s = test_format; *s != '\0'; ++s ) {
+    switch ( *s ) {
+      case 'h':
+        t |= TIDY_TEST_NO_HOME;
+        break;
+      default:
+        fatal_error( EX_USAGE,
+          "\"%s\": invalid value for %s; must be h|*|-\n",
+          env_var, test_format
+        );
+    } // switch
+  } // for
+
+  return t;
+}
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
@@ -87,6 +136,7 @@ static int tidy_status( void ) {
  */
 int main( int argc, char const *argv[] ) {
   prog_name = path_basename( argv[0] );
+  tidy_test = tidy_test_parse( "INCLUDE_TIDY_TEST" );
 
   // Initialization MUST happen in this order.
   cli_options_init( &argc, &argv );

@@ -35,7 +35,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "August 25, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "September 5, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -1346,6 +1346,32 @@ In addition to colors,
 other character attributes
 such as bold, underlined, reverse video, etc.,
 may be possible depending on the capabilities of the terminal.
+.TP
+.B INCLUDE_TIDY_TEST
+Facilitates testing
+when set to a non-empty value
+of one
+.ig
+or more
+..
+of the following letters
+(case-sensitive):
+.RS 7
+.TP 4
+.B h
+Do not read any file
+under the user's home directory.
+.RE
+.PD
+.ig
+.IP
+Multiple letters may be given,
+one immediately after the other.
+Alternatively,
+\f(CW*\fP may be given to mean ``all''
+or
+\f(CW-\fP may be given to mean ``none.''
+..
 .TP
 .B XDG_CONFIG_DIRS
 If set to a colon separated list of paths,

@@ -1259,16 +1259,18 @@ static char const* home_dir( void ) {
   static char const *home;
 
   RUN_ONCE {
-    home = null_if_empty( getenv( "HOME" ) );
+    if ( (tidy_test & TIDY_TEST_NO_HOME) == 0 ) {
+      home = null_if_empty( getenv( "HOME" ) );
 #if HAVE_GETEUID && HAVE_GETPWUID && HAVE_STRUCT_PASSWD_PW_DIR
-    if ( home == NULL ) {
-      // LCOV_EXCL_START
-      struct passwd const *const pw = getpwuid( geteuid() );
-      if ( pw != NULL )
-        home = null_if_empty( pw->pw_dir );
-      // LCOV_EXCL_STOP
-    }
+      if ( home == NULL ) {
+        // LCOV_EXCL_START
+        struct passwd const *const pw = getpwuid( geteuid() );
+        if ( pw != NULL )
+          home = null_if_empty( pw->pw_dir );
+        // LCOV_EXCL_STOP
+      }
 #endif /* HAVE_GETEUID && && HAVE_GETPWUID && HAVE_STRUCT_PASSWD_PW_DIR */
+    }
   }
 
   return home;
