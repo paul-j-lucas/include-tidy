@@ -9,6 +9,7 @@ color = 0
 comment-style = 0
 comment-symbols = 0
 error = 0
+first = true
 line-length = false
 unknown = 0
 
