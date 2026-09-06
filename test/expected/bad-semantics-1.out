@@ -2,11 +2,12 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 "bad-semantics-1.toml":2,18: error: "false": invalid value for "add-c-includes"; expected array
 "bad-semantics-1.toml":3,22: error: "false": invalid value for "add-cxx-includes"; expected string
 "bad-semantics-1.toml":4,16: error: "false": invalid value for "align-column"; expected integer
-"bad-semantics-1.toml":5,19: error: "foo": invalid value for "comment-symbols"; must be one of "alpha", "length", "ref-count", or "most-used"
-"bad-semantics-1.toml":6,9: error: "0": invalid value for "error"; expected string
-"bad-semantics-1.toml":7,15: error: "1000": invalid value for "line-length"; must be 0-512
-"bad-semantics-1.toml":8,1: error: "unknown": unknown key
-"bad-semantics-1.toml":11,1: error: "bad-associated-header.h": only non-header files may have an associated header
-"bad-semantics-1.toml":14,9: error: "0": invalid value for "first"; expected boolean
-include-tidy: 9 errors generated
+"bad-semantics-1.toml":5,9: error: "foo": invalid value for "color"; must be one of "always", "auto", "isatty", "never", "not_file", "not_isreg", or "tty"
+"bad-semantics-1.toml":6,19: error: "foo": invalid value for "comment-symbols"; must be one of "alpha", "length", "ref-count", or "most-used"
+"bad-semantics-1.toml":7,9: error: "0": invalid value for "error"; expected string
+"bad-semantics-1.toml":8,15: error: "1000": invalid value for "line-length"; must be 0-512
+"bad-semantics-1.toml":9,1: error: "unknown": unknown key
+"bad-semantics-1.toml":12,1: error: "bad-associated-header.h": only non-header files may have an associated header
+"bad-semantics-1.toml":15,9: error: "0": invalid value for "first"; expected boolean
+include-tidy: 10 errors generated
 

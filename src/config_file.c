@@ -564,14 +564,14 @@ static void color_parse( config_parse_fn_args const *config ) {
     return;
   if ( option_is_set( COPT(COLOR) ) )
     return;
-
   if ( !opt_color_parse( string_value ) ) {
-    print_file_error(
-      config->config_path, config->value->loc.line, config->value->loc.col,
-      "\"%s\": invalid value for \"%s\"\n",
-      string_value, config->key->name
+    print_invalid_value( config, /*value=*/NULL, TOML_STRING );
+    EPUTS(
+      "; must be one of "
+      "\"always\", \"auto\", \"isatty\", \"never\", "
+      "\"not_file\", \"not_isreg\", or \"tty\"\n"
     );
-    ++error_count;
+    return;
   }
   option_mark_set( COPT(COLOR) );
 }
@@ -587,7 +587,6 @@ static void comment_style_parse( config_parse_fn_args const *config ) {
     return;
   if ( option_is_set( COPT(COMMENT_STYLE) ) )
     return;
-
   if ( !opt_comment_style_parse( string_value ) ) {
     print_invalid_value( config, /*value=*/NULL, TOML_STRING );
     EPUTS( "; must be one of \"//\", \"/*\", or \"none\"\n" );

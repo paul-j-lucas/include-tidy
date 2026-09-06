@@ -2,6 +2,7 @@
 add-c-includes = false
 add-cxx-includes = [ false ]
 align-column = false
+color = "foo"
 comment-symbols = "foo"
 error = 0
 line-length = 1000
