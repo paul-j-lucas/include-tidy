@@ -1,4 +1,10 @@
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=bad-semantics-2.toml f.c
-"bad-semantics-2.toml":1,1: error: required table header missing
-include-tidy: 1 error generated
+"bad-semantics-2.toml":2,16: error: "1000": invalid value for "align-column"; must be 0-256
+"bad-semantics-2.toml":3,9: error: "foo": invalid value for "color"; must be one of "always", "auto", "isatty", "never", "not_file", "not_isreg", or "tty"
+"bad-semantics-2.toml":4,17: error: "foo": invalid value for "comment-style"; must be one of "//", "/*", or "none"
+"bad-semantics-2.toml":5,19: error: "foo": invalid value for "comment-symbols"; must be one of "alpha", "length", "ref-count", or "most-used"
+"bad-semantics-2.toml":6,9: error: "foo": invalid value for "error"; must be one of "always", "never", or "violations"
+"bad-semantics-2.toml":7,15: error: "10000": invalid value for "line-length"; must be 0-512
+"bad-semantics-2.toml":10,1: error: "bad-associated-header.h": only non-header files may have an associated header
+include-tidy: 7 errors generated
 

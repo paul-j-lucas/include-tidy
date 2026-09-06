@@ -1,13 +1,21 @@
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=bad-semantics-1.toml f.c
-"bad-semantics-1.toml":2,18: error: "false": invalid value for "add-c-includes"; expected array
-"bad-semantics-1.toml":3,22: error: "false": invalid value for "add-cxx-includes"; expected string
-"bad-semantics-1.toml":4,16: error: "false": invalid value for "align-column"; expected integer
-"bad-semantics-1.toml":5,9: error: "foo": invalid value for "color"; must be one of "always", "auto", "isatty", "never", "not_file", "not_isreg", or "tty"
-"bad-semantics-1.toml":6,19: error: "foo": invalid value for "comment-symbols"; must be one of "alpha", "length", "ref-count", or "most-used"
-"bad-semantics-1.toml":7,9: error: "0": invalid value for "error"; expected string
-"bad-semantics-1.toml":8,15: error: "1000": invalid value for "line-length"; must be 0-512
-"bad-semantics-1.toml":9,1: error: "unknown": unknown key
-"bad-semantics-1.toml":12,1: error: "bad-associated-header.h": only non-header files may have an associated header
-"bad-semantics-1.toml":15,9: error: "0": invalid value for "first"; expected boolean
-include-tidy: 10 errors generated
+"bad-semantics-1.toml":3,1: error: required table header missing
+"bad-semantics-1.toml":4,18: error: "0": invalid value for "add-c-includes"; expected array
+"bad-semantics-1.toml":5,22: error: "0": invalid value for "add-cxx-includes"; expected string
+"bad-semantics-1.toml":6,16: error: "false": invalid value for "align-column"; expected integer
+"bad-semantics-1.toml":7,16: error: "0": invalid value for "all-includes"; expected boolean
+"bad-semantics-1.toml":8,9: error: "0": invalid value for "color"; expected string
+"bad-semantics-1.toml":9,17: error: "0": invalid value for "comment-style"; expected string
+"bad-semantics-1.toml":10,19: error: "0": invalid value for "comment-symbols"; expected string
+"bad-semantics-1.toml":11,9: error: "0": invalid value for "error"; expected string
+"bad-semantics-1.toml":12,15: error: "false": invalid value for "line-length"; expected integer
+"bad-semantics-1.toml":13,1: error: "unknown": unknown key
+"bad-semantics-1.toml":16,21: error: "0": invalid value for "associated-header"; expected string
+"bad-semantics-1.toml":19,9: error: "0": invalid value for "first"; expected boolean
+"bad-semantics-1.toml":20,8: error: "0": invalid value for "keep"; expected boolean
+"bad-semantics-1.toml":22,22: error: "0": invalid value for "ignore-as-argument"; expected boolean
+"bad-semantics-1.toml":25,9: error: invalid value for "proxy" key; expected string or array
+"bad-semantics-1.toml":26,11: error: invalid value for "symbols" key; expected string or array
+"bad-semantics-1.toml":29,10: error: "0": invalid value for "ignore"; expected boolean
+include-tidy: 18 errors generated
 

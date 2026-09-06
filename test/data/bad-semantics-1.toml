@@ -1,15 +1,29 @@
+align-column = 35
+
 [include-tidy]
-add-c-includes = false
-add-cxx-includes = [ false ]
+add-c-includes = 0
+add-cxx-includes = [ 0 ]
 align-column = false
-color = "foo"
-comment-symbols = "foo"
+all-includes = 0
+color = 0
+comment-style = 0
+comment-symbols = 0
 error = 0
-line-length = 1000
+line-length = false
 unknown = 0
 
-[bad-associated-header.h]
-associated-header = "foo.h"
+[f.c]
+associated-header = 0
 
-[foo.h]
+[f.h]
 first = 0
+keep = 0
+elide-includes = 0
+ignore-as-argument = 0
+ignore-symbols = 0
+keep-includes = 0
+proxy = 0
+symbols = 0
+
+[foo]
+ignore = 0

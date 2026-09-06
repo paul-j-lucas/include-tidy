@@ -1,1 +1,10 @@
-align-column = 35
+[include-tidy]
+align-column = 1000
+color = "foo"
+comment-style = "foo"
+comment-symbols = "foo"
+error = "foo"
+line-length = 10000
+
+[bad-associated-header.h]
+associated-header = "foo.h"
