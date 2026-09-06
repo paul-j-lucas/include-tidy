@@ -230,11 +230,15 @@ bool opt_verbose_parse( char const *verbose_format ) {
         break;
         // LCOV_EXCL_STOP
       case 'c':
+        // LCOV_EXCL_START: config. files are printed as absolute paths.
         verbose |= TIDY_VERBOSE_CONFIG_FILES;
         break;
+        // LCOV_EXCL_STOP
       case 'C':
+        // LCOV_EXCL_START: function cursors have platform-specific signatures.
         verbose |= TIDY_VERBOSE_CURSORS;
         break;
+        // LCOV_EXCL_STOP
       case 'd':
         verbose |= TIDY_VERBOSE_DIRECTORY;
         break;
