@@ -4,3 +4,12 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 // tidy | source file: "hello.c"
 #include <stdio.h>                      // printf
 
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-style=none hello.c
+#include <stdio.h>
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-style=// hello.c
+#include <stdio.h>                      // printf
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-style=/* hello.c
+#include <stdio.h>                      /* printf */
+

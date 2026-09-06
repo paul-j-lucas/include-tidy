@@ -9,3 +9,21 @@ test_include_tidy $TIDY_TEST_OPTIONS \
     -Xtidy --all-includes \
     -Xtidy --verbose=F \
     hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy --comment-style=none \
+    hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy --comment-style="//" \
+    hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy --comment-style="/*" \
+    hello.c
