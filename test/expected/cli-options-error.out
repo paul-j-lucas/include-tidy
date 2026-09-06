@@ -85,6 +85,21 @@ include-tidy: error: "-l" requires an argument
 $ include-tidy -Xtidy -lX
 include-tidy: error: "X": invalid integer
 
+$ include-tidy -Xtidy --verbose
+include-tidy: error: "--verbose/-V" requires an argument
+
+$ include-tidy -Xtidy --verbose=
+include-tidy: error: "--verbose/-V" requires an argument
+
+$ include-tidy -Xtidy --verbose=X
+include-tidy: error: "X": invalid value for --verbose/-V; must be [acCdfFipPsSz]+
+
+$ include-tidy -Xtidy -V
+include-tidy: error: "-V" requires an argument
+
+$ include-tidy -Xtidy -VX
+include-tidy: error: "X": invalid value for --verbose/-V; must be [acCdfFipPsSz]+
+
 $ include-tidy -Xtidy foo.c
 include-tidy: error: -Xtidy requires subsequent option
 

@@ -36,6 +36,12 @@ test_include_tidy -Xtidy --line-length=X
 test_include_tidy -Xtidy -l
 test_include_tidy -Xtidy -lX
 
+test_include_tidy -Xtidy --verbose
+test_include_tidy -Xtidy --verbose=
+test_include_tidy -Xtidy --verbose=X
+test_include_tidy -Xtidy -V
+test_include_tidy -Xtidy -VX
+
 test_include_tidy -Xtidy foo.c
 
 test_include_tidy --help X
