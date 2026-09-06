@@ -336,7 +336,6 @@ static bool toml_int_parse( config_parse_fn_args const *config, long value_min,
     print_invalid_value( config, /*value=*/NULL, TOML_INT );
     return false;
   }
-
   if ( config->value->i < value_min || config->value->i > value_max ) {
     print_invalid_value( config, /*value=*/NULL, TOML_INT );
     EPRINTF( "; must be %ld-%ld\n", value_min, value_max );
@@ -590,6 +589,7 @@ static void comment_style_parse( config_parse_fn_args const *config ) {
   if ( !opt_comment_style_parse( string_value ) ) {
     print_invalid_value( config, /*value=*/NULL, TOML_STRING );
     EPUTS( "; must be one of \"//\", \"/*\", or \"none\"\n" );
+    return;
   }
   option_mark_set( COPT(COMMENT_STYLE) );
 }
@@ -605,13 +605,13 @@ static void comment_symbols_parse( config_parse_fn_args const *config ) {
     return;
   if ( option_is_set( COPT(COMMENT_SYMBOLS) ) )
     return;
-
   if ( !opt_comment_symbols_parse( string_value ) ) {
     print_invalid_value( config, /*value=*/NULL, TOML_STRING );
     EPUTS(
       "; must be one of "
       "\"alpha\", \"length\", \"ref-count\", or \"most-used\"\n"
     );
+    return;
   }
   option_mark_set( COPT(COMMENT_SYMBOLS) );
 }
@@ -656,7 +656,6 @@ static void error_parse( config_parse_fn_args const *config ) {
     return;
   if ( option_is_set( COPT(ERROR) ) )
     return;
-
   if ( !opt_error_parse( string_value ) ) {
     print_invalid_value( config, /*value=*/NULL, TOML_STRING );
     EPUTS( "; must be one of \"always\", \"never\", or \"violations\"\n" );
