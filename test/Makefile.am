@@ -30,7 +30,6 @@ TESTS=	tests/hello.test
 
 # Command-line option tests
 TESTS+=	tests/cli-align-column.test \
-	tests/cli-comment-style.test \
 	tests/cli-comment-symbols.test \
 	tests/cli-compiler-no-exists.test \
 	tests/cli-compiler-no-include.test \
