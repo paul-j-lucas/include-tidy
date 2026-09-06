@@ -1,5 +1,7 @@
 2026-09-05  Paul J. Lucas <paul@lucasmail.org>
 
+   * config_file.c, test/Makefile.am, xdg_config_dirs.out,
+     xdg_config_dirs.test: XDG_CONFIG_DIRS test.
    * man/man1/include-tidy.1, config_file.c, include-tidy.c, include-tidy.h,
      options.c, options.h: Added INCLUDE_TIDY_TEST.
    * config_file.c, test/Makefile.am, home.out,
