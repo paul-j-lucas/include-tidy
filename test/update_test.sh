@@ -95,9 +95,12 @@ DATA_DIR="$srcdir/data"
 EXPECTED_DIR="$srcdir/expected"
 ACTUAL_OUTPUT="$TMPDIR/cdecl_test_output_$$_"
 
+# If you update any of this, update the same in run_test.sh also.
 TIDY_TEST_CXXFLAGS="-std=c++20"
 TIDY_TEST_CONFIG="-Xtidy --config=../$TOP_SRCDIR/etc/config.toml"
 TIDY_TEST_OPTIONS="-Xtidy --directory=data -Xtidy --no-config-layers"
+unset XDG_CONFIG_HOME
+unset XDG_CONFIG_DIRS
 
 ##
 # Must put $ABS_TOP_BUILDDIR/src first in PATH so we get the correct version of

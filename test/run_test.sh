@@ -204,9 +204,12 @@ trap "x=$?; rm -f $TMPDIR/*_$$_* 2>/dev/null; exit $x" EXIT HUP INT TERM
 DATA_DIR="$srcdir/data"
 EXPECTED_DIR="$srcdir/expected"
 
+# If you update any of this, update the same in update_test.sh also.
 TIDY_TEST_CXXFLAGS="-std=c++20"
 TIDY_TEST_CONFIG="-Xtidy --config=../$TOP_SRCDIR/etc/config.toml"
 TIDY_TEST_OPTIONS="-Xtidy --directory=data -Xtidy --no-config-layers"
+unset XDG_CONFIG_HOME
+unset XDG_CONFIG_DIRS
 
 ##
 # Must put $ABS_TOP_BUILDDIR/src first in PATH so we get the correct version of
