@@ -290,7 +290,7 @@ done:
   fclose( fsource );
 }
 
-// LCOV_EXCL_START since -I, -isystem, etc.,  options contain absolute paths.
+// LCOV_EXCL_START: -I, -isystem, etc., options contain absolute paths.
 void verbose_print_argv( char const *label, int argc,
                          char const *const argv[] ) {
   verbose_section_begin( /*printed_header=*/NULL );
@@ -303,7 +303,7 @@ void verbose_print_argv( char const *label, int argc,
 }
 // LCOV_EXCL_STOP
 
-// LCOV_EXCL_START since cursors contain platform-specific stuff.
+// LCOV_EXCL_START: function cursors have platform-specific signatures.
 void verbose_print_cursor_impl( char const *label, CXCursor cursor ) {
   label = empty_if_null( label );
   char const *const space = label[0] != '\0' ? " " : "";
