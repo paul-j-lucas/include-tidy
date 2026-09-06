@@ -214,6 +214,8 @@ NODISCARD
 static int          tidy_include_cmp_by_rel_path( tidy_include const*,
                                                   tidy_include const* );
 
+static void         toml_print_value( toml_value const*, FILE* );
+
 ////////// local constants ////////////////////////////////////////////////////
 
 /**
@@ -433,7 +435,11 @@ void toml_string_or_string_array_parse( config_parse_fn_args const *config,
     default:
       print_file_error(
         config->config_path, config->value->loc.line, config->value->loc.col,
-        "invalid value for \"%s\" key; expected string or array\n",
+        ""
+      );
+      toml_print_value( config->value, stderr );
+      EPRINTF(
+        ": invalid value for \"%s\"; expected string or array\n",
         config->key->name
       );
       ++error_count;
@@ -1348,22 +1354,7 @@ static void print_invalid_value( config_parse_fn_args const *config,
     value = config->value;
 
   print_file_error( config->config_path, value->loc.line, value->loc.col, "" );
-
-  switch ( value->type ) {
-    case TOML_BOOL:
-      EPRINTF( "\"%s\"", value->b ? "true" : "false" );
-      break;
-    case TOML_INT:
-      EPRINTF( "\"%ld\"", value->i );
-      break;
-    case TOML_STRING:
-      EPRINTF( "\"%s\"", value->s );
-      break;
-    case TOML_ARRAY:
-      EPUTS( "array" );
-      break;
-  } // switch
-
+  toml_print_value( value, stderr );
   EPRINTF( ": invalid value for \"%s\"", config->key->name );
   if ( value->type != expected )
     EPRINTF( "; expected %s\n", toml_type_name( expected ) );
@@ -1472,6 +1463,31 @@ static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
   assert( i_include != NULL );
   assert( j_include != NULL );
   return strcmp( i_include->rel_path, j_include->rel_path );
+}
+
+/**
+ * Prints a TOML value.
+ *
+ * @param value The toml_value to print.
+ * @param fout The `FILE` to print to.
+ */
+static void toml_print_value( toml_value const *value, FILE *fout ) {
+  assert( value != NULL );
+
+  switch ( value->type ) {
+    case TOML_BOOL:
+      fprintf( fout, "\"%s\"", value->b ? "true" : "false" );
+      break;
+    case TOML_INT:
+      fprintf( fout, "\"%ld\"", value->i );
+      break;
+    case TOML_STRING:
+      fprintf( fout, "\"%s\"", value->s );
+      break;
+    case TOML_ARRAY:
+      fputs( "array", fout );
+      break;
+  } // switch
 }
 
 ////////// extern functions ///////////////////////////////////////////////////

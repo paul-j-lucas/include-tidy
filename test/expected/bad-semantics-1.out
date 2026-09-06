@@ -14,8 +14,8 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 "bad-semantics-1.toml":19,9: error: "0": invalid value for "first"; expected boolean
 "bad-semantics-1.toml":20,8: error: "0": invalid value for "keep"; expected boolean
 "bad-semantics-1.toml":22,22: error: "0": invalid value for "ignore-as-argument"; expected boolean
-"bad-semantics-1.toml":25,9: error: invalid value for "proxy" key; expected string or array
-"bad-semantics-1.toml":26,11: error: invalid value for "symbols" key; expected string or array
+"bad-semantics-1.toml":25,9: error: "0": invalid value for "proxy"; expected string or array
+"bad-semantics-1.toml":26,11: error: "0": invalid value for "symbols"; expected string or array
 "bad-semantics-1.toml":29,10: error: "0": invalid value for "ignore"; expected boolean
 include-tidy: 18 errors generated
 
