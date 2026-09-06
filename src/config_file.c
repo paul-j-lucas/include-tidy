@@ -1035,10 +1035,8 @@ static FILE* config_file_find( char const *config_path, strbuf_t *path_buf ) {
       else {
         char const *const home = home_dir();
         if ( home != NULL ) {
-          // LCOV_EXCL_START
           strbuf_puts( path_buf, home );
           strbuf_paths( path_buf, ".config" );
-          // LCOV_EXCL_STOP
         }
       }
       if ( path_buf->len > 0 ) {
@@ -1251,7 +1249,6 @@ static void config_parse( char const *config_path, FILE *config_file ) {
   }
 }
 
-// LCOV_EXCL_START
 /**
  * Gets the full path of the user's home directory.
  *
@@ -1265,16 +1262,17 @@ static char const* home_dir( void ) {
     home = null_if_empty( getenv( "HOME" ) );
 #if HAVE_GETEUID && HAVE_GETPWUID && HAVE_STRUCT_PASSWD_PW_DIR
     if ( home == NULL ) {
+      // LCOV_EXCL_START
       struct passwd const *const pw = getpwuid( geteuid() );
       if ( pw != NULL )
         home = null_if_empty( pw->pw_dir );
+      // LCOV_EXCL_STOP
     }
 #endif /* HAVE_GETEUID && && HAVE_GETPWUID && HAVE_STRUCT_PASSWD_PW_DIR */
   }
 
   return home;
 }
-// LCOV_EXCL_STOP
 
 /**
  * Sets the \ref tidy_include::handling "handling" field of the include file(s)
