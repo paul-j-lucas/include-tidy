@@ -1171,11 +1171,11 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       continue;
     }
     if ( toml_table_empty( &table ) ) {
-      print_file_error(
+      print_file_warning(
         config_path, table.key.loc.line, table.key.loc.col,
         "\"%s\": empty table\n", table.key.name
       );
-      ++error_count;
+      ++warning_count;
       continue;
     }
 

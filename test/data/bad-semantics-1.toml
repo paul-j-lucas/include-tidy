@@ -12,6 +12,8 @@ error = 0
 line-length = false
 unknown = 0
 
+[empty]
+
 [f.c]
 associated-header = 0
 

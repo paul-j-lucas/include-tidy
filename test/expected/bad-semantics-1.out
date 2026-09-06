@@ -10,12 +10,13 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 "bad-semantics-1.toml":11,9: error: "0": invalid value for "error"; expected string
 "bad-semantics-1.toml":12,15: error: "false": invalid value for "line-length"; expected integer
 "bad-semantics-1.toml":13,1: error: "unknown": unknown key
-"bad-semantics-1.toml":16,21: error: "0": invalid value for "associated-header"; expected string
-"bad-semantics-1.toml":19,9: error: "0": invalid value for "first"; expected boolean
-"bad-semantics-1.toml":20,8: error: "0": invalid value for "keep"; expected boolean
-"bad-semantics-1.toml":22,22: error: "0": invalid value for "ignore-as-argument"; expected boolean
-"bad-semantics-1.toml":25,9: error: "0": invalid value for "proxy"; expected string or array
-"bad-semantics-1.toml":26,11: error: "0": invalid value for "symbols"; expected string or array
-"bad-semantics-1.toml":29,10: error: "0": invalid value for "ignore"; expected boolean
-include-tidy: 18 errors generated
+"bad-semantics-1.toml":15: warning: "empty": empty table
+"bad-semantics-1.toml":18,21: error: "0": invalid value for "associated-header"; expected string
+"bad-semantics-1.toml":21,9: error: "0": invalid value for "first"; expected boolean
+"bad-semantics-1.toml":22,8: error: "0": invalid value for "keep"; expected boolean
+"bad-semantics-1.toml":24,22: error: "0": invalid value for "ignore-as-argument"; expected boolean
+"bad-semantics-1.toml":27,9: error: "0": invalid value for "proxy"; expected string or array
+"bad-semantics-1.toml":28,11: error: "0": invalid value for "symbols"; expected string or array
+"bad-semantics-1.toml":31,10: error: "0": invalid value for "ignore"; expected boolean
+include-tidy: 1 warning and 18 errors generated
 
