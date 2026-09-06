@@ -219,7 +219,7 @@ bool opt_line_length_parse( char const *s ) {
 bool opt_verbose_parse( char const *verbose_format ) {
   assert( verbose_format != NULL );
 
-  optstr_set_all_or_none( &verbose_format, OPT_VERBOSE_ALL );
+  option_str_set_all_or_none( &verbose_format, OPT_VERBOSE_ALL );
   tidy_verbose verbose = TIDY_VERBOSE_NONE;
 
     for ( char const *s = verbose_format; *s != '\0'; ++s ) {
@@ -272,7 +272,7 @@ bool opt_verbose_parse( char const *verbose_format ) {
   return true;
 }
 
-void optstr_set_all_or_none( char const **pformat, char const *all_value ) {
+void option_str_set_all_or_none( char const **pformat, char const *all_value ) {
   assert( pformat != NULL );
   assert( *pformat != NULL );
   assert( all_value != NULL );

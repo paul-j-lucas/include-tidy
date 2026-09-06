@@ -106,7 +106,7 @@ static tidy_test_t tidy_test_parse( char const *env_var ) {
   if ( test_format == NULL )
     return TIDY_TEST_NONE;
 
-  optstr_set_all_or_none( &test_format, "h" );
+  option_str_set_all_or_none( &test_format, "h" );
   tidy_test_t t = TIDY_TEST_NONE;
 
   for ( char const *s = test_format; *s != '\0'; ++s ) {

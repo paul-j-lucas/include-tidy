@@ -225,7 +225,7 @@ bool opt_verbose_parse( char const *verbose_format );
  * @param pformat A pointer to the format string to possibly set.
  * @param all_value The "all" value for when \a *pformat is `"*"`.
  */
-void optstr_set_all_or_none( char const **pformat, char const *all_value );
+void option_str_set_all_or_none( char const **pformat, char const *all_value );
 
 ///////////////////////////////////////////////////////////////////////////////
 
