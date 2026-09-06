@@ -1192,8 +1192,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   tidy_argc -= optind - 1;
   free( tidy_argv );
 
-  if ( tidy_argc > 1 )
-    print_usage( EX_USAGE );
   if ( opt_help )
     print_usage( argc > 1 ? EX_USAGE : EX_OK );
   if ( opt_version > 0 ) {
@@ -1202,6 +1200,8 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     print_version( /*verbose=*/opt_version > 1 );
     exit( EX_OK );
   }
+  if ( tidy_argc != 1 || tidy_source_path == NULL )
+    print_usage( EX_USAGE );
 
   if ( source_lang == NULL ) {
     EPRINTF( "%s: ", prog_name );
