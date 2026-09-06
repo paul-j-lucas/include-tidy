@@ -1,5 +1,6 @@
 EXPECTED_EXIT=0
 
+INCLUDE_TIDY_TEST=$(echo $INCLUDE_TIDY_TEST | sed 's/h//')
 HOME="$PWD/home"
 export HOME
 

@@ -67,8 +67,9 @@
  * Test mode.
  */
 enum tidy_test {
-  TIDY_TEST_NONE    = 0,                ///< Not being tested.
-  TIDY_TEST_NO_HOME = 1 << 0            ///< Don't read anything under `$HOME`.
+  TIDY_TEST_NONE        = 0,            ///< Not being tested.
+  TIDY_TEST_NO_ETC_XDG  = 1 << 0,       ///< Don't read files under `/etc/xdg`.
+  TIDY_TEST_NO_HOME     = 1 << 1,       ///< Don't read files under `$HOME`.
 };
 
 ////////// typedefs ///////////////////////////////////////////////////////////

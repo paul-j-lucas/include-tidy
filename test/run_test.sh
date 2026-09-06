@@ -205,7 +205,7 @@ DATA_DIR="$srcdir/data"
 EXPECTED_DIR="$srcdir/expected"
 
 # If you update any of this, update the same in update_test.sh also.
-export INCLUDE_TIDY_TEST=x
+export INCLUDE_TIDY_TEST=eh
 TIDY_TEST_CXXFLAGS="-std=c++20"
 TIDY_TEST_CONFIG="-Xtidy --config=../$TOP_SRCDIR/etc/config.toml"
 TIDY_TEST_OPTIONS="-Xtidy --directory=data -Xtidy --no-config-layers"

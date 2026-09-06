@@ -1351,19 +1351,20 @@ may be possible depending on the capabilities of the terminal.
 Facilitates testing
 when set to a non-empty value
 of one
-.ig
 or more
-..
 of the following letters
 (case-sensitive):
 .RS 7
-.TP 4
+.TP 3
+.PD 0
 .B h
-Do not read any file
+Don't read files
 under the user's home directory.
+.TP
+.B e
+Don't read files under \f(CW/etc/xdg/include-tidy\fP.
 .RE
 .PD
-.ig
 .IP
 Multiple letters may be given,
 one immediately after the other.
@@ -1371,7 +1372,6 @@ Alternatively,
 \f(CW*\fP may be given to mean ``all''
 or
 \f(CW-\fP may be given to mean ``none.''
-..
 .TP
 .B XDG_CONFIG_DIRS
 If set to a colon separated list of paths,
@@ -1391,6 +1391,7 @@ and
 \f(CW$XDG_CONFIG_HOME/include-tidy/config.toml\fP
 exists and is readable,
 then that used as a configuration file.
+.PD
 .SH FILES
 .PD 0
 .TP

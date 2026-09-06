@@ -1057,8 +1057,11 @@ static FILE* config_file_find( char const *config_path, strbuf_t *path_buf ) {
       // /etc/xdg/include-tidy/config.toml.
       ++case_num;
       char const *config_dirs = null_if_empty( getenv( "XDG_CONFIG_DIRS" ) );
-      if ( config_dirs == NULL )
-        config_dirs = "/etc/xdg";       // LCOV_EXCL_LINE
+      if ( config_dirs == NULL ) {
+        if ( (tidy_test & TIDY_TEST_NO_ETC_XDG) == 1 )
+          break;
+        config_dirs = "/etc/xdg";
+      }
       for (;;) {
         char const *const next_sep = strchr( config_dirs, ':' );
         size_t const dir_len = next_sep != NULL ?

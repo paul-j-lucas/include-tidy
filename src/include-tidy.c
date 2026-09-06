@@ -90,9 +90,10 @@ static int tidy_status( void ) {
  *
  * Format | Meaning
  * -------|-----------------------------------------------------------------
- * `h`    | Do not read any file under `$HOME` by default.
+ * `e`    | Don't read files under `/etc/xdg/include-tidy` by default.
+ * `h`    | Don't read files under the user's home directory by default.
  *
- * Multiple formats may be given, one immediately after the other, e.g., `h`.
+ * Multiple formats may be given, one immediately after the other, e.g., `eh`.
  * Alternatively, `*` may be given to mean "all" or either the empty string or
  * `-` may be given to mean "none."
  * @endparblock
@@ -102,22 +103,25 @@ NODISCARD
 static tidy_test_t tidy_test_parse( char const *env_var ) {
   assert( env_var != NULL );
 
-  char const *test_format = null_if_empty( getenv( env_var ) );
-  if ( test_format == NULL )
-    return TIDY_TEST_NONE;
+  char const *value = null_if_empty( getenv( env_var ) );
+  if ( value == NULL )
+    return TIDY_TEST_NONE;              // LCOV_EXCL_LINE
 
-  option_str_set_all_or_none( &test_format, "h" );
+  option_str_set_all_or_none( &value, "h" );
   tidy_test_t t = TIDY_TEST_NONE;
 
-  for ( char const *s = test_format; *s != '\0'; ++s ) {
+  for ( char const *s = value; *s != '\0'; ++s ) {
     switch ( *s ) {
+      case 'e':
+        t |= TIDY_TEST_NO_ETC_XDG;
+        break;
       case 'h':
         t |= TIDY_TEST_NO_HOME;
         break;
       default:
         fatal_error( EX_USAGE,
-          "\"%s\": invalid value for %s; must be h|*|-\n",
-          env_var, test_format
+          "\"%s\": invalid value for %s; must be [eh]+|*|-\n",
+          value, env_var
         );
     } // switch
   } // for
