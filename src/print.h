@@ -304,12 +304,14 @@ void verbose_print_argv( char const *label, int argc,
  */
 void verbose_print_cursor_impl( char const *label, CXCursor cursor );
 
+#ifndef NDEBUG
 /**
  * Prints the tokens for \a cursor.
  *
  * @param cursor The cursor to print the tokens for.
  */
 void verbose_print_tokens( CXCursor cursor );
+#endif /* NDEBUG */
 
 /**
  * Prints output preceeded by `"// tidy | "`.

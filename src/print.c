@@ -227,8 +227,10 @@ void print_include( char const *sgr_color, char const delims[static 2],
     "#include %c%s%c", delims[0], rel_path, delims[1]
   );
   if ( unlikely( raw_len < 0 ) ) {
+    // LCOV_EXCL_START
     color_end( stdout, sgr_color );
     perror_exit( EX_IOERR );
+    // LCOV_EXCL_STOP
   }
 
   if ( comment != NULL ) {
@@ -251,18 +253,18 @@ void print_source_line( char const *path, unsigned line, unsigned col,
   long const line_pos =
     STATIC_CAST( long, offset ) - (STATIC_CAST( long, col ) - 1);
   if ( line_pos < 0 )
-    return;
+    return;                             // LCOV_EXCL_LINE
   FILE *const fsource = fopen( path, "rb" );
   if ( fsource == NULL )
-    return;
+    return;                             // LCOV_EXCL_LINE
   if ( fseek( fsource, line_pos, SEEK_SET ) == -1 )
-    goto done;
+    goto done;                          // LCOV_EXCL_LINE
 
   char         *line_buf = NULL;
   size_t        line_cap = 0;
   ssize_t const raw_len = getline( &line_buf, &line_cap, fsource );
   if ( raw_len == -1 )
-    goto done;
+    goto done;                          // LCOV_EXCL_LINE
   unsigned const line_len = STATIC_CAST( unsigned, raw_len );
 
   EPRINTF( "%5u | %s", line, line_buf );
@@ -288,6 +290,7 @@ done:
   fclose( fsource );
 }
 
+// LCOV_EXCL_START since -I, -isystem, etc.,  options contain absolute paths.
 void verbose_print_argv( char const *label, int argc,
                          char const *const argv[] ) {
   verbose_section_begin( /*printed_header=*/NULL );
@@ -298,7 +301,9 @@ void verbose_print_argv( char const *label, int argc,
     putchar( '\n' );
   } // for
 }
+// LCOV_EXCL_STOP
 
+// LCOV_EXCL_START since cursors contain platform-specific stuff.
 void verbose_print_cursor_impl( char const *label, CXCursor cursor ) {
   label = empty_if_null( label );
   char const *const space = label[0] != '\0' ? " " : "";
@@ -330,7 +335,10 @@ void verbose_print_cursor_impl( char const *label, CXCursor cursor ) {
   clang_disposeString( kind_cxs );
   free( name );
 }
+// LCOV_EXCL_STOP
 
+#ifndef NDEBUG
+// LCOV_EXCL_START since this is used for debugging.
 void verbose_print_tokens( CXCursor cursor ) {
   CXSourceRange const     range = tidy_getCursorExtent( cursor );
   CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( cursor );
@@ -352,6 +360,8 @@ void verbose_print_tokens( CXCursor cursor ) {
 
   clang_disposeTokens( tu, tokens, tokens_len );
 }
+// LCOV_EXCL_STOP
+#endif /* NDEBUG */
 
 int verbose_printf( char const *format, ... ) {
   PUTS( "// tidy | " );
