@@ -205,6 +205,7 @@ DATA_DIR="$srcdir/data"
 EXPECTED_DIR="$srcdir/expected"
 
 # If you update any of this, update the same in update_test.sh also.
+export INCLUDE_TIDY_TEST=x
 TIDY_TEST_CXXFLAGS="-std=c++20"
 TIDY_TEST_CONFIG="-Xtidy --config=../$TOP_SRCDIR/etc/config.toml"
 TIDY_TEST_OPTIONS="-Xtidy --directory=data -Xtidy --no-config-layers"
@@ -245,13 +246,6 @@ run_include_tidy_test() {
     0|65) fail ;;
     *)    fail ERROR "$ACTUAL_EXIT" ;;
     esac
-  fi
-}
-
-run_script_test() {
-  if $TEST > "$LOG_FILE" 2>&1
-  then pass
-  else fail
   fi
 }
 
