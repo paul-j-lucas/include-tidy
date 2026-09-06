@@ -214,7 +214,7 @@ NODISCARD
 static int          tidy_include_cmp_by_rel_path( tidy_include const*,
                                                   tidy_include const* );
 
-static void         toml_print_value( toml_value const*, FILE* );
+static void         toml_value_print( toml_value const*, FILE* );
 
 ////////// local constants ////////////////////////////////////////////////////
 
@@ -437,7 +437,7 @@ void toml_string_or_string_array_parse( config_parse_fn_args const *config,
         config->config_path, config->value->loc.line, config->value->loc.col,
         ""
       );
-      toml_print_value( config->value, stderr );
+      toml_value_print( config->value, stderr );
       EPRINTF(
         ": invalid value for \"%s\"; expected string or array\n",
         config->key->name
@@ -1354,7 +1354,7 @@ static void print_invalid_value( config_parse_fn_args const *config,
     value = config->value;
 
   print_file_error( config->config_path, value->loc.line, value->loc.col, "" );
-  toml_print_value( value, stderr );
+  toml_value_print( value, stderr );
   EPRINTF( ": invalid value for \"%s\"", config->key->name );
   if ( value->type != expected )
     EPRINTF( "; expected %s\n", toml_type_name( expected ) );
@@ -1471,7 +1471,7 @@ static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
  * @param value The toml_value to print.
  * @param fout The `FILE` to print to.
  */
-static void toml_print_value( toml_value const *value, FILE *fout ) {
+static void toml_value_print( toml_value const *value, FILE *fout ) {
   assert( value != NULL );
 
   switch ( value->type ) {
