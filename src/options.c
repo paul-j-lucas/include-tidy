@@ -225,8 +225,10 @@ bool opt_verbose_parse( char const *verbose_format ) {
     for ( char const *s = verbose_format; *s != '\0'; ++s ) {
     switch ( *s ) {
       case 'a':
+        // LCOV_EXCL_START: -I, -isystem, etc., options contain absolute paths.
         verbose |= TIDY_VERBOSE_ARGS;
         break;
+        // LCOV_EXCL_STOP
       case 'c':
         verbose |= TIDY_VERBOSE_CONFIG_FILES;
         break;
@@ -252,8 +254,10 @@ bool opt_verbose_parse( char const *verbose_format ) {
         verbose |= TIDY_VERBOSE_PROXIES_EXPLICIT;
         break;
       case 's':
+        // LCOV_EXCL_START: function cursors have platform-specific signatures.
         verbose |= TIDY_VERBOSE_SYMBOLS;
         break;
+        // LCOV_EXCL_STOP
       case 'S':
         verbose |= TIDY_VERBOSE_CONFIG_SYMBOLS;
         break;
