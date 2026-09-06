@@ -199,7 +199,7 @@ bool opt_line_length_parse( char const *s );
  * `f`    | Name of source-file only if in violation.
  * `F`    | Name of source-file.
  * `i`    | Files included.
- * `P`    | Implicit include proxies.
+ * `p`    | Implicit include proxies.
  * `P`    | Explicit include proxies.
  * `s`    | Symbols referenced and the include files declaring them.
  * `S`    | Configuration file symbols.
