@@ -85,6 +85,9 @@ include-tidy: error: "-l" requires an argument
 $ include-tidy -Xtidy -lX
 include-tidy: error: "X": invalid integer
 
+$ include-tidy -Xtidy foo.c
+include-tidy: error: -Xtidy requires subsequent option
+
 $ include-tidy --help X
 usage: include-tidy [-Xtidy tidy-option]... [compiler-option]... source-file
        include-tidy other-option

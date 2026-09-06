@@ -615,7 +615,8 @@ static void insert_argv( int *pargc, char const **pargv[], size_t argi,
  *
  * @param argc The command-line argument count from `main()`.
  * @param argv The command-line argument values from `main()`.
- * @param pargi A pointer to the current argument index variable.
+ * @param pargi A pointer to the current argument index variable.  It's
+ * incremented only if returning `true`.
  * @return Returns `true` only if `argv[*pargi]` is `-Xtidy` and is followed by
  * a subsequent option.
  */
@@ -627,7 +628,7 @@ static bool is_Xtidy_opt( int argc, char const *const argv[], int *pargi ) {
 
   if ( strcmp( argv[ *pargi ], "-Xtidy" ) != 0 )
     return false;
-  if ( ++*pargi >= argc )
+  if ( ++*pargi >= argc || argv[ *pargi ][0] != '-' )
     fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
   return true;
 }
@@ -762,7 +763,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
         struct option const *const option = get_option( short_opt );
         if ( option == NULL ) {
           fatal_error( EX_USAGE,
-            "'%c': invalid option; use --help for help\n", short_opt
+            "'%c': invalid -Xtidy option; use --help for help\n", short_opt
           );
         }
         switch ( option->has_arg ) {
