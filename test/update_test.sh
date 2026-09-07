@@ -96,7 +96,7 @@ EXPECTED_DIR="$srcdir/expected"
 ACTUAL_OUTPUT="$TMPDIR/cdecl_test_output_$$_"
 
 # If you update any of this, update the same in run_test.sh also.
-export INCLUDE_TIDY_TEST=hx
+export INCLUDE_TIDY_TEST=eh
 TIDY_TEST_CXXFLAGS="-std=c++20"
 TIDY_TEST_CONFIG="-Xtidy --config=../$TOP_SRCDIR/etc/config.toml"
 TIDY_TEST_OPTIONS="-Xtidy --directory=data -Xtidy --no-config-layers"
