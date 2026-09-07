@@ -85,6 +85,21 @@ include-tidy: error: "--directory/-d" requires an argument
 $ include-tidy -Xtidy -d
 include-tidy: error: "-d" requires an argument
 
+$ include-tidy -Xtidy --color
+include-tidy: error: "--color/-k" requires an argument
+
+$ include-tidy -Xtidy --color=
+include-tidy: error: "--color/-k" requires an argument
+
+$ include-tidy -Xtidy --color=X
+include-tidy: error: "X": invalid value for --color/-k
+
+$ include-tidy -Xtidy -k
+include-tidy: error: "-k" requires an argument
+
+$ include-tidy -Xtidy -kX
+include-tidy: error: "X": invalid value for --color/-k
+
 $ include-tidy -Xtidy --error
 include-tidy: error: "--error/-e" requires an argument
 
