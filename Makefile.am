@@ -72,6 +72,8 @@ clean-local: clean-coverage-local
 clean-coverage-local:
 	rm -f $(COVERAGE_INFO)
 
+check-recursive: clean-coverage
+
 distclean-local: distclean-coverage-local
 
 distclean-coverage-local:
