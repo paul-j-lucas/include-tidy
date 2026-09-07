@@ -119,10 +119,12 @@ tidy: include-tidy
 	    include-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) "$$file" || exit $$?; \
 	done
 
+if ENABLE_COVERAGE
 clean-coverage-local:
 	rm -f *.gcda
 
 distclean-coverage-local: clean-coverage-local
 	rm -f *.gcno
+endif
 
 # vim:set noet sw=8 ts=8:
