@@ -124,11 +124,17 @@ include-tidy: error: "--line-length/-l" requires an argument
 $ include-tidy -Xtidy --line-length=X
 include-tidy: error: "X": invalid integer
 
+$ include-tidy -Xtidy --line-length=1000
+include-tidy: error: "1000": invalid value for --line-length/-l; must be 1-512
+
 $ include-tidy -Xtidy -l
 include-tidy: error: "-l" requires an argument
 
 $ include-tidy -Xtidy -lX
 include-tidy: error: "X": invalid integer
+
+$ include-tidy -Xtidy -l1000
+include-tidy: error: "1000": invalid value for --line-length/-l; must be 1-512
 
 $ include-tidy -Xtidy --verbose
 include-tidy: error: "--verbose/-V" requires an argument

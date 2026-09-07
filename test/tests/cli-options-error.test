@@ -51,8 +51,10 @@ test_include_tidy -Xtidy -eX
 test_include_tidy -Xtidy --line-length
 test_include_tidy -Xtidy --line-length=
 test_include_tidy -Xtidy --line-length=X
+test_include_tidy -Xtidy --line-length=1000
 test_include_tidy -Xtidy -l
 test_include_tidy -Xtidy -lX
+test_include_tidy -Xtidy -l1000
 
 test_include_tidy -Xtidy --verbose
 test_include_tidy -Xtidy --verbose=
