@@ -245,7 +245,7 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
 #ifdef __APPLE__
     // On macOS, the C compiler's include search paths include frameworks
     // directories denoted by having paths followed by " (framework
-    // directory)".  These don't contain .h file directly, so there's no point
+    // directory)".  These don't contain .h files directly, so there's no point
     // in including them.
     static char   FRAMEWORK_DIR[]   = "(framework directory)\n";
     static size_t FRAMEWORK_DIR_LEN = STRLITLEN( FRAMEWORK_DIR );
