@@ -92,7 +92,7 @@ TESTS+=	tests/cxx.test \
 
 ###############################################################################
 
-EXTRA_DIST =		bin data expected tests xdg_config_home
+EXTRA_DIST =		bin data expected tests
 TOP_SRCDIR =		$(top_srcdir)
 ABS_TOP_BUILDDIR =	$(abs_top_builddir)
 TEST_EXTENSIONS =	.test
