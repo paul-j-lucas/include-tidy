@@ -247,7 +247,7 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
     // directories denoted by having paths followed by " (framework
     // directory)".  These don't contain .h file directly, so there's no point
     // in including them.
-    static char   FRAMEWORK_DIR[]   = "(framework directory)";
+    static char   FRAMEWORK_DIR[]   = "(framework directory)\n";
     static size_t FRAMEWORK_DIR_LEN = STRLITLEN( FRAMEWORK_DIR );
     if ( str_ends_with( line_buf, FRAMEWORK_DIR, FRAMEWORK_DIR_LEN ) )
       continue;
