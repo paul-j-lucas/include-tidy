@@ -69,6 +69,8 @@ else
 	@echo "    ./configure --enable-coverage"
 endif
 
+check-recursive: clean-coverage
+
 clean-local: clean-coverage-local
 	rm -fr $(DOCS_DIR)
 
@@ -76,8 +78,6 @@ clean-coverage-local:
 if ENABLE_COVERAGE
 	rm -f $(COVERAGE_INFO)
 endif
-
-check-recursive: clean-coverage
 
 distclean-local: distclean-coverage-local
 
