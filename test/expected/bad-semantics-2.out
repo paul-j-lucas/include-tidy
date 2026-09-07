@@ -6,5 +6,6 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 "bad-semantics-2.toml":6,9: error: "foo": invalid value for "error"; must be one of "always", "never", or "violations"
 "bad-semantics-2.toml":7,15: error: "10000": invalid value for "line-length"; must be 0-512
 "bad-semantics-2.toml":10,1: error: "bad-associated-header.h": only non-header files may have an associated header
-include-tidy: 7 errors generated
+"bad-semantics-2.toml":13,20: error: "0": invalid value for "elide-includes"; expected string
+include-tidy: 8 errors generated
 
