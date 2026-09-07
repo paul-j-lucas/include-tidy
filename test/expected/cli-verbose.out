@@ -1,0 +1,5 @@
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --verbose=dF hello.c
+// tidy | source file: "hello.c"
+// tidy | 
+// tidy | change directory: "data"
+

@@ -35,7 +35,8 @@ TESTS+=	tests/cli-align-column.test \
 	tests/cli-compiler-no-include.test \
 	tests/cli-error-always.test \
 	tests/cli-help.test \
-	tests/cli-options-error.test
+	tests/cli-options-error.test \
+	tests/cli-verbose.test
 
 # Configuration file option tests
 TESTS+=	tests/align-column.test \
