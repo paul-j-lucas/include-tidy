@@ -1190,7 +1190,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       case '?':
         goto invalid_opt;
       default:
-        goto unhandled_opt;
+        goto unhandled_opt;             // LCOV_EXCL_LINE
     } // switch
     option_mark_set( short_opt );
   } // for
