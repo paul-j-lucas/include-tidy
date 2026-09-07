@@ -58,7 +58,25 @@
  * @{
  */
 
-///////////////////////////////////////////////////////////////////////////////
+////////// macros /////////////////////////////////////////////////////////////
+
+/**
+ * When given the `-v` (verbose) option, both `clang` and `gcc` emit this line
+ * followed by a list of default system include search paths.
+ *
+ * @sa add_compiler_include_paths()
+ * @sa #COMPILER_SEARCH_END
+ */
+#define COMPILER_SEARCH_START  "#include <...> search starts here:"
+
+/**
+ * When given the `-v` (verbose) option, both `clang` and `gcc` emit this line
+ * following a list of default system include search paths.
+ *
+ * @sa add_compiler_include_paths()
+ * @sa #COMPILER_SEARCH_START
+ */
+#define COMPILER_SEARCH_END    "End of search list."
 
 /**
  * Convenience macro for iterating over all command-line options.
@@ -194,17 +212,18 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
   if ( fcompiler == NULL )
     goto error;                         // LCOV_EXCL_LINE
 
-  bool    found_include_paths = false;
+  bool    found_search_start = false;
+  bool    found_search_end = false;
   char   *line_buf = NULL;
   size_t  line_cap = 0;
 
   while ( getline( &line_buf, &line_cap, fcompiler ) != -1 ) {
-    if ( strcmp( line_buf, "#include <...> search starts here:\n" ) == 0 ) {
-      found_include_paths = true;
+    if ( strcmp( line_buf, COMPILER_SEARCH_START "\n" ) == 0 ) {
+      found_search_start = true;
       break;
     }
   } // while
-  if ( !found_include_paths )
+  if ( !found_search_start )
     goto done;
 
   // Find the index to insert the new -isystem option before the last argv that
@@ -218,8 +237,10 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
   } // for
 
   while ( getline( &line_buf, &line_cap, fcompiler ) != -1 ) {
-    if ( strcmp( line_buf, "End of search list.\n" ) == 0 )
+    if ( strcmp( line_buf, COMPILER_SEARCH_END "\n" ) == 0 ) {
+      found_search_end = true;
       break;
+    }
 
 #ifdef __APPLE__
     // On macOS, the C compiler's include search paths include frameworks
@@ -255,9 +276,16 @@ done:
     status = WEXITSTATUS( status );
     switch ( status ) {
       case 0:
-        if ( !found_include_paths ) {
+        if ( !found_search_start ) {
           print_warning(
-            "#include <...> paths not found in \"%s\" output\n", compiler_path
+            "\"" COMPILER_SEARCH_START "\" not found in \"%s\" output\n",
+            compiler_path
+          );
+        }
+        else if ( !found_search_end ) {
+          print_warning(
+            "\"" COMPILER_SEARCH_END "\" not found in \"%s\" output\n",
+            compiler_path
           );
         }
         return;
