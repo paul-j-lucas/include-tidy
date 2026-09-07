@@ -1,5 +1,20 @@
 2026-09-07  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c, unknown_extension.out: Made error messages consistent.
+   * cli_options.c: Code coverage exclusion comments.
+   * cli-options-error.out, cli-options-error.test: More --line-length error
+     tests.
+   * cli-options-error.out, cli-options-error.test: --color error tests.
+   * cli-options-error.out, cli-options-error.test: More CLI error tests.
+   * cli_options.c, cli-options-error.out, cli-options-error.test: Now checking
+     for -I - (missing argument).
+   * cli-options-error.out, cli-options-error.test: Test for -I witout an
+     argument.
+   * cli_options.c, cli-options-error.out: Now using fatal_error().
+   * cli_options.c, cli-options-error.out, cli-options-error.test: More
+     consisten error messages; added invalid -Xtidy option test.
+   * cli_options.c: Added missing \n.
+   * cli_options.c, util.c, util.h: Added str_ends_with().
    * test/Makefile.am: Fixed incorrect code-coverage cleaning.
    * cli_options.c, cli-compiler-no-include.out: Now printing warning if "End
      of search list." was not found.
