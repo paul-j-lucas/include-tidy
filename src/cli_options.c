@@ -793,7 +793,8 @@ static void move_tidy_args( int *pargc, char const *argv[],
         struct option const *const option = get_option( short_opt );
         if ( option == NULL ) {
           fatal_error( EX_USAGE,
-            "'%c': invalid -Xtidy option; use --help for help\n", short_opt
+            "'%c': invalid -Xtidy option; use --help or -h for help\n",
+            short_opt
           );
         }
         switch ( option->has_arg ) {
@@ -1282,7 +1283,7 @@ invalid_opt:
     EPRINTF( "\"%s\"", invalid_opt + STRLITLEN( "--" ) );
   else
     EPRINTF( "'%c'", optopt );
-  EPRINTF( ": invalid option; use --help or -h for help\n" );
+  EPRINTF( ": invalid -Xtidy option; use --help or -h for help\n" );
   exit( EX_USAGE );
 
 missing_arg:

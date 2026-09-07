@@ -6,6 +6,10 @@ test_include_tidy -Xtidy --align-column=X
 test_include_tidy -Xtidy -a
 test_include_tidy -Xtidy -aX
 
+test_include_tidy -Xtidy --bogus
+test_include_tidy -Xtidy -b
+test_include_tidy -Xtidy foo.c
+
 test_include_tidy -Xtidy --comment-style
 test_include_tidy -Xtidy --comment-style=
 test_include_tidy -Xtidy --comment-style=X
@@ -41,8 +45,6 @@ test_include_tidy -Xtidy --verbose=
 test_include_tidy -Xtidy --verbose=X
 test_include_tidy -Xtidy -V
 test_include_tidy -Xtidy -VX
-
-test_include_tidy -Xtidy foo.c
 
 test_include_tidy --help X
 test_include_tidy --help=X
