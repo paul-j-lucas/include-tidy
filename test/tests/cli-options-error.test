@@ -3,8 +3,10 @@ EXPECTED_EXIT=64
 test_include_tidy -Xtidy --align-column
 test_include_tidy -Xtidy --align-column=
 test_include_tidy -Xtidy --align-column=X
+test_include_tidy -Xtidy --align-column=1000
 test_include_tidy -Xtidy -a
 test_include_tidy -Xtidy -aX
+test_include_tidy -Xtidy -a1000
 
 test_include_tidy -Xtidy --bogus
 test_include_tidy -Xtidy -b
@@ -33,6 +35,12 @@ test_include_tidy -Xtidy -c
 test_include_tidy -Xtidy --directory
 test_include_tidy -Xtidy --directory=
 test_include_tidy -Xtidy -d
+
+test_include_tidy -Xtidy --error
+test_include_tidy -Xtidy --error=
+test_include_tidy -Xtidy --error=X
+test_include_tidy -Xtidy -e
+test_include_tidy -Xtidy -eX
 
 test_include_tidy -Xtidy --line-length
 test_include_tidy -Xtidy --line-length=

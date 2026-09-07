@@ -7,11 +7,17 @@ include-tidy: error: "--align-column/-a" requires an argument
 $ include-tidy -Xtidy --align-column=X
 include-tidy: error: "X": invalid integer
 
+$ include-tidy -Xtidy --align-column=1000
+include-tidy: error: "1000": invalid value for --align-column/-a; must be 0-256
+
 $ include-tidy -Xtidy -a
 include-tidy: error: "-a" requires an argument
 
 $ include-tidy -Xtidy -aX
 include-tidy: error: "X": invalid integer
+
+$ include-tidy -Xtidy -a1000
+include-tidy: error: "1000": invalid value for --align-column/-a; must be 0-256
 
 $ include-tidy -Xtidy --bogus
 include-tidy: error: "bogus": invalid -Xtidy option; use --help or -h for help
@@ -78,6 +84,21 @@ include-tidy: error: "--directory/-d" requires an argument
 
 $ include-tidy -Xtidy -d
 include-tidy: error: "-d" requires an argument
+
+$ include-tidy -Xtidy --error
+include-tidy: error: "--error/-e" requires an argument
+
+$ include-tidy -Xtidy --error=
+include-tidy: error: "--error/-e" requires an argument
+
+$ include-tidy -Xtidy --error=X
+include-tidy: error: "X": invalid value for --error/-e; must be one of "violations", "always", or "never"
+
+$ include-tidy -Xtidy -e
+include-tidy: error: "-e" requires an argument
+
+$ include-tidy -Xtidy -eX
+include-tidy: error: "X": invalid value for --error/-e; must be one of "violations", "always", or "never"
 
 $ include-tidy -Xtidy --line-length
 include-tidy: error: "--line-length/-l" requires an argument
