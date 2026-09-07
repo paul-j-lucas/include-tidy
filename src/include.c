@@ -455,19 +455,32 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     goto done;
   }
 
-  if ( IS_VERBOSE( INCLUDES ) ) {
-    if ( verbose_section_begin( &iid->printed_includes_header ) )
-      verbose_printf( "includes:\n" );
+  if ( IS_VERBOSE( INCLUDES_ALL ) ||
+      (IS_VERBOSE( INCLUDES_DIRECT ) && included->depth == 0) ) {
+    if ( verbose_section_begin( &iid->printed_includes_header ) ) {
+      verbose_printf(
+        "%s includes:\n", IS_VERBOSE( INCLUDES_ALL ) ? "all" : "direct"
+      );
+    }
 
     char delims[2];
     include_get_delims( included, delims );
 
-    verbose_printf(
-      "  %2u%*s %c%s%c\n",
-      included->depth,
-      STATIC_CAST( int, included->depth * INCLUDE_VERBOSE_INDENT ), "",
-      delims[0], included->abs_path, delims[1]
-    );
+    if ( IS_VERBOSE( INCLUDES_ALL ) ) {
+      verbose_printf(
+        "  %2u%*s %c%s%c\n",
+        included->depth,
+        STATIC_CAST( int, included->depth * INCLUDE_VERBOSE_INDENT ), "",
+        delims[0], included->abs_path, delims[1]
+      );
+    }
+    else {
+      verbose_printf(
+        "  %*s %c%s%c\n",
+        STATIC_CAST( int, included->depth * INCLUDE_VERBOSE_INDENT ), "",
+        delims[0], included->abs_path, delims[1]
+      );
+    }
   }
 
 done:

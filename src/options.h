@@ -58,7 +58,7 @@
 #define OPT_COMPILER_DEFAULT      "clang" /**< Default compiler path. */
 #define OPT_LINE_LENGTH_DEFAULT   80      /**< Default line length. */
 #define OPT_LINE_LENGTH_MAX       512     /**< Maximum line length. */
-#define OPT_VERBOSE_ALL           "acCdfFipPsSz" /**< All verbose values. */
+#define OPT_VERBOSE_ALL           "acCdfFiIpPsSz" /**< All verbose values. */
 
 ////////// enums //////////////////////////////////////////////////////////////
 
@@ -97,13 +97,14 @@ enum tidy_verbose {
   TIDY_VERBOSE_CONFIG_SYMBOLS       = 1 << 2,   ///< Configuration symbols.
   TIDY_VERBOSE_CURSORS              = 1 << 3,   ///< Libclang cursors.
   TIDY_VERBOSE_DIRECTORY            = 1 << 4,   ///< Changing directory.
-  TIDY_VERBOSE_INCLUDES             = 1 << 5,   ///< Files included.
-  TIDY_VERBOSE_PROXIES_EXPLICIT     = 1 << 6,   ///< Explicit include proxies.
-  TIDY_VERBOSE_PROXIES_IMPLICIT     = 1 << 7,   ///< Implicit include proxies.
-  TIDY_VERBOSE_SRC_FILE_VIOLATIONS  = 1 << 8,   ///< Source file in violation.
-  TIDY_VERBOSE_SRC_FILE_ALWAYS      = 1 << 9,   ///< Always source file.
-  TIDY_VERBOSE_STATISTICS           = 1 << 10,  ///< Print statistics?
-  TIDY_VERBOSE_SYMBOLS              = 1 << 11,  ///< Symbols referenced.
+  TIDY_VERBOSE_INCLUDES_DIRECT      = 1 << 5,   ///< Files directly included.
+  TIDY_VERBOSE_INCLUDES_ALL         = 1 << 6,   ///< All files included.
+  TIDY_VERBOSE_PROXIES_EXPLICIT     = 1 << 7,   ///< Explicit include proxies.
+  TIDY_VERBOSE_PROXIES_IMPLICIT     = 1 << 8,   ///< Implicit include proxies.
+  TIDY_VERBOSE_SRC_FILE_VIOLATIONS  = 1 << 9,   ///< Source file in violation.
+  TIDY_VERBOSE_SRC_FILE_ALWAYS      = 1 << 10,  ///< Always source file.
+  TIDY_VERBOSE_STATISTICS           = 1 << 11,  ///< Print statistics?
+  TIDY_VERBOSE_SYMBOLS              = 1 << 12,  ///< Symbols referenced.
 };
 
 ////////// typedefs ///////////////////////////////////////////////////////////

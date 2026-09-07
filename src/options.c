@@ -249,7 +249,10 @@ bool opt_verbose_parse( char const *verbose_format ) {
         verbose |= TIDY_VERBOSE_SRC_FILE_ALWAYS;
         break;
       case 'i':
-        verbose |= TIDY_VERBOSE_INCLUDES;
+        verbose |= TIDY_VERBOSE_INCLUDES_DIRECT;
+        break;
+      case 'I':
+        verbose |= TIDY_VERBOSE_INCLUDES_ALL;
         break;
       case 'p':
         verbose |= TIDY_VERBOSE_PROXIES_IMPLICIT;
@@ -273,10 +276,14 @@ bool opt_verbose_parse( char const *verbose_format ) {
     } // switch
   } // for
 
-  if ( (verbose & TIDY_VERBOSE_SRC_FILE_ALWAYS) != 0 )
+  opt_verbose = verbose;
+
+  if ( IS_VERBOSE( INCLUDES_ALL ) )
+    verbose &= ~TO_UNSIGNED_EXPR( TIDY_VERBOSE_INCLUDES_DIRECT );
+
+  if ( IS_VERBOSE( SRC_FILE_ALWAYS ) )
     verbose &= ~TO_UNSIGNED_EXPR( TIDY_VERBOSE_SRC_FILE_VIOLATIONS );
 
-  opt_verbose = verbose;
   return true;
 }
 
@@ -287,7 +294,7 @@ void option_str_set_all_or_none( char const **pformat, char const *all_value ) {
   assert( all_value[0] != '\0' );
 
   if ( strcmp( *pformat, "*" ) == 0 )
-    *pformat = all_value;
+    *pformat = all_value;               // LCOV_EXCL_LINE
   else if ( strcmp( *pformat, "-" ) == 0 )
     *pformat = "";
 }
