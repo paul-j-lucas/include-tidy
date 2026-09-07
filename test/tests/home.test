@@ -1,7 +1,7 @@
 EXPECTED_EXIT=0
 
 INCLUDE_TIDY_TEST=$(echo $INCLUDE_TIDY_TEST | sed 's/h//')
-HOME="$PWD/home"
+HOME="$PWD/data/home"
 export HOME
 
 test_include_tidy $TIDY_TEST_OPTIONS \
