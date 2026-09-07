@@ -14,7 +14,7 @@ $ include-tidy -Xtidy -aX
 include-tidy: error: "X": invalid integer
 
 $ include-tidy -Xtidy --bogus
-include-tidy: "bogus": invalid -Xtidy option; use --help or -h for help
+include-tidy: error: "bogus": invalid -Xtidy option; use --help or -h for help
 
 $ include-tidy -Xtidy -b
 include-tidy: error: 'b': invalid -Xtidy option; use --help or -h for help
@@ -136,7 +136,7 @@ include-tidy home page: https://github.com/paul-j-lucas/include-tidy
 Report bugs to: https://github.com/paul-j-lucas/include-tidy/issues
 
 $ include-tidy --help=X
-include-tidy: "help=X": invalid -Xtidy option; use --help or -h for help
+include-tidy: error: "help=X": invalid -Xtidy option; use --help or -h for help
 
 $ include-tidy --help --version
 include-tidy: error: --help/-h can be given only by itself
@@ -174,5 +174,5 @@ include-tidy home page: https://github.com/paul-j-lucas/include-tidy
 Report bugs to: https://github.com/paul-j-lucas/include-tidy/issues
 
 $ include-tidy --version=X
-include-tidy: "version=X": invalid -Xtidy option; use --help or -h for help
+include-tidy: error: "version=X": invalid -Xtidy option; use --help or -h for help
 

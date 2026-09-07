@@ -1275,16 +1275,17 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   return;
 
-invalid_opt:
+invalid_opt:;
   // Determine whether the invalid option was short or long.
-  EPRINTF( "%s: ", prog_name );
+  strbuf_t ebuf;
+  strbuf_init( &ebuf );
   char const *const invalid_opt = tidy_argv[ optind - 1 ];
   if ( invalid_opt != NULL && STRNCMPLIT( invalid_opt, "--" ) == 0 )
-    EPRINTF( "\"%s\"", invalid_opt + STRLITLEN( "--" ) );
+    strbuf_printf( &ebuf, "\"%s\"", invalid_opt + STRLITLEN( "--" ) );
   else
-    EPRINTF( "'%c'", optopt );
-  EPRINTF( ": invalid -Xtidy option; use --help or -h for help\n" );
-  exit( EX_USAGE );
+    strbuf_printf( &ebuf, "'%c'", optopt );
+  strbuf_puts( &ebuf, ": invalid -Xtidy option; use --help or -h for help" );
+  fatal_error( EX_USAGE, "%s\n", ebuf.str );
 
 missing_arg:
   fatal_error( EX_USAGE,
