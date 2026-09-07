@@ -50,9 +50,9 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-typedef struct      getCursorByName_data getCursorByName_data;
-typedef CXString  (*getCursorName_fn)( CXCursor );
-typedef struct      isBaseClass_data     isBaseClass_data;
+typedef struct getCursorByName_data getCursorByName_data;
+typedef CXString                  (*getCursorName_fn)( CXCursor );
+typedef struct isBaseClass_data     isBaseClass_data;
 
 ////////// structs ////////////////////////////////////////////////////////////
 
