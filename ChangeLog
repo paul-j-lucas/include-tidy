@@ -1,3 +1,7 @@
+2026-09-07  Paul J. Lucas <paul@lucasmail.org>
+
+   * man/man1/include-tidy.1: Added a missing '!' from the Makefile example.
+
 2026-09-06  Paul J. Lucas <paul@lucasmail.org>
 
    * man/man1/include-tidy.1, config_file.c, include-tidy.c, include-tidy.h,
