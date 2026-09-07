@@ -1,5 +1,25 @@
 2026-09-07  Paul J. Lucas <paul@lucasmail.org>
 
+   * test/Makefile.am: Fixed incorrect code-coverage cleaning.
+   * cli_options.c, cli-compiler-no-include.out: Now printing warning if "End
+     of search list." was not found.
+   * home/README.txt: Added README.txt.
+   * test/Makefile.am, xdg_config_dirs.test, xdg_config_home.test: Moved
+     xdg_config_home inside data.
+   * test/Makefile.am, home.test: Moved home inside data.
+   * test/Makefile.am, cli-compiler-no-include.out,
+     cli-compiler-no-include.test: Moved scripts into bin/; updated EXTRA_DIST.
+   * Makefile.am: Added --ignore-errors unused.
+   * Makefile.am, test/Makefile.am: ENABLE_COVERAGE improvements.
+   * src/Makefile.am: Added if ENABLE_COVERAGE.
+   * test/Makefile.am: "make check" and "make update" run "make clean-coverage"
+     beforehand.
+   * Makefile.am: "make check" now called "make clean-coverage" first.
+   * bad-semantics-1.toml, bad-semantics-2.toml, bad-semantics-1.out,
+     bad-semantics-2.out: Better test for keep-includes.
+   * bad-semantics-1.toml, bad-semantics-2.toml, bad-semantics-1.out,
+     bad-semantics-2.out: Better test for elide-includes.
+   * update_test.sh: Updated INCLUDE_TIDY_TEST.
    * man/man1/include-tidy.1: Added a missing '!' from the Makefile example.
 
 2026-09-06  Paul J. Lucas <paul@lucasmail.org>
