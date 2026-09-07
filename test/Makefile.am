@@ -92,6 +92,8 @@ TESTS+=	tests/cxx.test \
 
 ###############################################################################
 
+.PHONY: top-clean-coverage
+
 TOP_SRCDIR = $(top_srcdir)
 ABS_TOP_BUILDDIR = $(abs_top_builddir)
 AM_TESTS_ENVIRONMENT = TOP_SRCDIR=$(TOP_SRCDIR) ABS_TOP_BUILDDIR=$(ABS_TOP_BUILDDIR) ; export TOP_SRCDIR ABS_TOP_BUILDDIR ;
@@ -103,8 +105,13 @@ EXTRA_DIST = run_test.sh tests data expected
 dist-hook:
 	cd $(distdir)/tests && rm -f *.log *.trs
 
+top-clean-coverage:
+	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) clean-coverage
+
+$(TEST_LOGS): | top-clean-coverage
+
 UPDATE_TEST = $(srcdir)/update_test.sh
-update:
+update: top-clean-coverage
 	@ls $(TESTS) | xargs -n255 -r \
 	$(UPDATE_TEST) -B "$(ABS_TOP_BUILDDIR)" -s "$(TOP_SRCDIR)"
 
