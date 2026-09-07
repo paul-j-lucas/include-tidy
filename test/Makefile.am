@@ -92,25 +92,29 @@ TESTS+=	tests/cxx.test \
 
 ###############################################################################
 
+EXTRA_DIST =		run_test.sh tests data expected
+TOP_SRCDIR =		$(top_srcdir)
+ABS_TOP_BUILDDIR =	$(abs_top_builddir)
+TEST_EXTENSIONS =	.test
+TEST_LOG_DRIVER =	$(srcdir)/run_test.sh
+UPDATE_TEST =		$(srcdir)/update_test.sh
+
+AM_TESTS_ENVIRONMENT = TOP_SRCDIR=$(TOP_SRCDIR) ABS_TOP_BUILDDIR=$(ABS_TOP_BUILDDIR) ; export TOP_SRCDIR ABS_TOP_BUILDDIR ;
+
 .PHONY: top-clean-coverage
 
-TOP_SRCDIR = $(top_srcdir)
-ABS_TOP_BUILDDIR = $(abs_top_builddir)
-AM_TESTS_ENVIRONMENT = TOP_SRCDIR=$(TOP_SRCDIR) ABS_TOP_BUILDDIR=$(ABS_TOP_BUILDDIR) ; export TOP_SRCDIR ABS_TOP_BUILDDIR ;
-TEST_EXTENSIONS = .test
-
-TEST_LOG_DRIVER = $(srcdir)/run_test.sh
-
-EXTRA_DIST = run_test.sh tests data expected
-dist-hook:
-	cd $(distdir)/tests && rm -f *.log *.trs
-
+if ENABLE_COVERAGE
 top-clean-coverage:
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) clean-coverage
 
 $(TEST_LOGS): | top-clean-coverage
+else
+top-clean-coverage:
+endif
 
-UPDATE_TEST = $(srcdir)/update_test.sh
+dist-hook:
+	cd $(distdir)/tests && rm -f *.log *.trs
+
 update: top-clean-coverage
 	@ls $(TESTS) | xargs -n255 -r \
 	$(UPDATE_TEST) -B "$(ABS_TOP_BUILDDIR)" -s "$(TOP_SRCDIR)"
