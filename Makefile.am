@@ -43,6 +43,7 @@ LCOV_FLAGS =		--capture \
 			--exclude "src/color.c" \
 			--exclude "src/unit_test.c" \
 			--gcov-tool "$(GCOV)" \
+			--ignore-errors unused \
 			--output-file $(COVERAGE_INFO)
 
 GENHTML_FLAGS =	--legend \
