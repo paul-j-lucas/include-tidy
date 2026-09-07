@@ -475,11 +475,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       );
     }
     else {
-      verbose_printf(
-        " %*s %c%s%c\n",
-        STATIC_CAST( int, included->depth * INCLUDE_VERBOSE_INDENT ), "",
-        delims[0], included->abs_path, delims[1]
-      );
+      verbose_printf( "  %c%s%c\n", delims[0], included->abs_path, delims[1] );
     }
   }
 
