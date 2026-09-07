@@ -13,3 +13,7 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-style=/* hello.c
 #include <stdio.h>                      /* printf */
 
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --verbose=i hello.c
+// tidy | direct includes:
+// tidy |   <stdio.h>
+

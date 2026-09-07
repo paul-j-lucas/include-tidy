@@ -33,6 +33,7 @@
 #include "config_file.h"
 #include "file_ext.h"
 #include "hash_table.h"
+#include "include-tidy.h"
 #include "ipath.h"
 #include "options.h"
 #include "path_util.h"
@@ -465,17 +466,19 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
 
     char delims[2];
     include_get_delims( included, delims );
+    char const *const included_path = tidy_test != TIDY_TEST_NONE ?
+      included->rel_path : included->abs_path;
 
     if ( IS_VERBOSE( INCLUDES_ALL ) ) {
       verbose_printf(
         "  %2u%*s %c%s%c\n",
         included->depth,
         STATIC_CAST( int, included->depth * INCLUDE_VERBOSE_INDENT ), "",
-        delims[0], included->abs_path, delims[1]
+        delims[0], included_path, delims[1]
       );
     }
     else {
-      verbose_printf( "  %c%s%c\n", delims[0], included->abs_path, delims[1] );
+      verbose_printf( "  %c%s%c\n", delims[0], included_path, delims[1] );
     }
   }
 
