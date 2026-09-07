@@ -953,6 +953,20 @@ inline char const* plural_s( unsigned long long n ) {
 }
 
 /**
+ * Gets whether \a s ends with \a end.
+ *
+ * @param s The string to check.
+ * @param end The end string.
+ * @param end_len The length of \a end.
+ * @return Returns `true` only if \a s ends with \a end.
+ */
+NODISCARD
+inline bool str_ends_with( char const *s, char const *end, size_t end_len ) {
+  size_t const s_len = strlen( s );
+  return s_len >= end_len && strcmp( s + s_len - end_len, end ) == 0;
+}
+
+/**
  * A variant of **strncpy**(3) that always null-terminates \a dst.
  *
  * @param dst A pointer to receive the copy of \a src.  It _must_ be at least

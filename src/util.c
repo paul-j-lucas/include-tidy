@@ -186,6 +186,7 @@ void perror_exit( int status ) {
   exit( status );
 }
 
+
 char* str_trim( char *s ) {
   assert( s != NULL );
   SKIP_WS( s );
@@ -211,6 +212,7 @@ extern inline char* (nonconst_empty_if_null)( char* );
 extern inline char const* (null_if_empty)( char const* );
 
 extern inline char const* plural_s( unsigned long long );
+extern inline bool str_ends_with( char const*, char const*, size_t );
 extern inline char* strncpy_0( char*, char const*, size_t );
 extern inline bool true_or_set( bool* );
 extern inline bool true_clear( bool* );
