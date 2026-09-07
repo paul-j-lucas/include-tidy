@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 ##
 #       include-tidy -- #include tidier
-#       test/update_test.sh
+#       test/bin/update_test.sh
 #
 #       Copyright (C) 2026  Paul J. Lucas
 #
