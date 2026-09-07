@@ -23,6 +23,11 @@ Now correctly printing verbose arguments.
 ** libclang errors
 Error messages from libclang are now marked so explicitly.
 
+** `man` page omission
+Added a missing `!` from the `Makefile` example:
+
+    [ ! -f "$$file" ] || \
+
 ** `XDG_CONFIG_DIRS`
 More than one path is now handled correctly.
 
