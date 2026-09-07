@@ -44,6 +44,7 @@ TESTS+=	tests/align-column.test \
 # Other tests
 TESTS+=	tests/associated-header.test \
 	tests/home.test \
+	tests/ipaths.test \
 	tests/xdg_config_home.test \
 	tests/xdg_config_dirs.test
 
