@@ -1210,7 +1210,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   // trans_unit.c.  Do this now so --verbose=a prints all command-line
   // arguments including these.
   int const argc = *pargc;
-  char const *const LIBCLANG_ARGS[] = {
+  static char const *const LIBCLANG_ARGS[] = {
     "-D__include_tidy__",
     "-Qunused-arguments",
     "-Wno-unknown-warning-option",
