@@ -103,13 +103,9 @@ AM_TESTS_ENVIRONMENT = TOP_SRCDIR=$(TOP_SRCDIR) ABS_TOP_BUILDDIR=$(ABS_TOP_BUILD
 
 .PHONY: top-clean-coverage
 
+top-clean-coverage:
 if ENABLE_COVERAGE
-top-clean-coverage:
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) clean-coverage
-
-$(TEST_LOGS): | top-clean-coverage
-else
-top-clean-coverage:
 endif
 
 dist-hook:
