@@ -141,6 +141,9 @@ include-tidy: error: "help=X": invalid -Xtidy option; use --help or -h for help
 $ include-tidy --help --version
 include-tidy: error: --help/-h can be given only by itself
 
+$ include-tidy -I
+include-tidy: error: "-I" requires an argument
+
 $ include-tidy -x
 include-tidy: error: "-x" requires an argument
 
