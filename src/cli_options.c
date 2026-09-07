@@ -1076,6 +1076,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   if ( compiler_path != NULL && source_lang != NULL )
     add_compiler_include_paths( pargc, pargv, compiler_path, source_lang );
 
+  strbuf_t          err_buf;
   char const       *opt_directory = NULL;
   bool              opt_help = false;
   unsigned          opt_version = 0;
@@ -1086,6 +1087,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   array_t           tmp_include_paths = ARRAY_INIT( sizeof(char*) );
 
   move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
+  strbuf_init( &err_buf );
 
   opterr = 0;                           // suppress default error message
   for (;;) {
@@ -1236,17 +1238,16 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     print_usage( EX_USAGE );
 
   if ( source_lang == NULL ) {
-    EPRINTF( "%s: ", prog_name );
     if ( source_ext == NULL )
-      EPUTS( "missing" );
+      strbuf_puts( &err_buf, "missing" );
     else
-      EPRINTF( "\"%s\": unknown", source_ext );
-    EPUTS( " extension; must be one of " );
+      strbuf_printf( &err_buf, "\"%s\": unknown", source_ext );
+    strbuf_puts( &err_buf, " extension; must be one of " );
     bool comma = false;
     FOREACH_FILE_EXT( file_ext )
-      EPRINTF( true_or_set( &comma ) ? ", %s" : "%s", file_ext->ext );
-    EPUTS( "; or use -xc[++]\n" );
-    exit( EX_USAGE );
+      strbuf_sepsn_puts( &err_buf, ", ", 2, &comma, file_ext->ext );
+    strbuf_puts( &err_buf, "; or use -xc[++]" );
+    fatal_error( EX_USAGE, "%s\n", err_buf.str );
   }
 
   if ( opt_directory != NULL ) {
@@ -1277,15 +1278,13 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
 invalid_opt:;
   // Determine whether the invalid option was short or long.
-  strbuf_t ebuf;
-  strbuf_init( &ebuf );
   char const *const invalid_opt = tidy_argv[ optind - 1 ];
   if ( invalid_opt != NULL && STRNCMPLIT( invalid_opt, "--" ) == 0 )
-    strbuf_printf( &ebuf, "\"%s\"", invalid_opt + STRLITLEN( "--" ) );
+    strbuf_printf( &err_buf, "\"%s\"", invalid_opt + STRLITLEN( "--" ) );
   else
-    strbuf_printf( &ebuf, "'%c'", optopt );
-  strbuf_puts( &ebuf, ": invalid -Xtidy option; use --help or -h for help" );
-  fatal_error( EX_USAGE, "%s\n", ebuf.str );
+    strbuf_printf( &err_buf, "'%c'", optopt );
+  strbuf_puts( &err_buf, ": invalid -Xtidy option; use --help or -h for help" );
+  fatal_error( EX_USAGE, "%s\n", err_buf.str );
 
 missing_arg:
   fatal_error( EX_USAGE,
