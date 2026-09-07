@@ -816,7 +816,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
       argv[ new_argc++ ] = argv[i];
       tidy_argv[ tidy_argc++ ] = argv[i];
       if ( argv[i][2] == '\0' ) {       // -I <dir>
-        if ( ++i >= argc ) {
+        if ( ++i >= argc || argv[i][0] == '-' ) {
           short_opt = 'I';
           goto short_opt_requires_argument;
         }

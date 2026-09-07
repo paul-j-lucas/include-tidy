@@ -144,6 +144,9 @@ include-tidy: error: --help/-h can be given only by itself
 $ include-tidy -I
 include-tidy: error: "-I" requires an argument
 
+$ include-tidy -I -xc
+include-tidy: error: "-I" requires an argument
+
 $ include-tidy -x
 include-tidy: error: "-x" requires an argument
 

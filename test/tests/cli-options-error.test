@@ -51,6 +51,7 @@ test_include_tidy --help=X
 test_include_tidy --help --version
 
 test_include_tidy -I
+test_include_tidy -I -xc
 
 test_include_tidy -x
 test_include_tidy -xX
