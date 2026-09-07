@@ -14,11 +14,12 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 "bad-semantics-1.toml":16: warning: "empty": empty table
 "bad-semantics-1.toml":19,21: error: "0": invalid value for "associated-header"; expected string
 "bad-semantics-1.toml":20,18: error: "0": invalid value for "elide-includes"; expected string or array
-"bad-semantics-1.toml":23,9: error: "0": invalid value for "first"; expected boolean
-"bad-semantics-1.toml":24,8: error: "0": invalid value for "keep"; expected boolean
-"bad-semantics-1.toml":25,22: error: "0": invalid value for "ignore-as-argument"; expected boolean
+"bad-semantics-1.toml":21,17: error: "0": invalid value for "keep-includes"; expected string or array
+"bad-semantics-1.toml":24,9: error: "0": invalid value for "first"; expected boolean
+"bad-semantics-1.toml":25,8: error: "0": invalid value for "keep"; expected boolean
+"bad-semantics-1.toml":26,22: error: "0": invalid value for "ignore-as-argument"; expected boolean
 "bad-semantics-1.toml":28,9: error: "0": invalid value for "proxy"; expected string or array
 "bad-semantics-1.toml":29,11: error: "0": invalid value for "symbols"; expected string or array
 "bad-semantics-1.toml":32,10: error: "0": invalid value for "ignore"; expected boolean
-include-tidy: 1 warning and 20 errors generated
+include-tidy: 1 warning and 21 errors generated
 

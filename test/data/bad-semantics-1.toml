@@ -18,13 +18,13 @@ unknown = 0
 [f.c]
 associated-header = 0
 elide-includes = 0
+keep-includes = 0
 
 [f.h]
 first = 0
 keep = 0
 ignore-as-argument = 0
 ignore-symbols = 0
-keep-includes = 0
 proxy = 0
 symbols = 0
 

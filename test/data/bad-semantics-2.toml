@@ -11,3 +11,4 @@ associated-header = "foo.h"
 
 [f.c]
 elide-includes = [ 0 ]
+keep-includes = [ 0 ]
