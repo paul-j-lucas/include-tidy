@@ -92,12 +92,12 @@ TESTS+=	tests/cxx.test \
 
 ###############################################################################
 
-EXTRA_DIST =		run_test.sh tests data expected
+EXTRA_DIST =		bin data expected home tests xdg_config_home
 TOP_SRCDIR =		$(top_srcdir)
 ABS_TOP_BUILDDIR =	$(abs_top_builddir)
 TEST_EXTENSIONS =	.test
-TEST_LOG_DRIVER =	$(srcdir)/run_test.sh
-UPDATE_TEST =		$(srcdir)/update_test.sh
+TEST_LOG_DRIVER =	$(srcdir)/bin/run_test.sh
+UPDATE_TEST =		$(srcdir)/bin/update_test.sh
 
 AM_TESTS_ENVIRONMENT = TOP_SRCDIR=$(TOP_SRCDIR) ABS_TOP_BUILDDIR=$(ABS_TOP_BUILDDIR) ; export TOP_SRCDIR ABS_TOP_BUILDDIR ;
 
