@@ -1,5 +1,7 @@
 2026-09-07  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli-verbose.out, cli-verbose.test: Now testing --option=-.
+   * options.c: Code coverage exclusion comments.
    * config.h, explicit-proxy.c, explicit-proxy.toml, pjl_config.h,
      cli-verbose.out, cli-verbose.test: Now testing --verbose=P.
    * man/man1/include-tidy.1, config_file.c, proxies.c, symbol.c: When
