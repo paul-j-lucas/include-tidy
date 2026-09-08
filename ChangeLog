@@ -1,3 +1,17 @@
+2026-09-08  Paul J. Lucas <paul@lucasmail.org>
+
+   * test/Makefile.am, include-enoent.c, include-enoent.out,
+     include-enoent.test: Testing include file not found.
+   * test/Makefile.am, libclang-error.out, libclang-error.test: Added libclang
+     error test.
+   * util.c, util_test.c: Added test for fputs_quoted of NULL.
+   * util_test.c: Added test for str_trim().
+   * strbuf.c: Better strbuf_puts_quoted.
+   * src/Makefile.am, util.c, util_test.c: Added util_test.c.
+   * print.c: Eliminated a use of fputs_quoted().
+   * symbol.c, test/Makefile.am, hash.hpp, hash.out, hash.test: Added test for
+     CXCursor_OverloadedDeclRef.
+
 2026-09-07  Paul J. Lucas <paul@lucasmail.org>
 
    * cxx.c: Code coverage exclusion comments.
