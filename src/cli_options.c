@@ -1238,6 +1238,8 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     print_usage( EX_USAGE );
 
   if ( source_lang == NULL ) {
+    if ( tidy_source_path != NULL )
+      strbuf_printf( &err_buf, "\"%s\": ", tidy_source_path );
     if ( source_ext == NULL )
       strbuf_puts( &err_buf, "missing" );
     else

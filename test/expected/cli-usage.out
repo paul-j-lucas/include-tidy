@@ -25,5 +25,5 @@ include-tidy home page: https://github.com/paul-j-lucas/include-tidy
 Report bugs to: https://github.com/paul-j-lucas/include-tidy/issues
 
 $ include-tidy foo
-include-tidy: error: missing extension; must be one of c, c++, cc, cp, cpp, cxx, h, h++, hh, hp, hpp, hxx; or use -xc[++]
+include-tidy: error: "foo": missing extension; must be one of c, c++, cc, cp, cpp, cxx, h, h++, hh, hp, hpp, hxx; or use -xc[++]
 
