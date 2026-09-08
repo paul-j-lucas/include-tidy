@@ -2,6 +2,11 @@ EXPECTED_EXIT=0
 
 test_include_tidy $TIDY_TEST_OPTIONS \
     $TIDY_TEST_CONFIG \
+    -Xtidy --verbose=- \
+    hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
     -Xtidy --verbose=dF \
     hello.c
 
