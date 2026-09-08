@@ -57,6 +57,7 @@ TESTS+=	tests/bad-semantics-1.test \
 	tests/duplicate.test \
 	tests/enoent.test \
 	tests/error.test \
+	tests/include-enoent.test \
 	tests/unknown_extension.test
 
 # Real-world C tests.
