@@ -653,9 +653,7 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
 
   int             c = toml_getc( toml );
   unsigned const  first_col = toml->loc.col;
-  strbuf_t        key_buf;
-
-  strbuf_init( &key_buf );
+  strbuf_t        key_buf = STRBUF_INIT();
 
   switch ( c ) {
     case '"':
@@ -871,8 +869,7 @@ static bool toml_string_parse( toml_file *toml, strbuf_t *rv_sbuf ) {
   assert( toml != NULL );
   assert( rv_sbuf != NULL );
 
-  strbuf_t sbuf;
-  strbuf_init( &sbuf );
+  strbuf_t sbuf = STRBUF_INIT();
 
   for (;;) {
     int c = toml_getc( toml );
@@ -997,8 +994,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *rv_value ) {
     toml_loc const value_loc = toml->loc;
     switch ( c ) {
       case '"':;
-        strbuf_t sbuf;
-        strbuf_init( &sbuf );
+        strbuf_t sbuf = STRBUF_INIT();
         if ( !toml_string_parse( toml, &sbuf ) )
           return false;
         *rv_value = (toml_value){

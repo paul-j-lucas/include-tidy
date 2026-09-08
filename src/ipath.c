@@ -116,9 +116,8 @@ bool ipath_find( char const *rel_path, char abs_path[static PATH_MAX] ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
-  bool is_found = false;
-  strbuf_t sbuf;
-  strbuf_init( &sbuf );
+  bool      is_found = false;
+  strbuf_t  sbuf = STRBUF_INIT();
 
   for ( size_t i = 0; i < ipaths.len; ++i ) {
     tidy_ipath const *const ipath = array_at_nc( &ipaths, i );

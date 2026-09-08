@@ -148,8 +148,7 @@ char const* path_no_ext( char const *path, char path_buf[static PATH_MAX] ) {
 char* path_normalize( char const *path ) {
   assert( path != NULL );
 
-  strbuf_t in_path;
-  strbuf_init( &in_path );
+  strbuf_t in_path = STRBUF_INIT();
 
   if ( path_is_relative( path ) ) {
     path = path_no_dot_slash( path );
@@ -174,8 +173,7 @@ char* path_normalize( char const *path ) {
       *(char const**)array_push_back( &comp_stack ) = comp;
   } // for
 
-  strbuf_t out_path;
-  strbuf_init( &out_path );
+  strbuf_t out_path = STRBUF_INIT();
 
   if ( path_is_absolute( in_path.str ) )
     strbuf_putc( &out_path, '/' );

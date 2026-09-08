@@ -1075,7 +1075,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   if ( compiler_path != NULL && source_lang != NULL )
     add_compiler_include_paths( pargc, pargv, compiler_path, source_lang );
 
-  strbuf_t          err_buf;
+  strbuf_t          err_buf = STRBUF_INIT();
   char const       *opt_directory = NULL;
   bool              opt_help = false;
   unsigned          opt_version = 0;
@@ -1086,7 +1086,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   array_t           tmp_include_paths = ARRAY_INIT( sizeof(char*) );
 
   move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
-  strbuf_init( &err_buf );
 
   opterr = 0;                           // suppress default error message
   for (;;) {

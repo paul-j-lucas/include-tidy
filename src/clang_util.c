@@ -243,8 +243,7 @@ static char* getScopedName_thunk( CXCursor cursor, getCursorName_fn name_fn ) {
   if ( !tidy_Cursor_isInvalid( ref_csr ) )
     cursor = ref_csr;
 
-  strbuf_t sbuf;
-  strbuf_init( &sbuf );
+  strbuf_t sbuf = STRBUF_INIT();
   getScopedName_impl( cursor, name_fn, &sbuf );
   return strbuf_take( &sbuf );
 }

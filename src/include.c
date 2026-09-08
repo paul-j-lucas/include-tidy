@@ -629,14 +629,12 @@ static char* make_symbols_comment( tidy_include const *include ) {
     );
   }
 
-  bool comma = false;
-  bool is_done = false;
-
-  size_t const fixed_len = opt_align_column +
-    strlen( opt_comment_style[0] ) + strlen( opt_comment_style[1] );
-
-  strbuf_t symbols_buf;
-  strbuf_init( &symbols_buf );
+  bool          comma = false;
+  size_t const  fixed_len = opt_align_column +
+                  strlen( opt_comment_style[0] ) +
+                  strlen( opt_comment_style[1] );
+  bool          is_done = false;
+  strbuf_t      symbols_buf = STRBUF_INIT();
 
   for ( size_t i = 0; !is_done && i < symbols_array.len; ++i ) {
     tidy_symbol const *const sym =

@@ -1512,8 +1512,7 @@ void config_init( void ) {
   ATEXIT( &config_cleanup );
 
   bool found_at_least_1 = false;
-  strbuf_t path_buf;
-  strbuf_init( &path_buf );
+  strbuf_t path_buf = STRBUF_INIT();
   do {
     FILE *const config_file = config_file_find( opt_config_path, &path_buf );
     if ( config_file == NULL )

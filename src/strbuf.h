@@ -46,6 +46,16 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
+/**
+ * An initializer that can be assigned to a stand-alone strbuf.
+ *
+ * @sa strbuf_cleanup()
+ * @sa strbuf_init()
+ */
+#define STRBUF_INIT()             (strbuf_t){ 0 }
+
+////////// typedefs ///////////////////////////////////////////////////////////
+
 typedef struct strbuf strbuf_t;
 
 ////////// structs ////////////////////////////////////////////////////////////
@@ -68,6 +78,7 @@ struct strbuf {
  *
  * @param sbuf A pointer to the \ref strbuf to clean up.
  *
+ * @sa #STRBUF_INIT()
  * @sa strbuf_init()
  * @sa strbuf_reset()
  * @sa strbuf_take()
@@ -82,11 +93,12 @@ void strbuf_cleanup( strbuf_t *sbuf );
  * @note This need not be called for either global or `static` buffers.
  *
  * @sa strbuf_cleanup()
+ * @sa #STRBUF_INIT()
  * @sa strbuf_reset()
  * @sa strbuf_take()
  */
 inline void strbuf_init( strbuf_t *sbuf ) {
-  *sbuf = (strbuf_t){ 0 };
+  *sbuf = STRBUF_INIT();
 }
 
 /**
