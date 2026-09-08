@@ -1,5 +1,9 @@
 2026-09-07  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c, cli-usage.out, unknown_extension.out: Added source_path to
+     error message.
+   * test/Makefile.am, cli-usage.out, cli-usage.test: Usage tests.
+   * cli_options.c: Code coverage exclusion comments.
    * clang_util.c, cli_options.c, config_file.c, include.c, ipath.c,
      path_util.c, strbuf.h, strbuf_test.c, toml_lite.c: Added STRBUF_INIT().
    * symbol.c: Code coverage exclusion comments.
