@@ -3,3 +3,7 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 // tidy | 
 // tidy | change directory: "data"
 
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=explicit-proxy.toml -Xtidy --verbose=P explicit-proxy.c
+// tidy | explicit proxies:
+// tidy |   "config.h" -> "pjl_config.h"
+

@@ -4,3 +4,8 @@ test_include_tidy $TIDY_TEST_OPTIONS \
     $TIDY_TEST_CONFIG \
     -Xtidy --verbose=dF \
     hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    -Xtidy --config=explicit-proxy.toml \
+    -Xtidy --verbose=P \
+    explicit-proxy.c
