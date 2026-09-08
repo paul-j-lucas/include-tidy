@@ -1,5 +1,18 @@
 2026-09-07  Paul J. Lucas <paul@lucasmail.org>
 
+   * config.h, explicit-proxy.c, explicit-proxy.toml, pjl_config.h,
+     cli-verbose.out, cli-verbose.test: Now testing --verbose=P.
+   * man/man1/include-tidy.1, config_file.c, proxies.c, symbol.c: When
+     INCLUDE_TIDY_TEST is set, most verbose paths are relative.
+   * include.c, options.c, hello.out, hello.test: Now testing --verbose=i.
+   * include.c: Simplification.
+   * include.c: Fixed direct includes indentation.
+   * man/man1/include-tidy.1, include.c, options.c, options.h,
+     cli-options-error.out: --verbose now take either 'i' for direct includes
+     only or 'I' for all includes.
+   * test/Makefile.am, cli-verbose.out, cli-verbose.test: --verbose test.
+   * test/Makefile.am, ipaths.out, ipaths.test: ipaths tests.
+   * cli_options.c: Made static.
    * cli_options.c, unknown_extension.out: Made error messages consistent.
    * cli_options.c: Code coverage exclusion comments.
    * cli-options-error.out, cli-options-error.test: More --line-length error
