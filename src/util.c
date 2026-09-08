@@ -128,12 +128,12 @@ void fputs_quoted( char const *s, char quote, FILE *fout ) {
   fputc( quote, fout );
   for ( ; *s != '\0'; ++s ) {
     switch ( *s ) {
-      case '\b': fputs( "\\b", fout ); break;
-      case '\f': fputs( "\\f", fout ); break;
-      case '\n': fputs( "\\n", fout ); break;
-      case '\r': fputs( "\\r", fout ); break;
-      case '\t': fputs( "\\t", fout ); break;
-      case '\v': fputs( "\\v", fout ); break;
+      case '\b': fputs( "\\b",  fout ); break;
+      case '\f': fputs( "\\f",  fout ); break;
+      case '\n': fputs( "\\n",  fout ); break;
+      case '\r': fputs( "\\r",  fout ); break;
+      case '\t': fputs( "\\t",  fout ); break;
+      case '\v': fputs( "\\v",  fout ); break;
       case '\\': fputs( "\\\\", fout ); break;
       default:
         if ( *s == quote )
