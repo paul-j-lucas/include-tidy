@@ -1,2 +1,16 @@
-$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml types.h
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --verbose=z types.h
+// tidy | statistics:
+// tidy |   typedef map:
+// tidy |     tm-load-factor = 0.03
+// tidy |     tm-size = 13
+// tidy |   symbol set:
+// tidy |     ss-load-factor = 0.01
+// tidy |     ss-size = 1
+// tidy |   include set:
+// tidy |     is-size = 9
+// tidy |     is-max-load-factor:
+// tidy |       is-path = "slist.h"
+// tidy |       symbol set:
+// tidy |         isss-load-factor = 0.02
+// tidy |         isss-size = 1
 
