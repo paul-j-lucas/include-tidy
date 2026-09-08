@@ -252,8 +252,10 @@ bool opt_verbose_parse( char const *verbose_format ) {
         verbose |= TIDY_VERBOSE_INCLUDES_DIRECT;
         break;
       case 'I':
+        // LCOV_EXCL_START: includes are platform-specific.
         verbose |= TIDY_VERBOSE_INCLUDES_ALL;
         break;
+        // LCOV_EXCL_STOP
       case 'p':
         // LCOV_EXCL_START: implicit proxies are platform-specific.
         verbose |= TIDY_VERBOSE_PROXIES_IMPLICIT;
