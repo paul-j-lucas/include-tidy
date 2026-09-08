@@ -470,12 +470,14 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       included->rel_path : included->abs_path;
 
     if ( IS_VERBOSE( INCLUDES_ALL ) ) {
+      // LCOV_EXCL_START: includes are platform-specific.
       verbose_printf(
         "  %2u%*s %c%s%c\n",
         included->depth,
         STATIC_CAST( int, included->depth * INCLUDE_VERBOSE_INDENT ), "",
         delims[0], included_path, delims[1]
       );
+      // LCOV_EXCL_STOP
     }
     else {
       verbose_printf( "  %c%s%c\n", delims[0], included_path, delims[1] );
@@ -790,9 +792,11 @@ static void print_statistics( void ) {
   if ( max_include != NULL ) {
     char delims[2];
     include_get_delims( max_include, delims );
+    char const *const max_include_path = tidy_test != TIDY_TEST_NONE ?
+      max_include->rel_path : max_include->abs_path;
     verbose_printf( "    is-max-load-factor:\n" );
     verbose_printf(
-      "      is-path = %c%s%c\n", delims[0], max_include->abs_path, delims[1]
+      "      is-path = %c%s%c\n", delims[0], max_include_path, delims[1]
     );
     verbose_printf( "      symbol set:\n" );
     verbose_printf(
