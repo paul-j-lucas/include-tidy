@@ -1441,10 +1441,12 @@ static void symbol_includes_dump( void ) {
           (to_include = rb_iterator_next( &ti_iter )) != NULL; ) {
       char delims[2];
       include_get_delims( to_include, delims );
+      char const *const to_include_path = tidy_test != TIDY_TEST_NONE ?
+        to_include->rel_path : to_include->abs_path;
       printf(
         "%s%c%s%c",
         true_or_set( &comma ) ? ", " : "",
-        delims[0], to_include->abs_path, delims[1]
+        delims[0], to_include_path, delims[1]
       );
     } // for
     puts( " ]" );

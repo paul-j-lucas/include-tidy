@@ -28,10 +28,11 @@
 #include "symbol.h"
 #include "clang_util.h"
 #include "cli_options.h"
-#include "cxx.h"
 #include "config_file.h"
+#include "cxx.h"
 #include "fnv1a.h"
 #include "hash_table.h"
+#include "include-tidy.h"
 #include "include.h"
 #include "options.h"
 #include "print.h"
@@ -307,9 +308,11 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
       verbose_printf( "symbols:\n" );
     char delims[2];
     include_get_delims( include_added_to, delims );
+    char const *const include_added_to_path = tidy_test != TIDY_TEST_NONE ?
+      include_added_to->rel_path : include_added_to->abs_path;
     verbose_printf(
       "  \"%s\" -> %c%s%c\n",
-      sym->key, delims[0], include_added_to->abs_path, delims[1]
+      sym->key, delims[0], include_added_to_path, delims[1]
     );
   }
 

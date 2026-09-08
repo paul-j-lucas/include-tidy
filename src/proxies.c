@@ -27,8 +27,9 @@
 #include "pjl_config.h"
 #include "proxies.h"
 #include "cli_options.h"
-#include "include.h"
 #include "config_file.h"
+#include "include-tidy.h"
+#include "include.h"
 #include "options.h"
 #include "path_util.h"
 #include "print.h"
@@ -225,10 +226,21 @@ static void include_proxies_dump( bool want_explicit ) {
     char delims[2], proxy_delims[2];
     include_get_delims( include, delims );
     include_get_delims( include->proxy, proxy_delims );
+
+    char const *include_path, *proxy_path;
+    if ( tidy_test != TIDY_TEST_NONE ) {
+      include_path = include->rel_path;
+      proxy_path = include->proxy->rel_path;
+    }
+    else {
+      include_path = include->abs_path;
+      proxy_path = include->proxy->abs_path;
+    }
+
     verbose_printf(
       "  %c%s%c -> %c%s%c\n",
-      delims[0], include->abs_path, delims[1],
-      proxy_delims[0], include->proxy->abs_path, proxy_delims[1]
+      delims[0], include_path, delims[1],
+      proxy_delims[0], proxy_path, proxy_delims[1]
     );
   } // for
 }
