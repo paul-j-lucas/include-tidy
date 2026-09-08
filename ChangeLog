@@ -1,5 +1,9 @@
 2026-09-07  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c, cli_options.c, config_file.c, include.c, ipath.c,
+     path_util.c, strbuf.h, strbuf_test.c, toml_lite.c: Added STRBUF_INIT().
+   * symbol.c: Code coverage exclusion comments.
+   * include.c: Now printing rel_path when tidy_test != TIDY_TEST_NONE.
    * cli-verbose.out, cli-verbose.test: Now testing --option=-.
    * options.c: Code coverage exclusion comments.
    * config.h, explicit-proxy.c, explicit-proxy.toml, pjl_config.h,
