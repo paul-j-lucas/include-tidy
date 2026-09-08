@@ -1,5 +1,6 @@
 2026-09-07  Paul J. Lucas <paul@lucasmail.org>
 
+   * cxx.c: Code coverage exclusion comments.
    * cli_options.c, cli-usage.out, unknown_extension.out: Added source_path to
      error message.
    * test/Makefile.am, cli-usage.out, cli-usage.test: Usage tests.
