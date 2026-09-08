@@ -125,38 +125,22 @@ void fputs_quoted( char const *s, char quote, FILE *fout ) {
     return;
   }
 
-  bool in_quote = false;
-  char const other_quote = quote == '\'' ? '"' : '\'';
-
   fputc( quote, fout );
-  for ( char prev = '\0'; *s != '\0'; prev = *s++ ) {
+  for ( ; *s != '\0'; ++s ) {
     switch ( *s ) {
-      case '\b': fputs( "\\b", fout ); continue;
-      case '\f': fputs( "\\f", fout ); continue;
-      case '\n': fputs( "\\n", fout ); continue;
-      case '\r': fputs( "\\r", fout ); continue;
-      case '\t': fputs( "\\t", fout ); continue;
-      case '\v': fputs( "\\v", fout ); continue;
-      case '\\':
-        if ( in_quote ) {
-          if ( prev != '\\' )
-            fputs( "\\\\", fout );
-          continue;
-        }
+      case '\b': fputs( "\\b", fout ); break;
+      case '\f': fputs( "\\f", fout ); break;
+      case '\n': fputs( "\\n", fout ); break;
+      case '\r': fputs( "\\r", fout ); break;
+      case '\t': fputs( "\\t", fout ); break;
+      case '\v': fputs( "\\v", fout ); break;
+      case '\\': fputs( "\\\\", fout ); break;
+      default:
+        if ( *s == quote )
+          fputc( '\\', fout );
+        fputc( *s, fout );
         break;
     } // switch
-
-    if ( prev != '\\' ) {
-      if ( *s == quote ) {
-        fputc( '\\', fout );
-        in_quote = !in_quote;
-      }
-      else if ( *s == other_quote ) {
-        in_quote = !in_quote;
-      }
-    }
-
-    fputc( *s, fout );
   } // for
   fputc( quote, fout );
 }
