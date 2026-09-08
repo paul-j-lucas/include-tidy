@@ -170,7 +170,6 @@ void perror_exit( int status ) {
   exit( status );
 }
 
-
 char* str_trim( char *s ) {
   assert( s != NULL );
   SKIP_WS( s );
