@@ -97,7 +97,7 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
   CXSourceLocation const cursor_loc = clang_getCursorLocation( cursor );
   unsigned cursor_offset = tidy_getSpellingLocation_offset( cursor_loc );
   if ( cursor_offset == 0 )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
 
   CXSourceRange range = clang_getCursorExtent( parent );
   if ( clang_Range_isNull( range ) )
@@ -110,7 +110,7 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
   unsigned token_count;
   clang_tokenize( tu, range, &tokens, &token_count );
   if ( unlikely( token_count == 0 ) )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
 
   // Locate the specific token index corresponding to cursor.
   unsigned cursor_token_idx = token_count;
@@ -409,13 +409,13 @@ bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
   assert( tidy_source_is_cxx );
 
   if ( tidy_Cursor_isInvalid( obj_csr ) )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
 
   // Fully unwrap address-of, dereferences, parens, casts, and variable
   // initializers.
   CXCursor const init_csr = tidy_Cursor_getVarInitNoUnaryOps( obj_csr );
   if ( tidy_Cursor_isInvalid( init_csr ) )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
 
   //
   // Check whether the object's underlying type is declared within a C++ class,
@@ -438,7 +438,7 @@ bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
   //
   CXCursor child_csr = tidy_Cursor_skipUnexposedDown( init_csr );
   if ( tidy_Cursor_isInvalid( child_csr ) )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
   CXCursor ref_csr = clang_getCursorReferenced( child_csr );
   if ( clang_Cursor_isNull( ref_csr ) ) {
     enum CXCursorKind const kind = clang_getCursorKind( child_csr );
@@ -448,7 +448,7 @@ bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
     }
   }
   if ( tidy_Cursor_isInvalid( ref_csr ) )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
 
   enum CXCursorKind const kind = clang_getCursorKind( ref_csr );
   switch ( kind ) {
