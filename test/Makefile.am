@@ -88,6 +88,7 @@ TESTS+=	tests/cxx.test \
 	tests/entities_hpp.test \
 	tests/error_string.test \
 	tests/exit_codes.test \
+	tests/hash.test \
 	tests/namespace_type.test \
 	tests/query_node.test \
 	tests/timespec_t.test \

@@ -1264,7 +1264,7 @@ static void visit_OverloadedDeclRef( CXCursor overloaded_csr, CXCursor parent,
   for ( unsigned i = 0; i < num_decls; ++i ) {
     CXCursor dec_csr = clang_getOverloadedDecl( overloaded_csr, i );
     if ( tidy_Cursor_isInvalid( dec_csr ) )
-      continue;
+      continue;                         // LCOV_EXCL_LINE
     dec_csr = clang_getCanonicalCursor( dec_csr );
     maybe_add_symbol( dec_csr, dec_csr, sid );
     //
