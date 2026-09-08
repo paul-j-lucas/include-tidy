@@ -55,6 +55,13 @@ static void buf_puts_quoted( char *buf, size_t buf_size, char const *s,
   fclose( fbuf );
 }
 
+static bool trim_equal( char const *before, char const *after ) {
+  char *const dup = check_strdup( before );
+  bool const is_equal = strcmp( str_trim( dup ), after ) == 0;
+  free( dup );
+  return is_equal;
+}
+
 ////////// test functions /////////////////////////////////////////////////////
 
 static bool test_fputs_quoted( void ) {
@@ -71,12 +78,37 @@ static bool test_fputs_quoted( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_str_trim( void ) {
+  TEST_FUNC_BEGIN();
+
+  TEST( trim_equal( "x", "x" ) );
+
+  TEST( trim_equal( " x", "x" ) );
+  TEST( trim_equal( "x ", "x" ) );
+  TEST( trim_equal( " x ", "x" ) );
+
+  TEST( trim_equal( "  x", "x" ) );
+  TEST( trim_equal( "x  ", "x" ) );
+  TEST( trim_equal( "  x  ", "x" ) );
+
+  TEST( trim_equal( "\tx", "x" ) );
+  TEST( trim_equal( "x\t", "x" ) );
+  TEST( trim_equal( "\tx\t", "x" ) );
+
+  TEST( trim_equal( "\t\tx", "x" ) );
+  TEST( trim_equal( "x\t\t", "x" ) );
+  TEST( trim_equal( "\t\tx\t\t", "x" ) );
+
+  TEST_FUNC_END();
+}
+
 ////////// main ///////////////////////////////////////////////////////////////
 
 int main( int argc, char const *const argv[] ) {
   test_prog_init( argc, argv );
 
   test_fputs_quoted();
+  test_str_trim();
 
   return test_exit_status;
 }
