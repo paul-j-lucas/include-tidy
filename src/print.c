@@ -324,6 +324,13 @@ void verbose_print_cursor_impl( char const *label, CXCursor cursor ) {
   char const *const       kind_cs = clang_getCString( kind_cxs );
   char       *const       name = tidy_Cursor_getScopedDisplayName( cursor );
 
+  //
+  // Use fputs_quoted() since C++ user-defined literals contain quotes, e.g.:
+  //
+  //      constexpr double operator"" _km( long double val ) {
+  //        return val * 1000.0;
+  //      }
+  //
   verbose_printf( "%s%scursor: ", label, space );
   fputs_quoted( name, '"', stdout );
   printf( " (%s), \"%s\":%u,%u\n", kind_cs, abs_path, line, col );
