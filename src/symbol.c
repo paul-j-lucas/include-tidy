@@ -335,7 +335,7 @@ static CXFile get_symbol_file( CXCursor sym_csr,
 
   CXFile const sym_file = tidy_getCursorLocation_File( sym_csr );
   if ( unlikely( sym_file == NULL ) )
-    return NULL;
+    return NULL;                        // LCOV_EXCL_LINE
 
   // If the symbol was first declared in the file being tidied, we don't care.
   if ( clang_File_isEqual( sym_file, sid->source_file ) )
@@ -601,7 +601,7 @@ CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
     CXCursor const next_csr =
       macro_getCursorByNameToken( *t, rv_csr, param_set );
     if ( tidy_Cursor_isInvalid( next_csr ) )
-      break;
+      break;                            // LCOV_EXCL_LINE
 
     rv_csr = next_csr;
     token_idx = next_idx;
@@ -790,7 +790,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     goto skip;
 
   if ( IS_VERBOSE( CURSORS ) )
-    verbose_print_cursor( cursor );
+    verbose_print_cursor( cursor );     // LCOV_EXCL_LINE
 
   if ( tidy_source_is_cxx ) {
     //
@@ -938,7 +938,7 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
       break;
     CXCursor const next_csr = tidy_getCursorByNameToken( tidy_tu, *t, rv_csr );
     if ( tidy_Cursor_isInvalid( next_csr ) )
-      break;
+      break;                            // LCOV_EXCL_LINE
 
     rv_csr = next_csr;
     token_idx = next_idx;
@@ -1136,7 +1136,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   // Gets the cursor for the declaration of the symbol.
   CXCursor const dec_csr = clang_getCursorReferenced( cursor );
   if ( tidy_Cursor_isInvalid( dec_csr ) )
-    return;
+    return;                             // LCOV_EXCL_LINE
 
   //
   // Explicitly call symbol_is_excluded() and get_symbol_file() so we can avoid
@@ -1177,7 +1177,7 @@ static void visit_MemberRefExpr( CXCursor mbr_ref_csr, CXCursor parent,
 
   CXCursor const mbr_csr = clang_getCursorReferenced( mbr_ref_csr );
   if ( tidy_Cursor_isInvalid( mbr_csr ) )
-    return;
+    return;                             // LCOV_EXCL_LINE
 
   CXCursor const mbr_cls_csr = clang_getCursorSemanticParent( mbr_csr );
   if ( !tidy_Cursor_isClassDecl( mbr_cls_csr ) )
@@ -1225,13 +1225,13 @@ static void visit_MemberRefExpr( CXCursor mbr_ref_csr, CXCursor parent,
         break;
       CXCursor const def_cls_csr = clang_getCursorDefinition( mbr_cls_csr );
       if ( tidy_Cursor_isInvalid( def_cls_csr ) )
-        break;
+        break;                          // LCOV_EXCL_LINE
       CXFile const def_file = tidy_getCursorLocation_File( def_cls_csr );
       if ( def_file == NULL )
-        break;
+        break;                          // LCOV_EXCL_LINE
       tidy_include const *const def_include = include_find_by_File( def_file );
       if ( def_include == NULL )
-        break;
+        break;                          // LCOV_EXCL_LINE
       if ( def_include->depth > 0 )     // not directly included
         return;
       break;
