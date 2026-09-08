@@ -165,10 +165,12 @@ void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim ) {
 }
 #endif /* NEED_MATRIX_NEW */
 
+// LCOV_EXCL_START
 void perror_exit( int status ) {
   perror( prog_name );
   exit( status );
 }
+// LCOV_EXCL_STOP
 
 char* str_trim( char *s ) {
   assert( s != NULL );

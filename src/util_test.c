@@ -49,7 +49,6 @@ static FILE* check_fmemopen( char *buf, size_t buf_size,
 static void buf_puts_quoted( char *buf, size_t buf_size, char const *s,
                              char quote ) {
   assert( buf != NULL );
-  assert( s != NULL );
   FILE *const fbuf = check_fmemopen( buf, buf_size, "w" );
   fputs_quoted( s, quote, fbuf );
   fclose( fbuf );
@@ -74,6 +73,9 @@ static bool test_fputs_quoted( void ) {
 
   buf_puts_quoted( buf, sizeof( buf ), "hello \"\b\f\n\r\t\v\\\" world", '\'' );
   TEST( strcmp( buf, "'hello \"\\b\\f\\n\\r\\t\\v\\\\\" world'" ) == 0 );
+
+  buf_puts_quoted( buf, sizeof( buf ), NULL, '"' );
+  TEST( strcmp( buf, "null" ) == 0 );
 
   TEST_FUNC_END();
 }
