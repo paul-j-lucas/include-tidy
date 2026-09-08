@@ -1217,8 +1217,10 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   insert_argv( pargc, pargv, 1, ARRAY_SIZE( LIBCLANG_ARGS ), LIBCLANG_ARGS );
 
   if ( IS_VERBOSE( ARGS ) ) {
+    // LCOV_EXCL_START: -I, -isystem, etc., options contain absolute paths.
     verbose_print_argv( "libclang", *pargc, *pargv );
     verbose_print_argv( "tidy", tidy_argc, tidy_argv );
+    // LCOV_EXCL_STOP
   }
 
   tidy_argc -= optind - 1;
