@@ -52,8 +52,10 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define TOML_ARRAY_CAP_MIN        4     /**< Minimum array capacity. */
-#define TOML_STRING_LEN_MAX       1024  /**< Maximum string length. */
+/**
+ * Minimum array capacity.
+ */
+#define TOML_ARRAY_CAP_MIN        4
 
 /**
  * Map any invalid character to this.
@@ -68,6 +70,16 @@
  * special value in \ref toml_file::c_last "c_last".
  */
 #define TOML_CHAR_PENDING_NEWLINE -3
+
+/**
+ * Maximum decimal digits.
+ */
+#define TOML_INT_DIGITS_MAX       MAX_DEC_INT_DIGITS( long )
+
+/**
+ * Maximum string length.
+ */
+#define TOML_STRING_LEN_MAX       1024
 
 ////////// local constants ////////////////////////////////////////////////////
 
@@ -498,7 +510,7 @@ static bool toml_int_parse( toml_file *toml, long *rv_i ) {
   assert( rv_i != NULL );
 
   int     base = 10;
-  char    buf[ MAX_DEC_INT_DIGITS( long ) + 1/*'\0'*/ ];
+  char    buf[ TOML_INT_DIGITS_MAX + 1/*'\0'*/ ];
   size_t  buf_len = 0;
   int     c = toml_getc( toml );
   char    c_prev;
@@ -600,7 +612,7 @@ static bool toml_int_parse( toml_file *toml, long *rv_i ) {
         break;
     } // switch
 
-    if ( buf_len + 1 == sizeof buf - 1 ) {
+    if ( buf_len + 1 == TOML_INT_DIGITS_MAX ) {
       toml->error_msg = TOML_ERR_MSG_INT_TOO_MANY_DIGITS;
       goto error;
     }
