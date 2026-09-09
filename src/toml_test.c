@@ -575,6 +575,63 @@ static bool test_value_int_bad_binary( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_value_int_bad_decimal( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test-int] \n"
+    "i = 42a    \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_INT )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 7 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_value_int_bad_hexadecimal( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test-int] \n"
+    "i = 0xg    \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_INT )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 7 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_value_int_bad_octal( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test-int] \n"
+    "i = 0o8    \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_INT )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 7 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_value_int_bad_underscore( void ) {
   TEST_FUNC_BEGIN();
 
@@ -657,6 +714,9 @@ int main( int argc, char const *const argv[] ) {
 
     test_value_int_bad_base();
     test_value_int_bad_binary();
+    test_value_int_bad_decimal();
+    test_value_int_bad_hexadecimal();
+    test_value_int_bad_octal();
     test_value_int_bad_underscore();
   }
 
