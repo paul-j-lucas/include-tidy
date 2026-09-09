@@ -440,6 +440,8 @@ static bool toml_char_parse( toml_file *toml, char want_c ) {
 /**
  * Parses a TOML comment.
  *
+ * @note Assumes the caller has already parsed the `#`.
+ *
  * @param toml The toml_file to use.
  */
 static void toml_comment_parse( toml_file *toml ) {
@@ -858,13 +860,13 @@ static bool toml_space_comments_skip( toml_file *toml ) {
     if ( !toml_space_skip( toml ) )
       break;
     int const c = toml_getc( toml );
-    if ( c == EOF || c == TOML_CHAR_INVALID )
-      break;
-    if ( c != '#' ) {
-      toml_ungetc( toml, c );
-      break;
+    if ( c == '#' ) {
+      toml_comment_parse( toml );
+      continue;
     }
-    toml_comment_parse( toml );
+    if ( c != EOF && c != TOML_CHAR_INVALID )
+      toml_ungetc( toml, c );
+    break;
   } // for
 
   return toml->error == TOML_ERR_NONE;
