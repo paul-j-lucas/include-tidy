@@ -4,14 +4,13 @@
 *.in
 *.log
 *.o
+*.s[a-v][a-z]
+*.sw[a-p]
 *.trs
 *~
 .deps/
 .DS_Store
 Makefile
-
-.*.s[a-v][a-z]
-.*.sw[a-p]
 
 /aclocal.m4
 /ar-lib
