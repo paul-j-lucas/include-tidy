@@ -541,7 +541,7 @@ static bool toml_int_parse( toml_file *toml, long *rv_i ) {
       break;
 
     case TOML_CHAR_INVALID:
-      return false;
+      unreachable();                    // since caller got a valid char
 
     default:
       toml_ungetc( toml, c );
