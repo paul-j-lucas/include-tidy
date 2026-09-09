@@ -438,7 +438,7 @@
  * `CHAR_BIT`.  Therefore, multiply that by 1233, then right-shift by 12.
  *
  * The `STATIC_ASSERT_EXPR` (if true) adds 1 that rounds up since shifting
- * truncates.  The `IS_SIGNED_TYPE` (if true) adds another 1 to accomodate the
+ * truncates.  The `IS_SIGNED_TYPE` (if true) subtracts 1 to accomodate the
  * possible `-` (minus sign) for a negative number if \a TYPE is signed.
  * @endparblock
  *
@@ -450,7 +450,7 @@
   (((sizeof(TYPE) * CHAR_BIT * 1233) >> 12)                   \
     + STATIC_ASSERT_EXPR( IS_INTEGRAL_TYPE(TYPE),             \
                           #TYPE " must be an integral type" ) \
-    + IS_SIGNED_TYPE(TYPE))
+    - IS_SIGNED_TYPE(TYPE))
 
 /// @cond DOXYGEN_IGNORE
 #define NAME2_HELPER(A,B)         A##B
