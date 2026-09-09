@@ -121,6 +121,7 @@ NODISCARD
 static int  toml_getc( toml_file* );
 
 static void toml_comment_parse( toml_file* );
+static void toml_recover( toml_file* );
 static void toml_value_cleanup( toml_value* );
 
 ////////// inline functions ///////////////////////////////////////////////////
@@ -371,7 +372,7 @@ static bool toml_bool_parse( toml_file *toml, bool *rv_b ) {
   assert( toml != NULL );
   assert( rv_b != NULL );
 
-  toml_loc const start_loc = toml->loc;
+  toml_loc const err_loc = toml->loc;
 
   int         c = toml_getc( toml );    // guaranteed valid
   bool const  is_t = c == 't';
@@ -391,7 +392,8 @@ static bool toml_bool_parse( toml_file *toml, bool *rv_b ) {
   return true;
 
 error:
-  toml->loc = start_loc;
+  toml_recover( toml );
+  toml->loc = err_loc;
   toml_col_inc( toml );
   toml->error = TOML_ERR_UNEX_VALUE;
   return false;
@@ -614,7 +616,10 @@ done:
     return true;
   }
 
-error:
+error:;
+  toml_loc const err_loc = toml->loc;
+  toml_recover( toml );
+  toml->loc = err_loc;
   toml->error = TOML_ERR_INVALID_INT;
   return false;
 }
@@ -796,6 +801,35 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *rv_kv ) {
     toml_key_cleanup( &key );
 
   return ok;
+}
+
+/**
+ * Try to recover from a parsing error by reading and discarding non-structural
+ * characters.
+ *
+ * @param toml The toml_file to use.
+ */
+static void toml_recover( toml_file *toml ) {
+  assert( toml != NULL );
+
+  for (;;) {
+    int const c = toml_getc( toml );
+    switch ( c ) {
+      case '\t':
+      case '\n':
+      case '\r':
+      case ' ':
+      case '#':
+      case ',':
+      case '=':
+      case '[':
+      case ']':
+        toml_ungetc( toml, c );
+        FALLTHROUGH;
+      case EOF:
+        return;
+    } // switch
+  } // for
 }
 
 /**
