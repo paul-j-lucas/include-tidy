@@ -188,6 +188,25 @@ static bool test_key_duplicate( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_key_empty( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[ ]          \n"
+    "key = false  \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_KEY )
+    && TEST( test.toml.loc.line == 1 )
+    && TEST( test.toml.loc.col == 2 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_invalid_char( void ) {
   TEST_FUNC_BEGIN();
 
@@ -651,6 +670,25 @@ static bool test_value_int_bad_underscore( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_value_int_bad_underscore2( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test-int] \n"
+    "i = 1__0   \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_INT )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 7 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_value_string( void ) {
   TEST_FUNC_BEGIN();
 
@@ -695,6 +733,7 @@ int main( int argc, char const *const argv[] ) {
     test_key_bad_leading_dot();
     test_key_bad_trailing_dot();
     test_key_duplicate();
+    test_key_empty();
 
     test_table_name_duplicate();
     test_table_name_valid();
@@ -718,6 +757,7 @@ int main( int argc, char const *const argv[] ) {
     test_value_int_bad_hexadecimal();
     test_value_int_bad_octal();
     test_value_int_bad_underscore();
+    test_value_int_bad_underscore2();
   }
 
   return test_exit_status;
