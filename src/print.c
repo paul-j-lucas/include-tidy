@@ -138,8 +138,10 @@ static void fl_print_impl( fl_print_args const *flpa, char const *format,
   color_end( stderr, flpa->what_color );
   EPUTS( ": " );
 
+  // LCOV_EXCL_START
   if ( opt_debug )
     EPRINTF( "[%s:%d] ", flpa->tidy_file, flpa->tidy_line );
+  // LCOV_EXCL_STOP
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
@@ -252,18 +254,18 @@ void print_source_line( char const *path, unsigned line, unsigned col,
 
   long const line_pos =
     STATIC_CAST( long, offset ) - (STATIC_CAST( long, col ) - 1);
-  if ( line_pos < 0 )
+  if ( unlikely( line_pos < 0 ) )
     return;                             // LCOV_EXCL_LINE
   FILE *const fsource = fopen( path, "rb" );
-  if ( fsource == NULL )
+  if ( unlikely( fsource == NULL ) )
     return;                             // LCOV_EXCL_LINE
-  if ( fseek( fsource, line_pos, SEEK_SET ) == -1 )
+  if ( unlikely( fseek( fsource, line_pos, SEEK_SET ) == -1 ) )
     goto done;                          // LCOV_EXCL_LINE
 
   char         *line_buf = NULL;
   size_t        line_cap = 0;
   ssize_t const raw_len = getline( &line_buf, &line_cap, fsource );
-  if ( raw_len == -1 )
+  if ( unlikely( raw_len == -1 ) )
     goto done;                          // LCOV_EXCL_LINE
   unsigned const line_len = STATIC_CAST( unsigned, raw_len );
 
