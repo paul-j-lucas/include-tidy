@@ -858,6 +858,25 @@ static bool test_value_string_bad_escape_eof( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_value_string_bad_escape_invalid_char( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]           \n"
+    "s = \"a\\\x01\"  \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_CHAR )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 8 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_value_string_eof( void ) {
   TEST_FUNC_BEGIN();
 
@@ -871,6 +890,25 @@ static bool test_value_string_eof( void ) {
     && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 6 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_value_string_invalid_char( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]         \n"
+    "k = \"a\x01b\" \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_CHAR )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 7 );
 
   toml_error_print( &test.toml );
   toml_test_cleanup( &test );
@@ -1021,7 +1059,9 @@ int main( int argc, char const *const argv[] ) {
 
     test_value_string_bad_escape();
     test_value_string_bad_escape_eof();
+    test_value_string_bad_escape_invalid_char();
     test_value_string_eof();
+    test_value_string_invalid_char();
     test_value_string_unterminated();
 
     test_value_unexpected_char();
