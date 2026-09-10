@@ -240,7 +240,7 @@ static inline void toml_ungetc( toml_file *toml, int c ) {
  */
 static inline int toml_peekc( toml_file *toml ) {
   int const c = toml_getc( toml );
-  if ( c != EOF )
+  if ( likely( c != EOF ) )
     toml_ungetc( toml, c );
   return c;
 }
@@ -253,7 +253,7 @@ static inline int toml_peekc( toml_file *toml ) {
  * @param array The toml_array to clean up.  If NULL, does nothing.
  */
 static void toml_array_cleanup( toml_array *array ) {
-  if ( array != NULL ) {
+  if ( likely( array != NULL ) ) {
     // Force hoist of array-> out of loop.
     size_t const size = array->size;
     toml_value *const values = array->values;
@@ -291,12 +291,6 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
       goto done;
     c = toml_getc( toml );
     switch ( c ) {
-      case EOF:
-        toml->error = TOML_ERR_UNEX_EOF;
-        goto done;
-      case TOML_CHAR_INVALID:
-        toml->error = TOML_ERR_INVALID_CHAR;
-        goto done;
       case '#': // impossible due to toml_space_comments_skip() above
         INTERNAL_ERROR( "unexpected '#'\n" );
       case ',':
@@ -309,6 +303,12 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
         continue;
       case ']':
         ok = true;
+        goto done;
+      case EOF:
+        toml->error = TOML_ERR_UNEX_EOF;
+        goto done;
+      case TOML_CHAR_INVALID:
+        toml->error = TOML_ERR_INVALID_CHAR;
         goto done;
       default:
         if ( need_comma ) {
@@ -382,7 +382,7 @@ static bool toml_bool_parse( toml_file *toml, int c, bool *rv_b ) {
 
   // Ensure it's not part of a longer identifier (e.g., "truest").
   c = toml_peekc( toml );
-  if ( c != EOF && is_ident( c ) )
+  if ( is_ident( c ) )
     goto error;
 
   *rv_b = is_t;
@@ -407,11 +407,11 @@ NODISCARD
 static bool toml_char_parse( toml_file *toml, char want_c ) {
   assert( toml != NULL );
 
-  int const got_c = toml_getc( toml );
-  if ( got_c == want_c )
+  int const c = toml_getc( toml );
+  if ( c == want_c )
     return true;
 
-  switch ( got_c ) {
+  switch ( c ) {
     case EOF:
       toml->error = TOML_ERR_UNEX_EOF;
       break;
@@ -435,7 +435,7 @@ static bool toml_char_parse( toml_file *toml, char want_c ) {
 static void toml_comment_parse( toml_file *toml ) {
   assert( toml != NULL );
 
-  for ( int c; (c = fgetc( toml->file )) != EOF; ) {
+  for ( int c; likely( (c = fgetc( toml->file )) != EOF ); ) {
     if ( c == '\n' ) {
       toml_newline( toml );
       break;
@@ -452,9 +452,6 @@ static void toml_comment_parse( toml_file *toml ) {
  *  + `EOF` for end-of-file; or:
  *  + #TOML_CHAR_INVALID for any invalid TOML character.
  *
- * @note If an invalid character is read, sets \ref toml_file::error "error" to
- * #TOML_ERR_INVALID_CHAR.
- *
  * @sa toml_is_invalid_char()
  * @sa toml_peekc()
  * @sa toml_ungetc()
@@ -465,7 +462,7 @@ static int toml_getc( toml_file *toml ) {
 
   bool const is_newline_pending = toml->c_last == TOML_CHAR_PENDING_NEWLINE;
 
-  int c = !is_newline_pending && toml->c_last != EOF ?
+  int c = !is_newline_pending && likely( toml->c_last != EOF ) ?
     toml->c_last :
     fgetc( toml->file );
 
@@ -474,7 +471,7 @@ static int toml_getc( toml_file *toml ) {
 
   toml->c_last = EOF;
 
-  if ( c != EOF ) {
+  if ( likely( c != EOF ) ) {
     if ( is_newline_pending )
       toml_newline( toml );
     if ( c == '\n' )
@@ -565,6 +562,8 @@ static bool toml_int_parse( toml_file *toml, int c, long *rv_i ) {
       case EOF:
         if ( c_prev == '_' )
           goto error;
+        // An EOF here isn't necessarily an error.  It could just mean there is
+        // nothing after this integer.
         goto done;
       case TOML_CHAR_INVALID:
         toml->error = TOML_ERR_INVALID_CHAR;
@@ -631,7 +630,7 @@ error:;
  * @param key The toml_key to clean-up. If NULL, does nothing.
  */
 static void toml_key_cleanup( toml_key *key ) {
-  if ( key != NULL ) {
+  if ( likely( key != NULL ) ) {
     FREE( key->name );
     key->name = NULL;
   }
@@ -741,7 +740,7 @@ error:
  * @param kv The toml_key_value to clean-up. If NULL, does nothing.
  */
 static void toml_key_value_cleanup( toml_key_value *kv ) {
-  if ( kv != NULL ) {
+  if ( likely( kv != NULL ) ) {
     toml_key_cleanup( &kv->key );
     toml_value_cleanup( &kv->value );
   }
@@ -854,7 +853,7 @@ static bool toml_space_comments_skip( toml_file *toml ) {
       toml_comment_parse( toml );
       continue;
     }
-    if ( c != EOF )
+    if ( likely( c != EOF ) )
       toml_ungetc( toml, c );
     break;
   } // for
@@ -1002,7 +1001,7 @@ static bool toml_table_header_parse( toml_file *toml, toml_key *rv_key,
  * @param value The toml_value to clean-up.  If NULL, does nothing.
  */
 static void toml_value_cleanup( toml_value *value ) {
-  if ( value != NULL ) {
+  if ( likely( value != NULL ) ) {
     switch ( value->type ) {
       case TOML_ARRAY:
         toml_array_cleanup( &value->a );
@@ -1117,7 +1116,7 @@ char const* toml_error_msg( toml_file const *toml ) {
 }
 
 void toml_file_cleanup( toml_file *toml ) {
-  if ( toml != NULL ) {
+  if ( likely( toml != NULL ) ) {
     // Table names are copied into the entries, so nothing to free.
     ht_cleanup( &toml->table_names, /*free_fn=*/NULL );
     *toml = (toml_file){ 0 };
@@ -1147,7 +1146,7 @@ void toml_file_init( toml_file *toml, FILE *file ) {
 }
 
 void toml_table_cleanup( toml_table *table ) {
-  if ( table != NULL ) {
+  if ( likely( table != NULL ) ) {
     toml_key_cleanup( &table->key );
     ht_cleanup(
       &table->keys_values,
