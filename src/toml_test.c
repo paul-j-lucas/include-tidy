@@ -207,6 +207,25 @@ static bool test_key_empty( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_key_invalid_char( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]\n"
+    "k\x01"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_CHAR )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 2 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_invalid_char( void ) {
   TEST_FUNC_BEGIN();
 
@@ -689,6 +708,25 @@ static bool test_value_int_bad_underscore2( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_value_int_invalid_char( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]     \n"
+    "i = 1\x01  \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_CHAR )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 6 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_value_int_too_many_digits( void ) {
   TEST_FUNC_BEGIN();
 
@@ -953,6 +991,7 @@ int main( int argc, char const *const argv[] ) {
     test_key_bad_trailing_dot();
     test_key_duplicate();
     test_key_empty();
+    test_key_invalid_char();
 
     test_table_name_duplicate();
     test_table_name_valid();
@@ -977,6 +1016,7 @@ int main( int argc, char const *const argv[] ) {
     test_value_int_bad_octal();
     test_value_int_bad_underscore();
     test_value_int_bad_underscore2();
+    test_value_int_invalid_char();
     test_value_int_too_many_digits();
 
     test_value_string_bad_escape();
