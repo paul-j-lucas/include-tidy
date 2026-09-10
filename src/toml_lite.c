@@ -285,7 +285,6 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
 
   unsigned    array_cap = TOML_ARRAY_CAP_MIN;
   toml_array  array = { .values = MALLOC( toml_value, array_cap ) };
-  int         c = '\0';
   bool        ok = false;
   bool        need_comma = false;
 
@@ -294,7 +293,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
   for (;;) {
     if ( !toml_space_comments_skip( toml ) )
       goto done;
-    c = toml_getc( toml );
+    int const c = toml_getc( toml );
     switch ( c ) {
       case '#': // impossible due to toml_space_comments_skip() above
         INTERNAL_ERROR( "unexpected '#'\n" );
