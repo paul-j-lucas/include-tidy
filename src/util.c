@@ -134,7 +134,6 @@ void fputs_quoted( char const *s, char quote, FILE *fout ) {
       case '\r': fputs( "\\r",  fout ); break;
       case '\t': fputs( "\\t",  fout ); break;
       case '\v': fputs( "\\v",  fout ); break;
-      case '\\': fputs( "\\\\", fout ); break;
       default:
         if ( *s == quote )
           fputc( '\\', fout );

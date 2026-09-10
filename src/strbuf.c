@@ -134,7 +134,6 @@ char* strbuf_puts_quoted( strbuf_t *sbuf, char quote, char const *s ) {
       case '\r': strbuf_putsn( sbuf, "\\r",  2 ); break;
       case '\t': strbuf_putsn( sbuf, "\\t",  2 ); break;
       case '\v': strbuf_putsn( sbuf, "\\v",  2 ); break;
-      case '\\': strbuf_putsn( sbuf, "\\\\", 2 ); break;
       default:
         if ( *s == quote )
           strbuf_putc( sbuf, '\\' );
