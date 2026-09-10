@@ -196,7 +196,7 @@ static inline void toml_col_inc( toml_file *toml ) {
  * @return Returns `true` only if \a c is invalid.
  */
 NODISCARD
-static bool toml_is_invalid_char( int c ) {
+static inline bool toml_is_invalid_char( int c ) {
   unsigned const uc = STATIC_CAST( unsigned, c );
   // Replace several branches for range checks with a shift-and-mask.
   return unlikely(
