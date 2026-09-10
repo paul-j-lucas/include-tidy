@@ -644,6 +644,9 @@ static void toml_key_cleanup( toml_key *key ) {
 /**
  * Parses a TOML key.
  *
+ * @note Assumes the caller has already called toml_space_comments_skip() that
+ * checks for #TOML_CHAR_INVALID.
+ *
  * @param toml The toml_file to use.
  * @param rv_key The key to parse into.
  * @param rv_key_len If not NULL, receives the key's length.
@@ -674,9 +677,8 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
       toml->error = TOML_ERR_INVALID_KEY;
       toml->error_msg = TOML_ERR_MSG_BARE_KEY_NO_BEGIN_DOT;
       return false;
-    case TOML_CHAR_INVALID:
-      toml->error = TOML_ERR_INVALID_CHAR;
-      return false;
+    case TOML_CHAR_INVALID: // impossible due to toml_space_comments_skip()
+      INTERNAL_ERROR( "unexpected invalid character\n" );
     case EOF:
       // An EOF here isn't necessarily an error.  It could just mean there are
       // no more keys (and values).
@@ -690,10 +692,6 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
       if ( !toml_space_comments_skip( toml ) )
         goto error;
       c = toml_getc( toml );
-      if ( c == TOML_CHAR_INVALID ) {
-        toml->error = TOML_ERR_INVALID_CHAR;
-        goto error;
-      }
       if ( c_prev != '.' && c != '.' ) {
         toml_ungetc( toml, c );
         break;
@@ -780,6 +778,9 @@ static ht_hash_val_t toml_key_value_hash( toml_key_value const *kv ) {
 
 /**
  * Parses a TOML _key_ `=` _value_.
+ *
+ * @note Assumes the caller has already called toml_space_comments_skip() that
+ * checks for #TOML_CHAR_INVALID.
  *
  * @param toml The toml_file to use.
  * @param rv_kv The toml_key_value to parse into.
