@@ -306,6 +306,24 @@ static bool test_table_name_duplicate( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_table_name_eof( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "["
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
+    && TEST( test.toml.loc.line == 1 )
+    && TEST( test.toml.loc.col == 1 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_table_name_valid( void ) {
   TEST_FUNC_BEGIN();
 
@@ -1100,6 +1118,7 @@ int main( int argc, char const *const argv[] ) {
     test_key_invalid_char();
 
     test_table_name_duplicate();
+    test_table_name_eof();
     test_table_name_valid();
 
     test_invalid_char();

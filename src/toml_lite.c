@@ -985,20 +985,29 @@ static bool toml_table_header_parse( toml_file *toml, toml_key *rv_key,
   assert( rv_key != NULL );
   assert( rv_name_len != NULL );
 
-  toml_key key = { 0 };
+  if ( !toml_space_comments_skip( toml ) )
+    return false;
 
-  bool const ok =
-    toml_space_comments_skip( toml ) &&
-    toml_key_parse( toml, &key, rv_name_len ) &&
-    toml_space_comments_skip( toml ) &&
-    toml_char_parse( toml, ']' );
+  toml_key key;
+  if ( !toml_key_parse( toml, &key, rv_name_len ) ) {
+    if ( toml->error == TOML_ERR_NONE ) {
+      //
+      // If we didn't parse a key, but there is no error, it must mean we've
+      // encountered EOF.  Ordinarily, not parsing a key isn't an error, but it
+      // is when parsing a table header.
+      //
+      toml->error = TOML_ERR_UNEX_EOF;
+    }
+    return false;
+  }
 
-  if ( ok )
-    *rv_key = key;
-  else
+  if ( !(toml_space_comments_skip( toml ) && toml_char_parse( toml, ']' )) ) {
     toml_key_cleanup( &key );
+    return false;
+  }
 
-  return ok;
+  *rv_key = key;
+  return true;
 }
 
 /**
