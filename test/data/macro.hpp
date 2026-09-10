@@ -1,6 +1,6 @@
-#ifndef pjl_array_h
-#define pjl_array_h
+#ifndef macro_hpp
+#define macro_hpp
 
 #define ZERO(/**/TYPE,SIZE)       (TYPE){ .count = 0, .size = (SIZE) }
 
-#endif /* pjl_array_h */
+#endif /* macro_hpp */
