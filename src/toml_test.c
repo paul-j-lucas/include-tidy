@@ -245,6 +245,25 @@ static bool test_key_invalid_char( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_key_invalid_char2( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]\n"
+    "k \x01"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_CHAR )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 3 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_invalid_char( void ) {
   TEST_FUNC_BEGIN();
 
@@ -415,18 +434,25 @@ static bool test_table_second( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[table-1]    \n"
-    "key = false  \n"
-    "[table-2]    \n"
-    "key = true   \n"
+    "[table-1]  \n"
+    "b = false  \n"
+    "i = 42     \n"
+    "[table-2]  \n"
+    "b = true   \n"
   );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) &&
        TEST( toml_table_next( &test.toml, &test.table ) ) ) {
-    toml_value const *value = toml_table_find( &test.table, "key" );
+    toml_value const *value;
+
+    value = toml_table_find( &test.table, "b" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_BOOL ) &&
       TEST( value->b == true );
+
+    value = toml_table_find( &test.table, "i" );
+    TEST( value == NULL );
+
     TEST( !toml_table_next( &test.toml, &test.table ) );
   }
 
@@ -486,9 +512,7 @@ static bool test_value_array( void ) {
   );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
-    toml_value const *value;
-
-    value = toml_table_find( &test.table, "ab" );
+    toml_value const *const value = toml_table_find( &test.table, "ab" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_ARRAY ) &&
       TEST( value->a.size == 2 ) &&
@@ -1170,6 +1194,7 @@ int main( int argc, char const *const argv[] ) {
     test_key_duplicate();
     test_key_empty();
     test_key_invalid_char();
+    test_key_invalid_char2();
 
     test_table_name_duplicate();
     test_table_name_eof();
