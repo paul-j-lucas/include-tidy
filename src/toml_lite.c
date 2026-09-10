@@ -99,7 +99,6 @@ static char const *const TOML_ERROR_MSGS[] = {
   [ TOML_ERR_INVALID_STRING   ] = "invalid string",
   [ TOML_ERR_UNEX_CHAR        ] = "unexpected character",
   [ TOML_ERR_UNEX_EOF         ] = "unexpected end of file",
-  [ TOML_ERR_UNEX_VALUE       ] = "unexpected value",
 };
 
 /// @cond DOXYGEN_IGNORE
@@ -395,7 +394,7 @@ error:
   toml_recover( toml );
   toml->loc = err_loc;
   toml_col_inc( toml );
-  toml->error = TOML_ERR_UNEX_VALUE;
+  toml->error = TOML_ERR_UNEX_CHAR;
   return false;
 }
 

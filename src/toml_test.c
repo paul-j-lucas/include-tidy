@@ -469,7 +469,7 @@ static bool test_value_bool_bad_value( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_VALUE )
+    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 5 );
 
@@ -488,7 +488,7 @@ static bool test_value_bool_extra_chars( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_VALUE )
+    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 8 );
 
