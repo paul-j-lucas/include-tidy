@@ -324,6 +324,60 @@ static bool test_table_name_eof( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_table_name_invalid_char( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[ \x01test]\n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_CHAR )
+    && TEST( test.toml.loc.line == 1 )
+    && TEST( test.toml.loc.col  == 3 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_table_name_invalid_char2( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "\x01[test]\n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_CHAR )
+    && TEST( test.toml.loc.line == 1 )
+    && TEST( test.toml.loc.col  == 1 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_table_name_invalid_char3( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[\"test\" \x01]\n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_CHAR )
+    && TEST( test.toml.loc.line == 1 )
+    && TEST( test.toml.loc.col  == 9 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_table_name_valid( void ) {
   TEST_FUNC_BEGIN();
 
@@ -1119,6 +1173,9 @@ int main( int argc, char const *const argv[] ) {
 
     test_table_name_duplicate();
     test_table_name_eof();
+    test_table_name_invalid_char();
+    test_table_name_invalid_char2();
+    test_table_name_invalid_char3();
     test_table_name_valid();
 
     test_invalid_char();
