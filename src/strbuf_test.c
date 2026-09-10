@@ -99,8 +99,8 @@ static bool test_strbuf_put_quoted( void ) {
   TEST( strcmp( sbuf.str, "\"a \\\"b\\\" c\"" ) == 0 );
 
   strbuf_reset( &sbuf );
-  strbuf_puts_quoted( &sbuf, '"', "\b\f\n\r\t\v" );
-  TEST( strcmp( sbuf.str, "\"\\b\\f\\n\\r\\t\\v\"" ) == 0 );
+  strbuf_puts_quoted( &sbuf, '"', "\b\f\n\r\t\v\\" );
+  TEST( strcmp( sbuf.str, "\"\\b\\f\\n\\r\\t\\v\\\\\"" ) == 0 );
 
   strbuf_cleanup( &sbuf );
   TEST_FUNC_END();
