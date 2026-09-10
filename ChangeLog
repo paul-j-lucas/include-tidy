@@ -1,5 +1,20 @@
 2026-09-09  Paul J. Lucas <paul@lucasmail.org>
 
+   * toml_test.c: Added TOML string escape EOF test.
+   * toml_lite.c, toml_lite.h, toml_test.c:
+     s/TOML_ERR_UNEX_VALUE/TOML_ERR_UNEX_CHAR/
+   * toml_test.c: Added TOML test for unexpected char for value.
+   * toml_test.c: More TOML string tests.
+   * toml_lite.c: '#' is impossible in certain cases.
+   * strbuf_test.c: Added test for \\.
+   * toml_test.c: More TOML string testing.
+   * toml_lite.c: toml_space_skip() is now called from only 1 place.
+   * toml_lite.c: Eliminated toml_is_space().
+   * toml_lite.c, toml_lite.h, toml_test.c: Now allowing more whitespace.
+   * toml_lite.c: toml_space_comments_skip() rework.
+   * toml_test.c: Added "too many digits" test.
+   * util.h: Fixed MAX_DEC_INT_DIGITS.
+   * toml_test.c: More TOML tests.
    * toml_test.c: More TOML bad integer tests.
    * toml_lite.c: Added TOML_INT_DIGITS_MAX.
    * toml_lite.c: Added better TOML error recovery.
