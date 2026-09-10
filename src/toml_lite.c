@@ -404,6 +404,9 @@ error:
 /**
  * Parses a character.
  *
+ * @note Assumes the caller has already called toml_space_comments_skip() that
+ * checks for #TOML_CHAR_INVALID.
+ *
  * @param toml The toml_file to use.
  * @param want_c The character wanted.
  * @return Returns `true` only if \a want_c was parsed successfully.
@@ -420,9 +423,8 @@ static bool toml_char_parse( toml_file *toml, char want_c ) {
     case EOF:
       toml->error = TOML_ERR_UNEX_EOF;
       break;
-    case TOML_CHAR_INVALID:
-      toml->error = TOML_ERR_INVALID_CHAR;
-      break;
+    case TOML_CHAR_INVALID: // impossible due to toml_space_comments_skip()
+      INTERNAL_ERROR( "unexpected invalid character\n" );
     default:
       toml->error = TOML_ERR_UNEX_CHAR;
       break;
