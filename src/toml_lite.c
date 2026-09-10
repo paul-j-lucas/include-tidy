@@ -1202,16 +1202,15 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   int c = toml_getc( toml );
 
   switch ( c ) {
-    case TOML_CHAR_INVALID:
-      toml->error = TOML_ERR_INVALID_CHAR;
-      return false;
-    case EOF:
-      // An EOF here isn't an error.  It just means there are no more tables.
-      return false;
     case '[':
       if ( !toml_table_header_parse( toml, &table_key, &table_name_len ) )
         return false;
       break;
+    case TOML_CHAR_INVALID: // impossible due to toml_space_comments_skip()
+      INTERNAL_ERROR( "unexpected invalid character\n" );
+    case EOF:
+      // An EOF here isn't an error.  It just means there are no more tables.
+      return false;
     default:
       toml_ungetc( toml, c );
       table_key = (toml_key){ .name = NULL };
