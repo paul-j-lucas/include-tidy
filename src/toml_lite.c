@@ -197,8 +197,13 @@ static inline void toml_col_inc( toml_file *toml ) {
  */
 NODISCARD
 static bool toml_is_invalid_char( int c ) {
-  return  (c >= 0x00 && c <= 0x08) || c == 0x0B || c == 0x0C ||
-          (c >= 0x0E && c <= 0x1F) || c == 0x7F;
+  unsigned const uc = STATIC_CAST( unsigned, c );
+  // Replace several branches for range checks with a shift-and-mask.
+  return unlikely(
+    uc < ' ' ?
+      ( (1u << uc) & ((1u << '\n') | (1u << '\r') | (1u << '\t')) ) == 0 :
+      uc == 0x7F
+  );
 }
 
 /**
