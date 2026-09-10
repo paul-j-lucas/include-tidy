@@ -202,17 +202,6 @@ static bool toml_is_invalid_char( int c ) {
 }
 
 /**
- * Checks whether \a c is a whitespace character according to TOML.
- *
- * @param c The character to check.
- * @return Returns `true` only if \a c is a space.
- */
-NODISCARD
-static inline bool toml_is_space( int c ) {
-  return c == ' ' || c == '\t';
-}
-
-/**
  * Performs a newline.
  *
  * @param toml The toml_file to use.
@@ -691,7 +680,7 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
   char c_prev = '\0';
 
   do {
-    if ( toml_is_space( c ) ) {
+    if ( c == ' ' || c == '\t' ) {
       if ( !toml_space_skip( toml ) )
         goto error;
       c = toml_getc( toml );
