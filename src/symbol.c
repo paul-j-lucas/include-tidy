@@ -587,29 +587,32 @@ CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
   CXCursor rv_csr =
     macro_getCursorByNameToken( tokens[ *ptoken_idx ], tu_csr, param_set );
 
-  while ( !tidy_Cursor_isInvalid( rv_csr ) ) {
-    unsigned next_idx = token_idx;
-    CXToken const *t;
+  if ( tidy_source_is_cxx ) {
+    while ( !tidy_Cursor_isInvalid( rv_csr ) ) {
+      unsigned next_idx = token_idx;
+      CXToken const *t;
 
-    // Look for "::".
-    if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
-      break;
-    if ( !tidy_Token_isScopeQualifier( tidy_tu, *t ) )
-      break;
+      // Look for "::".
+      if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
+        break;
+      if ( !tidy_Token_isScopeQualifier( tidy_tu, *t ) )
+        break;
 
-    // Look for an identifier.
-    if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
-      break;
-    CXCursor const next_csr =
-      macro_getCursorByNameToken( *t, rv_csr, param_set );
-    if ( tidy_Cursor_isInvalid( next_csr ) )
-      break;                            // LCOV_EXCL_LINE
+      // Look for an identifier.
+      if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
+        break;
+      CXCursor const next_csr =
+        macro_getCursorByNameToken( *t, rv_csr, param_set );
+      if ( tidy_Cursor_isInvalid( next_csr ) )
+        break;                          // LCOV_EXCL_LINE
 
-    rv_csr = next_csr;
-    token_idx = next_idx;
-  } // while
+      rv_csr = next_csr;
+      token_idx = next_idx;
+    } // while
 
-  *ptoken_idx = token_idx;
+    *ptoken_idx = token_idx;
+  }
+
   return rv_csr;
 }
 
@@ -925,28 +928,32 @@ static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
   CXCursor rv_csr =
     tidy_getCursorByNameToken( tidy_tu, tokens[ *ptoken_idx ], scope_csr );
 
-  while ( !tidy_Cursor_isInvalid( rv_csr ) ) {
-    unsigned next_idx = token_idx;
-    CXToken const *t;
+  if ( tidy_source_is_cxx ) {
+    while ( !tidy_Cursor_isInvalid( rv_csr ) ) {
+      unsigned next_idx = token_idx;
+      CXToken const *t;
 
-    // Look for "::".
-    if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
-      break;
-    if ( !tidy_Token_isScopeQualifier( tidy_tu, *t ) )
-      break;
+      // Look for "::".
+      if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
+        break;
+      if ( !tidy_Token_isScopeQualifier( tidy_tu, *t ) )
+        break;
 
-    // Look for an identifier.
-    if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
-      break;
-    CXCursor const next_csr = tidy_getCursorByNameToken( tidy_tu, *t, rv_csr );
-    if ( tidy_Cursor_isInvalid( next_csr ) )
-      break;                            // LCOV_EXCL_LINE
+      // Look for an identifier.
+      if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
+        break;
+      CXCursor const next_csr =
+        tidy_getCursorByNameToken( tidy_tu, *t, rv_csr );
+      if ( tidy_Cursor_isInvalid( next_csr ) )
+        break;                          // LCOV_EXCL_LINE
 
-    rv_csr = next_csr;
-    token_idx = next_idx;
-  } // while
+      rv_csr = next_csr;
+      token_idx = next_idx;
+    } // while
 
-  *ptoken_idx = token_idx;
+    *ptoken_idx = token_idx;
+  }
+
   return rv_csr;
 }
 
