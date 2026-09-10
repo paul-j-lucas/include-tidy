@@ -319,6 +319,31 @@ static bool test_table_name_valid( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_table_second( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[table-1]    \n"
+    "key = false  \n"
+    "[table-2]    \n"
+    "key = true   \n"
+  );
+
+  if ( TEST( toml_table_next( &test.toml, &test.table ) ) &&
+       TEST( toml_table_next( &test.toml, &test.table ) ) ) {
+    toml_value const *value = toml_table_find( &test.table, "key" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_BOOL ) &&
+      TEST( value->b == true );
+    TEST( !toml_table_next( &test.toml, &test.table ) );
+  }
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_unex_char( void ) {
   TEST_FUNC_BEGIN();
 
@@ -1023,6 +1048,8 @@ int main( int argc, char const *const argv[] ) {
   test_value_int();
   test_value_string();
   test_value_whitespace();
+
+  test_table_second();
 
   if ( test_failures == 0 ) {
     test_key_bad_leading_dot();
