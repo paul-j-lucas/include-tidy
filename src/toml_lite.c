@@ -294,7 +294,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
   ++toml->array_depth;
 
   for (;;) {
-    if ( !toml_space_skip( toml ) )
+    if ( !toml_space_comments_skip( toml ) )
       goto done;
     c = toml_getc( toml );
     switch ( c ) {
@@ -681,7 +681,7 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
 
   do {
     if ( c == ' ' || c == '\t' ) {
-      if ( !toml_space_skip( toml ) )
+      if ( !toml_space_comments_skip( toml ) )
         goto error;
       c = toml_getc( toml );
       if ( c == TOML_CHAR_INVALID )
