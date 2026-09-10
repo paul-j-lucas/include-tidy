@@ -303,7 +303,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
         FALLTHROUGH;
       case TOML_CHAR_INVALID:
         goto done;
-      case '#':                         // toml_space_comments_skip() above
+      case '#': // impossible due to toml_space_comments_skip() above
         INTERNAL_ERROR( "unexpected '#'\n" );
       case ',':
         if ( !need_comma ) {
@@ -1034,9 +1034,8 @@ static bool toml_value_parse( toml_file *toml, toml_value *rv_value ) {
         };
         return true;
 
-      case '#':
-        toml_comment_parse( toml );
-        continue;
+      case '#': // impossible since caller called toml_space_comments_skip()
+        INTERNAL_ERROR( "unexpected '#'\n" );
 
       case '+':
       case '-':
