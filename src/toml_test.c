@@ -433,6 +433,27 @@ static bool test_value_array_bad_comma( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_value_array_bad_value( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]   \n"
+    "ab = [   \n"
+    "  truex  \n"
+    "]        \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
+    && TEST( test.toml.loc.line == 3 )
+    && TEST( test.toml.loc.col  == 3 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_value_array_missing_comma( void ) {
   TEST_FUNC_BEGIN();
 
@@ -1068,6 +1089,7 @@ int main( int argc, char const *const argv[] ) {
 
     test_value_array();
     test_value_array_bad_comma();
+    test_value_array_bad_value();
     test_value_array_missing_comma();
     test_value_array_unex_eof();
 
