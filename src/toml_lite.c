@@ -240,15 +240,8 @@ static inline void toml_ungetc( toml_file *toml, int c ) {
  */
 static inline int toml_peekc( toml_file *toml ) {
   int const c = toml_getc( toml );
-  if ( c != EOF ) {
+  if ( c != EOF )
     toml_ungetc( toml, c );
-    //
-    // Reset toml->error in case toml_getc() read an invalid character and set
-    // toml->error since we only peeked at the character and didn't actually
-    // get it yet.
-    //
-    toml->error = TOML_ERR_NONE;
-  }
   return c;
 }
 
@@ -300,8 +293,9 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
     switch ( c ) {
       case EOF:
         toml->error = TOML_ERR_UNEX_EOF;
-        FALLTHROUGH;
+        goto done;
       case TOML_CHAR_INVALID:
+        toml->error = TOML_ERR_INVALID_CHAR;
         goto done;
       case '#': // impossible due to toml_space_comments_skip() above
         INTERNAL_ERROR( "unexpected '#'\n" );
@@ -421,6 +415,9 @@ static bool toml_char_parse( toml_file *toml, char want_c ) {
     case EOF:
       toml->error = TOML_ERR_UNEX_EOF;
       break;
+    case TOML_CHAR_INVALID:
+      toml->error = TOML_ERR_INVALID_CHAR;
+      break;
     default:
       toml->error = TOML_ERR_UNEX_CHAR;
       break;
@@ -472,10 +469,8 @@ static int toml_getc( toml_file *toml ) {
     toml->c_last :
     fgetc( toml->file );
 
-  if ( toml_is_invalid_char( c ) ) {
-    toml->error = TOML_ERR_INVALID_CHAR;
+  if ( toml_is_invalid_char( c ) )
     c = TOML_CHAR_INVALID;
-  }
 
   toml->c_last = EOF;
 
@@ -572,6 +567,7 @@ static bool toml_int_parse( toml_file *toml, int c, long *rv_i ) {
           goto error;
         goto done;
       case TOML_CHAR_INVALID:
+        toml->error = TOML_ERR_INVALID_CHAR;
         return false;
       case '_':
         switch ( c_prev ) {
@@ -674,8 +670,12 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
       toml->error = TOML_ERR_INVALID_KEY;
       toml->error_msg = TOML_ERR_MSG_BARE_KEY_NO_BEGIN_DOT;
       return false;
-    case EOF:
     case TOML_CHAR_INVALID:
+      toml->error = TOML_ERR_INVALID_CHAR;
+      return false;
+    case EOF:
+      // An EOF here isn't necessarily an error.  It could just mean there are
+      // no more keys (and values).
       return false;
   } // switch
 
@@ -686,8 +686,10 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
       if ( !toml_space_comments_skip( toml ) )
         goto error;
       c = toml_getc( toml );
-      if ( c == TOML_CHAR_INVALID )
+      if ( c == TOML_CHAR_INVALID ) {
+        toml->error = TOML_ERR_INVALID_CHAR;
         goto error;
+      }
       if ( c_prev != '.' && c != '.' ) {
         toml_ungetc( toml, c );
         break;
@@ -702,8 +704,10 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
     c_prev = STATIC_CAST( char, c );
     strbuf_putc( &key_buf, c_prev );
     c = toml_getc( toml );
-    if ( c == TOML_CHAR_INVALID )
+    if ( c == TOML_CHAR_INVALID ) {
+      toml->error = TOML_ERR_INVALID_CHAR;
       goto error;
+    }
   } while ( c != EOF );
 
   if ( key_buf.len == 0 ) {
@@ -850,7 +854,7 @@ static bool toml_space_comments_skip( toml_file *toml ) {
       toml_comment_parse( toml );
       continue;
     }
-    if ( c != EOF && c != TOML_CHAR_INVALID )
+    if ( c != EOF )
       toml_ungetc( toml, c );
     break;
   } // for
@@ -874,6 +878,7 @@ static bool toml_space_skip( toml_file *toml ) {
     int const c = toml_getc( toml );
     switch ( c ) {
       case TOML_CHAR_INVALID:
+        toml->error = TOML_ERR_INVALID_CHAR;
         return false;
       case ' ':
       case '\t':
@@ -908,8 +913,10 @@ static bool toml_string_parse( toml_file *toml, strbuf_t *rv_sbuf ) {
     int c = toml_getc( toml );
     switch ( c ) {
       case EOF:
-        goto eof;
+        toml->error = TOML_ERR_UNEX_EOF;
+        goto error;
       case TOML_CHAR_INVALID:
+        toml->error = TOML_ERR_INVALID_CHAR;
         goto error;
       case '\r':
       case '\n':
@@ -929,9 +936,12 @@ static bool toml_string_parse( toml_file *toml, strbuf_t *rv_sbuf ) {
           case 'r'  : c = '\r'; break;
           case 't'  : c = '\t'; break;
           case '\\' : c = '\\'; break;
-          case EOF  : goto eof;
 
+          case EOF:
+            toml->error = TOML_ERR_UNEX_EOF;
+            goto error;
           case TOML_CHAR_INVALID:
+            toml->error = TOML_ERR_INVALID_CHAR;
             goto error;
           default:
             toml->error = TOML_ERR_INVALID_STRING;
@@ -948,8 +958,6 @@ done:
   *rv_sbuf = sbuf;
   return true;
 
-eof:
-  toml->error = TOML_ERR_UNEX_EOF;
 error:
   strbuf_cleanup( &sbuf );
   return false;
@@ -1086,6 +1094,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *rv_value ) {
         return true;
 
       case TOML_CHAR_INVALID:
+        toml->error = TOML_ERR_INVALID_CHAR;
         return false;
 
       default:
@@ -1187,8 +1196,11 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   int c = toml_getc( toml );
 
   switch ( c ) {
-    case EOF:
     case TOML_CHAR_INVALID:
+      toml->error = TOML_ERR_INVALID_CHAR;
+      return false;
+    case EOF:
+      // An EOF here isn't an error.  It just means there are no more tables.
       return false;
     case '[':
       if ( !toml_table_header_parse( toml, &table_key, &table_name_len ) )
