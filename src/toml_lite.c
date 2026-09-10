@@ -364,17 +364,20 @@ done:
  * Parses a TOML Boolean value.
  *
  * @param toml The toml_file to use.
+ * @param c The first character parsed.
  * @param rv_b The `bool` to parse into.
  * @return Returns `true` only upon success.
  */
 NODISCARD
-static bool toml_bool_parse( toml_file *toml, bool *rv_b ) {
+static bool toml_bool_parse( toml_file *toml, int c, bool *rv_b ) {
   assert( toml != NULL );
   assert( rv_b != NULL );
 
-  toml_loc const err_loc = toml->loc;
+  toml_loc const err_loc = {
+    .line = toml->loc.line,
+    .col  = toml->loc.col - 1
+  };
 
-  int         c = toml_getc( toml );    // guaranteed valid
   bool const  is_t = c == 't';
   char const *want = is_t ? "rue" : "alse";
 
@@ -491,18 +494,18 @@ static int toml_getc( toml_file *toml ) {
  * Parses a TOML integer.
  *
  * @param toml The toml_file to use.
+ * @param c The first character parsed.
  * @param rv_i The integer to parse into.
  * @return Returns `true` only if an integer was parsed successfully.
  */
 NODISCARD
-static bool toml_int_parse( toml_file *toml, long *rv_i ) {
+static bool toml_int_parse( toml_file *toml, int c, long *rv_i ) {
   assert( toml != NULL );
   assert( rv_i != NULL );
 
   int     base = 10;
   char    buf[ TOML_INT_DIGITS_MAX + 1/*'\0'*/ ];
   size_t  buf_len = 0;
-  int     c = toml_getc( toml );
   char    c_prev;
 
   switch ( c ) {                        // can't be EOF
@@ -1048,10 +1051,9 @@ static bool toml_value_parse( toml_file *toml, toml_value *rv_value ) {
       case '6':
       case '7':
       case '8':
-      case '9':
-        toml_ungetc( toml, c );
+      case '9':;
         long i;
-        if ( !toml_int_parse( toml, &i ) )
+        if ( !toml_int_parse( toml, c, &i ) )
           return false;
         *rv_value = (toml_value){
           .type = TOML_INT,
@@ -1061,10 +1063,9 @@ static bool toml_value_parse( toml_file *toml, toml_value *rv_value ) {
         return true;
 
       case 'f':
-      case 't':
-        toml_ungetc( toml, c );
+      case 't':;
         bool b;
-        if ( !toml_bool_parse( toml, &b ) )
+        if ( !toml_bool_parse( toml, c, &b ) )
           return false;
         *rv_value = (toml_value){
           .type = TOML_BOOL,
