@@ -312,9 +312,8 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
       case EOF:
         toml->error = TOML_ERR_UNEX_EOF;
         goto done;
-      case TOML_CHAR_INVALID:
-        toml->error = TOML_ERR_INVALID_CHAR;
-        goto done;
+      case TOML_CHAR_INVALID: // impossible due to toml_space_comments_skip()
+        INTERNAL_ERROR( "unexpected invalid character\n" );
       default:
         if ( need_comma ) {
           toml->error = TOML_ERR_UNEX_CHAR;
