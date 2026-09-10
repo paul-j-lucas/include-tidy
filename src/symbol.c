@@ -304,6 +304,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     goto done;
 
   if ( IS_VERBOSE( SYMBOLS ) ) {
+    // LCOV_EXCL_START: functions have platform-specific signatures.
     if ( verbose_section_begin( &sid->printed_symbols_header  ) )
       verbose_printf( "symbols:\n" );
     char delims[2];
@@ -314,6 +315,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
       "  \"%s\" -> %c%s%c\n",
       sym->key, delims[0], include_added_to_path, delims[1]
     );
+    // LCOV_EXCL_STOP
   }
 
 done:
