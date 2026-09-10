@@ -1026,6 +1026,8 @@ static void toml_value_cleanup( toml_value *value ) {
 /**
  * Parses a TOML value.
  *
+ * @note Assumes the caller has already checked for for #TOML_CHAR_INVALID.
+ *
  * @param toml The toml_file to use.
  * @param rv_value The toml_value to parse into.
  * @return Returns `true` only if the value parsed successfully.
@@ -1099,8 +1101,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *rv_value ) {
         return true;
 
       case TOML_CHAR_INVALID:
-        toml->error = TOML_ERR_INVALID_CHAR;
-        return false;
+        INTERNAL_ERROR( "unexpected invalid character\n" );
 
       default:
         toml->error = TOML_ERR_UNEX_CHAR;
