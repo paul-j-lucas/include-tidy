@@ -97,14 +97,14 @@ static bool test_comments( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "#1                   \n"
-    " #2                  \n"
-    "[test-comments]  #3  \n"
-    "bf = false       #4  \n"
-    "ab = [           #5  \n"
-    "  false,         #6  \n"
-    "  true           #7  \n"
-    "]                #8  \n"
+    "#1             \n"
+    " #2            \n"
+    "[test]     #3  \n"
+    "bf = false #4  \n"
+    "ab = [     #5  \n"
+    "  false,   #6  \n"
+    "  true     #7  \n"
+    "]          #8  \n"
   );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
@@ -135,8 +135,8 @@ static bool test_key_bad_leading_dot( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-key]  \n"
-    ".key = false\n"
+    "[test]       \n"
+    ".key = false \n"
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
@@ -154,8 +154,8 @@ static bool test_key_bad_trailing_dot( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-key]  \n"
-    "key. = false\n"
+    "[test]       \n"
+    "key. = false \n"
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
@@ -173,7 +173,7 @@ static bool test_key_duplicate( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-key]   \n"
+    "[test]       \n"
     "key = false  \n"
     "key = true   \n"
   );
@@ -251,9 +251,9 @@ static bool test_table_name_duplicate( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-key]   \n"
+    "[test]       \n"
     "key = false  \n"
-    "[test-key]   \n"
+    "[test]       \n"
     "key = false  \n"
   );
 
@@ -343,7 +343,7 @@ static bool test_value_array( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-array]\n"
+    "[test]   \n"
     "ab = [   \n"
     "  false, \n"
     "  true   \n"
@@ -373,10 +373,10 @@ static bool test_value_array_bad_comma( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-array] \n"
-    "ab = [       \n"
-    "  ,          \n"
-    "]            \n"
+    "[test] \n"
+    "ab = [ \n"
+    "  ,    \n"
+    "]      \n"
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
@@ -416,14 +416,14 @@ static bool test_value_array_unex_eof( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-array] \n"
-    "ab = [\n"
+    "[test] \n"
+    "ab = [ \n"
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
     && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
     && TEST( test.toml.loc.line == 2 )
-    && TEST( test.toml.loc.col  == 7 );
+    && TEST( test.toml.loc.col  == 8 );
 
   toml_error_print( &test.toml );
   toml_test_cleanup( &test );
@@ -435,9 +435,9 @@ static bool test_value_bool( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-bool]  \n"
-    "bf = false   \n"
-    "bt = true    \n"
+    "[test]     \n"
+    "bf = false \n"
+    "bt = true  \n"
   );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
@@ -464,8 +464,8 @@ static bool test_value_bool_bad_value( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-bool]  \n"
-    "b = fALSE    \n"
+    "[test]     \n"
+    "b = fALSE  \n"
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
@@ -502,7 +502,7 @@ static bool test_value_int( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-int]     \n"
+    "[test]         \n"
     "i2 = 0b101010  \n"
     "i8 = 0o52      \n"
     "i10 = +42      \n"
@@ -561,8 +561,8 @@ static bool test_value_int_bad_base( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-int] \n"
-    "i = 0a     \n"
+    "[test] \n"
+    "i = 0a \n"
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
@@ -580,8 +580,8 @@ static bool test_value_int_bad_binary( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-int] \n"
-    "i = 0b2    \n"
+    "[test]   \n"
+    "i = 0b2  \n"
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
@@ -599,8 +599,8 @@ static bool test_value_int_bad_decimal( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-int] \n"
-    "i = 42a    \n"
+    "[test]   \n"
+    "i = 42a  \n"
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
@@ -618,8 +618,8 @@ static bool test_value_int_bad_hexadecimal( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-int] \n"
-    "i = 0xg    \n"
+    "[test]   \n"
+    "i = 0xg  \n"
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
@@ -637,8 +637,8 @@ static bool test_value_int_bad_octal( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-int] \n"
-    "i = 0o8    \n"
+    "[test]   \n"
+    "i = 0o8  \n"
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
@@ -656,8 +656,8 @@ static bool test_value_int_bad_underscore( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-int] \n"
-    "i = 1_     \n"
+    "[test] \n"
+    "i = 1_ \n"
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
@@ -675,8 +675,8 @@ static bool test_value_int_bad_underscore2( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test-int] \n"
-    "i = 1__0   \n"
+    "[test]   \n"
+    "i = 1__0 \n"
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
@@ -737,6 +737,65 @@ static bool test_value_string( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_value_whitespace( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]   \n"
+    "b1 =     \n"
+    "false    \n"
+    "b2       \n"
+    "= true   \n"
+    "i1 =     \n"
+    "1        \n"
+    "i2       \n"
+    "= 2      \n"
+    "s1 =     \n"
+    "\"a\"    \n"
+    "s2       \n"
+    "= \"b\"  \n"
+  );
+
+  if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
+    toml_value const *value;
+
+    value = toml_table_find( &test.table, "b1" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_BOOL ) &&
+      TEST( value->b == false );
+
+    value = toml_table_find( &test.table, "b2" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_BOOL ) &&
+      TEST( value->b == true );
+
+    value = toml_table_find( &test.table, "i1" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 1 );
+
+    value = toml_table_find( &test.table, "i2" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 2 );
+
+    value = toml_table_find( &test.table, "s1" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "a" ) == 0 );
+
+    value = toml_table_find( &test.table, "s2" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "b" ) == 0 );
+  }
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 ////////// main ///////////////////////////////////////////////////////////////
 
 int main( int argc, char const *const argv[] ) {
@@ -747,6 +806,7 @@ int main( int argc, char const *const argv[] ) {
   test_value_bool();
   test_value_int();
   test_value_string();
+  test_value_whitespace();
 
   if ( test_failures == 0 ) {
     test_key_bad_leading_dot();

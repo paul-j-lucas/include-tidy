@@ -117,7 +117,6 @@ static char const TOML_ERR_MSG_INVALID_ESCAPE_SEQUENCE[] =
   "invalid escape sequence";
 static char const TOML_ERR_MSG_MISSING_COMMA[] =
   "unexpected character (missing ',')";
-static char const TOML_ERR_MSG_UNEX_NEWLINE[] = "unexpected newline";
 static char const TOML_ERR_MSG_UNTERMINATED_STRING[] = "unterminated string";
 
 /// @endcond
@@ -125,7 +124,8 @@ static char const TOML_ERR_MSG_UNTERMINATED_STRING[] = "unterminated string";
 ////////// local functions ////////////////////////////////////////////////////
 
 NODISCARD
-static bool toml_space_skip( toml_file* ),
+static bool toml_space_comments_skip( toml_file* ),
+            toml_space_skip( toml_file* ),
             toml_string_parse( toml_file*, strbuf_t* ),
             toml_value_parse( toml_file*, toml_value* );
 
@@ -798,16 +798,11 @@ static bool toml_key_value_parse( toml_file *toml, toml_key_value *rv_kv ) {
   if ( !toml_key_parse( toml, &key, /*rv_key_len=*/NULL ) )
     return false;
 
-  assert( !toml->in_key_value );
-  toml->in_key_value = true;
-
   bool const ok =
-    toml_space_skip( toml ) &&
+    toml_space_comments_skip( toml ) &&
     toml_char_parse( toml, '=' ) &&
-    toml_space_skip( toml ) &&
+    toml_space_comments_skip( toml ) &&
     toml_value_parse( toml, &value );
-
-  toml->in_key_value = false;
 
   if ( ok )
     *rv_kv = (toml_key_value){ .key = key, .value = value };
@@ -884,23 +879,22 @@ NODISCARD
 static bool toml_space_skip( toml_file *toml ) {
   assert( toml != NULL );
 
-  for ( int c; (c = toml_getc( toml )) != EOF; ) {
-    if ( c == TOML_CHAR_INVALID )
-      return false;
-    if ( c == '\n' ) {
-      if ( toml->in_key_value && toml->array_depth == 0 ) {
-        toml->error = TOML_ERR_UNEX_CHAR;
-        toml->error_msg = TOML_ERR_MSG_UNEX_NEWLINE;
+  for (;;) {
+    int const c = toml_getc( toml );
+    switch ( c ) {
+      case TOML_CHAR_INVALID:
         return false;
-      }
-    }
-    else if ( !toml_is_space( c ) ) {
-      toml_ungetc( toml, c );
-      break;
+      case ' ':
+      case '\t':
+      case '\n':
+        break;
+      default:
+        toml_ungetc( toml, c );
+        FALLTHROUGH;
+      case EOF:
+        return true;
     }
   } // for
-
-  return true;
 }
 
 /**
@@ -990,9 +984,9 @@ static bool toml_table_header_parse( toml_file *toml, toml_key *rv_key,
   toml_key key = { 0 };
 
   bool const ok =
-    toml_space_skip( toml ) &&
+    toml_space_comments_skip( toml ) &&
     toml_key_parse( toml, &key, rv_name_len ) &&
-    toml_space_skip( toml ) &&
+    toml_space_comments_skip( toml ) &&
     toml_char_parse( toml, ']' );
 
   if ( ok )

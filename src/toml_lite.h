@@ -174,7 +174,6 @@ struct toml_file {
   int           c_last;                 ///< Last character read, if any.
   unsigned      col_prev;               ///< Previous column within file.
   toml_loc      loc;                    ///< Current source location.
-  bool          in_key_value;           ///< Started parsing _key_ = _value_?
   hash_table_t  table_names;            ///< Table names seen so far.
 };
 
