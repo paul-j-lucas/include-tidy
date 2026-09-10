@@ -374,11 +374,9 @@ static bool toml_bool_parse( toml_file *toml, int c, bool *rv_b ) {
     .line = toml->loc.line,
     .col  = toml->loc.col - 1
   };
+  bool const is_t = c == 't';
 
-  bool const  is_t = c == 't';
-  char const *want = is_t ? "rue" : "alse";
-
-  for ( ; *want != '\0'; ++want ) {
+  for ( char const *want = is_t ? "rue" : "alse"; *want != '\0'; ++want ) {
     if ( toml_getc( toml ) != *want )
       goto error;
   } // for
