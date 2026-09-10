@@ -1,5 +1,10 @@
 2026-09-09  Paul J. Lucas <paul@lucasmail.org>
 
+   * test/Makefile.am, macro.out, macro.test: Made test be C++.
+   * symbol.c: No longer looking for "::" in C.
+   * test/Makefile.am, macro.h, macro.out, macro.test: Added macro test.
+   * toml_lite.c, util_test.c: #include fixes.
+   * symbol.c: Code coverage exclusion comments.
    * toml_test.c: Added TOML string escape EOF test.
    * toml_lite.c, toml_lite.h, toml_test.c:
      s/TOML_ERR_UNEX_VALUE/TOML_ERR_UNEX_CHAR/
