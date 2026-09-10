@@ -1,3 +1,25 @@
+2026-09-10  Paul J. Lucas <paul@lucasmail.org>
+
+   * proxies.c: Code coverage exclusion comments.
+   * print.c: Code coverage exclusion comments; more unlikely().
+   * toml_test.c: 100% TOML code coverage.
+   * toml_test.c: More TOML tests.
+   * strbuf.c, util.c: Removed \\ case.
+   * toml_lite.c, toml_test.c: Now checking for lone '['.
+   * toml_test.c: Added TOML test for bad string key.
+   * toml_test.c: Test bad value in TOML array.
+   * toml_lite.c: Eliminated impossible case for TOML_CHAR_INVALID.
+   * toml_test.c: Multiple TOML table test.
+   * toml_lite.c: Eliminated impossible case for TOML_CHAR_INVALID.
+   * toml_lite.c: Eliminated impossible cases for TOML_CHAR_INVALID.
+   * toml_test.c: More tests for invalid characters.
+   * toml_lite.c: Added "inline".
+   * toml_lite.c: Faster toml_is_invalid_char().
+   * toml_lite.c: toml_getc() no longer implicitly sets toml->error to
+     TOML_ERR_INVALID_CHAR: let the caller do that -- makes toml_ungetc() and
+     toml_peekc() simpler.
+   * toml_lite.c: Now passing first character parsed for bool and int.
+
 2026-09-09  Paul J. Lucas <paul@lucasmail.org>
 
    * macro.hpp: Better macro test.
