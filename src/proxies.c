@@ -216,7 +216,7 @@ static void include_proxies_dump( bool want_explicit ) {
     if ( include->proxy == NULL )
       continue;
     if ( include->is_proxy_explicit != want_explicit )
-      continue;
+      continue;                         // LCOV_EXCL_LINE
     if ( verbose_section_begin( &printed_proxies_header ) ) {
       verbose_printf(
         "%s proxies:\n",
@@ -233,8 +233,10 @@ static void include_proxies_dump( bool want_explicit ) {
       proxy_path = include->proxy->rel_path;
     }
     else {
+      // LCOV_EXCL_START: coverage is run when tidy_test != TIDY_TEST_NONE.
       include_path = include->abs_path;
       proxy_path = include->proxy->abs_path;
+      // LCOV_EXCL_STOP
     }
 
     verbose_printf(
@@ -255,8 +257,10 @@ void implicit_proxies_init( void ) {
 
   if ( IS_VERBOSE( PROXIES_EXPLICIT ) )
     include_proxies_dump( /*want_explicit=*/true );
+  // LCOV_EXCL_START: implicit proxies are platform-specific.
   if ( IS_VERBOSE( PROXIES_IMPLICIT ) )
     include_proxies_dump( /*want_explicit=*/false );
+  // LCOV_EXCL_STOP
 }
 
 bool include_proxy_would_cycle( tidy_include const *from_include,
