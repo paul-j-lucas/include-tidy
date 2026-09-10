@@ -343,11 +343,11 @@ static bool test_value_array( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test]   \n"
-    "ab = [   \n"
-    "  false, \n"
-    "  true   \n"
-    "]        \n"
+    "[test]     \n"
+    "ab = [     \n"
+    "  false,   \n"
+    "  true #1  \n"
+    "]          \n"
   );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
@@ -747,9 +747,9 @@ static bool test_value_whitespace( void ) {
     "false    \n"
     "b2       \n"
     "= true   \n"
-    "i1 =     \n"
+    "i1 = #1  \n"
     "1        \n"
-    "i2       \n"
+    "i2   #2  \n"
     "= 2      \n"
     "s1 =     \n"
     "\"a\"    \n"

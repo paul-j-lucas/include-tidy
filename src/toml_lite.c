@@ -303,9 +303,8 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
         FALLTHROUGH;
       case TOML_CHAR_INVALID:
         goto done;
-      case '#':
-        toml_comment_parse( toml );
-        continue;
+      case '#':                         // toml_space_comments_skip() above
+        INTERNAL_ERROR( "unexpected '#'\n" );
       case ',':
         if ( !need_comma ) {
           toml->error = TOML_ERR_UNEX_CHAR;
