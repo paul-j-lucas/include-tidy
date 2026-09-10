@@ -839,6 +839,25 @@ static bool test_value_string_unterminated( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_value_unexpected_char( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test] \n"
+    "k = x  \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 5 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_value_whitespace( void ) {
   TEST_FUNC_BEGIN();
 
@@ -944,6 +963,8 @@ int main( int argc, char const *const argv[] ) {
     test_value_string_bad_escape();
     test_value_string_eof();
     test_value_string_unterminated();
+
+    test_value_unexpected_char();
   }
 
   return test_exit_status;
