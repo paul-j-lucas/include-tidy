@@ -782,6 +782,63 @@ static bool test_value_string( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_value_string_bad_escape( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]         \n"
+    "s = \"a\\xb\"  \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_STRING )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 8 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_value_string_eof( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]   \n"
+    "s = \"a"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 6 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_value_string_unterminated( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]   \n"
+    "s = \"a  \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_STRING )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 9 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_value_whitespace( void ) {
   TEST_FUNC_BEGIN();
 
@@ -883,6 +940,10 @@ int main( int argc, char const *const argv[] ) {
     test_value_int_bad_underscore();
     test_value_int_bad_underscore2();
     test_value_int_too_many_digits();
+
+    test_value_string_bad_escape();
+    test_value_string_eof();
+    test_value_string_unterminated();
   }
 
   return test_exit_status;
