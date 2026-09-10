@@ -68,6 +68,7 @@ TESTS+=	tests/c_ast.test \
 	tests/cdecl_dym.test \
 	tests/dump.test \
 	tests/english.test \
+	tests/macro.test \
 	tests/p_macro.test \
 	tests/red_black.test \
 	tests/show.test \
