@@ -801,6 +801,25 @@ static bool test_value_string_bad_escape( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_value_string_bad_escape_eof( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]     \n"
+    "s = \"a\\"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 7 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_value_string_eof( void ) {
   TEST_FUNC_BEGIN();
 
@@ -961,6 +980,7 @@ int main( int argc, char const *const argv[] ) {
     test_value_int_too_many_digits();
 
     test_value_string_bad_escape();
+    test_value_string_bad_escape_eof();
     test_value_string_eof();
     test_value_string_unterminated();
 
