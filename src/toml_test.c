@@ -716,6 +716,13 @@ static bool test_value_string( void ) {
     "[test]               \n"
     "s1 = \"ab\"          \n"
     "s2 = \"\\\"ab\\\"\"  \n"
+    "sb = \"x\\by\"       \n"
+    "se = \"x\\ey\"       \n"
+    "sf = \"x\\fy\"       \n"
+    "sn = \"x\\ny\"       \n"
+    "sr = \"x\\ry\"       \n"
+    "st = \"x\\ty\"       \n"
+    "ss = \"x\\\\y\"      \n"
   );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
@@ -730,6 +737,44 @@ static bool test_value_string( void ) {
     TEST( value != NULL ) &&
       TEST( value->type == TOML_STRING ) &&
       TEST( strcmp( value->s, "\"ab\"" ) == 0 );
+
+    value = toml_table_find( &test.table, "sb" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "x\by" ) == 0 );
+
+    value = toml_table_find( &test.table, "se" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( value->s[0] == 'x' ) &&
+      TEST( value->s[1] == 0x1B ) &&
+      TEST( value->s[2] == 'y' ) &&
+      TEST( value->s[3] == '\0' );
+
+    value = toml_table_find( &test.table, "sf" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "x\fy" ) == 0 );
+
+    value = toml_table_find( &test.table, "sn" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "x\ny" ) == 0 );
+
+    value = toml_table_find( &test.table, "sr" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "x\ry" ) == 0 );
+
+    value = toml_table_find( &test.table, "st" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "x\ty" ) == 0 );
+
+    value = toml_table_find( &test.table, "ss" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "x\\y" ) == 0 );
   }
 
   toml_error_print( &test.toml );
