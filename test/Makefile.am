@@ -32,7 +32,7 @@ TESTS=	tests/hello.test
 TESTS+=	tests/cli-align-column.test \
 	tests/cli-comment-symbols.test \
 	tests/cli-compiler-no-exists.test \
-	tests/cli-compiler-no-include.test \
+	tests/cli-compiler-no-include-start.test \
 	tests/cli-error-always.test \
 	tests/cli-help.test \
 	tests/cli-options-error.test \

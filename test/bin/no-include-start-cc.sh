@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 ##
 #       include-tidy -- #include tidier
-#       test/bin/no-include-cc.sh
+#       test/bin/no-include-start-cc.sh
 #
 #       Copyright (C) 2026  Paul J. Lucas
 #

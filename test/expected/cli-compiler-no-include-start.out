@@ -1,0 +1,3 @@
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --compiler=bin/no-include-start-cc.sh f.c
+include-tidy: warning: "#include <...> search starts here:" not found in "bin/no-include-start-cc.sh" output
+
