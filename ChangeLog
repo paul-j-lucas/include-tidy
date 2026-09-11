@@ -1,5 +1,8 @@
 2026-09-10  Paul J. Lucas <paul@lucasmail.org>
 
+   * options.c: Code coverage exclusion comments.
+   * ipath.c: ipath_add: no longer calling access(); now returning if
+     realpath() fails; now returning if not a directory.
    * proxies.c: Code coverage exclusion comments.
    * print.c: Code coverage exclusion comments; more unlikely().
    * toml_test.c: 100% TOML code coverage.
