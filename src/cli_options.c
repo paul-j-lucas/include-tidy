@@ -657,9 +657,19 @@ static bool is_Xtidy_opt( int argc, char const *const argv[], int *pargi ) {
 
   if ( strcmp( argv[ *pargi ], "-Xtidy" ) != 0 )
     return false;
-  if ( ++*pargi >= argc || argv[ *pargi ][0] != '-' )
-    fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
-  return true;
+  if ( ++*pargi >= argc )               // nothing after -Xtidy
+    goto error;
+  if ( argv[ *pargi ][0] != '-' )       // non-option after -Xtidy
+    goto error;
+  if ( isalnum( argv[ *pargi ][1] ) )   // short option
+    return true;
+  if ( argv[ *pargi ][1] != '-' )       // not long option
+    goto error;
+  if ( isalnum( argv[ *pargi ][2] ) )   // long option
+    return true;
+
+error:
+  fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
 }
 
 /**
@@ -785,7 +795,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
 
     if ( is_Xtidy_opt( argc, argv, &i ) ) {
       tidy_argv[ tidy_argc++ ] = argv[i];
-      if ( argv[i][0] == '-' && isalnum( argv[i][1] ) ) {
+      if ( isalnum( argv[i][1] ) ) {    // short opt
         if ( argv[i][2] != '\0' )
           continue;
         short_opt = argv[i][1];
