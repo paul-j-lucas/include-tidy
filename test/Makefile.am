@@ -99,11 +99,11 @@ TESTS+=	tests/cxx.test \
 
 ###############################################################################
 
-EXTRA_DIST =		bin data expected tests
-TOP_SRCDIR =		$(top_srcdir)
 ABS_TOP_BUILDDIR =	$(abs_top_builddir)
+EXTRA_DIST =		bin data expected tests
 TEST_EXTENSIONS =	.test
 TEST_LOG_DRIVER =	$(srcdir)/bin/run_test.sh
+TOP_SRCDIR =		$(top_srcdir)
 UPDATE_TEST =		$(srcdir)/bin/update_test.sh
 
 AM_TESTS_ENVIRONMENT = TOP_SRCDIR=$(TOP_SRCDIR) ABS_TOP_BUILDDIR=$(ABS_TOP_BUILDDIR) ; export TOP_SRCDIR ABS_TOP_BUILDDIR ;
