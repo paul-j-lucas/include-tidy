@@ -36,3 +36,51 @@ test_include_tidy $TIDY_TEST_OPTIONS \
     $TIDY_TEST_CONFIG \
     -Xtidy -Aa35 \
     hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy --comment-symbols=alpha \
+    comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy --comment-symbols=length \
+    comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy --comment-symbols=most-used \
+    comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy --comment-symbols=ref-count \
+    comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy -Salpha \
+    comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy -Slength \
+    comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy -Smost-used \
+    comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy -Sref-count \
+    comment-symbols.c

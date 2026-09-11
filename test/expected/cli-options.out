@@ -15,3 +15,27 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy -Aa35 hello.c
 #include <stdio.h>                // printf
 
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-symbols=alpha comment-symbols.c
+#include <stdio.h>                      // fprintf, fputs, stdout
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-symbols=length comment-symbols.c
+#include <stdio.h>                      // fputs, stdout, fprintf
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-symbols=most-used comment-symbols.c
+#include <stdio.h>                      // fputs
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-symbols=ref-count comment-symbols.c
+#include <stdio.h>                      // fputs, stdout, fprintf
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy -Salpha comment-symbols.c
+#include <stdio.h>                      // fprintf, fputs, stdout
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy -Slength comment-symbols.c
+#include <stdio.h>                      // fputs, stdout, fprintf
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy -Smost-used comment-symbols.c
+#include <stdio.h>                      // fputs
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy -Sref-count comment-symbols.c
+#include <stdio.h>                      // fputs, stdout, fprintf
+
