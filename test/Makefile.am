@@ -29,8 +29,7 @@ AUTOMAKE_OPTIONS = 1.12			# needed for TEST_LOG_DRIVER
 TESTS=	tests/hello.test
 
 # Command-line option tests
-TESTS+=	tests/cli-align-column.test \
-	tests/cli-comment-symbols.test \
+TESTS+=	tests/cli-comment-symbols.test \
 	tests/cli-compiler-no-exists.test \
 	tests/cli-compiler-no-include-end.test \
 	tests/cli-compiler-no-include-start.test \
