@@ -282,8 +282,10 @@ bool opt_verbose_parse( char const *verbose_format ) {
 
   opt_verbose = verbose;
 
+  // LCOV_EXCL_START: includes are platform-specific.
   if ( IS_VERBOSE( INCLUDES_ALL ) )
     verbose &= ~TO_UNSIGNED_EXPR( TIDY_VERBOSE_INCLUDES_DIRECT );
+  // LCOV_EXCL_STOP
 
   if ( IS_VERBOSE( SRC_FILE_ALWAYS ) )
     verbose &= ~TO_UNSIGNED_EXPR( TIDY_VERBOSE_SRC_FILE_VIOLATIONS );
