@@ -39,7 +39,8 @@
 #include <stdbool.h>
 #include <stdlib.h>                     /* for exit() */
 #include <string.h>                     /* for str...() */
-#include <unistd.h>                     /* for access() */
+#include <sys/stat.h>
+#include <unistd.h>
 
 /// @endcond
 
@@ -81,34 +82,23 @@ static void ipaths_cleanup( void ) {
 void ipath_add( char const *path ) {
   assert( path != NULL );
 
-  if ( access( path, X_OK ) != 0 )
+  char path_buf[ PATH_MAX ];
+  if ( realpath( path, path_buf ) == NULL )
     return;
 
-  size_t path_len;
-  char path_buf[ PATH_MAX ];
-  if ( realpath( path, path_buf ) == NULL ) {
-    //
-    // Upon success, realpath() never includes a trailing '/' on directories;
-    // upon failure, fall back to using the given path, but ensure it doesn't
-    // include a trailing '/' either.
-    //
-    strncpy_0( path_buf, path, PATH_MAX-1 );
-    path_len = strlen( path_buf );
-    while ( path_len > 1 && path_buf[ path_len - 1 ] == '/' )
-      path_buf[ --path_len ] = '\0';
-  }
-  else {
-    path_len = strlen( path_buf );
-  }
+  struct stat st;
+  if ( stat( path_buf, &st ) != 0 || !S_ISDIR( st.st_mode ) )
+    return;
 
   for ( size_t i = 0; i < ipaths.len; ++i ) {
     tidy_ipath const *const ipath = array_at_nc( &ipaths, i );
     if ( strcmp( path_buf, ipath->abs_path ) == 0 )
       return;
   } // for
+
   *(tidy_ipath*)array_push_back( &ipaths ) = (tidy_ipath){
     .abs_path = check_strdup( path_buf ),
-    .abs_path_len = path_len
+    .abs_path_len = strlen( path_buf )
   };
 }
 
