@@ -162,7 +162,7 @@ static char const*  get_long_opt_value( int, char const *const[], char const*,
 
 NODISCARD
 static struct option const*
-                    get_option( int );
+                    get_option_short( int );
 
 static void         insert_argv( int*, char const**[], size_t, size_t,
                                  char const *const[] );
@@ -334,7 +334,7 @@ error:
  *  + The argument is not empty.
  */
 static bool check_optarg( int short_opt ) {
-  struct option const *const option = get_option( short_opt );
+  struct option const *const option = get_option_short( short_opt );
   if ( option == NULL || option->has_arg != required_argument )
     return true;
   if ( optarg == NULL )
@@ -384,7 +384,8 @@ static char const* get_compiler_path( int argc, char const *const argv[] ) {
   assert( argc > 0 );
   assert( argv != NULL );
 
-  struct option const *const compiler_option = get_option( COPT(COMPILER) );
+  struct option const *const compiler_option =
+    get_option_short( COPT(COMPILER) );
   assert( compiler_option != NULL );
   char const *const compiler_long_opt = compiler_option->name;
 
@@ -464,7 +465,7 @@ static char const* get_opt_format( int short_opt ) {
   strbuf_t *const sbuf = &sbufs[ buf_index++ % ARRAY_SIZE( sbufs ) ];
   strbuf_reset( sbuf );
 
-  struct option const *const option = get_option( short_opt );
+  struct option const *const option = get_option_short( short_opt );
   char const *const long_opt = option != NULL ? option->name : "";
   return strbuf_printf(
     sbuf, "%s%s%s-%c",
@@ -497,7 +498,7 @@ static char const* get_opt_help( int short_opt ) {
  * @return Returns the corresponding `option` or NULL if not found.
  */
 NODISCARD
-static struct option const* get_option( int short_opt ) {
+static struct option const* get_option_short( int short_opt ) {
   assert( short_opt > 0 && short_opt < 128 );
   FOREACH_CLI_OPTION( option, OPTIONS ) {
     if ( option->val == short_opt )
@@ -799,7 +800,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
         if ( argv[i][2] != '\0' )
           continue;
         short_opt = argv[i][1];
-        struct option const *const option = get_option( short_opt );
+        struct option const *const option = get_option_short( short_opt );
         if ( option == NULL ) {
           fatal_error( EX_USAGE,
             "'%c': invalid -Xtidy option; use --help or -h for help\n",
