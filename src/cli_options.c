@@ -326,25 +326,6 @@ error:
 }
 
 /**
- * Checks `optarg` for \a short_opt.
- *
- * @param short_opt The option to check `optarg` for.
- * @return Returns `true` only if:
- *  + \a short_opt does not correspond to an option; or:
- *  + The option does not require and argument; or:
- *  + The argument is not empty.
- */
-static bool check_optarg( int short_opt ) {
-  struct option const *const option = get_option_short( short_opt );
-  if ( option == NULL || option->has_arg != required_argument )
-    return true;
-  if ( optarg == NULL )
-    return false;
-  SKIP_WS( optarg );
-  return optarg[0] != '\0';
-}
-
-/**
  * If \a short_opt was given, checks that _only_ it was given and, if not,
  * prints an error message and exits; if \a short_opt was not given, does
  * nothing.
@@ -1153,8 +1134,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     );
     if ( short_opt == -1 )
       break;
-    if ( !check_optarg( short_opt ) )
-      goto missing_arg;
     switch ( short_opt ) {
       case COPT(ALIGN_COLUMN):;
         if ( !opt_align_column_parse( optarg ) ) {
