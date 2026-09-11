@@ -1,3 +1,11 @@
+2026-09-11  Paul J. Lucas <paul@lucasmail.org>
+
+   * cli_options.c, test/Makefile.am, cli-long-opt.out, cli-options-error.out,
+     cli-long-opt.test: Better -Xtidy long option handling.
+   * cli_options.c: More robust is_Xtidy_opt().
+   * test/Makefile.am, no-include-end-cc.sh, cli-compiler-no-include-end.out,
+     cli-compiler-no-include-end.test: Test of no "End of search list."
+
 2026-09-10  Paul J. Lucas <paul@lucasmail.org>
 
    * options.c: Code coverage exclusion comments.
