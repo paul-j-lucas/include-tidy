@@ -1,8 +1,8 @@
 $ include-tidy -Xtidy --align-column
-include-tidy: error: "--align-column/-a" requires an argument
+include-tidy: error: "--align-column" requires an argument
 
 $ include-tidy -Xtidy --align-column=
-include-tidy: error: "--align-column/-a" requires an argument
+include-tidy: error: "--align-column" requires an argument
 
 $ include-tidy -Xtidy --align-column=X
 include-tidy: error: "X": invalid integer
@@ -29,10 +29,10 @@ $ include-tidy -Xtidy foo.c
 include-tidy: error: -Xtidy requires subsequent option
 
 $ include-tidy -Xtidy --comment-style
-include-tidy: error: "--comment-style/-s" requires an argument
+include-tidy: error: "--comment-style" requires an argument
 
 $ include-tidy -Xtidy --comment-style=
-include-tidy: error: "--comment-style/-s" requires an argument
+include-tidy: error: "--comment-style" requires an argument
 
 $ include-tidy -Xtidy --comment-style=X
 include-tidy: error: "X": invalid value for --comment-style/-s; must be one of "//", "/*", or "none"
@@ -44,10 +44,10 @@ $ include-tidy -Xtidy -sX
 include-tidy: error: "X": invalid value for --comment-style/-s; must be one of "//", "/*", or "none"
 
 $ include-tidy -Xtidy --comment-symbols
-include-tidy: error: "--comment-symbols/-S" requires an argument
+include-tidy: error: "--comment-symbols" requires an argument
 
 $ include-tidy -Xtidy --comment-symbols=
-include-tidy: error: "--comment-symbols/-S" requires an argument
+include-tidy: error: "--comment-symbols" requires an argument
 
 $ include-tidy -Xtidy --comment-symbols=X
 include-tidy: error: "X": invalid value for --comment-symbols/-S
@@ -68,28 +68,28 @@ $ include-tidy -Xtidy -C
 include-tidy: error: "-C" requires an argument
 
 $ include-tidy -Xtidy --config
-include-tidy: error: "--config/-c" requires an argument
+include-tidy: error: "--config" requires an argument
 
 $ include-tidy -Xtidy --config=
-include-tidy: error: "--config/-c" requires an argument
+include-tidy: error: "--config" requires an argument
 
 $ include-tidy -Xtidy -c
 include-tidy: error: "-c" requires an argument
 
 $ include-tidy -Xtidy --directory
-include-tidy: error: "--directory/-d" requires an argument
+include-tidy: error: "--directory" requires an argument
 
 $ include-tidy -Xtidy --directory=
-include-tidy: error: "--directory/-d" requires an argument
+include-tidy: error: "--directory" requires an argument
 
 $ include-tidy -Xtidy -d
 include-tidy: error: "-d" requires an argument
 
 $ include-tidy -Xtidy --color
-include-tidy: error: "--color/-k" requires an argument
+include-tidy: error: "--color" requires an argument
 
 $ include-tidy -Xtidy --color=
-include-tidy: error: "--color/-k" requires an argument
+include-tidy: error: "--color" requires an argument
 
 $ include-tidy -Xtidy --color=X
 include-tidy: error: "X": invalid value for --color/-k
@@ -101,10 +101,10 @@ $ include-tidy -Xtidy -kX
 include-tidy: error: "X": invalid value for --color/-k
 
 $ include-tidy -Xtidy --error
-include-tidy: error: "--error/-e" requires an argument
+include-tidy: error: "--error" requires an argument
 
 $ include-tidy -Xtidy --error=
-include-tidy: error: "--error/-e" requires an argument
+include-tidy: error: "--error" requires an argument
 
 $ include-tidy -Xtidy --error=X
 include-tidy: error: "X": invalid value for --error/-e; must be one of "violations", "always", or "never"
@@ -116,10 +116,10 @@ $ include-tidy -Xtidy -eX
 include-tidy: error: "X": invalid value for --error/-e; must be one of "violations", "always", or "never"
 
 $ include-tidy -Xtidy --line-length
-include-tidy: error: "--line-length/-l" requires an argument
+include-tidy: error: "--line-length" requires an argument
 
 $ include-tidy -Xtidy --line-length=
-include-tidy: error: "--line-length/-l" requires an argument
+include-tidy: error: "--line-length" requires an argument
 
 $ include-tidy -Xtidy --line-length=X
 include-tidy: error: "X": invalid integer
@@ -137,10 +137,10 @@ $ include-tidy -Xtidy -l1000
 include-tidy: error: "1000": invalid value for --line-length/-l; must be 1-512
 
 $ include-tidy -Xtidy --verbose
-include-tidy: error: "--verbose/-V" requires an argument
+include-tidy: error: "--verbose" requires an argument
 
 $ include-tidy -Xtidy --verbose=
-include-tidy: error: "--verbose/-V" requires an argument
+include-tidy: error: "--verbose" requires an argument
 
 $ include-tidy -Xtidy --verbose=X
 include-tidy: error: "X": invalid value for --verbose/-V; must be [acCdfFiIpPsSz]+

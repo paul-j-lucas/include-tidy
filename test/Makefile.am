@@ -36,6 +36,7 @@ TESTS+=	tests/cli-align-column.test \
 	tests/cli-compiler-no-include-start.test \
 	tests/cli-error-always.test \
 	tests/cli-help.test \
+	tests/cli-long-opt.test \
 	tests/cli-options-error.test \
 	tests/cli-usage.test \
 	tests/cli-verbose.test \

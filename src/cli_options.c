@@ -161,8 +161,9 @@ static char const*  get_long_opt_value( int, char const *const[], char const*,
                  *  get_short_opt_value( int, char const *const[], int, int* );
 
 NODISCARD
-static struct option const*
-                    get_option_short( int );
+static struct option const
+                 *  get_option_long( char const* ),
+                 *  get_option_short( int );
 
 static void         insert_argv( int*, char const**[], size_t, size_t,
                                  char const *const[] );
@@ -492,10 +493,34 @@ static char const* get_opt_help( int short_opt ) {
 }
 
 /**
+ * Gets the `option` corresponding to \a long_opt.
+ *
+ * @param long_opt The long option to get the option for.
+ * @return Returns the corresponding `option` or NULL if not found.
+ *
+ * @sa get_option_short()
+ */
+NODISCARD
+static struct option const* get_option_long( char const *long_opt ) {
+  assert( long_opt != NULL );
+  char const *const equal = strchr( long_opt, '=' );
+  size_t const n = equal != NULL ?
+    STATIC_CAST( size_t, equal - long_opt ) : strlen( long_opt );
+
+  FOREACH_CLI_OPTION( option, OPTIONS ) {
+    if ( strncmp( option->name, long_opt, n ) == 0 )
+      return option;
+  } // for
+  return NULL;
+}
+
+/**
  * Gets the `option` corresponding to \a short_opt.
  *
  * @param short_opt The short option to get the option for.
  * @return Returns the corresponding `option` or NULL if not found.
+ *
+ * @sa get_option_long()
  */
 NODISCARD
 static struct option const* get_option_short( int short_opt ) {
@@ -504,7 +529,7 @@ static struct option const* get_option_short( int short_opt ) {
     if ( option->val == short_opt )
       return option;
   } // for
-  return NULL;                          // LCOV_EXCL_LINE
+  return NULL;
 }
 
 /**
@@ -786,6 +811,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
 
   int const argc = *pargc;
   int new_argc = 1, tidy_argc = 1;
+  char const *long_opt;
   char short_opt;
 
   char const **const tidy_argv =
@@ -816,6 +842,37 @@ static void move_tidy_args( int *pargc, char const *argv[],
             if ( ++i >= argc )
               goto short_opt_requires_argument;
             tidy_argv[ tidy_argc++ ] = argv[i];
+            break;
+        } // switch
+      }
+      else {                            // must be long opt
+        assert( argv[i][1] == '-' );
+        long_opt = &argv[i][2];
+        struct option const *const option = get_option_long( long_opt );
+        if ( option == NULL ) {
+          fatal_error( EX_USAGE,
+            "\"%s\": invalid -Xtidy option; use --help or -h for help\n",
+            long_opt
+          );
+        }
+        switch ( option->has_arg ) {
+          case no_argument:
+            break;
+          case optional_argument:
+            UNEXPECTED_INT_VALUE( option->has_arg );
+          case required_argument:;
+            char *const equal = strchr( long_opt, '=' );
+            if ( equal != NULL ) {      // --<long_opt>=<value>
+              if ( equal[1] == '\0' ) {
+                *equal = '\0';
+                goto long_opt_requires_argument;
+              }
+            }
+            else {                      // --<long_opt> <value>
+              if ( ++i >= argc || argv[i][0] == '-' )
+                goto long_opt_requires_argument;
+              tidy_argv[ tidy_argc++ ] = argv[i];
+            }
             break;
         } // switch
       }
@@ -900,6 +957,9 @@ next_argv:;
   *ptidy_argc = tidy_argc;
   *ptidy_argv = tidy_argv;
   return;
+
+long_opt_requires_argument:
+  fatal_error( EX_USAGE, "\"--%s\" requires an argument\n", long_opt );
 
 short_opt_requires_argument:
   fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", short_opt );
