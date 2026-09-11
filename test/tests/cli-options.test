@@ -9,3 +9,13 @@ test_include_tidy $TIDY_TEST_OPTIONS \
     $TIDY_TEST_CONFIG \
     -Xtidy --color never \
     hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy -knever \
+    hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy -k never \
+    hello.c

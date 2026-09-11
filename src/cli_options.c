@@ -811,8 +811,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
 
   int const argc = *pargc;
   int new_argc = 1, tidy_argc = 1;
-  char const *long_opt;
-  char short_opt;
+  char const *opt;
 
   char const **const tidy_argv =
     MALLOC( char*, STATIC_CAST( size_t, argc ) + 1/*NULL*/ );
@@ -822,59 +821,47 @@ static void move_tidy_args( int *pargc, char const *argv[],
 
     if ( is_Xtidy_opt( argc, argv, &i ) ) {
       tidy_argv[ tidy_argc++ ] = argv[i];
-      if ( isalnum( argv[i][1] ) ) {    // short opt
-        if ( argv[i][2] != '\0' )
-          continue;
-        short_opt = argv[i][1];
-        struct option const *const option = get_option_short( short_opt );
-        if ( option == NULL ) {
-          fatal_error( EX_USAGE,
-            "'%c': invalid -Xtidy option; use --help or -h for help\n",
-            short_opt
-          );
-        }
-        switch ( option->has_arg ) {
-          case no_argument:
-            break;
-          case optional_argument:
-            UNEXPECTED_INT_VALUE( option->has_arg );
-          case required_argument:
-            if ( ++i >= argc )
+      if ( isalnum( argv[i][1] ) ) {            // short opt
+        for ( opt = &argv[i][1]; *opt != '\0'; ++opt ) {
+          struct option const *const option = get_option_short( *opt );
+          if ( option == NULL ) {
+            fatal_error( EX_USAGE,
+              "'%c': invalid -Xtidy option; use --help or -h for help\n", *opt
+            );
+          }
+          if ( option->has_arg == required_argument ) {
+            if ( opt[1] != '\0' )               // -<opt><arg>
+              break;
+            if ( ++i >= argc || argv[i][0] == '-' )
               goto short_opt_requires_argument;
-            tidy_argv[ tidy_argc++ ] = argv[i];
+            tidy_argv[ tidy_argc++ ] = argv[i]; // -<opt> <arg>
             break;
-        } // switch
+          }
+        } // for
       }
-      else {                            // must be long opt
+      else {                                    // must be long opt
         assert( argv[i][1] == '-' );
-        long_opt = &argv[i][2];
-        struct option const *const option = get_option_long( long_opt );
+        opt = &argv[i][2];
+        struct option const *const option = get_option_long( opt );
         if ( option == NULL ) {
           fatal_error( EX_USAGE,
-            "\"%s\": invalid -Xtidy option; use --help or -h for help\n",
-            long_opt
+            "\"%s\": invalid -Xtidy option; use --help or -h for help\n", opt
           );
         }
-        switch ( option->has_arg ) {
-          case no_argument:
-            break;
-          case optional_argument:
-            UNEXPECTED_INT_VALUE( option->has_arg );
-          case required_argument:;
-            char *const equal = strchr( long_opt, '=' );
-            if ( equal != NULL ) {      // --<long_opt>=<value>
-              if ( equal[1] == '\0' ) {
-                *equal = '\0';
-                goto long_opt_requires_argument;
-              }
+        if ( option->has_arg == required_argument ) {
+          char *const equal = strchr( opt, '=' );
+          if ( equal != NULL ) {                // --<long_opt>=<value>
+            if ( equal[1] == '\0' ) {
+              *equal = '\0';
+              goto long_opt_requires_argument;
             }
-            else {                      // --<long_opt> <value>
-              if ( ++i >= argc || argv[i][0] == '-' )
-                goto long_opt_requires_argument;
-              tidy_argv[ tidy_argc++ ] = argv[i];
-            }
-            break;
-        } // switch
+          }
+          else {                                // --<long_opt> <value>
+            if ( ++i >= argc || argv[i][0] == '-' )
+              goto long_opt_requires_argument;
+            tidy_argv[ tidy_argc++ ] = argv[i];
+          }
+        }
       }
       continue;
     }
@@ -882,9 +869,9 @@ static void move_tidy_args( int *pargc, char const *argv[],
     if ( STRNCMPLIT( argv[i], "-I" ) == 0 ) {
       argv[ new_argc++ ] = argv[i];
       tidy_argv[ tidy_argc++ ] = argv[i];
-      if ( argv[i][2] == '\0' ) {       // -I <dir>
+      if ( argv[i][2] == '\0' ) {               // -I <dir>
         if ( ++i >= argc || argv[i][0] == '-' ) {
-          short_opt = 'I';
+          opt = "I";
           goto short_opt_requires_argument;
         }
         argv[ new_argc++ ] = argv[i];
@@ -959,10 +946,10 @@ next_argv:;
   return;
 
 long_opt_requires_argument:
-  fatal_error( EX_USAGE, "\"--%s\" requires an argument\n", long_opt );
+  fatal_error( EX_USAGE, "\"--%s\" requires an argument\n", opt );
 
 short_opt_requires_argument:
-  fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", short_opt );
+  fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", *opt );
 }
 
 /**
