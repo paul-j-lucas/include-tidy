@@ -57,7 +57,8 @@ TESTS+=	tests/bad-semantics-1.test \
 	tests/enoent.test \
 	tests/error.test \
 	tests/include-enoent.test \
-	tests/unknown_extension.test
+	tests/unknown_extension.test \
+	tests/unnecessary.test
 
 # Real-world C tests.
 TESTS+=	tests/c_ast.test \
