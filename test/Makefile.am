@@ -47,6 +47,7 @@ TESTS+=	tests/align-column.test \
 TESTS+=	tests/associated-header.test \
 	tests/home.test \
 	tests/ipaths.test \
+	tests/symlink.test \
 	tests/xdg_config_home.test \
 	tests/xdg_config_dirs.test
 
