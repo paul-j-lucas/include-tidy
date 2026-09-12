@@ -119,10 +119,12 @@ static tidy_test_t tidy_test_parse( char const *env_var ) {
         t |= TIDY_TEST_NO_HOME;
         break;
       default:
+        // LCOV_EXCL_START
         fatal_error( EX_USAGE,
-          "\"%s\": invalid value for %s; must be [eh]+|*|-\n",
+          "\"%s\": invalid value for %s; must be [eh]|*|-\n",
           value, env_var
         );
+        // LCOV_EXCL_STOP
     } // switch
   } // for
 
