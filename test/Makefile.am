@@ -41,7 +41,8 @@ TESTS+=	tests/cli-compiler-no-exists.test \
 
 # Configuration file option tests
 TESTS+=	tests/align-column.test \
-	tests/comment-style.test
+	tests/comment-style.test \
+	tests/elide-includes.test
 
 # Other tests
 TESTS+=	tests/associated-header.test \

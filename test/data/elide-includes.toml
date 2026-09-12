@@ -1,0 +1,5 @@
+[elide.c]
+elide-includes = [
+  "elide_2.h",
+  "elide_3.h"
+]
