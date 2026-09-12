@@ -89,6 +89,12 @@
 ////////// local constants ////////////////////////////////////////////////////
 
 /**
+ * Shared partial error message for an invalid `-Xtidy` option.
+ */
+static char const INVALID_XTIDY_OPTION[] =
+  "invalid -Xtidy option; use --help or -h for help";
+
+/**
  * Command-line options.
  *
  * @sa OPTIONS_HELP
@@ -803,11 +809,8 @@ static void move_tidy_args( int *pargc, char const *argv[],
       if ( isalnum( argv[i][1] ) ) {            // short opt
         for ( opt = &argv[i][1]; *opt != '\0'; ++opt ) {
           struct option const *const option = get_option_short( *opt );
-          if ( option == NULL ) {
-            fatal_error( EX_USAGE,
-              "'%c': invalid -Xtidy option; use --help or -h for help\n", *opt
-            );
-          }
+          if ( option == NULL )
+            fatal_error( EX_USAGE, "'%c': %s\n", *opt, INVALID_XTIDY_OPTION );
           if ( option->has_arg == required_argument ) {
             if ( opt[1] != '\0' )               // -<opt><arg>
               break;
@@ -822,11 +825,8 @@ static void move_tidy_args( int *pargc, char const *argv[],
         assert( argv[i][1] == '-' );
         opt = &argv[i][2];
         struct option const *const option = get_option_long( opt );
-        if ( option == NULL ) {
-          fatal_error( EX_USAGE,
-            "\"%s\": invalid -Xtidy option; use --help or -h for help\n", opt
-          );
-        }
+        if ( option == NULL )
+          fatal_error( EX_USAGE, "\"%s\": %s\n", opt, INVALID_XTIDY_OPTION );
         if ( option->has_arg == required_argument ) {
           char *const equal = strchr( opt, '=' );
           if ( equal != NULL ) {                // --<long_opt>=<value>
@@ -1227,16 +1227,40 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
         break;
 
       case ':':
-        goto missing_arg;
-      case '?':
-        goto invalid_opt;
+        // LCOV_EXCL_START: move_tidy_args() checks for missing arguments out
+        // of necessity, so this case is never executed; but keep the code just
+        // in case.
+        fatal_error( EX_USAGE,
+          "\"%s\" requires an argument\n",
+          get_opt_format( short_opt == ':' ? optopt : short_opt )
+        );
+        // LCOV_EXCL_STOP
+
+      case '?':;
+        // Determine whether the invalid option was short or long.
+        char const *const invalid_opt = tidy_argv[ optind - 1 ];
+        if ( invalid_opt != NULL && STRNCMPLIT( invalid_opt, "--" ) == 0 )
+          strbuf_printf( &err_buf, "\"%s\"", invalid_opt + STRLITLEN( "--" ) );
+        else
+          strbuf_printf( &err_buf, "'%c'", optopt );
+        fatal_error( EX_USAGE, "%s: %s\n", err_buf.str, INVALID_XTIDY_OPTION );
+
       default:
-        goto unhandled_opt;             // LCOV_EXCL_LINE
+        // LCOV_EXCL_START
+        if ( isprint( short_opt ) )
+          strbuf_printf( &err_buf, "'%c'", short_opt );
+        else
+          strbuf_printf( &err_buf, "%d", short_opt );
+        INTERNAL_ERROR(
+          "%s: unhandled getopt_long() return value\n", err_buf.str
+        );
+        // LCOV_EXCL_STOP
     } // switch
+
     option_mark_set( short_opt );
   } // for
-  FREE( short_opts );
 
+  FREE( short_opts );
   check_options();
 
   if ( IS_VERBOSE( SRC_FILE_ALWAYS ) ) {
@@ -1272,8 +1296,10 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   if ( opt_version > 0 ) {
     if ( argc > 1 )                     // include-tidy --version foo
       print_usage( EX_USAGE );
+    // LCOV_EXCL_START
     print_version( /*verbose=*/opt_version > 1 );
     exit( EX_OK );
+    // LCOV_EXCL_STOP
   }
   if ( tidy_argc != 1 || tidy_source_path == NULL )
     print_usage( EX_USAGE );
@@ -1316,31 +1342,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   // argv[argc-1] is the source file, but we've already copied it into
   // tidy_source_path, so just NULL it out.
   (*pargv)[ --*pargc ] = NULL;
-
-  return;
-
-invalid_opt:;
-  // Determine whether the invalid option was short or long.
-  char const *const invalid_opt = tidy_argv[ optind - 1 ];
-  if ( invalid_opt != NULL && STRNCMPLIT( invalid_opt, "--" ) == 0 )
-    strbuf_printf( &err_buf, "\"%s\"", invalid_opt + STRLITLEN( "--" ) );
-  else
-    strbuf_printf( &err_buf, "'%c'", optopt );
-  strbuf_puts( &err_buf, ": invalid -Xtidy option; use --help or -h for help" );
-  fatal_error( EX_USAGE, "%s\n", err_buf.str );
-
-missing_arg:
-  fatal_error( EX_USAGE,
-    "\"%s\" requires an argument\n",
-    get_opt_format( short_opt == ':' ? optopt : short_opt )
-  );
-
-unhandled_opt:
-  // LCOV_EXCL_START
-  if ( isprint( short_opt ) )
-    INTERNAL_ERROR( "'%c': unhandled getopt_long() return value\n", short_opt );
-  INTERNAL_ERROR( "%d: unhandled getopt_long() return value\n", short_opt );
-  // LCOV_EXCL_STOP
 }
 
 bool option_is_set( int short_opt ) {
