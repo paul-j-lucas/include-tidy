@@ -3,4 +3,4 @@ EXPECTED_EXIT=64
 test_include_tidy
 test_include_tidy foo
 
-# vim:set syntax=sh et sw=2 ts=2:
+# vim:set syntax=bash et sw=2 ts=2:

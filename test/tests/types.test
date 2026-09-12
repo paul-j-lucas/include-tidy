@@ -4,3 +4,5 @@ test_include_tidy $TIDY_TEST_OPTIONS \
     $TIDY_TEST_CONFIG \
     -Xtidy --verbose=z \
     types.h
+
+# vim:set syntax=bash et sw=2 ts=2:

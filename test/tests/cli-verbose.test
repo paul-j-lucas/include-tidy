@@ -14,3 +14,5 @@ test_include_tidy $TIDY_TEST_OPTIONS \
     -Xtidy --config=explicit-proxy.toml \
     -Xtidy --verbose=P \
     explicit-proxy.c
+
+# vim:set syntax=bash et sw=2 ts=2:

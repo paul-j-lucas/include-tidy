@@ -48,3 +48,6 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy -Al65 comment-symbols.c
 #include <stdio.h>                      // fprintf, fputs, ...
 
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --line-length=60 comment-symbols.c
+#include <stdio.h>                      // fprintf, fputs
+

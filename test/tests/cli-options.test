@@ -1,104 +1,112 @@
 EXPECTED_EXIT=0
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --color=never \
-    hello.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --color=never \
+  hello.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --color never \
-    hello.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --color never \
+  hello.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy -knever \
-    hello.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy -knever \
+  hello.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy -k never \
-    hello.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy -k never \
+  hello.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --all-includes \
-    -Xtidy --align-column=35 \
-    hello.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy --align-column=35 \
+  hello.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy -A \
-    -Xtidy -a35 \
-    hello.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy -A \
+  -Xtidy -a35 \
+  hello.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy -Aa35 \
-    hello.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy -Aa35 \
+  hello.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --all-includes \
-    -Xtidy --comment-symbols=alpha \
-    comment-symbols.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy --comment-symbols=alpha \
+  comment-symbols.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --all-includes \
-    -Xtidy --comment-symbols=length \
-    comment-symbols.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy --comment-symbols=length \
+  comment-symbols.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --all-includes \
-    -Xtidy --comment-symbols=most-used \
-    comment-symbols.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy --comment-symbols=most-used \
+  comment-symbols.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --all-includes \
-    -Xtidy --comment-symbols=ref-count \
-    comment-symbols.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy --comment-symbols=ref-count \
+  comment-symbols.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --all-includes \
-    -Xtidy -Salpha \
-    comment-symbols.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy -Salpha \
+  comment-symbols.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --all-includes \
-    -Xtidy -Slength \
-    comment-symbols.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy -Slength \
+  comment-symbols.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --all-includes \
-    -Xtidy -Smost-used \
-    comment-symbols.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy -Smost-used \
+  comment-symbols.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --all-includes \
-    -Xtidy -Sref-count \
-    comment-symbols.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy -Sref-count \
+  comment-symbols.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --all-includes \
-    -Xtidy --line-length=65 \
-    comment-symbols.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy --line-length=65 \
+  comment-symbols.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy -A \
-    -Xtidy -l65 \
-    comment-symbols.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy -A \
+  -Xtidy -l65 \
+  comment-symbols.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy -Al65 \
-    comment-symbols.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy -Al65 \
+  comment-symbols.c
 
+# Tests that "..." is elided.
+test_include_tidy $TIDY_TEST_OPTIONS \
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy --line-length=60 \
+  comment-symbols.c
+
+# vim:set syntax=bash et sw=2 ts=2:

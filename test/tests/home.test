@@ -6,3 +6,5 @@ export HOME
 
 test_include_tidy $TIDY_TEST_OPTIONS \
     hello.c
+
+# vim:set syntax=bash et sw=2 ts=2:
