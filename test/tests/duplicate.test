@@ -2,6 +2,7 @@ EXPECTED_EXIT=1
 
 test_include_tidy $TIDY_TEST_OPTIONS \
   $TIDY_TEST_CONFIG \
+  -Xtidy --comment-style=none \
   hello-2-stdio.c
 
 # vim:set syntax=bash et sw=2 ts=2:
