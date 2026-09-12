@@ -1,5 +1,8 @@
 EXPECTED_EXIT=64
 
+test_include_tidy -Xtidy
+test_include_tidy -Xtidy X
+
 test_include_tidy -Xtidy --align-column
 test_include_tidy -Xtidy --align-column=
 test_include_tidy -Xtidy --align-column=X

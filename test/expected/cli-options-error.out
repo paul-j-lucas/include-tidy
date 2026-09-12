@@ -1,3 +1,9 @@
+$ include-tidy -Xtidy
+include-tidy: error: -Xtidy requires subsequent option
+
+$ include-tidy -Xtidy X
+include-tidy: error: -Xtidy requires subsequent option
+
 $ include-tidy -Xtidy --align-column
 include-tidy: error: "--align-column" requires an argument
 

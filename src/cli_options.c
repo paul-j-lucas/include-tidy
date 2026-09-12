@@ -664,16 +664,14 @@ static bool is_Xtidy_opt( int argc, char const *const argv[], int *pargi ) {
 
   if ( strcmp( argv[ *pargi ], "-Xtidy" ) != 0 )
     return false;
-  if ( ++*pargi >= argc )               // nothing after -Xtidy
+  if ( ++*pargi >= argc )               // -Xtidy (nothing)
     goto error;
-  if ( argv[ *pargi ][0] != '-' )       // non-option after -Xtidy
+  if ( argv[ *pargi ][0] != '-' )       // -Xtidy A (non-option)
     goto error;
-  if ( isalnum( argv[ *pargi ][1] ) )   // short option
+  if ( isalnum( argv[ *pargi ][1] ) )   // -Xtidy -A (short option)
     return true;
-  if ( argv[ *pargi ][1] != '-' )       // not long option
-    goto error;
-  if ( isalnum( argv[ *pargi ][2] ) )   // long option
-    return true;
+  if ( argv[ *pargi ][1] == '-' && isalnum( argv[ *pargi ][2] ) )
+    return true;                        // -Xtidy --A (long option)
 
 error:
   fatal_error( EX_USAGE, "-Xtidy requires subsequent option\n" );
