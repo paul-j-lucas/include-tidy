@@ -1,5 +1,8 @@
 2026-09-12  Paul J. Lucas <paul@lucasmail.org>
 
+   * test/Makefile.am, elide-includes.toml, elide.c, elide_1.h, elide_2.h,
+     elide_3.h, elide-includes.out, elide-includes.test: Added elide-includes
+     test.
    * test/Makefile.am, real.h, symlink.c, symlink.h, symlink.out, symlink.test:
      symlink test.
    * hello.cpp, cli-options.out, cli-options.test: Also testing hello.cpp.
