@@ -265,10 +265,8 @@ bool opt_verbose_parse( char const *verbose_format ) {
         verbose |= TIDY_VERBOSE_PROXIES_EXPLICIT;
         break;
       case 's':
-        // LCOV_EXCL_START: function cursors have platform-specific signatures.
         verbose |= TIDY_VERBOSE_SYMBOLS;
         break;
-        // LCOV_EXCL_STOP
       case 'S':
         verbose |= TIDY_VERBOSE_CONFIG_SYMBOLS;
         break;

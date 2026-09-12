@@ -293,29 +293,37 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
   CXFile include_file = config_symbol_get_include( sym->name );
   if ( include_file == NULL )
     include_file = sym_file;
-  tidy_include const *const include_added_to =
+  tidy_include const *const to_include =
     include_add_symbol( include_file, sym );
 
   if ( !hti.inserted ) {
     tidy_symbol_cleanup( &new_sym );
     goto done;
   }
-  if ( include_added_to == NULL )
+  if ( to_include == NULL )
     goto done;
 
   if ( IS_VERBOSE( SYMBOLS ) ) {
-    // LCOV_EXCL_START: functions have platform-specific signatures.
     if ( verbose_section_begin( &sid->printed_symbols_header  ) )
       verbose_printf( "symbols:\n" );
     char delims[2];
-    include_get_delims( include_added_to, delims );
-    char const *const include_added_to_path = tidy_test != TIDY_TEST_NONE ?
-      include_added_to->rel_path : include_added_to->abs_path;
+    include_get_delims( to_include, delims );
+
+    char const *from_sym_name, *to_include_path;
+    if ( tidy_test != TIDY_TEST_NONE ) {
+      from_sym_name = sym->name;
+      to_include_path = to_include->rel_path;
+    }
+    else {
+      // LCOV_EXCL_START: coverage is run when tidy_test != TIDY_TEST_NONE.
+      from_sym_name = sym->key;
+      to_include_path = to_include->abs_path;
+      // LCOV_EXCL_STOP
+    }
     verbose_printf(
       "  \"%s\" -> %c%s%c\n",
-      sym->key, delims[0], include_added_to_path, delims[1]
+      from_sym_name, delims[0], to_include_path, delims[1]
     );
-    // LCOV_EXCL_STOP
   }
 
 done:
