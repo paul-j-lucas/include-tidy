@@ -124,23 +124,22 @@ static bool test_insert_delete() {
 
   ht_insert_rv_t hti =
     ht_insert( &table, &TEST_LIT( "A", 0 ), sizeof(test_data) );
-  if ( TEST( !ht_empty( &table ) ) && TEST( hti.inserted ) )
-    goto end_test;
-  test_data *t = HT_DINT( hti.entry );
-  TEST( strcmp( t->key, "A" ) == 0 );
-  TEST( t->val == 0 );
+  if ( TEST( !ht_empty( &table ) ) && TEST( hti.inserted ) ) {
+    test_data *t = HT_DINT( hti.entry );
+    TEST( strcmp( t->key, "A" ) == 0 );
+    TEST( t->val == 0 );
 
-  hti = ht_insert( &table, &TEST_LIT( "A", 1 ), sizeof(test_data) );
-  TEST( !hti.inserted );
+    hti = ht_insert( &table, &TEST_LIT( "A", 1 ), sizeof(test_data) );
+    TEST( !hti.inserted );
 
-  t = HT_DINT( hti.entry );
-  TEST( strcmp( t->key, "A" ) == 0 );
-  TEST( t->val == 0 );
+    t = HT_DINT( hti.entry );
+    TEST( strcmp( t->key, "A" ) == 0 );
+    TEST( t->val == 0 );
 
-  ht_delete( &table, hti.entry );
-  TEST( ht_empty( &table ) );
+    ht_delete( &table, hti.entry );
+    TEST( ht_empty( &table ) );
+  }
 
-end_test:
   ht_cleanup( &table, /*free_fn=*/NULL );
   TEST_FUNC_END();
 }
