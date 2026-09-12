@@ -274,8 +274,8 @@ void print_source_line( char const *path, unsigned line, unsigned col,
   // getline() includes the \n in the buffer except if EOF is reached, so check
   // if the last character is \n: if not, print one explicitly.
   //
-  if ( unlikely( line_buf[ line_len - 1 ] != '\n' ) )
-    EPUTC( '\n' );
+  if ( line_len > 0 && unlikely( line_buf[ line_len - 1 ] != '\n' ) )
+    EPUTC( '\n' );                      // LCOV_EXCL_LINE
 
   EPRINTF( "%5s | ", "" );
   for ( unsigned i = 1; i < col && (i - 1) < line_len; ++i )
