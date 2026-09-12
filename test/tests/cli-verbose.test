@@ -1,18 +1,18 @@
 EXPECTED_EXIT=0
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --verbose=- \
-    hello.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --verbose=- \
+  hello.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --verbose=dFs \
-    hello.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --verbose=dFs \
+  hello.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    -Xtidy --config=explicit-proxy.toml \
-    -Xtidy --verbose=P \
-    explicit-proxy.c
+  -Xtidy --config=explicit-proxy.toml \
+  -Xtidy --verbose=P \
+  explicit-proxy.c
 
 # vim:set syntax=bash et sw=2 ts=2:

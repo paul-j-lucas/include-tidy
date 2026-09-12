@@ -1,23 +1,23 @@
 EXPECTED_EXIT=69
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --compiler=no-exists-cc \
-    f.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --compiler=no-exists-cc \
+  f.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy --compiler no-exists-cc \
-    f.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy --compiler no-exists-cc \
+  f.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy -Cno-exists-cc \
-    f.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy -Cno-exists-cc \
+  f.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
-    $TIDY_TEST_CONFIG \
-    -Xtidy -C no-exists-cc \
-    f.c
+  $TIDY_TEST_CONFIG \
+  -Xtidy -C no-exists-cc \
+  f.c
 
 # vim:set syntax=bash et sw=2 ts=2:
