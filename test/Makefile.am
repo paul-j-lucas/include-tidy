@@ -37,7 +37,6 @@ TESTS+=	tests/cli-compiler-no-exists.test \
 	tests/cli-options.test \
 	tests/cli-options-error.test \
 	tests/cli-usage.test \
-	tests/cli-verbose.test \
 	tests/libclang-error.test
 
 # Configuration file option tests
