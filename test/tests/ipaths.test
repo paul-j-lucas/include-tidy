@@ -5,4 +5,5 @@ test_include_tidy $TIDY_TEST_OPTIONS \
     -I /does/not/exist \
     -I ../../lib \
     -I ../../lib \
+    -I /dev/null \
     hello.c
