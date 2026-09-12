@@ -15,6 +15,18 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy -Aa35 hello.c
 #include <stdio.h>                // printf
 
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-style=none hello.c
+#include <stdio.h>
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy -Snone hello.c
+include-tidy: error: "none": invalid value for --comment-symbols/-S
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-style=// hello.c
+#include <stdio.h>                      // printf
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-style=/* hello.c
+#include <stdio.h>                      /* printf */
+
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --comment-symbols=alpha comment-symbols.c
 #include <stdio.h>                      // fprintf, fputs, stdout
 
@@ -53,10 +65,17 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --verbose=- hello.c
 
-$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --verbose=dFs hello.c
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --verbose=f hello.c
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --verbose=F hello.c
 // tidy | source file: "hello.c"
-// tidy | 
+#include <stdio.h>                      // printf
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --verbose=dis hello.c
 // tidy | change directory: "data"
+// tidy | 
+// tidy | direct includes:
+// tidy |   <stdio.h>
 // tidy | 
 // tidy | symbols:
 // tidy |   "printf" -> <stdio.h>

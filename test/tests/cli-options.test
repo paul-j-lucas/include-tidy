@@ -40,6 +40,30 @@ test_include_tidy $TIDY_TEST_OPTIONS \
 test_include_tidy $TIDY_TEST_OPTIONS \
   $TIDY_TEST_CONFIG \
   -Xtidy --all-includes \
+  -Xtidy --comment-style=none \
+  hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy -Snone \
+  hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy --comment-style="//" \
+  hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy --comment-style="/*" \
+  hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
   -Xtidy --comment-symbols=alpha \
   comment-symbols.c
 
@@ -116,7 +140,18 @@ test_include_tidy $TIDY_TEST_OPTIONS \
 
 test_include_tidy $TIDY_TEST_OPTIONS \
   $TIDY_TEST_CONFIG \
-  -Xtidy --verbose=dFs \
+  -Xtidy --verbose=f \
+  hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+  $TIDY_TEST_CONFIG \
+  -Xtidy --all-includes \
+  -Xtidy --verbose=F \
+  hello.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+  $TIDY_TEST_CONFIG \
+  -Xtidy --verbose=dis \
   hello.c
 
 test_include_tidy $TIDY_TEST_OPTIONS \
