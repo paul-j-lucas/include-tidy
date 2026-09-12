@@ -1,0 +1,3 @@
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml missing.c
+#include <stdio.h>                      // printf
+

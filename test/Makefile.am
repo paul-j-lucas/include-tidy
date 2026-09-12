@@ -57,6 +57,7 @@ TESTS+=	tests/bad-semantics-1.test \
 	tests/enoent.test \
 	tests/error.test \
 	tests/include-enoent.test \
+	tests/missing.test \
 	tests/unknown_extension.test \
 	tests/unnecessary.test
 
