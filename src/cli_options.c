@@ -871,16 +871,16 @@ static void move_tidy_args( int *pargc, char const *argv[],
 
     FOREACH_ARRAY_ELEMENT( char const*, popt, LONG_INCLUDE_PATH_OPTIONS ) {
       size_t const opt_len = strlen( *popt );
-      if ( strncmp( argv[i], *popt, opt_len ) == 0 ) {
+      if ( strncmp( argv[i], *popt, opt_len ) == 0 &&
+           argv[i][ opt_len ] != '-' ) {
         argv[ new_argc++ ] = argv[i];
-
         char const *dir_arg;
+
         switch ( argv[i][ opt_len ] ) {
           case '\0':                    // <long_opt> <dir>
             if ( ++i >= argc )
               fatal_error( EX_USAGE, "\"%s\" requires an argument\n", *popt );
-            argv[ new_argc++ ] = argv[i];
-            dir_arg = argv[i];
+            dir_arg = argv[ new_argc++ ] = argv[i];
             break;
           case '=':                     // <long_opt>=<dir>
             dir_arg = argv[i] + opt_len + 1;
@@ -889,6 +889,12 @@ static void move_tidy_args( int *pargc, char const *argv[],
             dir_arg = argv[i] + opt_len;
             break;
         } // switch
+
+        if ( dir_arg[0] == '\0' ) {
+          for ( opt = *popt; *opt == '-'; ++opt )
+            ;
+          goto long_opt_requires_argument;
+        }
 
         // Convert option to -I<dir> for include-tidy.
         char *new_arg = NULL;

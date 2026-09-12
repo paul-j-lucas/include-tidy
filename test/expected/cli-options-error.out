@@ -195,6 +195,48 @@ include-tidy: error: "-I" requires an argument
 $ include-tidy -I -xc
 include-tidy: error: "-I" requires an argument
 
+$ include-tidy --include-directory
+include-tidy: error: "--include-directory" requires an argument
+
+$ include-tidy --include-directory=
+include-tidy: error: "--include-directory" requires an argument
+
+$ include-tidy --include-directory-after
+include-tidy: error: "--include-directory-after" requires an argument
+
+$ include-tidy --include-directory-after=
+include-tidy: error: "--include-directory-after" requires an argument
+
+$ include-tidy -cxx-isystem
+include-tidy: error: "-cxx-isystem" requires an argument
+
+$ include-tidy -cxx-isystem=
+include-tidy: error: "--cxx-isystem" requires an argument
+
+$ include-tidy -idirafter
+include-tidy: error: "-idirafter" requires an argument
+
+$ include-tidy -idirafter=
+include-tidy: error: "--idirafter" requires an argument
+
+$ include-tidy -iquote
+include-tidy: error: "-iquote" requires an argument
+
+$ include-tidy -iquote=
+include-tidy: error: "--iquote" requires an argument
+
+$ include-tidy -isystem
+include-tidy: error: "-isystem" requires an argument
+
+$ include-tidy -isystem=
+include-tidy: error: "--isystem" requires an argument
+
+$ include-tidy -isystem-after
+include-tidy: error: "-isystem-after" requires an argument
+
+$ include-tidy -isystem-after=
+include-tidy: error: "--isystem-after" requires an argument
+
 $ include-tidy -x
 include-tidy: error: "-x" requires an argument
 

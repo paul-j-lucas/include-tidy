@@ -72,6 +72,27 @@ test_include_tidy --help --version
 test_include_tidy -I
 test_include_tidy -I -xc
 
+test_include_tidy --include-directory
+test_include_tidy --include-directory=
+
+test_include_tidy --include-directory-after
+test_include_tidy --include-directory-after=
+
+test_include_tidy -cxx-isystem
+test_include_tidy -cxx-isystem=
+
+test_include_tidy -idirafter
+test_include_tidy -idirafter=
+
+test_include_tidy -iquote
+test_include_tidy -iquote=
+
+test_include_tidy -isystem
+test_include_tidy -isystem=
+
+test_include_tidy -isystem-after
+test_include_tidy -isystem-after=
+
 test_include_tidy -x
 test_include_tidy -xX
 
