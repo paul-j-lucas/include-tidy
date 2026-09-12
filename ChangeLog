@@ -1,3 +1,44 @@
+2026-09-12  Paul J. Lucas <paul@lucasmail.org>
+
+   * test/Makefile.am, real.h, symlink.c, symlink.h, symlink.out, symlink.test:
+     symlink test.
+   * hello.cpp, cli-options.out, cli-options.test: Also testing hello.cpp.
+   * test/Makefile.am, missing.c, missing.h, missing.out, missing.test: Added
+     indirect include (missing) test.
+   * duplicate.out, duplicate.test: Expanded test.
+   * test/Makefile.am, unnecessary.c, unnecessary.out, unnecessary.test:
+     Duplicate unnecessary test.
+   * duplicate.out, duplicate.test: Another test.
+   * cli-options.out, hello.out, cli-options.test, hello.test: Test reorg.
+   * test/Makefile.am, cli-options.out, cli-options.test: Test consolidation.
+   * home.test, xdg_config_dirs.test, xdg_config_home.test: Now using () for
+     subshell.
+   * cli-options.out, Derived-02.test, Derived-MI.test, align-column.test,
+     associated-header.test, bad-semantics-1.test, bad-semantics-2.test,
+     c_ast.test, c_ast_util.test, c_type.test, c_typedef.test, cdecl_dym.test,
+     cli-compiler-no-exists.test, cli-compiler-no-include-end.test,
+     cli-compiler-no-include-start.test, cli-error-always.test, cli-help.test,
+     cli-options-error.test, cli-options.test, cli-usage.test,
+     cli-verbose.test, comment-style.test, conf_filter.test, conf_string.test,
+     conf_var_init.test, cxx.test, derived_conf_string_cpp.test,
+     derived_conf_string_hpp.test, derived_map.test, derived_set-2.test,
+     derived_set.test, dump.test, duplicate.test, elements_cpp.test,
+     english.test, enoent.test, entities_hpp.test, error.test,
+     error_string.test, exit_codes.test, hash.test, hello.test, home.test,
+     include-enoent.test, ipaths.test, libclang-error.test, macro.test,
+     namespace_type.test, p_macro.test, query_node.test, red_black.test,
+     show.test, slist.test, timespec_t.test, types.test,
+     unknown_extension.test, using_set.test, xdg_config_dirs.test,
+     xdg_config_home.test: Added test for elision of ...; vim comments.
+   * include-tidy.c: Code coverage exclusion comments.
+   * hash_table_test.c: Corrected test logic.
+   * lcovrc: Added } \/\/
+   * cli-compiler-no-exists.out, cli-compiler-no-exists.test: More CLI tests.
+   * options.c, symbol.c, cli-verbose.out, cli-verbose.test: Added --verbose=s
+     to code coverage.
+   * print.c: Code coverage exclusion comments.
+   * lcovrc: Added }$.
+
 2026-09-11  Paul J. Lucas <paul@lucasmail.org>
 
    * ipaths.out, ipaths.test: Added ipath !S_ISDIR( st.st_mode ) test.
