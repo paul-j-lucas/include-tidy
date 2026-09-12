@@ -1,10 +1,11 @@
 EXPECTED_EXIT=0
 
-INCLUDE_TIDY_TEST=$(echo $INCLUDE_TIDY_TEST | sed 's/h//')
-HOME="$PWD/data/home"
-export HOME
+(
+  INCLUDE_TIDY_TEST=$(echo $INCLUDE_TIDY_TEST | sed 's/h//')
+  export HOME="$PWD/data/home"
 
-test_include_tidy $TIDY_TEST_OPTIONS \
+  test_include_tidy $TIDY_TEST_OPTIONS \
     hello.c
+)
 
 # vim:set syntax=bash et sw=2 ts=2:
