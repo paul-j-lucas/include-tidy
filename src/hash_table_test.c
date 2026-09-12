@@ -97,21 +97,19 @@ static bool test_find_delete() {
   TEST( entry == NULL );
 
   entry = ht_find( &table, &TEST_LIT( "D", 0 ) );
-  if ( !TEST( entry != NULL ) )
-    goto end_test;
+  if ( TEST( entry != NULL ) ) {
+    ht_delete( &table, entry );
 
-  ht_delete( &table, entry );
+    bool seen[ 128 ];
+    test_ht_seen( &table, seen );
 
-  bool seen[ 128 ];
-  test_ht_seen( &table, seen );
+    TEST(  seen[ 'A' ] );
+    TEST(  seen[ 'B' ] );
+    TEST(  seen[ 'C' ] );
+    TEST( !seen[ 'D' ] );
+    TEST(  seen[ 'E' ] );
+  }
 
-  TEST(  seen[ 'A' ] );
-  TEST(  seen[ 'B' ] );
-  TEST(  seen[ 'C' ] );
-  TEST( !seen[ 'D' ] );
-  TEST(  seen[ 'E' ] );
-
-end_test:
   ht_cleanup( &table, /*free_fn=*/NULL );
   TEST_FUNC_END();
 }
