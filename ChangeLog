@@ -1,5 +1,19 @@
 2026-09-11  Paul J. Lucas <paul@lucasmail.org>
 
+   * ipaths.out, ipaths.test: Added ipath !S_ISDIR( st.st_mode ) test.
+   * cli-options.out, cli-options.test: Added --line-length test.
+   * cli_options.c, cli-options-error.out, cli-options-error.test: More
+     command-line tests.
+   * cli_options.c, cli-options-error.out, cli-options-error.test: More CLI
+     tests.
+   * cli_options.c: check_optarg() wasn't a good idea: should not rely on
+     optarg for missing argument.
+   * test/Makefile.am, cli-options.out, cli-options.test: More comprehensive
+     tests.
+   * test/Makefile.am, cli-options.out, cli-options.test: More short-option
+     tests.
+   * cli_options.c, cli-options.out, cli-options.test: Yet better -Xtidy option
+     handling.
    * cli_options.c, test/Makefile.am, cli-long-opt.out, cli-options-error.out,
      cli-long-opt.test: Better -Xtidy long option handling.
    * cli_options.c: More robust is_Xtidy_opt().
