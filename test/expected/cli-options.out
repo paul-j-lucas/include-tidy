@@ -39,3 +39,12 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy -Sref-count comment-symbols.c
 #include <stdio.h>                      // fputs, stdout, fprintf
 
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --all-includes -Xtidy --line-length=65 comment-symbols.c
+#include <stdio.h>                      // fprintf, fputs, ...
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy -A -Xtidy -l65 comment-symbols.c
+#include <stdio.h>                      // fprintf, fputs, ...
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy -Al65 comment-symbols.c
+#include <stdio.h>                      // fprintf, fputs, ...
+

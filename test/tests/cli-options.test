@@ -84,3 +84,21 @@ test_include_tidy $TIDY_TEST_OPTIONS \
     -Xtidy --all-includes \
     -Xtidy -Sref-count \
     comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy --all-includes \
+    -Xtidy --line-length=65 \
+    comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy -A \
+    -Xtidy -l65 \
+    comment-symbols.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+    $TIDY_TEST_CONFIG \
+    -Xtidy -Al65 \
+    comment-symbols.c
+
