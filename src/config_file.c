@@ -192,7 +192,8 @@ static void         ignore_as_argument_parse( config_parse_fn_args const* );
 static void         ignore_parse( config_parse_fn_args const* );
 static void         ignore_symbols_parse( config_parse_fn_args const* );
 static void         ignore_symbols_parse_string( config_parse_fn_args const* );
-static void         include_handle( char const*, tidy_handling );
+static void         include_handle( char const*, char const*, char const*,
+                                    toml_loc const*, tidy_handling );
 static void         includes_parse( config_parse_fn_args const* );
 static void         includes_parse_string( config_parse_fn_args const* );
 static void         keep_includes_parse( config_parse_fn_args const* );
@@ -648,7 +649,11 @@ static void elide_include_parse_string( config_parse_fn_args const *config ) {
   assert( config != NULL );
   assert( config->value->type == TOML_STRING );
 
-  include_handle( config->value->s, TIDY_HANDLE_ELIDE );
+  include_handle(
+    config->config_path, config->key->name,
+    config->value->s, &config->value->loc,
+    TIDY_HANDLE_ELIDE
+  );
 }
 
 /**
@@ -815,7 +820,11 @@ static void keep_includes_parse_string( config_parse_fn_args const *config ) {
   assert( config != NULL );
   assert( config->value->type == TOML_STRING );
 
-  include_handle( config->value->s, TIDY_HANDLE_KEEP );
+  include_handle(
+    config->config_path, config->key->name,
+    config->value->s, &config->value->loc,
+    TIDY_HANDLE_KEEP
+  );
 }
 
 /**
@@ -829,7 +838,11 @@ static void keep_parse( config_parse_fn_args const *config ) {
   bool keep;
   if ( !toml_bool_parse( config, &keep ) || !keep )
     return;
-  include_handle( config->table->key.name, TIDY_HANDLE_KEEP );
+  include_handle(
+    config->config_path, config->key->name,
+    config->table->key.name, &config->table->key.loc,
+    TIDY_HANDLE_KEEP
+  );
 }
 
 /**
@@ -985,7 +998,7 @@ static void config_cleanup( void ) {
  *     If `XDG_CONFIG_DIRS` is empty or unset, then `/etc/xdg` is used.
  * @endparblock
  *
- * @param config_path The path to a configuration file.  May be NULL.
+ * @param config_path The configuration file path.  May be NULL.
  * @param rv_path_buf A path to receive the path of the configuration file that
  * was found, if any.
  * @return Returns the `FILE*` for the configuration file if found or NULL if
@@ -1113,7 +1126,7 @@ static config_key const* config_key_find( char const *key_name ) {
 /**
  * Tries to open a configuration file given by \a config_path.
  *
- * @param config_path The path to a configuration file.  May be NULL.
+ * @param config_path The configuration file path.  May be NULL.
  * @param opts The configuration options, if any.
  * @return Returns a `FILE*` to the open file upon success or NULL upon either
  * error or if \a config_path is NULL.
@@ -1156,7 +1169,7 @@ static FILE* config_open( char const *config_path, config_opts opts ) {
 /**
  * Parses a configuration file.
  *
- * @param config_path The path to the configurarion file.
+ * @param config_path The configurarion file path.
  * @param config_file The `FILE*` corresponding to \a config_path.
  */
 static void config_parse( char const *config_path, FILE *config_file ) {
@@ -1292,11 +1305,20 @@ static char const* home_dir( void ) {
  * Sets the \ref tidy_include::handling "handling" field of the include file(s)
  * having \a rel_path to \a handling.
  *
+ * @param config_path The configuration file path.
+ * @param key_name The current key name.
  * @param rel_path The relative path of the include file to use.
+ * @param loc The location of \a rel_path.
  * @param handling The handling to set.
  */
-static void include_handle( char const *rel_path, tidy_handling handling ) {
+static void include_handle( char const *config_path, char const *key_name,
+                            char const *rel_path, toml_loc const *loc,
+                            tidy_handling handling ) {
+  assert( config_path != NULL );
+  assert( key_name != NULL );
   assert( rel_path != NULL );
+  assert( loc != NULL );
+  assert( handling != TIDY_HANDLE_DEFAULT );
 
   rb_iterator_t iter;
   size_t const  rel_path_len = strlen( rel_path );
@@ -1304,8 +1326,31 @@ static void include_handle( char const *rel_path, tidy_handling handling ) {
   rb_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( path_ends_with( include->abs_path, rel_path, rel_path_len ) )
-      include->handling = handling;
+    if ( path_ends_with( include->abs_path, rel_path, rel_path_len ) ) {
+      if ( include->handling == TIDY_HANDLE_DEFAULT ) {
+        include->handling = handling;
+      }
+      else if ( include->handling == handling ) {
+        print_file_warning(
+          config_path, loc->line, loc->col,
+          "%s \"%s\": redundantly %s\n",
+          key_name,
+          rel_path,
+          include->handling == TIDY_HANDLE_ELIDE ? "elided" : "kept"
+        );
+        ++warning_count;
+      }
+      else {
+        print_file_error(
+          config_path, loc->line, loc->col,
+          "%s \"%s\": previously %s\n",
+          key_name,
+          rel_path,
+          include->handling == TIDY_HANDLE_ELIDE ? "elided" : "kept"
+        );
+        ++error_count;
+      }
+    }
   } // for
 }
 

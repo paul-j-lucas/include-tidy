@@ -54,6 +54,7 @@ TESTS+=	tests/associated-header.test \
 # Error tests
 TESTS+=	tests/bad-semantics-1.test \
 	tests/bad-semantics-2.test \
+	tests/config-handling-error.test \
 	tests/duplicate.test \
 	tests/enoent.test \
 	tests/error.test \
