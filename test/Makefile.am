@@ -41,6 +41,7 @@ TESTS+=	tests/cli-compiler-no-exists.test \
 
 # Configuration file option tests
 TESTS+=	tests/config-align-column.test \
+	tests/config-color.test \
 	tests/config-comment-style.test \
 	tests/config-elide-includes.test
 
