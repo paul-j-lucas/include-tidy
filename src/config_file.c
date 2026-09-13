@@ -1141,9 +1141,11 @@ static FILE* config_open( char const *config_path, config_opts opts ) {
   static bool printed_configuration_header;
 
   if ( IS_VERBOSE( CONFIG_FILES ) ) {
+    // LCOV_EXCL_START: configuration paths are absolute
     if ( verbose_section_begin( &printed_configuration_header ) )
       verbose_printf( "configuration files:\n" );
     verbose_printf( "  \"%s\": %s\n", config_path, ok ? "OK" : STRERROR() );
+    // LCOV_EXCL_STOP
   }
 
   if ( !ok ) {
