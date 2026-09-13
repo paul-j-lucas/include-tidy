@@ -568,7 +568,7 @@ static void color_parse( config_parse_fn_args const *config ) {
   if ( !toml_string_parse( config, &string_value ) )
     return;
   if ( option_is_set( COPT(COLOR) ) )
-    return;
+    return;                             // LCOV_EXCL_LINE
   if ( !opt_color_parse( string_value ) ) {
     print_invalid_value( config, /*value=*/NULL, TOML_STRING );
     EPUTS(
@@ -591,7 +591,7 @@ static void comment_style_parse( config_parse_fn_args const *config ) {
   if ( !toml_string_parse( config, &string_value ) )
     return;
   if ( option_is_set( COPT(COMMENT_STYLE) ) )
-    return;
+    return;                             // LCOV_EXCL_LINE
   if ( !opt_comment_style_parse( string_value ) ) {
     print_invalid_value( config, /*value=*/NULL, TOML_STRING );
     EPUTS( "; must be one of \"//\", \"/*\", or \"none\"\n" );
@@ -610,7 +610,7 @@ static void comment_symbols_parse( config_parse_fn_args const *config ) {
   if ( !toml_string_parse( config, &string_value ) )
     return;
   if ( option_is_set( COPT(COMMENT_SYMBOLS) ) )
-    return;
+    return;                             // LCOV_EXCL_LINE
   if ( !opt_comment_symbols_parse( string_value ) ) {
     print_invalid_value( config, /*value=*/NULL, TOML_STRING );
     EPUTS(
@@ -661,7 +661,7 @@ static void error_parse( config_parse_fn_args const *config ) {
   if ( !toml_string_parse( config, &string_value ) )
     return;
   if ( option_is_set( COPT(ERROR) ) )
-    return;
+    return;                             // LCOV_EXCL_LINE
   if ( !opt_error_parse( string_value ) ) {
     print_invalid_value( config, /*value=*/NULL, TOML_STRING );
     EPUTS( "; must be one of \"always\", \"never\", or \"violations\"\n" );
