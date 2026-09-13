@@ -715,8 +715,10 @@ static char const* make_short_opts( struct option const options[static const 2],
     *s++ = STATIC_CAST( char, option->val );
     switch ( option->has_arg ) {
       case optional_argument:
+        // LCOV_EXCL_START: tidy doesn't currently have any optional arguments.
         *s++ = ':';
         FALLTHROUGH;
+        // LCOV_EXCL_STOP
       case required_argument:
         *s++ = ':';
     } // switch
@@ -953,8 +955,10 @@ static void print_usage( int status ) {
       case no_argument:
         break;
       case optional_argument:
+        // LCOV_EXCL_START: tidy doesn't currently have any optional arguments.
         long_opt_len += STRLITLEN( "[=ARG]" );
         break;
+        // LCOV_EXCL_STOP
       case required_argument:
         long_opt_len += STRLITLEN( "=ARG" );
         break;
@@ -988,8 +992,10 @@ static void print_usage( int status ) {
       case no_argument:
         break;
       case optional_argument:
+        // LCOV_EXCL_START: tidy doesn't currently have any optional arguments.
         long_opt_len += STATIC_CAST( size_t, fprintf( fout, "[=ARG]" ) );
         break;
+        // LCOV_EXCL_STOP
       case required_argument:
         long_opt_len += STATIC_CAST( size_t, fprintf( fout, "=ARG" ) );
         break;
