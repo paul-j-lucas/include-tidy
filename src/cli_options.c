@@ -798,7 +798,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
 
   int const argc = *pargc;
   int new_argc = 1, tidy_argc = 1;
-  char const *opt;
+  char const *opt = NULL;
 
   char const **const tidy_argv =
     MALLOC( char*, STATIC_CAST( size_t, argc ) + 1/*NULL*/ );
@@ -892,9 +892,8 @@ static void move_tidy_args( int *pargc, char const *argv[],
             break;
         } // switch
 
-        if ( dir_arg[0] == '\0' ) {
-          for ( opt = *popt; *opt == '-'; ++opt )
-            ;
+        if ( dir_arg[0] == '\0' || dir_arg[0] == '-' ) {
+          opt = *popt;
           goto long_opt_requires_argument;
         }
 
@@ -933,9 +932,14 @@ next_argv:;
   return;
 
 long_opt_requires_argument:
+  assert( opt != NULL );
+  if ( opt[0] == '-' )
+    fatal_error( EX_USAGE, "\"%s\" requires an argument\n", opt );
   fatal_error( EX_USAGE, "\"--%s\" requires an argument\n", opt );
 
 short_opt_requires_argument:
+  assert(  opt != NULL );
+  assert( isalnum( *opt ) );
   fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", *opt );
 }
 
