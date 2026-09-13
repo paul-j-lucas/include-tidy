@@ -42,7 +42,10 @@ TESTS+=	tests/cli-compiler-no-exists.test \
 # Configuration file tests
 TESTS+=	tests/config.test \
 	tests/config-associated-header.test \
-	tests/config-elide-includes.test
+	tests/config-bad-semantics-1.test \
+	tests/config-bad-semantics-2.test \
+	tests/config-elide-includes.test \
+	tests/config-handling-error.test
 
 # Other tests
 TESTS+=	tests/home.test \
@@ -52,10 +55,7 @@ TESTS+=	tests/home.test \
 	tests/xdg_config_dirs.test
 
 # Error tests
-TESTS+=	tests/bad-semantics-1.test \
-	tests/bad-semantics-2.test \
-	tests/config-handling-error.test \
-	tests/duplicate.test \
+TESTS+=	tests/duplicate.test \
 	tests/enoent.test \
 	tests/error.test \
 	tests/include-enoent.test \
