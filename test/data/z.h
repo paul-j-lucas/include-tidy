@@ -1,1 +1,1 @@
-typedef int associated_int;
+typedef int z_int;

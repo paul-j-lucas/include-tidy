@@ -3,6 +3,6 @@
 #include "z.h"
 
 void f() {
-  associated_int i;
+  z_int i;
   c_type_t type;
 }
