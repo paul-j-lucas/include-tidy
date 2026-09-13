@@ -39,13 +39,13 @@ TESTS+=	tests/cli-compiler-no-exists.test \
 	tests/cli-usage.test \
 	tests/libclang-error.test
 
-# Configuration file option tests
+# Configuration file tests
 TESTS+=	tests/config.test \
+	tests/config-associated-header.test \
 	tests/config-elide-includes.test
 
 # Other tests
-TESTS+=	tests/associated-header.test \
-	tests/home.test \
+TESTS+=	tests/home.test \
 	tests/ipaths.test \
 	tests/symlink.test \
 	tests/xdg_config_home.test \
