@@ -1,5 +1,8 @@
 2026-09-13  Paul J. Lucas <paul@lucasmail.org>
 
+   * config_file.c, test/Makefile.am, proxy-cycle-1.h, proxy-cycle-2.h,
+     proxy-cycle.c, proxy-cycle.toml, config-proxy-cycle.out,
+     config-proxy-cycle.test: Added proxy cycle test.
    * test/Makefile.am, bad.toml, config-bad-toml.out, config-bad-toml.test:
      Added invalid TOML test.
    * config_file.c: Code coverage exclusion comments.
