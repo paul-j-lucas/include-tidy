@@ -1009,7 +1009,6 @@ static FILE* config_file_find( char const *config_path,
       ++case_num;
       config_file = config_open( config_path, CONFIG_OPT_ERROR_IS_FATAL );
       if ( config_file != NULL ) {
-        strbuf_reset( &path_buf );
         strbuf_puts( &path_buf, config_path );
         break;
       }
