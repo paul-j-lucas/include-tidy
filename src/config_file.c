@@ -985,21 +985,23 @@ static void config_cleanup( void ) {
  *     If `XDG_CONFIG_DIRS` is empty or unset, then `/etc/xdg` is used.
  * @endparblock
  *
- * @param config_path The full path to a configuration file.  May be NULL.
- * @param path_buf A path buffer to use.  Upon return, it contains the full
+ * @param config_path The path to a configuration file.  May be NULL.
+ * @param rv_path_buf A path buffer to use.  Upon return, it contains the full
  * path of the configuration file that was found, if any.
  * @return Returns the `FILE*` for the configuration file if found or NULL if
  * not.
  */
 NODISCARD
-static FILE* config_file_find( char const *config_path, strbuf_t *path_buf ) {
-  assert( path_buf != NULL );
+static FILE* config_file_find( char const *config_path,
+                               strbuf_t *rv_path_buf ) {
+  assert( rv_path_buf != NULL );
 
   // This must be incremented in every case below and not just once initally
   // due to the fallthroughs between cases.
   static unsigned case_num = 1;
 
   FILE *config_file = NULL;
+  strbuf_t path_buf = STRBUF_INIT();
 
   switch ( case_num ) {
     case 1:
@@ -1007,8 +1009,8 @@ static FILE* config_file_find( char const *config_path, strbuf_t *path_buf ) {
       ++case_num;
       config_file = config_open( config_path, CONFIG_OPT_ERROR_IS_FATAL );
       if ( config_file != NULL ) {
-        strbuf_reset( path_buf );
-        strbuf_puts( path_buf, config_path );
+        strbuf_reset( &path_buf );
+        strbuf_puts( &path_buf, config_path );
         break;
       }
       FALLTHROUGH;
@@ -1016,12 +1018,12 @@ static FILE* config_file_find( char const *config_path, strbuf_t *path_buf ) {
     case 2:
       // Try $PWD/include-tidy.toml.
       ++case_num;
-      strbuf_reset( path_buf );
+      strbuf_reset( &path_buf );
       size_t cwd_path_len;
       char const *const cwd_path = path_cwd( &cwd_path_len );
-      strbuf_putsn( path_buf, cwd_path, cwd_path_len );
-      strbuf_paths( path_buf, PACKAGE ".toml" );
-      config_file = config_open( path_buf->str, CONFIG_OPT_IGNORE_ENOENT );
+      strbuf_putsn( &path_buf, cwd_path, cwd_path_len );
+      strbuf_paths( &path_buf, PACKAGE ".toml" );
+      config_file = config_open( path_buf.str, CONFIG_OPT_IGNORE_ENOENT );
       if ( config_file != NULL )
         break;
       FALLTHROUGH;
@@ -1030,23 +1032,23 @@ static FILE* config_file_find( char const *config_path, strbuf_t *path_buf ) {
       // Try $XDG_CONFIG_HOME/include-tidy/config.toml or
       // $HOME/.config/include-tidy/config.toml.
       ++case_num;
-      strbuf_reset( path_buf );
+      strbuf_reset( &path_buf );
       char const *const config_home =
         null_if_empty( getenv( "XDG_CONFIG_HOME" ) );
       if ( config_home != NULL ) {
-        strbuf_puts( path_buf, config_home );
+        strbuf_puts( &path_buf, config_home );
       }
       else {
         char const *const home = home_dir();
         if ( home != NULL ) {
-          strbuf_puts( path_buf, home );
-          strbuf_paths( path_buf, ".config" );
+          strbuf_puts( &path_buf, home );
+          strbuf_paths( &path_buf, ".config" );
         }
       }
-      if ( path_buf->len > 0 ) {
-        strbuf_paths( path_buf, PACKAGE );
-        strbuf_paths( path_buf, "config.toml" );
-        config_file = config_open( path_buf->str, CONFIG_OPT_IGNORE_ENOENT );
+      if ( path_buf.len > 0 ) {
+        strbuf_paths( &path_buf, PACKAGE );
+        strbuf_paths( &path_buf, "config.toml" );
+        config_file = config_open( path_buf.str, CONFIG_OPT_IGNORE_ENOENT );
         if ( config_file != NULL )
           break;
       }
@@ -1068,11 +1070,11 @@ static FILE* config_file_find( char const *config_path, strbuf_t *path_buf ) {
           STATIC_CAST( size_t, next_sep - config_dirs ) :
           strlen( config_dirs );
         if ( dir_len > 0 ) {
-          strbuf_reset( path_buf );
-          strbuf_putsn( path_buf, config_dirs, dir_len );
-          strbuf_paths( path_buf, PACKAGE );
-          strbuf_paths( path_buf, "config.toml" );
-          config_file = config_open( path_buf->str, CONFIG_OPT_IGNORE_ENOENT );
+          strbuf_reset( &path_buf );
+          strbuf_putsn( &path_buf, config_dirs, dir_len );
+          strbuf_paths( &path_buf, PACKAGE );
+          strbuf_paths( &path_buf, "config.toml" );
+          config_file = config_open( path_buf.str, CONFIG_OPT_IGNORE_ENOENT );
           if ( config_file != NULL )
             break;
         }
@@ -1082,6 +1084,10 @@ static FILE* config_file_find( char const *config_path, strbuf_t *path_buf ) {
       } // for
   } // switch
 
+  if ( config_file != NULL )
+    *rv_path_buf = path_buf;
+  else
+    strbuf_cleanup( &path_buf );
   return config_file;
 }
 
@@ -1106,26 +1112,26 @@ static config_key const* config_key_find( char const *key_name ) {
 }
 
 /**
- * Tries to open a configuration file given by \a path.
+ * Tries to open a configuration file given by \a config_path.
  *
- * @param path The full path to try to open.  May be NULL.
+ * @param config_path The path to a configuration file.  May be NULL.
  * @param opts The configuration options, if any.
  * @return Returns a `FILE*` to the open file upon success or NULL upon either
- * error or if \a path is NULL.
+ * error or if \a config_path is NULL.
  */
 NODISCARD
-static FILE* config_open( char const *path, config_opts opts ) {
-  if ( path == NULL )
+static FILE* config_open( char const *config_path, config_opts opts ) {
+  if ( config_path == NULL )
     return NULL;
 
-  FILE *const config_file = fopen( path, "r" );
+  FILE *const config_file = fopen( config_path, "r" );
   bool const  ok = config_file != NULL;
   static bool printed_configuration_header;
 
   if ( IS_VERBOSE( CONFIG_FILES ) ) {
     if ( verbose_section_begin( &printed_configuration_header ) )
       verbose_printf( "configuration files:\n" );
-    verbose_printf( "  \"%s\": %s\n", path, ok ? "OK" : STRERROR() );
+    verbose_printf( "  \"%s\": %s\n", config_path, ok ? "OK" : STRERROR() );
   }
 
   if ( !ok ) {
@@ -1136,10 +1142,10 @@ static FILE* config_open( char const *path, config_opts opts ) {
         FALLTHROUGH;
       default:
         if ( (opts & CONFIG_OPT_ERROR_IS_FATAL) != 0 ) {
-          print_file_error( path, 0, 0, "%s\n", STRERROR() );
+          print_file_error( config_path, 0, 0, "%s\n", STRERROR() );
           exit( EX_NOINPUT );
         }
-        print_file_warning( path, 0, 0, "%s\n", STRERROR() );
+        print_file_warning( config_path, 0, 0, "%s\n", STRERROR() );
         ++warning_count;
         break;
     } // switch
