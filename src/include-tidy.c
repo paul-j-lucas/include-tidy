@@ -107,7 +107,7 @@ static tidy_test_t tidy_test_parse( char const *env_var ) {
   if ( value == NULL )
     return TIDY_TEST_NONE;              // LCOV_EXCL_LINE
 
-  option_str_set_all_or_none( &value, "h" );
+  option_str_set_all_or_none( &value, "eh" );
   tidy_test_t t = TIDY_TEST_NONE;
 
   for ( char const *s = value; *s != '\0'; ++s ) {
