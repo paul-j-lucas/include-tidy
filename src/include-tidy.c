@@ -42,6 +42,10 @@
 #include <stdlib.h>
 #include <sysexits.h>
 
+////////// macros /////////////////////////////////////////////////////////////
+
+#define INCLUDE_TIDY_TEST_ALL     "eh"  /**< All test values. */
+
 ////////// enums //////////////////////////////////////////////////////////////
 
 /**
@@ -107,7 +111,7 @@ static tidy_test_t tidy_test_parse( char const *env_var ) {
   if ( value == NULL )
     return TIDY_TEST_NONE;              // LCOV_EXCL_LINE
 
-  option_str_set_all_or_none( &value, "eh" );
+  option_str_set_all_or_none( &value, INCLUDE_TIDY_TEST_ALL );
   tidy_test_t t = TIDY_TEST_NONE;
 
   for ( char const *s = value; *s != '\0'; ++s ) {
@@ -121,7 +125,8 @@ static tidy_test_t tidy_test_parse( char const *env_var ) {
       default:
         // LCOV_EXCL_START
         fatal_error( EX_USAGE,
-          "\"%s\": invalid value for %s; must be [eh]|*|-\n",
+          "\"%s\": invalid value for %s;"
+          " must be [" INCLUDE_TIDY_TEST_ALL "]|*|-\n",
           value, env_var
         );
         // LCOV_EXCL_STOP
