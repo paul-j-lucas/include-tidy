@@ -1,5 +1,7 @@
 2026-09-13  Paul J. Lucas <paul@lucasmail.org>
 
+   * test/Makefile.am, keep.c, keep.toml, config-keep.out, config-keep.test:
+     Added "keep" test.
    * config_file.c, test/Makefile.am, proxy-cycle-1.h, proxy-cycle-2.h,
      proxy-cycle.c, proxy-cycle.toml, config-proxy-cycle.out,
      config-proxy-cycle.test: Added proxy cycle test.
