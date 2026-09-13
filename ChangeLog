@@ -1,5 +1,16 @@
 2026-09-12  Paul J. Lucas <paul@lucasmail.org>
 
+   * config_file.c: Eliminated unncessary strbuf_reset().
+   * config.toml: Added line-length test.
+   * config.toml, config.out, config.test: Added ignore-as-argument test.
+   * config.toml: Added comment-symbols test.
+   * config_file.c: Code coverage exclusion comments.
+   * test/Makefile.am, config.out: Test consolidation.
+   * test/Makefile.am, color.toml, config-color.out, config-color.test: Added
+     color config test.
+   * cli-options-error.out, cli-options-error.test: Another CLI test.
+   * cli_options.c, cli-options-error.out: Fixed error messages for single -
+     clang long options.
    * cli_options.c: Code coverage exclusion comments.
    * include-enoent.out, include-enoent.test: Added --debug test.
    * cli-options.out, cli-options.test: Added -xc++ test.
