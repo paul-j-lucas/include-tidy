@@ -1,3 +1,5 @@
 [include-tidy]
+align-column = 35
 all-includes = true
+color = "never"
 comment-style = "/*"

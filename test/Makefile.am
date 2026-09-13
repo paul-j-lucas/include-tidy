@@ -40,9 +40,7 @@ TESTS+=	tests/cli-compiler-no-exists.test \
 	tests/libclang-error.test
 
 # Configuration file option tests
-TESTS+=	tests/config-align-column.test \
-	tests/config-color.test \
-	tests/config-comment-style.test \
+TESTS+=	tests/config.test \
 	tests/config-elide-includes.test
 
 # Other tests
