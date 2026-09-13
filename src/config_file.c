@@ -986,8 +986,8 @@ static void config_cleanup( void ) {
  * @endparblock
  *
  * @param config_path The path to a configuration file.  May be NULL.
- * @param rv_path_buf A path buffer to use.  Upon return, it contains the full
- * path of the configuration file that was found, if any.
+ * @param rv_path_buf A path to receive the path of the configuration file that
+ * was found, if any.
  * @return Returns the `FILE*` for the configuration file if found or NULL if
  * not.
  */
