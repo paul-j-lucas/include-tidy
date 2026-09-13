@@ -128,7 +128,7 @@ struct config_key {
  * Arguments to a config_parse_fn.
  */
 struct config_parse_fn_args {
-  char const       *config_path;        ///< Configuration file full path.
+  char const       *config_path;        ///< Configuration file path.
   toml_table const *table;              ///< Current table.
   toml_key const   *key;                ///< Current key.
   toml_value const *value;              ///< Value to parse.
@@ -1156,7 +1156,7 @@ static FILE* config_open( char const *config_path, config_opts opts ) {
 /**
  * Parses a configuration file.
  *
- * @param config_path The full path to the configurarion file.
+ * @param config_path The path to the configurarion file.
  * @param config_file The `FILE*` corresponding to \a config_path.
  */
 static void config_parse( char const *config_path, FILE *config_file ) {
