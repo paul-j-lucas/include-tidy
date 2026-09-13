@@ -73,6 +73,7 @@ test_include_tidy -I
 test_include_tidy -I -xc
 
 test_include_tidy --include-directory
+test_include_tidy --include-directory -I../lib
 test_include_tidy --include-directory=
 
 test_include_tidy --include-directory-after

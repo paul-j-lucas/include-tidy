@@ -198,6 +198,9 @@ include-tidy: error: "-I" requires an argument
 $ include-tidy --include-directory
 include-tidy: error: "--include-directory" requires an argument
 
+$ include-tidy --include-directory -I../lib
+include-tidy: error: "--include-directory" requires an argument
+
 $ include-tidy --include-directory=
 include-tidy: error: "--include-directory" requires an argument
 
