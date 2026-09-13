@@ -1,3 +1,12 @@
+2026-09-13  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c, test/Makefile.am, handling-error.c, handling-error.h,
+     handling-error.toml, config-handling-error.out,
+     config-handling-error.test: Now checking for conflicting include handling.
+   * src/Makefile.am: Now running clean-coverage on rebuild.
+   * include.c, config-elide-includes.out, config-elide-includes.test:
+     `elide-includes` now elides only if the include is needed.
+
 2026-09-12  Paul J. Lucas <paul@lucasmail.org>
 
    * config_file.c: Eliminated unncessary strbuf_reset().
