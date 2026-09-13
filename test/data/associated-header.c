@@ -1,6 +1,6 @@
 #include "c_type.h"
 #include "types.h"
-#include "z-associated-header.h"
+#include "z.h"
 
 void f() {
   associated_int i;
