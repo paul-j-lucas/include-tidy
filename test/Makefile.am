@@ -53,7 +53,8 @@ TESTS+=	tests/home.test \
 	tests/ipaths.test \
 	tests/symlink.test \
 	tests/xdg_config_home.test \
-	tests/xdg_config_dirs.test
+	tests/xdg_config_dirs-1.test \
+	tests/xdg_config_dirs-2.test
 
 # Error tests
 TESTS+=	tests/duplicate.test \

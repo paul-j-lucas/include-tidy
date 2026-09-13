@@ -1,0 +1,10 @@
+EXPECTED_EXIT=78
+
+(
+  export XDG_CONFIG_DIRS="/does/not/exist-1:/does/not/exist-2"
+
+  test_include_tidy $TIDY_TEST_OPTIONS \
+    hello.c
+)
+
+# vim:set syntax=bash et sw=2 ts=2:
