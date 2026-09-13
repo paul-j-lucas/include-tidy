@@ -1074,7 +1074,7 @@ static FILE* config_file_find( char const *config_path,
       if ( config_dirs == NULL ) {
         if ( (tidy_test & TIDY_TEST_NO_ETC_XDG) == 1 )
           break;
-        config_dirs = "/etc/xdg";
+        config_dirs = "/etc/xdg";       // LCOV_EXCL_LINE
       }
       for (;;) {
         char const *const next_sep = strchr( config_dirs, ':' );

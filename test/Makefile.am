@@ -51,6 +51,7 @@ TESTS+=	tests/config.test \
 # Other tests
 TESTS+=	tests/home.test \
 	tests/ipaths.test \
+	tests/no-config.test \
 	tests/symlink.test \
 	tests/xdg_config_home.test \
 	tests/xdg_config_dirs-1.test \
