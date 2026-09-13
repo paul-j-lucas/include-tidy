@@ -10,12 +10,16 @@ See the end of the file for license conditions.
 ** Better config. file error messages
 The offending value is now included in error messages.
 
-** `gcc` Support
+** `gcc` support
 Since `gcc` accepts many of the same command-line options as `clang` (and all
 the options necessary for `include-tidy`), `gcc` is now officially supported.
 
 ** `--clang` option renamed to `--compiler`
 Consequently, the `--clang` option has been renamed to `--compiler`.
+
+** `elide-includes` fix
+Now, an include listed amond `elide-includes` is elided only if it's needed.
+If it's not needed, it's still a violation.
 
 ** Fixed `--verbose=a`
 Now correctly printing verbose arguments.

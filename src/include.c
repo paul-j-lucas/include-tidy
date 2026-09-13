@@ -814,10 +814,11 @@ NODISCARD
 static bool should_print_include( tidy_include const *include ) {
   assert( include != NULL );
 
-  if ( include->handling == TIDY_HANDLE_ELIDE )
-    return false;
   if ( include->lines.len > 1 )
     return true;
+
+  if ( include->is_needed && include->handling == TIDY_HANDLE_ELIDE )
+    return false;
 
   if ( opt_all_includes &&
        (include->is_needed || include->handling == TIDY_HANDLE_KEEP) ) {
