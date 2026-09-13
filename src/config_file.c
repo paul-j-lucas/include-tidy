@@ -904,8 +904,9 @@ static void proxy_parse_string( config_parse_fn_args const *config ) {
     else if ( include_proxy_would_cycle( from_include, to_include ) ) {
       print_file_warning(
         config->config_path, config->value->loc.line, config->value->loc.col,
-        "\"%s\": proxy cycle detected\n",
-        from_include->rel_path
+        "\"%s\" <-> \"%s\" proxy cycle detected\n",
+        from_include->rel_path,
+        to_include->rel_path
       );
       ++warning_count;
     }
@@ -1573,6 +1574,7 @@ void config_init( void ) {
     fclose( config_file );
     found_at_least_1 = true;
     strbuf_reset( &path_buf );
+    warning_count = 0;
   } while ( opt_config_layers || !found_at_least_1 );
   strbuf_cleanup( &path_buf );
 

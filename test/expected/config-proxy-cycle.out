@@ -1,0 +1,5 @@
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=proxy-cycle.toml proxy-cycle.c
+"proxy-cycle.toml":5,9: warning: "proxy-cycle-1.h" <-> "proxy-cycle-2.h" proxy cycle detected
+include-tidy: 1 warning generated
+#include "proxy-cycle-2.h"              // DELETE LINE 2
+

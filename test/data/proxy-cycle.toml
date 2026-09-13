@@ -1,0 +1,5 @@
+[proxy-cycle-1.h]
+proxy = "proxy-cycle-2.h"
+
+[proxy-cycle-2.h]
+proxy = "proxy-cycle-1.h"

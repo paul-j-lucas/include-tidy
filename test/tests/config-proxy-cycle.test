@@ -1,0 +1,7 @@
+EXPECTED_EXIT=1
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+  -Xtidy --config=proxy-cycle.toml \
+  proxy-cycle.c
+
+# vim:set syntax=bash et sw=2 ts=2:
