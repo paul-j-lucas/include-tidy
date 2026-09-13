@@ -1,3 +1,5 @@
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=config.toml hello.c
 #include <stdio.h>                /* printf */
 
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=config.toml config.h
+

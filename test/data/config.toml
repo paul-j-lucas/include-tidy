@@ -4,3 +4,6 @@ all-includes = true
 color = "never"
 comment-style = "/*"
 comment-symbols = "alpha"
+
+[config.h]
+ignore-as-argument = true
