@@ -4,4 +4,14 @@ test_include_tidy $TIDY_TEST_OPTIONS \
   $TIDY_TEST_CONFIG \
   include-enoent.c
 
+test_include_tidy $TIDY_TEST_OPTIONS \
+  $TIDY_TEST_CONFIG \
+  -Xtidy --debug \
+  include-enoent.c
+
+test_include_tidy $TIDY_TEST_OPTIONS \
+  $TIDY_TEST_CONFIG \
+  -Xtidy -D \
+  include-enoent.c
+
 # vim:set syntax=bash et sw=2 ts=2:

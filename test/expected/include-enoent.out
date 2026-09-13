@@ -1,3 +1,9 @@
 $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml include-enoent.c
 "include-enoent.c":1,1: error: "include-enoent.h": No such file or directory (missing -I option?)
 
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy --debug include-enoent.c
+"include-enoent.c":1,1: error: [include.c:349] "include-enoent.h": No such file or directory (missing -I option?)
+
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=../../etc/config.toml -Xtidy -D include-enoent.c
+"include-enoent.c":1,1: error: [include.c:349] "include-enoent.h": No such file or directory (missing -I option?)
+
