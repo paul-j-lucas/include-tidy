@@ -1,0 +1,7 @@
+[include-tidy]
+all-includes = true
+std-c-includes = [
+  "stdio.h"
+]
+
+# vim:se et sw=2 ts=2:

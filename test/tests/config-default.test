@@ -1,0 +1,8 @@
+EXPECTED_EXIT=0
+
+test_include_tidy \
+  -Xtidy --directory=data/default \
+  -Xtidy --no-config-layers \
+  hello.c
+
+# vim:set syntax=bash et sw=2 ts=2:

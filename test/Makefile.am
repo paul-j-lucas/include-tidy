@@ -45,6 +45,7 @@ TESTS+=	tests/config.test \
 	tests/config-bad-semantics-1.test \
 	tests/config-bad-semantics-2.test \
 	tests/config-bad-toml.test \
+	tests/config-default.test \
 	tests/config-proxy-cycle.test \
 	tests/config-elide-includes.test \
 	tests/config-first.test \

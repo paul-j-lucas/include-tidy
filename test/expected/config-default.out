@@ -1,0 +1,3 @@
+$ include-tidy -Xtidy --directory=data/default -Xtidy --no-config-layers hello.c
+#include <stdio.h>                      // printf
+
