@@ -129,6 +129,8 @@ $(bin_PROGRAMS): clean-coverage
 clean-coverage-local:
 	rm -f *.gcda
 
+distclean-local: distclean-coverage-local
+
 distclean-coverage-local: clean-coverage-local
 	rm -f *.gcno
 endif
