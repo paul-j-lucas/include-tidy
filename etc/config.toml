@@ -261,7 +261,9 @@ includes = [
 
 # Gnulib weirdly declares free(3) in its string.h, but C says it's in stdlib.h.
 [free]
-includes = "stdlib.h"
+includes = [
+  "stdlib.h"
+]
 
 # NULL is declared in all of these, so any one is sufficient.
 [NULL]
@@ -317,7 +319,9 @@ symbols = [
 # Some platforms still have this in string.h (singular), but POSIX says it's in
 # strings.h (plural).
 [strcasecmp]
-includes = "strings.h"
+includes = [
+  "strings.h"
+]
 
 # Some platforms still use the legacy includes for these, but POSIX says
 # they're in sys/select.h.
@@ -346,7 +350,10 @@ symbols = [
 # Without this, other headers, like stdio.h, can include sys/types.h that some
 # systems declare time_t in, but C says it's in time.h.
 [time_t]
-includes = [ "ctime", "time.h" ]
+includes = [
+  "ctime",
+  "time.h"
+]
 
 # wchar_t is declared in all of these, so any one is sufficient.
 [wchar_t]
@@ -357,7 +364,9 @@ includes = [
 
 # Some platforms have this in ctype.h, but C says it's in wctype.h.
 [wint_t]
-includes = "wctype.h"
+includes = [
+  "wctype.h"
+]
 
 ########## C++ ################################################################
 
