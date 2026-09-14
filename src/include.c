@@ -553,7 +553,8 @@ static bool is_associated_header( tidy_include const *include,
     return false;
 
   char path_buf[ PATH_MAX ];
-  char const *const include_no_ext = path_no_ext( include->rel_path, path_buf );
+  char const *const include_rel_path_no_ext =
+    path_no_ext( include->rel_path, path_buf );
   //
   // If this include file's name matches the source file's (without extension),
   // it's the .h associated with the .c, so sort this include file first, e.g.:
@@ -563,7 +564,7 @@ static bool is_associated_header( tidy_include const *include,
   //      #include "a.h"
   //      #include "b.h"
   //
-  return strcmp( include_no_ext, source_file_no_ext ) == 0;
+  return strcmp( include_rel_path_no_ext, source_file_no_ext ) == 0;
 }
 
 /**
