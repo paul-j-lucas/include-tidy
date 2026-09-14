@@ -42,8 +42,8 @@ static FILE* check_fmemopen( char *buf, size_t buf_size,
   assert( mode != NULL );
 
   FILE *const file = fmemopen( buf, buf_size, mode );
-  if ( file == NULL )
-    fatal_error( EX_SOFTWARE, "%s\n", STRERROR() );
+  if ( unlikely( file == NULL ) )
+    fatal_error( EX_SOFTWARE, "%s\n", STRERROR() ); // LCOV_EXCL_LINE
   return file;
 }
 

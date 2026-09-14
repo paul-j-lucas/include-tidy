@@ -84,8 +84,8 @@ static void toml_test_init( toml_test *test, char const *buf ) {
   assert( buf != NULL );
 
   FILE *const file = fmemopen( CONST_CAST( void*, buf ), strlen( buf ), "r" );
-  if ( file == NULL )
-    fatal_error( EX_SOFTWARE, "%s\n", STRERROR() );
+  if ( unlikely( file == NULL ) )
+    fatal_error( EX_SOFTWARE, "%s\n", STRERROR() ); // LCOV_EXCL_LINE
   toml_file_init( &test->toml, file );
   toml_table_init( &test->table );
 }
