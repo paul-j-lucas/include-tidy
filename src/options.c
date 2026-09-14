@@ -268,8 +268,12 @@ bool opt_verbose_parse( char const *verbose_format ) {
         verbose |= TIDY_VERBOSE_SYMBOLS;
         break;
       case 'S':
+        // LCOV_EXCL_START: even though a symbol specifies a fixed set of
+        // headers it's declared it, an actual dump is the subset of those
+        // headers that are actually used.
         verbose |= TIDY_VERBOSE_CONFIG_SYMBOLS;
         break;
+        // LCOV_EXCL_STOP
       case 'z':
         verbose |= TIDY_VERBOSE_STATISTICS;
         break;

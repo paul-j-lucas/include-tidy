@@ -1473,6 +1473,9 @@ static void symbol_include_add( char const *from_sym_name,
   PJL_DISCARD_RV( rb_tree_insert( &si->to_include_set, to_include, 0 ) );
 }
 
+// LCOV_EXCL_START: even though a symbol specifies a fixed set of headers it's
+// declared it, an actual dump is the subset of those headers that are actually
+// used.
 /**
  * Dumps all symbol includes.
  */
@@ -1505,6 +1508,7 @@ static void symbol_includes_dump( void ) {
     puts( " ]" );
   }
 }
+// LCOV_EXCL_STOP
 
 /**
  * Compares two \ref tidy_include objects by their relative paths.
@@ -1584,7 +1588,7 @@ void config_init( void ) {
   }
 
   if ( IS_VERBOSE( CONFIG_SYMBOLS ) )
-    symbol_includes_dump();
+    symbol_includes_dump();             // LCOV_EXCL_LINE
 }
 
 bool config_is_standard_include( char const *rel_path ) {
