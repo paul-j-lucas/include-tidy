@@ -48,6 +48,7 @@ TESTS+=	tests/config.test \
 	tests/config-default.test \
 	tests/config-proxy-cycle.test \
 	tests/config-elide-includes.test \
+	tests/config-enoent.test \
 	tests/config-first.test \
 	tests/config-handling-error.test \
 	tests/config-keep.test
