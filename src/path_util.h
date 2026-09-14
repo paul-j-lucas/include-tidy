@@ -184,7 +184,7 @@ inline bool path_is_relative( char const *path ) {
 char const* path_no_dot_slash( char const *path );
 
 /**
- * Gets the pathname without the filename extension of \a path, if any.
+ * Gets the pathname of \a path without its filename extension, if any.
  *
  * @param path The path.
  * @param path_buf A path buffer to use only if \a path has an extension.
