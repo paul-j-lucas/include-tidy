@@ -879,8 +879,8 @@ static void proxy_parse_string( config_parse_fn_args const *config ) {
 
   tidy_include *const to_include =
     include_find_by_rel_path( config->table->key.name );
-  if ( to_include == NULL )
-    return;
+  if ( unlikely( to_include == NULL ) )
+    return;                             // LCOV_EXCL_LINE
 
   rb_iterator_t iter;
   size_t const  rel_path_len = strlen( config->value->s );
