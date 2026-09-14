@@ -51,6 +51,7 @@ TESTS+=	tests/config.test \
 	tests/config-enoent.test \
 	tests/config-first.test \
 	tests/config-handling-error.test \
+	tests/config-handling-warning.test \
 	tests/config-keep.test
 
 # Other tests

@@ -1,0 +1,5 @@
+[handling-warning.c]
+elide-includes = [
+  "handling.h",
+  "handling.h"
+]
