@@ -1,3 +1,3 @@
-[handling-error.c]
+[handling.c]
 elide-includes = "handling.h"
 keep-includes = "handling.h"

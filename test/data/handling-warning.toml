@@ -1,4 +1,4 @@
-[handling-warning.c]
+[handling.c]
 elide-includes = [
   "handling.h",
   "handling.h"
