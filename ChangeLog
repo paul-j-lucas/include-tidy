@@ -1,5 +1,13 @@
 2026-09-14  Paul J. Lucas <paul@lucasmail.org>
 
+   * lcovrc, toml_test.c, util_test.c: Removed STRERROR from lcovrc.
+   * handling-error.toml, handling-warning.toml, config-handling-error.out,
+     config-handling-warning.out, config-handling-error.test,
+     config-handling-warning.test: Test file consolidation.
+   * test/Makefile.am, handling-error.c, handling-error.toml,
+     handling-warning.c, handling-warning.toml, handling.h,
+     config-handling-error.out, config-handling-warning.out,
+     config-handling-warning.test: Added redundantly elided test.
    * test/Makefile.am, config-enoent.out, config-enoent.test: Added
      --config=enoent.toml test.
    * config_file.c: Code coverage exclusion comments.
