@@ -9,6 +9,6 @@ line-length = 10000
 [bad-associated-header.h]
 associated-header = "foo.h"
 
-[f.c]
+[minimal.c]
 elide-includes = [ 0 ]
 keep-includes = [ 0 ]
