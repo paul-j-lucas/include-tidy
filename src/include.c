@@ -118,24 +118,29 @@ struct maybe_print_include_args {
 ////////// local functions ////////////////////////////////////////////////////
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-static void   ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
-                                 CXClientData );
+static void         ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
+                                       CXClientData );
 #endif /* NEED_II_MATRIX */
 
 NODISCARD
-static bool   is_associated_header( tidy_include const*, char const* );
-
-static void   print_statistics( void );
+static bool         is_associated_header( tidy_include const*, char const* );
 
 NODISCARD
-static char*  tidy_File_getRelativePath( CXFile );
+static char const*  path_no_ext_if( char const*, char, char[static PATH_MAX] );
 
-static void   tidy_include_cleanup( tidy_include* );
+static void         print_statistics( void );
 
 NODISCARD
-static int    tidy_symbol_ptr_cmp_by_name( void const*, void const* ),
-              tidy_symbol_ptr_cmp_by_name_length( void const*, void const* ),
-              tidy_symbol_ptr_cmp_by_ref_count( void const*, void const* );
+static char*        tidy_File_getRelativePath( CXFile );
+
+static void         tidy_include_cleanup( tidy_include* );
+
+NODISCARD
+static int          tidy_symbol_ptr_cmp_by_name( void const*, void const* ),
+                    tidy_symbol_ptr_cmp_by_name_length( void const*,
+                                                        void const* ),
+                    tidy_symbol_ptr_cmp_by_ref_count( void const*,
+                                                      void const* );
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -188,16 +193,11 @@ static tidy_include* get_associated_header( void ) {
   static tidy_include *assoc_include;
 
   RUN_ONCE {
-    char const *const ext = path_ext( tidy_source_path );
-    if ( ext == NULL || tolower( ext[0] ) != 'c' )
-      return NULL;
-    tidy_file_ext const *const file_ext = file_ext_find( ext );
-    if ( file_ext == NULL )
-      return NULL;
-
     char path_buf[ PATH_MAX ];
     char const *const source_path_no_ext =
-      path_no_ext( tidy_source_path, path_buf );
+      path_no_ext_if( tidy_source_path, 'c', path_buf );
+    if ( source_path_no_ext == NULL )
+      return NULL;
 
     rb_iterator_t iter;
     rb_iterator_init( &iter, &tidy_include_set );
@@ -548,13 +548,9 @@ static bool is_associated_header( tidy_include const *include,
   if ( tidy_associated_header_rel_path != NULL )
     return strcmp( include->rel_path, tidy_associated_header_rel_path ) == 0;
 
-  char const *const include_ext = path_ext( include->rel_path );
-  if ( include_ext == NULL || include_ext[0] != 'h' )
-    return false;
-
   char path_buf[ PATH_MAX ];
   char const *const include_rel_path_no_ext =
-    path_no_ext( include->rel_path, path_buf );
+    path_no_ext_if( include->rel_path, 'h', path_buf );
   //
   // If this include file's name matches the source file's (without extension),
   // it's the .h associated with the .c, so sort this include file first, e.g.:
@@ -761,6 +757,31 @@ static void maybe_print_include( tidy_include const *include,
   free( comment );
   if ( reset_opt_comment_style )
     opt_comment_style[0] = "";
+}
+
+/**
+ * Gets the pathname of \a path without its filename extension, but only if the
+ * first character of its extension is \a if_ext_0.
+ *
+ * @param path The path.
+ * @param if_ext_0 The character that the first character of the filename
+ * extension of \a path must match ignoring case.
+ * @param path_buf A path buffer to use only if \a path has an extension and
+ * its first character matches \a if_ext_0.
+ * @return Returns \a path without its extension, but only if the first
+ * character of its extension matches \a if_ext_0 ignoring case; NULL
+ * otherwise.
+ */
+NODISCARD
+static char const* path_no_ext_if( char const *path, char if_ext_0,
+                                   char path_buf[static PATH_MAX] ) {
+  assert( path != NULL );
+
+  char const *const ext = path_ext( path );
+  if ( ext == NULL || tolower( ext[0] ) != if_ext_0 )
+    return NULL;
+  tidy_file_ext const *const file_ext = file_ext_find( ext );
+  return file_ext != NULL ? path_no_ext( path, path_buf ) : NULL;
 }
 
 /**
