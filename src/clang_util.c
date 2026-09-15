@@ -498,11 +498,11 @@ CXCursor tidy_Cursor_getVarInitNoUnaryOps( CXCursor expr_csr ) {
       case CXCursor_ParenExpr:
       case CXCursor_UnaryOperator:
         expr_csr = tidy_Cursor_getFirstExposedChild( init_csr );
-        if ( tidy_Cursor_isInvalid( expr_csr ) ||
-             clang_equalCursors( expr_csr, init_csr ) ) {
-          return init_csr;
+        if ( !tidy_Cursor_isInvalid( expr_csr ) &&
+             !clang_equalCursors( expr_csr, init_csr ) ) {
+          continue;
         }
-        break;
+        FALLTHROUGH;
       default:
         return init_csr;
     } // switch
