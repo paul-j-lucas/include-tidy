@@ -1,7 +1,0 @@
-EXPECTED_EXIT=0
-
-test_include_tidy $TIDY_TEST_OPTIONS \
-  -Xtidy --config=handling-warning.toml \
-  handling.c
-
-# vim:set syntax=bash et sw=2 ts=2:

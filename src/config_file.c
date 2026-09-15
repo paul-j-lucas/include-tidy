@@ -1332,17 +1332,7 @@ static void include_handle( char const *config_path, char const *key_name,
       if ( include->handling == TIDY_HANDLE_DEFAULT ) {
         include->handling = handling;
       }
-      else if ( include->handling == handling ) {
-        print_file_warning(
-          config_path, loc->line, loc->col,
-          "%s \"%s\": redundantly %s\n",
-          key_name,
-          rel_path,
-          include->handling == TIDY_HANDLE_ELIDE ? "elided" : "kept"
-        );
-        ++warning_count;
-      }
-      else {
+      else if ( include->handling != handling ) {
         print_file_error(
           config_path, loc->line, loc->col,
           "%s \"%s\": previously %s\n",
