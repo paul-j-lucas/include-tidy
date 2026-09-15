@@ -104,6 +104,7 @@ TESTS+=	tests/cxx.test \
 	tests/entities_hpp.test \
 	tests/error_string.test \
 	tests/exit_codes.test \
+	tests/file_info_hpp.test \
 	tests/hash.test \
 	tests/macro.test \
 	tests/namespace_type.test \

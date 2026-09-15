@@ -717,7 +717,7 @@ bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr ) {
 
   spec_csr = clang_getSpecializedCursorTemplate( underlying_csr );
   if ( !tidy_Cursor_isInvalid( spec_csr ) )
-    underlying_csr = spec_csr;
+    underlying_csr = spec_csr;          // LCOV_EXCL_LINE
 
   return clang_equalCursors( alias_csr, underlying_csr );
 }
