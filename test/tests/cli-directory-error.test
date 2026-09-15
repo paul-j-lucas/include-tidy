@@ -1,0 +1,7 @@
+EXPECTED_EXIT=74
+
+test_include_tidy \
+  -Xtidy --directory=/does/not/exist \
+  foo.c
+
+# vim:set syntax=bash et sw=2 ts=2:
