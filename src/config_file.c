@@ -75,7 +75,6 @@
  * Options for the config_open() function.
  */
 enum config_opts {
-  CONFIG_OPT_NONE           = 0,        ///< No options.
   CONFIG_OPT_ERROR_IS_FATAL = 1 << 0,   ///< An error is fatal.
   CONFIG_OPT_IGNORE_ENOENT  = 1 << 1    ///< Ignore file not found.
 };
