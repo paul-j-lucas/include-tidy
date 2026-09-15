@@ -1,5 +1,14 @@
 2026-09-14  Paul J. Lucas <paul@lucasmail.org>
 
+   * test/Makefile.am, ignore.toml, config-ignore.out, config-ignore.test:
+     Added "ignore" test.
+   * man/man1/include-tidy.1: Elaborated on "ignore".
+   * test/Makefile.am, ignore-symbols.toml, config-ignore-symbols.out,
+     config-ignore-symbols.test: Added ignore-symbols test.
+   * config_file.c: Changed "if" to "assert".
+   * config_file.c: Eliminated CONFIG_OPT_NONE.
+   * test/Makefile.am, cli-directory-error.out, cli-directory-error.test: Added
+     --directory=/does/not/exist test.
    * lcovrc, toml_test.c, util_test.c: Removed STRERROR from lcovrc.
    * handling-error.toml, handling-warning.toml, config-handling-error.out,
      config-handling-warning.out, config-handling-error.test,
