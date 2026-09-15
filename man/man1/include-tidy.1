@@ -35,7 +35,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "September 7, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "September 14, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -1058,6 +1058,29 @@ even if it's referenced from a file,
 the include file declaring it,
 if omitted,
 will not be reported as a violation.
+Note that:
+.RS 5
+.cS
+[\f2symbol\fP]
+ignore = true
+.cE 0
+.RE
+.IP
+ignores
+.I symbol
+in all files
+whereas:
+.RS 5
+.cS
+[\f2header.h\fP]
+ignore-symbols = "\f2symbol\fP"
+.cE 0
+.RE
+.IP
+ignores
+.I symbol
+only in
+.IR header.h .
 .TP
 .BR includes " \f1=\fP s" "\f1 | \fP[" s " \f1[,\fP " s "\f1]*\fP ]"
 Specifies that the symbol
