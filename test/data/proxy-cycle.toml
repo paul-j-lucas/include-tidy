@@ -3,3 +3,5 @@ proxy = "proxy-cycle-2.h"
 
 [proxy-cycle-2.h]
 proxy = "proxy-cycle-1.h"
+
+# vim:se et sw=2 ts=2:

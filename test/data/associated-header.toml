@@ -1,2 +1,4 @@
 [associated-header.c]
 associated-header = "z.h"
+
+# vim:se et sw=2 ts=2:

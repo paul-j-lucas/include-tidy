@@ -1,3 +1,5 @@
 [handling.c]
 elide-includes = "handling.h"
 keep-includes = "handling.h"
+
+# vim:se et sw=2 ts=2:

@@ -3,3 +3,5 @@ ignore-symbols = [
   "printf",
   "printf"
 ]
+
+# vim:se et sw=2 ts=2:

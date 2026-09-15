@@ -30,3 +30,5 @@ symbols = 0
 
 [symbol]
 ignore = 0
+
+# vim:se et sw=2 ts=2:

@@ -8,3 +8,5 @@ line-length = 65
 
 [config.h]
 ignore-as-argument = true
+
+# vim:se et sw=2 ts=2:

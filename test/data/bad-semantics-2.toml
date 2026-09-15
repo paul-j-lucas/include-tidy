@@ -12,3 +12,5 @@ associated-header = "foo.h"
 [minimal.c]
 elide-includes = [ 0 ]
 keep-includes = [ 0 ]
+
+# vim:se et sw=2 ts=2:
