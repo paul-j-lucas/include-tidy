@@ -1608,8 +1608,7 @@ CXFile config_symbol_get_include( char const *sym_name ) {
   if ( found_rb == NULL )
     return NULL;
   symbol_includes const *const found_si = RB_DINT( found_rb );
-  if ( rb_tree_empty( &found_si->to_include_set ) )
-    return NULL;
+  assert( !rb_tree_empty( &found_si->to_include_set ) );
 
   rb_iterator_t iter;
   rb_iterator_init( &iter, &found_si->to_include_set );
