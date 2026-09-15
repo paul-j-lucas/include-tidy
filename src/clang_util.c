@@ -625,7 +625,7 @@ bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
 
   // Is the object's class inherited from the member function's class?
   if ( !tidy_Cursor_isInheritedFrom( obj_cls_csr, mbr_fn_cls_csr ) )
-    return false;                       // LCOV_EXCL_LINE
+    return false;
 
   if ( rv_cls_csr != NULL )
     *rv_cls_csr = mbr_fn_cls_csr;
