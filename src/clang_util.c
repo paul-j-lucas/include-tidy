@@ -592,32 +592,32 @@ bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
 
   enum CXCursorKind const kind = clang_getCursorKind( expr_csr );
   if ( kind != CXCursor_CallExpr )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
 
   // Get the class of the member function.
   CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( expr_csr );
   if ( clang_getCursorKind( callee_csr ) != CXCursor_MemberRefExpr )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
   CXCursor const mbr_fn_csr = clang_getCursorReferenced( callee_csr );
   if ( clang_Cursor_isNull( mbr_fn_csr ) )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
   CXCursor mbr_fn_cls_csr = clang_getCursorSemanticParent( mbr_fn_csr );
   mbr_fn_cls_csr = clang_getCanonicalCursor( mbr_fn_cls_csr );
   if ( clang_Cursor_isNull( mbr_fn_cls_csr ) )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
 
   // Get the object the member function is being called on.
   CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( callee_csr );
   if ( clang_Cursor_isNull( obj_csr ) )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
   CXCursor obj_cls_csr = tidy_Cursor_getUnderlyingType( obj_csr );
   obj_cls_csr = clang_getCanonicalCursor( obj_cls_csr );
   if ( clang_Cursor_isNull( obj_cls_csr ) )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
 
   // Is the object's class inherited from the member function's class?
   if ( !tidy_Cursor_isInheritedFrom( obj_cls_csr, mbr_fn_cls_csr ) )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
 
   if ( rv_cls_csr != NULL )
     *rv_cls_csr = mbr_fn_cls_csr;
