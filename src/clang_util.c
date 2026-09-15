@@ -593,6 +593,9 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_csr ) {
   return false;
 }
 
+#ifdef NEED_tidy_Cursor_isInheritedMemberFunctionCall
+// See comment above tidy_Cursor_isInheritedMemberFunctionCall() declaration.
+
 bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
                                                 CXCursor *rv_cls_csr ) {
   expr_csr = tidy_Cursor_getVarInit( expr_csr );
@@ -631,6 +634,7 @@ bool tidy_Cursor_isInheritedMemberFunctionCall( CXCursor expr_csr,
     *rv_cls_csr = mbr_fn_cls_csr;
   return true;
 }
+#endif /* NEED_tidy_Cursor_isInheritedMemberFunctionCall */
 
 bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
                                         CXCursor *rv_cls_csr ) {

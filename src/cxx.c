@@ -205,6 +205,9 @@ static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
   if ( clang_getCursorKind( callee_csr ) != CXCursor_MemberRefExpr )
     return false;
 
+#ifdef NEED_tidy_Cursor_isInheritedMemberFunctionCall
+  // See comment above tidy_Cursor_isInheritedMemberFunctionCall() declaration.
+
   CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( callee_csr );
   if ( clang_Cursor_isNull( obj_csr ) )
     return false;
@@ -239,6 +242,10 @@ static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
   }
 
   return false;
+#else
+  (void)fn_csr;
+  return true;
+#endif /* NEED_tidy_Cursor_isInheritedMemberFunctionCall */
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
