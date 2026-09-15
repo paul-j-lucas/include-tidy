@@ -508,7 +508,7 @@ CXCursor tidy_Cursor_getVarInitNoUnaryOps( CXCursor expr_csr ) {
     } // switch
   } // while
 
-  return expr_csr;
+  return expr_csr;                      // LCOV_EXCL_LINE
 }
 
 
@@ -581,9 +581,11 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_csr ) {
     }
 
     CXCursor sem_parent = clang_getCursorSemanticParent( cursor );
-    if ( tidy_Cursor_isInvalid( sem_parent ) ||
-         clang_equalCursors( sem_parent, cursor ) ) {
+    if ( unlikely( tidy_Cursor_isInvalid( sem_parent ) ||
+                   clang_equalCursors( sem_parent, cursor ) ) ) {
+      // LCOV_EXCL_START
       sem_parent = clang_getCursorLexicalParent( cursor );
+      // LCOV_EXCL_STOP
     }
     cursor = sem_parent;
   } // while
