@@ -10,12 +10,11 @@
 #define swishxx_pattern_map_hpp
 
 #include <map>
-#include <string>
 
 template<typename T>
-struct pattern_map : std::map<std::string,T> {
-  using base_type = std::map<std::string,T>;
-  using value_type = base_type::value_type;
+struct pattern_map : std::map<char const*,T> {
+  using map_type = std::map<char const*,T>;
+  using value_type = map_type::value_type;
 };
 
 #endif /* swishxx_pattern_map_hpp */
