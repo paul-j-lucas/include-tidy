@@ -124,8 +124,6 @@ tidy: include-tidy
 	done
 
 if ENABLE_COVERAGE
-$(bin_PROGRAMS): clean-coverage
-
 clean-coverage-local:
 	rm -f *.gcda
 
