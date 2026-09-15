@@ -461,19 +461,21 @@ bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
   switch ( kind ) {
     case CXCursor_ConversionFunction:
     case CXCursor_CXXMethod:
-    case CXCursor_FieldDecl:;
+    case CXCursor_FieldDecl:
       //
       // The object is either a data member or the return value of either a
       // member function or conversion operator.
       //
-      // If its semantic parent is a class declaration, the header defining the
-      // class must have already provided the declaration for the object's type
-      // and all its members --- an IWYU exception.
+      // Since its semantic parent is a class declaration, the header defining
+      // the class must have already provided the declaration for the object's
+      // type and all its members --- an IWYU exception.
       //
+#ifndef NDEBUG
+      NO_OP;
       CXCursor const cls_csr = clang_getCursorSemanticParent( ref_csr );
-      if ( tidy_Cursor_isClassDecl( cls_csr ) )
-        return true;
-      break;
+      assert( tidy_Cursor_isClassDecl( cls_csr ) );
+#endif /* NDEBUG */
+      return true;
 
     case CXCursor_ParmDecl:;
       //
