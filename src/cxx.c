@@ -100,10 +100,10 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
     return false;                       // LCOV_EXCL_LINE
 
   CXSourceRange range = clang_getCursorExtent( parent );
-  if ( clang_Range_isNull( range ) )
-    range = clang_getCursorExtent( cursor );
-  if ( clang_Range_isNull( range ) )
-    return false;
+  if ( unlikely( clang_Range_isNull( range ) ) )
+    range = clang_getCursorExtent( cursor );  // LCOV_EXCL_LINE
+  if ( unlikely( clang_Range_isNull( range ) ) )
+    return false;                       // LCOV_EXCL_LINE
 
   CXTranslationUnit tu = clang_Cursor_getTranslationUnit( cursor );
   CXToken *tokens;
@@ -158,7 +158,7 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
     if ( tidy_Cursor_isInvalid( qual_csr ) )
       qual_csr = cursors[i];
     if ( tidy_Cursor_isInvalid( qual_csr ) )
-      break;
+      break;                            // LCOV_EXCL_LINE
 
     CXCursor const qual_parent = clang_getCursorSemanticParent( qual_csr );
     CXCursor const canon_qual_csr =
@@ -264,7 +264,7 @@ bool is_cxx_arrow_iwyu_exception( CXCursor call_csr, CXCursor mbr_cls_csr ) {
   // For obj->mbr, get obj.
   CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( call_csr );
   if ( tidy_Cursor_isInvalid( obj_csr ) )
-    return true;
+    return true;                        // LCOV_EXCL_LINE
 
   // If obj is a pointer or reference, get the underlying type.
   CXCursor obj_cls_csr = tidy_Cursor_getUnderlyingType( obj_csr );
@@ -305,7 +305,7 @@ bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
 
   CXFile const fn_file = tidy_getCursorLocation_File( fn_csr );
   if ( fn_file == NULL )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
   tidy_include const *fn_include = include_find_by_File( fn_file );
   if ( fn_include == NULL )
     return false;
@@ -334,10 +334,10 @@ bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
     //
     CXFile const par_file = tidy_getCursorLocation_File( par_ocls_csr );
     if ( par_file == NULL )
-      continue;
+      continue;                         // LCOV_EXCL_LINE
     tidy_include const *par_include = include_find_by_File( par_file );
     if ( par_include == NULL )
-      continue;
+      continue;                         // LCOV_EXCL_LINE
     par_include = include_get_proxy( par_include );
     if ( fn_include != par_include )
       continue;
@@ -347,7 +347,7 @@ bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
     CXCursor const arg_csr = clang_Cursor_getArgument( call_csr, i );
     CXCursor const arg_cls_csr = tidy_Cursor_getClassAsWritten( arg_csr );
     if ( clang_Cursor_isNull( arg_cls_csr ) )
-      continue;
+      continue;                         // LCOV_EXCL_LINE
 
     //
     // Given:
