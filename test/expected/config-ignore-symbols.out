@@ -1,0 +1,5 @@
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=ignore-symbols.toml hello.c
+"ignore-symbols.toml":4,3: warning: "printf" already ignored
+include-tidy: 1 warning generated
+#include <stdio.h>                      // DELETE LINE 1
+
