@@ -434,9 +434,9 @@ int tidy_Cursor_compare( CXCursor i_csr, CXCursor j_csr ) {
     return 1;
 
   if ( i_csr.xdata < j_csr.xdata )
-    return -1;
+    return -1;                          // LCOV_EXCL_LINE
   if ( i_csr.xdata > j_csr.xdata )
-    return 1;
+    return 1;                           // LCOV_EXCL_LINE
 
   // See <https://github.com/llvm/llvm-project/blob/4f5675a0500f9ccc60dcbabb57e1c4dc88c40a84/clang/tools/libclang/CIndex.cpp#L6706>.
   if ( clang_isDeclaration( i_csr.kind ) )
@@ -781,7 +781,7 @@ bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr ) {
 
   alias_csr = clang_getTypeDeclaration( alias_type );
   if ( tidy_Cursor_isInvalid( alias_csr ) )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
 
   CXCursor spec_csr = clang_getSpecializedCursorTemplate( alias_csr );
   if ( !tidy_Cursor_isInvalid( spec_csr ) )
@@ -806,9 +806,11 @@ CXString tidy_File_getRealPathName( CXFile file ) {
   CXString          abs_path_cxs = clang_File_tryGetRealPathName( file );
   char const *const abs_path = clang_getCString( abs_path_cxs );
 
-  if ( abs_path == NULL || abs_path[0] == '\0' ) {
+  if ( unlikely( abs_path == NULL || abs_path[0] == '\0' ) ) {
+    // LCOV_EXCL_START
     clang_disposeString( abs_path_cxs );
     abs_path_cxs = clang_getFileName( file );
+    // LCOV_EXCL_STOP
   }
 
   return abs_path_cxs;
@@ -872,7 +874,7 @@ CXSourceRange tidy_getCursorExtent( CXCursor cursor ) {
   );
 
   if ( start_file == NULL || start_file != end_file )
-    return range;
+    return range;                       // LCOV_EXCL_LINE
 
   CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( cursor );
 
@@ -903,6 +905,7 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
 
   CXFileUniqueID id;
   if ( unlikely( clang_getFileUniqueID( file, &id ) != 0 ) ) {
+    // LCOV_EXCL_START
     // clang_getFileUniqueID() failed, but we still want an ID: get a hash of
     // its full path.
     CXString const    abs_path_cxs = tidy_File_getRealPathName( file );
@@ -920,6 +923,7 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
     id = (CXFileUniqueID){
       .data = { STATIC_CAST( CXFileUniqueID_data_t, hash ) }
     };
+    // LCOV_EXCL_STOP
   }
   return id;
 }
