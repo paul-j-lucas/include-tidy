@@ -551,6 +551,8 @@ static bool is_associated_header( tidy_include const *include,
   char path_buf[ PATH_MAX ];
   char const *const include_rel_path_no_ext =
     path_no_ext_if( include->rel_path, 'h', path_buf );
+  if ( include_rel_path_no_ext == NULL )
+    return false;
   //
   // If this include file's name matches the source file's (without extension),
   // it's the .h associated with the .c, so sort this include file first, e.g.:
