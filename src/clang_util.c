@@ -393,38 +393,6 @@ static CXCursor tidy_Cursor_skipLinkageSpec( CXCursor cursor ) {
   return cursor;
 }
 
-/**
- * Similar to `clang_getCursorReferenced()` except returns \a cursor as-is if
- * it's not a reference rather than the null cursor.
- *
- * @param cursor The cursor to get the reference of.
- * @param rv_kind If not NULL, receives the (referenced) kind of cursor.
- * @return Returns the cursor referenced by \a cursor or \a cursor if it's not
- * a reference.
- */
-NODISCARD
-static CXCursor tidy_getCursorReferenced( CXCursor cursor,
-                                          enum CXCursorKind *rv_kind ) {
-  enum CXCursorKind kind = clang_getCursorKind( cursor );
-  switch ( kind ) {
-    case CXCursor_DeclRefExpr:
-    case CXCursor_MemberRefExpr:
-    case CXCursor_NamespaceRef:
-    case CXCursor_OverloadedDeclRef:
-    case CXCursor_TemplateRef:
-    case CXCursor_TypeRef:
-      cursor = clang_getCursorReferenced( cursor );
-      kind = clang_getCursorKind( cursor );
-      break;
-    default:
-      /* suppress warning */;
-  } // switch
-
-  if ( rv_kind != NULL )
-    *rv_kind = kind;
-  return cursor;
-}
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 int tidy_Cursor_compare( CXCursor i_csr, CXCursor j_csr ) {
@@ -765,8 +733,7 @@ bool tidy_Cursor_isTypeAliasComplete( CXCursor alias_csr ) {
 }
 
 bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr ) {
-  enum CXCursorKind kind;
-  alias_csr = tidy_getCursorReferenced( alias_csr, &kind );
+  enum CXCursorKind const kind = clang_getCursorKind( alias_csr );
   if ( kind != CXCursor_TypedefDecl && kind != CXCursor_TypeAliasDecl )
     return false;
 
