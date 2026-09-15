@@ -106,6 +106,7 @@ TESTS+=	tests/cxx.test \
 	tests/exit_codes.test \
 	tests/file_info_cpp.test \
 	tests/file_info_hpp.test \
+	tests/has_cxx_qualifier_proxy.test \
 	tests/hash.test \
 	tests/macro.test \
 	tests/namespace_type.test \
