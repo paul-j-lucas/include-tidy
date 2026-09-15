@@ -1,5 +1,20 @@
 2026-09-14  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c: Code coverage exclusion comments.
+   * clang_util.c, test/Makefile.am, file_info.hpp, file_info_hpp.out,
+     file_info_hpp.test: Complete testing of tidy_Cursor_isTypeAliasOf().
+   * clang_util.c: Simplification.
+   * pattern_map.hpp: Simplification.
+   * clang_util.c: Code coverage exclusion comments.
+   * elements.cpp, elements.hpp: Improved C++ test.
+   * clang_util.c, clang_util.h: Eliminated tidy_Cursor_getFunctionScope &
+     tidy_Cursor_skipLinkageSpec -- apparently not needed.
+   * clang_util.c: Eliminated tidy_getCursorReferenced() -- apparently not
+     needed.
+   * include.c: Added missing check for NULL.
+   * config_file.c, test/Makefile.am: Needed to eliminated check for redundant
+     handling.
+   * clang_util.c: Code coverage exclusion comments.
    * test/Makefile.am, ignore.toml, config-ignore.out, config-ignore.test:
      Added "ignore" test.
    * man/man1/include-tidy.1: Elaborated on "ignore".
