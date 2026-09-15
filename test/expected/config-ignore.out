@@ -1,0 +1,3 @@
+$ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config=ignore.toml hello.c
+#include <stdio.h>                      // DELETE LINE 1
+
