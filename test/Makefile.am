@@ -112,6 +112,7 @@ TESTS+=	tests/cxx.test \
 	tests/namespace_type.test \
 	tests/query_node.test \
 	tests/timespec_t.test \
+	tests/token_hpp.test \
 	tests/using_set.test
 
 ###############################################################################
