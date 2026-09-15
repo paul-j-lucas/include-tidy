@@ -760,14 +760,10 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_csr ) {
     enum CXCursorKind const kind = clang_getCursorKind( scope_csr );
     if ( kind == CXCursor_TranslationUnit )
       break;
-    CXCursor const sem_parent = clang_getCursorSemanticParent( scope_csr );
-    if ( clang_equalCursors( sem_parent, scope_csr ) )
-      break;
-
     enum CXLanguageKind const lang = clang_getCursorLanguage( scope_csr );
     gcbnd.cxx_recurse_into_scope = lang == CXLanguage_CPlusPlus;
     gcbnd.skip_csr = scope_csr;
-    scope_csr = sem_parent;
+    scope_csr = clang_getCursorSemanticParent( scope_csr );
   } // while
 
   return (CXCursor){ .kind = CXCursor_NoDeclFound };
@@ -776,7 +772,7 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_csr ) {
 CXCursor tidy_getCursorByNameToken( CXTranslationUnit tu, CXToken token,
                                     CXCursor scope_csr ) {
   if ( clang_getTokenKind( token ) != CXToken_Identifier )
-    return clang_getNullCursor();
+    return clang_getNullCursor();       // LCOV_EXCL_LINE
 
   CXString const    token_cxs = clang_getTokenSpelling( tu, token );
   char const *const token_cs = clang_getCString( token_cxs );
