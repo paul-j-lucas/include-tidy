@@ -138,38 +138,6 @@ NODISCARD
 CXCursor tidy_Cursor_getFirstExposedChild( CXCursor cursor );
 
 /**
- * Gets the scope for a function or operator.
- *
- * @remarks
- * @parblock
- * For a C++ member function or operator, this function returns the class it's
- * a member of.
- *
- * For a C++ non-member function or operator, iterates over its arguments and
- * returns the cursor for the class of the first argument that is a class; or
- * the cursor for the translation unit if none.
- * @endparblock
- *
- * @par Example
- * @parblock
- * Given something like:
- *
- *      struct Base {
- *        // ...
- *      };
- *
- *      bool operator==( Base const&, Base const& );
- *
- * this function would return the cursor for the `Base` class.
- * @endparblock
- *
- * @param fn_csr The cursor for a function or operator to get the scope of.
- * @return Returns said scope.
- */
-NODISCARD
-CXCursor tidy_Cursor_getFunctionScope( CXCursor fn_csr );
-
-/**
  * Gets the outermost C++ class for a cursor.
  *
  * @par Example
