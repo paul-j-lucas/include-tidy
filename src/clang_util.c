@@ -124,8 +124,12 @@ static enum CXChildVisitResult getCursorByName_visitor( CXCursor cursor,
   switch ( kind ) {
     case CXCursor_CXXBaseSpecifier:;
       CXCursor base_csr = clang_getCursorReferenced( cursor );
-      if ( tidy_Cursor_isInvalid( base_csr ) )
-        base_csr = clang_getTypeDeclaration( clang_getCursorType( cursor ) );
+      if ( tidy_Cursor_isInvalid( base_csr ) ) {
+        // LCOV_EXCL_START
+        CXType const type = clang_getCursorType( cursor );
+        base_csr = clang_getTypeDeclaration( type );
+        // LCOV_EXCL_STOP
+      }
       if ( !tidy_Cursor_isInvalid( base_csr ) )
         clang_visitChildren( base_csr, &getCursorByName_visitor, data );
       break;
@@ -300,8 +304,10 @@ static enum CXChildVisitResult isBaseClass_visitor( CXCursor cursor,
   if ( kind == CXCursor_CXXBaseSpecifier ) {
     CXCursor ref_csr = clang_getCursorReferenced( cursor );
     if ( tidy_Cursor_isInvalid( ref_csr ) ) {
+      // LCOV_EXCL_START
       CXType const type = clang_getCursorType( cursor );
       ref_csr = clang_getTypeDeclaration( type );
+      // LCOV_EXCL_STOP
     }
     ref_csr = clang_getCanonicalCursor( ref_csr );
 
