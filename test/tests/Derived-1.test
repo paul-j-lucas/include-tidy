@@ -2,6 +2,6 @@ EXPECTED_EXIT=0
 
 test_include_tidy $TIDY_TEST_CXXFLAGS $TIDY_TEST_OPTIONS \
   $TIDY_TEST_CONFIG \
-  Derived-02.cpp
+  Derived-1.hpp
 
 # vim:set syntax=bash et sw=2 ts=2:

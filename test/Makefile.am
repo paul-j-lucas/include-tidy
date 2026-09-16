@@ -93,11 +93,11 @@ TESTS+=	tests/cxx.test \
 	tests/conf_filter_cpp.test \
 	tests/conf_string_cpp.test \
 	tests/conf_var_init_cpp.test \
-	tests/Derived-02.test \
+	tests/Derived-1.test \
+	tests/Derived-2.test \
 	tests/derived_conf_string_cpp.test \
 	tests/derived_conf_string_hpp.test \
 	tests/derived_map_cpp.test \
-	tests/Derived-MI.test \
 	tests/derived_set-2_cpp.test \
 	tests/derived_set_cpp.test \
 	tests/elements_cpp.test \
