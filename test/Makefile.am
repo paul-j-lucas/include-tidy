@@ -75,42 +75,42 @@ TESTS+=	tests/duplicate.test \
 	tests/unnecessary.test
 
 # Real-world C tests.
-TESTS+=	tests/c_ast.test \
-	tests/c_ast_util.test \
-	tests/c_type.test \
-	tests/c_typedef.test \
-	tests/cdecl_dym.test \
-	tests/dump.test \
-	tests/english.test \
-	tests/p_macro.test \
-	tests/red_black.test \
-	tests/show.test \
-	tests/slist.test \
-	tests/types.test
+TESTS+=	tests/c_ast_h.test \
+	tests/c_ast_util_h.test \
+	tests/c_type_h.test \
+	tests/c_typedef_h.test \
+	tests/cdecl_dym_c.test \
+	tests/dump_h.test \
+	tests/english_h.test \
+	tests/p_macro_h.test \
+	tests/red_black_h.test \
+	tests/show_c.test \
+	tests/slist_h.test \
+	tests/types_h.test
 
-# C++ tests.
+# Real-world C++ tests.
 TESTS+=	tests/cxx.test \
-	tests/conf_filter.test \
-	tests/conf_string.test \
-	tests/conf_var_init.test \
+	tests/conf_filter_cpp.test \
+	tests/conf_string_cpp.test \
+	tests/conf_var_init_cpp.test \
 	tests/Derived-02.test \
 	tests/derived_conf_string_cpp.test \
 	tests/derived_conf_string_hpp.test \
-	tests/derived_map.test \
+	tests/derived_map_cpp.test \
 	tests/Derived-MI.test \
-	tests/derived_set-2.test \
-	tests/derived_set.test \
+	tests/derived_set-2_cpp.test \
+	tests/derived_set_cpp.test \
 	tests/elements_cpp.test \
 	tests/entities_hpp.test \
-	tests/error_string.test \
-	tests/exit_codes.test \
+	tests/error_string_cpp.test \
+	tests/exit_codes_cpp.test \
 	tests/file_info_cpp.test \
 	tests/file_info_hpp.test \
 	tests/has_cxx_qualifier_proxy.test \
-	tests/hash.test \
+	tests/hash_hpp.test \
 	tests/macro.test \
 	tests/namespace_type.test \
-	tests/query_node.test \
+	tests/query_node_cpp.test \
 	tests/timespec_t.test \
 	tests/token_hpp.test \
 	tests/using_set.test
