@@ -5,7 +5,7 @@ See the end of the file for license conditions.
 
 -------------------------------------------------------------------------------
 
-* Changes in Include-tidy 2.2
+* Changes in Include-tidy 3.0
 
 ** Better config. file error messages
 The offending value is now included in error messages.

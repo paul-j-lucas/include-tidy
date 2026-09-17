@@ -21,7 +21,7 @@
 ##
 
 AC_PREREQ([2.70])
-AC_INIT([include-tidy], [2.2], [https://github.com/paul-j-lucas/include-tidy/issues],,[https://github.com/paul-j-lucas/include-tidy])
+AC_INIT([include-tidy], [3.0], [https://github.com/paul-j-lucas/include-tidy/issues],,[https://github.com/paul-j-lucas/include-tidy])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 AM_EXTRA_RECURSIVE_TARGETS([clean-coverage distclean-coverage])
