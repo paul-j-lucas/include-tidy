@@ -43,6 +43,7 @@
 #include <ctype.h>                      /* for isalnum(), isprint() */
 #include <errno.h>
 #include <getopt.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for exit() */
@@ -1342,7 +1343,9 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   // tmp_include_paths is needed because we have to defer calling ipath_add()
   // until after chdir() (if called).
-  ipath_add( "." );
+  char dir_buf[ PATH_MAX + 1 ];
+  char const *const source_dir = path_dirname( tidy_source_path, dir_buf );
+  ipath_add( source_dir );
   for ( size_t i = 0; i < tmp_include_paths.len; ++i ) {
     char const *const *const ppath = array_at_nc( &tmp_include_paths, i );
     ipath_add( *ppath );

@@ -50,12 +50,33 @@
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-char const* path_basename( char const *path_name ) {
-  assert( path_name != NULL );
-  char const *const slash = strrchr( path_name, '/' );
+char const* path_basename( char const *path ) {
+  assert( path != NULL );
+  char const *const slash = strrchr( path, '/' );
   if ( slash != NULL )
-    return slash[1] ? slash + 1 : path_name;
-  return path_name;
+    return slash[1] ? slash + 1 : path;
+  return path;
+}
+
+char* path_dirname( char const *path, char dir_buf[static PATH_MAX + 1] ) {
+  assert( path != NULL );
+
+  char const *const slash = strrchr( path, '/' );
+  size_t dir_len;
+
+  if ( slash == NULL ) {
+    dir_buf[0] = '.';
+    dir_len = 1;
+  }
+  else {
+    dir_len = STATIC_CAST( size_t, slash - path );
+    if ( dir_len == 0 )                 // "/"
+      dir_len = 1;
+    memcpy( dir_buf, path, dir_len );
+  }
+
+  dir_buf[ dir_len ] = '\0';
+  return dir_buf;
 }
 
 char const* path_cwd( size_t *rv_len ) {

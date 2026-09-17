@@ -24,6 +24,10 @@ If it's not needed, it's still a violation.
 ** Fixed `--verbose=a`
 Now correctly printing verbose arguments.
 
+** `-I` of source directory
+The directory of the source path is added as an include path, not the current
+working directory.
+
 ** libclang errors
 Error messages from libclang are now marked so explicitly.
 

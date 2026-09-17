@@ -47,23 +47,25 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Extracts the base portion of a \a path_name.
+ * Extracts the base portion of a \a path.
  *
  * @remarks
  * @parblock
  * Unlike **basename**(3):
  *  + Trailing `/` characters are not deleted.
- *  + \a path_name is never modified (hence can therefore be `const`).
- *  + Returns a pointer within \a path_name (hence is multi-call safe).
+ *  + \a path is never modified (hence can therefore be `const`).
+ *  + Returns a pointer within \a path (hence is multi-call safe).
  * @endparblock
  *
- * @param path_name The path-name to extract the base portion of.
- * @return Returns a pointer to the last component of \a path_name.
- * If \a path_name consists entirely of '/' characters, a pointer to the string
- * "/" is returned.
+ * @param path The path to extract the base portion of.
+ * @return Returns a pointer to the last component of \a path.  If \a path
+ * consists entirely of '/' characters, a pointer to the string "/" is
+ * returned.
+ *
+ * @sa path_dirname()
  */
 NODISCARD
-char const* path_basename( char const *path_name );
+char const* path_basename( char const *path );
 
 /**
  * Gets the absolute path of the current working directory.
@@ -74,6 +76,19 @@ char const* path_basename( char const *path_name );
  */
 NODISCARD
 char const* path_cwd( size_t *rv_len );
+
+/**
+ * Extracts the directory portion of \a path.
+ *
+ * @param path The path to extract the directory portion of.
+ * @param dir_buf A buffer to receive the directory portion of \a path.  It
+ * will not end with <tt>'/'</tt> (unless \a path is exactly <tt>'/'</tt>).
+ * @return Returns \a dir_buf.
+ *
+ * @sa path_basename()
+ */
+NODISCARD
+char* path_dirname( char const *path, char dir_buf[static PATH_MAX + 1] );
 
 /**
  * Gets whether \a path ends with \a end_path.
