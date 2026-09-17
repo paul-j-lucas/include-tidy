@@ -1,5 +1,7 @@
 2026-09-17  Paul J. Lucas <paul@lucasmail.org>
 
+   * toml_lite.c: Suppressed warning.
+   * configure.ac: Added -Wno-format-zero-length.
    * config_file.c: #include fix.
    * include.c, include.h, proxies.c: Added basename field to tidy_include.
    * path_util_test.c: Added test_path_dirname().
