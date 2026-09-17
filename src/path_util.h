@@ -87,7 +87,7 @@ char const* path_cwd( size_t *rv_len );
  *
  * @sa path_basename()
  */
-NODISCARD
+PJL_DISCARD
 char* path_dirname( char const *path, char dir_buf[static PATH_MAX + 1] );
 
 /**
