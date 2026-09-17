@@ -440,20 +440,12 @@ bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
   }
 
   //
-  // Get what initialized the object.  If it's a CXCursor_CallExpr, we have to
-  // dig down to the callee.
+  // Get what initialized the object.
   //
   CXCursor child_csr = tidy_Cursor_skipUnexposedDown( init_csr );
   if ( tidy_Cursor_isInvalid( child_csr ) )
     return false;                       // LCOV_EXCL_LINE
-  CXCursor ref_csr = clang_getCursorReferenced( child_csr );
-  if ( clang_Cursor_isNull( ref_csr ) ) {
-    enum CXCursorKind const kind = clang_getCursorKind( child_csr );
-    if ( kind == CXCursor_CallExpr ) {
-      CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( child_csr );
-      ref_csr = clang_getCursorReferenced( callee_csr );
-    }
-  }
+  CXCursor const ref_csr = clang_getCursorReferenced( child_csr );
   if ( tidy_Cursor_isInvalid( ref_csr ) )
     return false;                       // LCOV_EXCL_LINE
 
