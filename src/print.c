@@ -46,6 +46,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for free */
+#include <string.h>
 #include <sysexits.h>
 
 /// @endcond
