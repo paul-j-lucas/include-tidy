@@ -1,5 +1,10 @@
 2026-09-17  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c, path_util.c, path_util.h: Now adding dirname(
+     tidy_source_path ) and not $PWD to ipaths.
+   * include.c, ipath.c, ipath.h, path_util.c, path_util.h, path_util_test.c,
+     proxies.c, include-enoent.out: Now using PATH_MAX+1; fixed partial matches
+     in ipath_relativize().
    * cxx.c: Eliminated dead code.
    * include.c, ipath.c, ipath.h: ipath_relativize() now returns a new string.
    * config_file.c: Removed path_basename() hack.
