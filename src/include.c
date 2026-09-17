@@ -388,6 +388,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     // original CXFile's path.
     //
     included->rel_path = tidy_File_getRelativePath( included_file );
+    included->basename = path_basename( included->rel_path );
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
     included->instance_id = tidy_include_set.size;
@@ -447,11 +448,9 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       // is incorrect).
       //
       tidy_include *const includer = include_find_by_File( includer_file );
-      if ( includer != old_includer ) {
-        char const *const included_base = path_basename( included->rel_path );
-        char const *const includer_base = path_basename( includer->rel_path );
-        if ( strcmp( included_base, includer_base ) == 0 )
-          included->includer = includer;
+      if ( includer != old_includer &&
+           strcmp( included->basename, includer->basename ) == 0 ) {
+        included->includer = includer;
       }
     }
     goto done;

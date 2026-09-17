@@ -152,8 +152,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       // include the real standard one.  The local header (even though it's
       // standard) should be a proxy for the real one.
       //
-      strcmp( path_basename( included->rel_path ),
-              path_basename( includer->rel_path ) ) == 0 ) {
+      strcmp( included->basename, includer->basename ) == 0 ) {
     proxy = includer;
     goto done;
   }
