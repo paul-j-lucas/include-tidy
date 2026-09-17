@@ -868,8 +868,8 @@ NODISCARD
 static char* tidy_File_getRelativePath( CXFile file ) {
   assert( file != NULL );
 
-  CXString const    path_cxs = clang_getFileName( file );
-  char const *const path = path_normalize( clang_getCString( path_cxs ) );
+  CXString const  path_cxs = clang_getFileName( file );
+  char *const     path = path_normalize( clang_getCString( path_cxs ) );
 
   clang_disposeString( path_cxs );
 
@@ -885,7 +885,7 @@ static char* tidy_File_getRelativePath( CXFile file ) {
   //    free the original path now.
 
   char *const rel_path = check_strdup( ipath_relativize( path ) );
-  FREE( path );
+  free( path );
   return rel_path;
 }
 

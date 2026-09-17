@@ -87,12 +87,10 @@ bool ipath_find( char const *rel_path, char abs_path[static PATH_MAX] );
  *
  * @param abs_path The absolute path of a file being included.
  * @return Returns the shortened path of \a abs_path relative to one of the
- * `-I` absolute paths.
- *
- * @note The pointer returned points to within \a abs_path.
+ * `-I` absolute paths.  The caller is responsible for freeing it.
  */
 NODISCARD
-char const* ipath_relativize( char const *abs_path );
+char* ipath_relativize( char const *abs_path );
 
 /**
  * Initializes the list of `-I` paths.

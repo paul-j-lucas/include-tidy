@@ -125,8 +125,12 @@ bool ipath_find( char const *rel_path, char abs_path[static PATH_MAX] ) {
   return is_found;
 }
 
-char const* ipath_relativize( char const *abs_path ) {
+char* ipath_relativize( char const *abs_path ) {
   assert( abs_path != NULL );
+
+  char path_buf[ PATH_MAX ];
+  if ( realpath( abs_path, path_buf ) != NULL )
+    abs_path = path_buf;
 
   size_t      longest_include_path_len = 0;
   char const *shortest_include_path = abs_path;
@@ -144,7 +148,9 @@ char const* ipath_relativize( char const *abs_path ) {
     }
   } // for
 
-  return path_no_dot_slash( shortest_include_path );
+  shortest_include_path = path_no_dot_slash( shortest_include_path );
+  assert( path_is_relative( shortest_include_path ) );
+  return check_strdup( shortest_include_path );
 }
 
 void ipaths_init( void ) {
