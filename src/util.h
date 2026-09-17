@@ -870,13 +870,13 @@ PJL_PRINTF_LIKE_FUNC(2)
 _Noreturn void fatal_error( int status, char const *format, ... );
 
 /**
- * Prints \a s as a quoted string with escaped characters.
+ * Prints \a s as a string with special characters escaped with backslashes
+ * presumably to be printed within quotes.
  *
- * @param s The string to put.  If NULL, prints `null` (unquoted).
- * @param quote The quote character to use, either <tt>'</tt> or <tt>"</tt>.
+ * @param s The string to put.  If NULL, prints `null`.
  * @param fout The `FILE` to print to.
  */
-void fputs_quoted( char const *s, char quote, FILE *fout );
+void fputs_escaped( char const *s, FILE *fout );
 
 /**
  * Like **free**(3) except frees the pointer pointed to by \a pptr.

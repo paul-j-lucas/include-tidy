@@ -47,11 +47,10 @@ static FILE* check_fmemopen( char *buf, size_t buf_size,
   return file;
 }
 
-static void buf_puts_quoted( char *buf, size_t buf_size, char const *s,
-                             char quote ) {
+static void buf_puts_escaped( char *buf, size_t buf_size, char const *s ) {
   assert( buf != NULL );
   FILE *const fbuf = check_fmemopen( buf, buf_size, "w" );
-  fputs_quoted( s, quote, fbuf );
+  fputs_escaped( s, fbuf );
   fclose( fbuf );
 }
 
@@ -64,18 +63,16 @@ static bool trim_equal( char const *before, char const *after ) {
 
 ////////// test functions /////////////////////////////////////////////////////
 
-static bool test_fputs_quoted( void ) {
+static bool test_fputs_escaped( void ) {
   TEST_FUNC_BEGIN();
 
+  static char const TEST_STR[] = "hello \"\b\f\n\r\t\v\\\" world";
   char buf[ 80 ] = { 0 };
 
-  buf_puts_quoted( buf, sizeof( buf ), "hello \"\b\f\n\r\t\v\\\" world", '"' );
-  TEST( strcmp( buf, "\"hello \\\"\\b\\f\\n\\r\\t\\v\\\\\\\" world\"" ) == 0 );
+  buf_puts_escaped( buf, sizeof( buf ), TEST_STR );
+  TEST( strcmp( buf, "hello \\\"\\b\\f\\n\\r\\t\\v\\\\\\\" world" ) == 0 );
 
-  buf_puts_quoted( buf, sizeof( buf ), "hello \"\b\f\n\r\t\v\\\" world", '\'' );
-  TEST( strcmp( buf, "'hello \"\\b\\f\\n\\r\\t\\v\\\\\" world'" ) == 0 );
-
-  buf_puts_quoted( buf, sizeof( buf ), NULL, '"' );
+  buf_puts_escaped( buf, sizeof( buf ), NULL );
   TEST( strcmp( buf, "null" ) == 0 );
 
   TEST_FUNC_END();
@@ -110,7 +107,7 @@ static bool test_str_trim( void ) {
 int main( int argc, char const *const argv[] ) {
   test_prog_init( argc, argv );
 
-  test_fputs_quoted();
+  test_fputs_escaped();
   test_str_trim();
 
   return test_exit_status;

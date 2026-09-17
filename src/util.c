@@ -116,8 +116,7 @@ void fatal_error( int status, char const *format, ... ) {
   exit( status );
 }
 
-void fputs_quoted( char const *s, char quote, FILE *fout ) {
-  assert( quote == '\'' || quote == '"' );
+void fputs_escaped( char const *s, FILE *fout ) {
   assert( fout != NULL );
 
   if ( s == NULL ) {
@@ -125,23 +124,27 @@ void fputs_quoted( char const *s, char quote, FILE *fout ) {
     return;
   }
 
-  fputc( quote, fout );
   for ( ; *s != '\0'; ++s ) {
-    switch ( *s ) {
+    unsigned char c = STATIC_CAST( unsigned char, *s );
+    switch ( c ) {
+      case '"' : fputs( "\\\"", fout ); break;
+      case '\\': fputs( "\\\\", fout ); break;
+      case '\a': fputs( "\\a",  fout ); break;
       case '\b': fputs( "\\b",  fout ); break;
       case '\f': fputs( "\\f",  fout ); break;
       case '\n': fputs( "\\n",  fout ); break;
       case '\r': fputs( "\\r",  fout ); break;
       case '\t': fputs( "\\t",  fout ); break;
       case '\v': fputs( "\\v",  fout ); break;
+
       default:
-        if ( *s == quote )
-          fputc( '\\', fout );
-        fputc( *s, fout );
+        if ( likely( c >= 0x20 && c < 0x7F ) )
+          fputc( c, fout );
+        else
+          fprintf( fout, "\\x%02x", c );
         break;
     } // switch
   } // for
-  fputc( quote, fout );
 }
 
 void free_pptr( void *pptr ) {
