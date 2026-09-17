@@ -1,5 +1,10 @@
 2026-09-17  Paul J. Lucas <paul@lucasmail.org>
 
+   * strbuf.c, strbuf.h: Removed strbuf_sepc_puts -- not used.
+   * util.c, util.h, util_test.c: Added tests for str_is_any().
+   * print.c, util.c, util.h: Named macro str_is_any_list().
+   * cxx.c: Code coverage exclusion comments.
+   * util_test.c: More tests for fputs_escaped().
    * cli_options.c, path_util.c, path_util.h: Now adding dirname(
      tidy_source_path ) and not $PWD to ipaths.
    * include.c, ipath.c, ipath.h, path_util.c, path_util.h, path_util_test.c,
