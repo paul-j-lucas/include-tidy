@@ -52,6 +52,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fnmatch.h>
+#include <limits.h>
 #if HAVE_PWD_H
 # include <pwd.h>                       /* for getpwuid() */
 #endif /* HAVE_PWD_H */
