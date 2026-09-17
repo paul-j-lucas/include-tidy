@@ -429,6 +429,11 @@ symbols = [
   "std::ostream"
 ]
 
+[sstream]
+symbols = [
+  "std::istringstream"
+]
+
 [string]
 symbols = [
   "std::string"
