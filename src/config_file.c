@@ -1582,24 +1582,7 @@ void config_init( void ) {
 
 bool config_is_standard_include( char const *rel_path ) {
   assert( rel_path != NULL );
-#ifndef NDEBUG
   assert( path_is_relative( rel_path ) );
-#else
-  //
-  // For an unknown reason, when running under a debugger such as lldb, some
-  // system include paths are passed to this function as absolute paths even
-  // though they're supposed to be relative.
-  //
-  // In order to be able to debug using lldb, convert an absolute path to a
-  // relative path --- for now.
-  //
-  // Note that simply using the basename isn't right since it won't work for a
-  // system include like <sys/wait.h>, but since it's only some paths that have
-  // this problem, this is good enough.
-  //
-  if ( unlikely( path_is_absolute( rel_path ) ) )
-    rel_path = path_basename( rel_path );
-#endif /* NDEBUG */
 
   return  (tidy_source_is_cxx &&
             is_standard_include( rel_path, &std_cxx_includes )) ||
