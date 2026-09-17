@@ -28,6 +28,10 @@ Now correctly printing verbose arguments.
 The directory of the source path is added as an include path, not the current
 working directory.
 
+** `include-tidy.toml` in source directory
+An `include-tidy.toml` file is now also checked for in the directory containing
+_source-path_ after `--config` and before `$PWD`.
+
 ** libclang errors
 Error messages from libclang are now marked so explicitly.
 

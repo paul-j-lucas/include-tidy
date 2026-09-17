@@ -1150,30 +1150,32 @@ The path given as the value for either the
 or
 .B \-c
 option.
+(If specified, this path
+.I must
+exist.)
 .IP \n+[step].
-\f(CW./include-tidy.toml\fP
+\f(CW$(dirname\fP
+.IR source-file \f(CW)/include-tidy.toml\fP.
 .IP \n+[step].
-\f(CW$XDG_CONFIG_HOME/include-tidy/config.toml\fP
+.BR $PWD \f(CW/include-tidy.toml\fP.
 .IP \n+[step].
-\f(CW~/.config/include-tidy/config.toml\fP,
-but only if
+.BR $XDG_CONFIG_HOME \f(CW/include-tidy/config.toml\fP.
+If
 .B XDG_CONFIG_HOME
-is empty or unset.
+is unset or empty,
+it defaults to \f(CW~/.config\fP.
 .IP \n+[step].
-If the
-.B XDG_CONFIG_DIRS
-environment variable
-is set to a colon separated list of paths,
-then for each
+For each
 .I path
-in it,
+in a colon separated list of paths in
+.BR XDG_CONFIG_DIRS ,
 the first of
-.IR path \f(CW/include-tidy/config.toml\fP.
-.IP \n+[step].
-\f(CW/etc/xdg/include-tidy/config.toml\fP,
-but only if
+.IR path \f(CW/include-tidy/config.toml\fP
+to exist and be readable.
+If
 .B XDG_CONFIG_DIRS
-is empty or unset.
+is unset or empty,
+it defaults to \f(CW/etc/xdg\fP.
 .PP
 If no configuration file is found,
 it's an error.

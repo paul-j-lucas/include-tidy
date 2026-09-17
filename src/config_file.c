@@ -988,14 +988,17 @@ static void config_cleanup( void ) {
  * @parblock
  * Configuration files are opened (if they exist) in this order:
  *
- *  1. The value of either the `--config` or `-c` command-line option.  (If
- *     specified, this _must_ exist.)
- *  2. `$PWD/include-tidy.toml`.
- *  3. `$XDG_CONFIG_HOME/include-tidy/config.toml`.  If `XDG_CONFIG_HOME` is
- *     empty or unset, then ``~/.config/` is used.
- *  4. For each _path_ in `$XDG_CONFIG_DIRS`, the first of
- *     <i>path</i><tt>/include-tidy/config.toml</tt> to exist and be readable.
- *     If `XDG_CONFIG_DIRS` is empty or unset, then `/etc/xdg` is used.
+ *  1. The path given as the value for either the `--config` or `-c` command-
+ *     line option.  (If specified, this path _must_ exist.)
+ *  2. <tt>dirname(</tt> \ref tidy_source_path <tt>)/include-tidy.toml</tt>.
+ *  3. `$PWD/include-tidy.toml`, but only if `$PWD` is not the same as the
+ *     directory of \ref tidy_source_path.
+ *  4. `$XDG_CONFIG_HOME/include-tidy/config.toml`.  If `XDG_CONFIG_HOME` is
+ *     unset or empty, it defaults to `~/.config`.
+ *  5. For each _path_ in a colon separated list of paths in `XDG_CONFIG_DIRS`,
+ *     the first of <i>path</i><tt>/include-tidy/config.toml</tt> to exist and
+ *     be readable.  If `XDG_CONFIG_DIRS` is unset or empty, it defaults to
+ *     `/etc/xdg`.
  * @endparblock
  *
  * @param config_path The configuration file path.  May be NULL.
@@ -1028,12 +1031,12 @@ static FILE* config_file_find( char const *config_path,
       FALLTHROUGH;
 
     case 2:
-      // Try $PWD/include-tidy.toml.
+      // Try dirname(tidy_source_path)/include-tidy.toml.
       ++case_num;
+      static char source_dir[ PATH_MAX + 1 ];
+      path_dirname( tidy_source_path, source_dir );
       strbuf_reset( &path_buf );
-      size_t cwd_path_len;
-      char const *const cwd_path = path_cwd( &cwd_path_len );
-      strbuf_putsn( &path_buf, cwd_path, cwd_path_len );
+      strbuf_puts( &path_buf, source_dir );
       strbuf_paths( &path_buf, PACKAGE ".toml" );
       config_file = config_open( path_buf.str, CONFIG_OPT_IGNORE_ENOENT );
       if ( config_file != NULL )
@@ -1041,6 +1044,21 @@ static FILE* config_file_find( char const *config_path,
       FALLTHROUGH;
 
     case 3:
+      // Try $PWD/include-tidy.toml.
+      ++case_num;
+      size_t cwd_path_len;
+      char const *const cwd_path = path_cwd( &cwd_path_len );
+      if ( strcmp( cwd_path, source_dir ) != 0 ) {
+        strbuf_reset( &path_buf );
+        strbuf_putsn( &path_buf, cwd_path, cwd_path_len );
+        strbuf_paths( &path_buf, PACKAGE ".toml" );
+        config_file = config_open( path_buf.str, CONFIG_OPT_IGNORE_ENOENT );
+        if ( config_file != NULL )
+          break;
+      }
+      FALLTHROUGH;
+
+    case 4:
       // Try $XDG_CONFIG_HOME/include-tidy/config.toml or
       // $HOME/.config/include-tidy/config.toml.
       ++case_num;
@@ -1066,7 +1084,7 @@ static FILE* config_file_find( char const *config_path,
       }
       FALLTHROUGH;
 
-    case 4:
+    case 5:
       // Try $XDG_CONFIG_DIRS/include-tidy/config.toml or
       // /etc/xdg/include-tidy/config.toml.
       ++case_num;
