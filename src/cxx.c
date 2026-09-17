@@ -155,8 +155,8 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
     } // switch
 
     CXCursor qual_csr = clang_getCursorReferenced( cursors[i] );
-    if ( tidy_Cursor_isInvalid( qual_csr ) )
-      qual_csr = cursors[i];
+    if ( unlikely( tidy_Cursor_isInvalid( qual_csr ) ) )
+      qual_csr = cursors[i];            // LCOV_EXCL_LINE
     if ( tidy_Cursor_isInvalid( qual_csr ) )
       break;                            // LCOV_EXCL_LINE
 
