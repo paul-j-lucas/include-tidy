@@ -38,7 +38,7 @@
 // standard
 #include <assert.h>
 #include <errno.h>
-#include <limits.h>                     /* for CHAR_BIT, PATH_MAX */
+#include <limits.h>                     /* for CHAR_BIT */
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>                      /* for FILE */
