@@ -58,27 +58,6 @@ char const* path_basename( char const *path ) {
   return path;
 }
 
-char* path_dirname( char const *path, char rv_dir_buf[static PATH_MAX + 1] ) {
-  assert( path != NULL );
-
-  char const *const slash = strrchr( path, '/' );
-  size_t dir_len;
-
-  if ( slash == NULL ) {
-    rv_dir_buf[0] = '.';
-    dir_len = 1;
-  }
-  else {
-    dir_len = STATIC_CAST( size_t, slash - path );
-    if ( dir_len == 0 )                 // "/"
-      dir_len = 1;
-    memcpy( rv_dir_buf, path, dir_len );
-  }
-
-  rv_dir_buf[ dir_len ] = '\0';
-  return rv_dir_buf;
-}
-
 char const* path_cwd( size_t *rv_len ) {
   static char   cwd_path_buf[ PATH_MAX + 1 ];
   static size_t cwd_path_len;
@@ -100,6 +79,27 @@ char const* path_cwd( size_t *rv_len ) {
   if ( rv_len != NULL )
     *rv_len = cwd_path_len;
   return cwd_path_buf;
+}
+
+char* path_dirname( char const *path, char rv_dir_buf[static PATH_MAX + 1] ) {
+  assert( path != NULL );
+
+  char const *const slash = strrchr( path, '/' );
+  size_t dir_len;
+
+  if ( slash == NULL ) {
+    rv_dir_buf[0] = '.';
+    dir_len = 1;
+  }
+  else {
+    dir_len = STATIC_CAST( size_t, slash - path );
+    if ( dir_len == 0 )                 // "/"
+      dir_len = 1;
+    memcpy( rv_dir_buf, path, dir_len );
+  }
+
+  rv_dir_buf[ dir_len ] = '\0';
+  return rv_dir_buf;
 }
 
 bool path_ends_with( char const *path, char const *end_path,
