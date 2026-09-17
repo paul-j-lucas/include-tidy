@@ -1274,6 +1274,7 @@ char const* toml_type_name( toml_type type ) {
     case TOML_STRING: return "string";
     case TOML_ARRAY : return "array";
   } // switch
+  UNEXPECTED_INT_VALUE( type );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
