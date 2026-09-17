@@ -126,7 +126,8 @@ NODISCARD
 static bool         is_associated_header( tidy_include const*, char const* );
 
 NODISCARD
-static char const*  path_no_ext_if( char const*, char, char[static PATH_MAX] );
+static char const*  path_no_ext_if( char const*, char,
+                                    char[static PATH_MAX + 1] );
 
 static void         print_statistics( void );
 
@@ -193,7 +194,7 @@ static tidy_include* get_associated_header( void ) {
   static tidy_include *assoc_include;
 
   RUN_ONCE {
-    char path_buf[ PATH_MAX ];
+    char path_buf[ PATH_MAX + 1 ];
     char const *const source_path_no_ext =
       path_no_ext_if( tidy_source_path, 'c', path_buf );
     if ( source_path_no_ext == NULL )
@@ -548,7 +549,7 @@ static bool is_associated_header( tidy_include const *include,
   if ( tidy_associated_header_rel_path != NULL )
     return strcmp( include->rel_path, tidy_associated_header_rel_path ) == 0;
 
-  char path_buf[ PATH_MAX ];
+  char path_buf[ PATH_MAX + 1 ];
   char const *const include_rel_path_no_ext =
     path_no_ext_if( include->rel_path, 'h', path_buf );
   if ( include_rel_path_no_ext == NULL )
@@ -776,7 +777,7 @@ static void maybe_print_include( tidy_include const *include,
  */
 NODISCARD
 static char const* path_no_ext_if( char const *path, char if_ext_0,
-                                   char path_buf[static PATH_MAX] ) {
+                                   char path_buf[static PATH_MAX + 1] ) {
   assert( path != NULL );
 
   char const *const ext = path_ext( path );
@@ -1061,7 +1062,7 @@ tidy_include* include_find_by_rel_path( char const *rel_path ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
-  char abs_path[ PATH_MAX ];
+  char abs_path[ PATH_MAX + 1 ];
   if ( ipath_find( rel_path, abs_path ) ) {
     CXFile const file = clang_getFile( tidy_tu, abs_path );
     if ( file != NULL )

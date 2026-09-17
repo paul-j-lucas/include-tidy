@@ -82,7 +82,7 @@ static bool test_path_no_ext( void ) {
   TEST_FUNC_BEGIN();
 
   char const *path;
-  char path_buf[ PATH_MAX ];
+  char path_buf[ PATH_MAX + 1 ];
 
   TEST( (path = path_no_ext( "a", path_buf )) != NULL )
     && TEST( strcmp( path, "a" ) == 0 );

@@ -194,7 +194,7 @@ char const* path_no_dot_slash( char const *path );
  * @sa path_ext()
  */
 NODISCARD
-char const* path_no_ext( char const *path, char path_buf[static PATH_MAX] );
+char const* path_no_ext( char const *path, char path_buf[static PATH_MAX + 1] );
 
 /**
  * Normalizes a path by:

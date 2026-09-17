@@ -82,7 +82,7 @@ static void ipaths_cleanup( void ) {
 void ipath_add( char const *path ) {
   assert( path != NULL );
 
-  char path_buf[ PATH_MAX ];
+  char path_buf[ PATH_MAX + 1 ];
   if ( realpath( path, path_buf ) == NULL )
     return;
 
@@ -102,7 +102,7 @@ void ipath_add( char const *path ) {
   };
 }
 
-bool ipath_find( char const *rel_path, char abs_path[static PATH_MAX] ) {
+bool ipath_find( char const *rel_path, char abs_path[static PATH_MAX + 1] ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
@@ -128,7 +128,7 @@ bool ipath_find( char const *rel_path, char abs_path[static PATH_MAX] ) {
 char* ipath_relativize( char const *abs_path ) {
   assert( abs_path != NULL );
 
-  char path_buf[ PATH_MAX ];
+  char path_buf[ PATH_MAX + 1 ];
   if ( realpath( abs_path, path_buf ) != NULL )
     abs_path = path_buf;
 
@@ -140,11 +140,13 @@ char* ipath_relativize( char const *abs_path ) {
 
     if ( ipath->abs_path_len > longest_include_path_len &&
          strncmp( abs_path, ipath->abs_path, ipath->abs_path_len ) == 0 ) {
-      longest_include_path_len = ipath->abs_path_len;
-      shortest_include_path = abs_path + ipath->abs_path_len;
-
-      if ( shortest_include_path[0] == '/' )
-        ++shortest_include_path;
+      char const last_c = abs_path[ ipath->abs_path_len ];
+      if ( last_c == '\0' || last_c == '/' ) {
+        longest_include_path_len = ipath->abs_path_len;
+        shortest_include_path = abs_path + ipath->abs_path_len;
+        if ( shortest_include_path[0] == '/' )
+          ++shortest_include_path;
+      }
     }
   } // for
 

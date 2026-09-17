@@ -76,7 +76,7 @@
  */
 PJL_DISCARD
 static char const* get_cxx_header( char const *c_name,
-                                   char path_buf[static PATH_MAX] ) {
+                                   char path_buf[static PATH_MAX + 1] ) {
   assert( c_name != NULL );
 
   char const *const c_ext = path_ext( c_name );
@@ -166,7 +166,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   if ( !path_is_filename( included->rel_path ) )
     goto skip;
 
-  char cxx_path[ PATH_MAX ];
+  char cxx_path[ PATH_MAX + 1 ];
   if ( get_cxx_header( included->rel_path, cxx_path ) != NULL ) {
     if ( strcmp( includer->rel_path, cxx_path ) == 0 ) {
       //

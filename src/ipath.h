@@ -75,7 +75,7 @@ void ipath_add( char const *include_path );
  * @return Returns `true` only if \a rel_path is found.
  */
 NODISCARD
-bool ipath_find( char const *rel_path, char abs_path[static PATH_MAX] );
+bool ipath_find( char const *rel_path, char abs_path[static PATH_MAX + 1] );
 
 /**
  * Relativizes \a abs_path against one of the `-I` absolute paths.

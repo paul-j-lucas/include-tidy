@@ -59,7 +59,7 @@ char const* path_basename( char const *path_name ) {
 }
 
 char const* path_cwd( size_t *rv_len ) {
-  static char   cwd_path_buf[ PATH_MAX ];
+  static char   cwd_path_buf[ PATH_MAX + 1 ];
   static size_t cwd_path_len;
 
   if ( cwd_path_len == 0 ) {
@@ -118,7 +118,8 @@ char const* path_no_dot_slash( char const *path ) {
   return path;
 }
 
-char const* path_no_ext( char const *path, char path_buf[static PATH_MAX] ) {
+char const* path_no_ext( char const *path,
+                         char path_buf[static PATH_MAX + 1] ) {
   assert( path != NULL );
 
   ssize_t last_dot = -1, last_slash = -1;
