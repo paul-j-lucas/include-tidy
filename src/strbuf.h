@@ -185,20 +185,6 @@ inline char* strbuf_puts( strbuf_t *sbuf, char const *s ) {
 }
 
 /**
- * Appends \a s, quoted with \a quote, and with non-space whitespace,
- * backslashes, and \a quote escaped, onto the end of \a sbuf growing the
- * buffer if necessary.
- *
- * @param sbuf A pointer to the \ref strbuf to append onto.
- * @param quote The quote character to use, either <code>&apos;</code> or
- * <code>&quot;</code>.
- * @param s The string to put.
- * @return Returns \ref strbuf::str "sbuf->str".
- */
-PJL_DISCARD
-char* strbuf_puts_quoted( strbuf_t *sbuf, char quote, char const *s );
-
-/**
  * Ensures at least \a res_len additional bytes of capacity exist in \a sbuf.
  *
  * @param sbuf A pointer to the \ref strbuf to reserve \a res_len additional

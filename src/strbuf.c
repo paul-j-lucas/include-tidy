@@ -120,32 +120,6 @@ char* strbuf_putsn( strbuf_t *sbuf, char const *s, size_t n ) {
   return sbuf->str;
 }
 
-char* strbuf_puts_quoted( strbuf_t *sbuf, char quote, char const *s ) {
-  assert( sbuf != NULL );
-  assert( quote == '\'' || quote == '"' );
-  assert( s != NULL );
-
-  strbuf_putc( sbuf, quote );
-  for ( ; *s != '\0'; ++s ) {
-    switch ( *s ) {
-      case '\b': strbuf_putsn( sbuf, "\\b",  2 ); break;
-      case '\f': strbuf_putsn( sbuf, "\\f",  2 ); break;
-      case '\n': strbuf_putsn( sbuf, "\\n",  2 ); break;
-      case '\r': strbuf_putsn( sbuf, "\\r",  2 ); break;
-      case '\t': strbuf_putsn( sbuf, "\\t",  2 ); break;
-      case '\v': strbuf_putsn( sbuf, "\\v",  2 ); break;
-      default:
-        if ( *s == quote )
-          strbuf_putc( sbuf, '\\' );
-        strbuf_putc( sbuf, *s );
-        break;
-    } // switch
-  } // for
-  strbuf_putc( sbuf, quote );
-
-  return sbuf->str;
-}
-
 bool strbuf_reserve( strbuf_t *sbuf, size_t res_len ) {
   assert( sbuf != NULL );
   if ( res_len < sbuf->cap - sbuf->len )
