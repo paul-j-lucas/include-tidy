@@ -1,3 +1,43 @@
+2026-09-17  Paul J. Lucas <paul@lucasmail.org>
+
+   * cxx.c: Eliminated dead code.
+   * include.c, ipath.c, ipath.h: ipath_relativize() now returns a new string.
+   * config_file.c: Removed path_basename() hack.
+   * print.c: Now skipping comment tokens.
+   * print.c: #include fix.
+   * strbuf.c, strbuf.h, strbuf_test.c: Removed strbuf_puts_quoted().
+   * config_file.c: Committed rel_path hack --- for now.
+   * print.c, util.c, util.h: Added token printing for cursors that don't have
+     a simple name.
+
+2026-09-16  Paul J. Lucas <paul@lucasmail.org>
+
+   * util.c, util.h, util_test.c: s/fputs_quoted/fputs_escaped/
+   * Base-1.hpp, Derived-1.hpp: Test renaming.
+   * test/Makefile.am: Test renaming.
+
+2026-09-15  Paul J. Lucas <paul@lucasmail.org>
+
+   * test/Makefile.am, token.hpp, token_hpp.out, token_hpp.test: Another test
+     for is_cxx_mbr_ref_iwyu_exception().
+   * src/Makefile.am: Needed to remove clean-coverage as a dependency for
+     $(bin_PROGRAMS).
+   * cxx.c: s/if/assert/
+   * has_cxx_qualifier_proxy.cpp, has_cxx_qualifier_proxy.hpp: Another test for
+     has_cxx_qualifier_proxy().
+   * test/Makefile.am, has_cxx_qualifier_proxy.cpp,
+     has_cxx_qualifier_proxy.hpp, has_cxx_qualifier_proxy.out,
+     has_cxx_qualifier_proxy.test: Another test for has_cxx_qualifier_proxy().
+   * cxx.c: Code coverage exclusion comments.
+   * clang_util.c, clang_util.h, cxx.c: #ifdef'd out
+     tidy_Cursor_isInheritedMemberFunctionCall().
+   * clang_util.c, test/Makefile.am, file_info.cpp, file_info_cpp.out,
+     file_info_cpp.test: Better testing of
+     tidy_Cursor_isInheritedMemberFunctionCall().
+   * file_info.hpp, hash.hpp: Updated test files: more comprehensive.
+   * clang_util.c: Code coverage exclusion comments.
+   * clang_util.c: Rework.
+
 2026-09-14  Paul J. Lucas <paul@lucasmail.org>
 
    * clang_util.c: Code coverage exclusion comments.
