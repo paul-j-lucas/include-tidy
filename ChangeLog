@@ -1,5 +1,16 @@
 2026-09-17  Paul J. Lucas <paul@lucasmail.org>
 
+   * config_file.c: #include fix.
+   * include.c, include.h, proxies.c: Added basename field to tidy_include.
+   * path_util_test.c: Added test_path_dirname().
+   * configure.ac: Bumped version to 3.0.
+   * man/man1/include-tidy.1, config_file.c: Now also checking for $(dirname
+     source-path)/include-tidy.toml.
+   * man/man1/include-tidy.1: Added (The order doesn't matter.).
+   * cli_options.c: Eliminated source_dir.
+   * cli_options.c: Revert "Eliminated source_dir."
+   * cli_options.c: Eliminated source_dir.
+   * path_util.h: s/NODISCARD/PJL_DISCARD/
    * strbuf.c, strbuf.h: Removed strbuf_sepc_puts -- not used.
    * util.c, util.h, util_test.c: Added tests for str_is_any().
    * print.c, util.c, util.h: Named macro str_is_any_list().
