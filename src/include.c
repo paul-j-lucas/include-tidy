@@ -898,6 +898,7 @@ static char* tidy_File_getRelativePath( CXFile file ) {
 static void tidy_include_cleanup( tidy_include *include ) {
   if ( include != NULL ) {
     FREE( include->abs_path );
+    // include->basename points to within rel_path so it doesn't need freeing
     FREE( include->rel_path );
     array_cleanup( &include->lines, /*free_fn=*/NULL );
 
