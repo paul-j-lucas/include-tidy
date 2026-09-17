@@ -261,6 +261,10 @@ static void tidy_Cursor_printAbridgedTokens( CXCursor cursor ) {
   bool        printed = false;          // print anything yet?
 
   for ( unsigned i = 0; i < token_count; ++i ) {
+    CXTokenKind const token_kind = clang_getTokenKind( tokens[i] );
+    if ( token_kind == CXToken_Comment )
+      continue;
+
     CXSourceLocation const loc = clang_getTokenLocation( tu, tokens[i] );
     if ( is_loc_in_any_range( loc, &cursor_ranges ) ) {
       eliding = true;
@@ -276,7 +280,6 @@ static void tidy_Cursor_printAbridgedTokens( CXCursor cursor ) {
       prev_token_kind = CXToken_Punctuation;
     }
 
-    CXTokenKind const token_kind = clang_getTokenKind( tokens[i] );
     CXString const    token_cxs = clang_getTokenSpelling( tu, tokens[i] );
     char const *const token_cs = clang_getCString( token_cxs );
 
