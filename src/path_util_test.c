@@ -40,6 +40,31 @@
 
 ////////// test functions /////////////////////////////////////////////////////
 
+static bool test_path_dirname( void ) {
+  TEST_FUNC_BEGIN();
+
+  char buf[ PATH_MAX + 1 ];
+
+  // Standard multi-level paths
+  TEST( strcmp( path_dirname( "/usr/local/bin", buf ), "/usr/local" ) == 0 );
+  TEST( strcmp( path_dirname( "foo/bar/baz.txt", buf ), "foo/bar" ) == 0 );
+  TEST( strcmp( path_dirname( "foo/bar", buf ), "foo" ) == 0 );
+
+  // Paths with no directory component
+  TEST( strcmp( path_dirname( "file.txt", buf ), "." ) == 0 );
+  TEST( strcmp( path_dirname( "", buf ), "." ) == 0 );
+
+  // Root and single-level absolute paths
+  TEST( strcmp( path_dirname( "/", buf ), "/" ) == 0 );
+  TEST( strcmp( path_dirname( "/etc", buf ), "/" ) == 0 );
+
+  // Paths ending with a slash
+  TEST( strcmp( path_dirname( "dir/", buf ), "dir" ) == 0 );
+  TEST( strcmp( path_dirname( "/var/log/", buf ), "/var/log" ) == 0 );
+
+  TEST_FUNC_END();
+}
+
 static bool test_path_ends_with( void ) {
   TEST_FUNC_BEGIN();
 
@@ -142,6 +167,7 @@ static bool test_path_normalize( void ) {
 int main( int argc, char const *const argv[] ) {
   test_prog_init( argc, argv );
 
+  test_path_dirname();
   test_path_ends_with();
   test_path_ext();
   test_path_no_dot_slash();
