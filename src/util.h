@@ -967,6 +967,29 @@ inline bool str_ends_with( char const *s, char const *end, size_t end_len ) {
 }
 
 /**
+ * Gets whether \a s is among \a strings.
+ *
+ * @param s The string to look for.
+ * @param strings The NULL terminated array of strings to look at.
+ * @return Returns `true` only if \a s is among \a strings.
+ */
+NODISCARD
+bool str_is_any( char const *s, char const *strings[static 1] );
+
+/**
+ * Convenience macro for calling str_is_any() constructing a compound array of
+ * string literals ending with NULL.
+ *
+ * @param S The string to look for.
+ * @param ... The strings to look at.
+ * @return Returns `true` only if \a S is among ...
+ */
+#define str_is_any(S,...)                                             \
+  str_is_any( (S),                                                    \
+              (char const*[]){ __VA_ARGS__ VA_OPT( (,), __VA_ARGS__ ) \
+                               (void*)0 } )
+
+/**
  * A variant of **strncpy**(3) that always null-terminates \a dst.
  *
  * @param dst A pointer to receive the copy of \a src.  It _must_ be at least

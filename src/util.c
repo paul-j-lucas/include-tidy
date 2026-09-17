@@ -174,6 +174,18 @@ void perror_exit( int status ) {
 }
 // LCOV_EXCL_STOP
 
+bool (str_is_any)( char const *s, char const *strings[static 1] ) {
+  assert( s != NULL );
+
+  for (;;) {
+    char const *const next = *strings++;
+    if ( next == NULL )
+      return false;
+    if ( strcmp( s, next ) == 0 )
+      return true;
+  } // for
+}
+
 char* str_trim( char *s ) {
   assert( s != NULL );
   SKIP_WS( s );

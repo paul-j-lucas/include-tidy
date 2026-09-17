@@ -26,7 +26,9 @@
 // local
 #include "pjl_config.h"                 /* must go first */
 #include "print.h"
+#include "array.h"
 #include "clang_util.h"
+#include "cli_options.h"
 #include "color.h"
 #include "include-tidy.h"
 #include "options.h"
@@ -86,6 +88,49 @@ struct fl_print_args {
 };
 
 ////////// local functions ////////////////////////////////////////////////////
+
+// LCOV_EXCL_START
+/**
+ * Visits each child cursor of a cursor collecting its CXSourceRange.
+ *
+ * @param cursor being visited.
+ * @param parent The parent cursor of \a cursor.
+ * @param data A pointer to an array_t to append the CXSourceRange to.
+ * @return Always returns `CXChildVisit_Continue`.
+ */
+static enum CXChildVisitResult cursor_ranges_visitor( CXCursor cursor,
+                                                      CXCursor parent,
+                                                      CXClientData data ) {
+  (void)parent;
+
+  //
+  // Restrict range collection to expressions and statements only.
+  //
+  // If other AST nodes (such as TypeRef, type specifiers, or children of a
+  // DeclStmt) were treated as elidable child ranges:
+  //
+  //  + A DeclStmt would elide its inner VarDecl child node entirely, reducing
+  //    the output to just ";".
+  //
+  //  + A VarDecl would elide its type tokens (e.g., "unsigned", "int", etc.)
+  //    into "..." leaving only the variable identifier (e.g., "x").
+  //
+  // Restricting collection to expressions and statements ensures sub-
+  // expressions (e.g., function call arguments, return values) and sub-
+  // statements (e.g., loop/if bodies) elide cleanly into "..." without eliding
+  // type names, storage classes, or declaration spellings.
+  //
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  if ( clang_isExpression( kind ) || clang_isStatement( kind ) ) {
+    CXSourceRange const range = clang_getCursorExtent( cursor );
+    assert( data != NULL );
+    array_t *const ranges = data;
+    *(CXSourceRange*)array_push_back( ranges ) = range;
+  }
+
+  return CXChildVisit_Continue;
+}
+// LCOV_EXCL_STOP
 
 /**
  * Prints a message to standard error.
@@ -148,6 +193,121 @@ static void fl_print_impl( fl_print_args const *flpa, char const *format,
   vfprintf( stderr, format, args );
 #pragma GCC diagnostic pop
 }
+
+// LCOV_EXCL_START
+/**
+ * Gets whether \a loc is in any range in \a ranges.
+ *
+ * @param loc The location to check.
+ * @param ranges An array of ranges to check against.
+ * @return Returns `true` only if loc is in any range in \a ranges.
+ */
+static bool is_loc_in_any_range( CXSourceLocation loc, array_t const *ranges ) {
+  assert( ranges != NULL );
+
+  if ( ranges->len == 0 )
+    return false;
+
+  CXFile file;
+  unsigned offset;
+  clang_getFileLocation( loc, &file, /*line=*/NULL, /*column=*/NULL, &offset );
+
+  for ( size_t i = 0; i < ranges->len; ++i ) {
+    CXSourceRange const *const  range = array_at_nc( ranges, i );
+    CXSourceLocation const      start_loc = clang_getRangeStart( *range );
+    CXSourceLocation const      end_loc = clang_getRangeEnd( *range );
+    CXFile                      start_file, end_file;
+    unsigned                    start_offset, end_offset;
+
+    clang_getFileLocation( start_loc, &start_file, NULL, NULL, &start_offset );
+    clang_getFileLocation( end_loc, &end_file, NULL, NULL, &end_offset );
+
+    if ( file == start_file && offset >= start_offset && offset < end_offset )
+      return true;
+  } // for
+
+  return false;
+}
+
+/**
+ * Prints an abridged subset of tokens comprising \a cursor.
+ *
+ * @remarks For kinds of cursor that don't have a simple name, e.g., a
+ * CompoundStmt, print an abridged set of tokens comprising it.
+ *
+ * @param cursor The cursor to print the tokens for.
+ */
+static void tidy_Cursor_printAbridgedTokens( CXCursor cursor ) {
+  CXSourceRange const     range = tidy_getCursorExtent( cursor );
+  CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( cursor );
+
+  CXToken *tokens = NULL;
+  unsigned token_count = 0;
+  clang_tokenize( tu, range, &tokens, &token_count );
+
+  if ( token_count == 0 ) {
+    PUTS( "null" );
+    return;
+  }
+
+  array_t cursor_ranges = ARRAY_INIT( sizeof( CXSourceRange ) );
+  clang_visitChildren( cursor, cursor_ranges_visitor, &cursor_ranges );
+
+  bool        eliding = false;          // eliding tokens?
+  bool        prev_token_is_semicolon = false;
+  bool        prev_token_is_space_after_keyword = false;
+  CXTokenKind prev_token_kind = STATIC_CAST( CXTokenKind, -1 );
+  bool        printed = false;          // print anything yet?
+
+  for ( unsigned i = 0; i < token_count; ++i ) {
+    CXSourceLocation const loc = clang_getTokenLocation( tu, tokens[i] );
+    if ( is_loc_in_any_range( loc, &cursor_ranges ) ) {
+      eliding = true;
+      continue;
+    }
+
+    if ( eliding ) {
+      if ( printed )
+        PUTS( " ... " );
+      eliding = false;
+      prev_token_is_semicolon = false;
+      prev_token_is_space_after_keyword = false;
+      prev_token_kind = CXToken_Punctuation;
+    }
+
+    CXTokenKind const token_kind = clang_getTokenKind( tokens[i] );
+    CXString const    token_cxs = clang_getTokenSpelling( tu, tokens[i] );
+    char const *const token_cs = clang_getCString( token_cxs );
+
+    bool const print_space =
+      printed && (
+        (prev_token_kind != CXToken_Punctuation &&
+              token_kind != CXToken_Punctuation) ||
+        prev_token_is_semicolon ||
+        (prev_token_is_space_after_keyword && strcmp( token_cs, "(" ) == 0)
+      );
+
+    if ( print_space )
+      putchar( ' ' );
+    fputs_escaped( token_cs, stdout );
+    printed = true;
+
+    prev_token_is_semicolon = strcmp( token_cs, ";" ) == 0;
+    prev_token_kind = token_kind;
+    prev_token_is_space_after_keyword = prev_token_kind == CXToken_Keyword &&
+      (str_is_any( token_cs, "for", "if", "switch", "while" ) ||
+       (tidy_source_is_cxx && str_is_any( token_cs, "catch" )));
+
+    clang_disposeString( token_cxs );
+  } // for
+
+  if ( printed && eliding )
+    PUTS( " ..." );
+
+  array_cleanup( &cursor_ranges, /*free_fn=*/NULL );
+  clang_disposeTokens( tu, tokens, token_count );
+}
+// LCOV_EXCL_STOP
 
 ////////// extern functions ///////////////////////////////////////////////////
 
@@ -326,15 +486,29 @@ void verbose_print_cursor_impl( char const *label, CXCursor cursor ) {
   char const *const       kind_cs = clang_getCString( kind_cxs );
   char       *const       name = tidy_Cursor_getScopedDisplayName( cursor );
 
-  //
-  // Use fputs_quoted() since C++ user-defined literals contain quotes, e.g.:
-  //
-  //      constexpr double operator"" _km( long double val ) {
-  //        return val * 1000.0;
-  //      }
-  //
   verbose_printf( "%s%scursor: ", label, space );
-  fputs_quoted( name, '"', stdout );
+
+  putchar( '"' );
+  if ( null_if_empty( name ) != NULL ) {
+    //
+    // Use fputs_escaped() since C++ user-defined literals contain quotes,
+    // e.g.:
+    //
+    //      constexpr double operator"" _km( long double val ) {
+    //        return val * 1000.0;
+    //      }
+    //
+    fputs_escaped( name, stdout );
+  }
+  else {
+    //
+    // The kind of cursor doesn't have a simple name, e.g., a CompoundStmt, so
+    // print an abridged set of tokens comprising it.
+    //
+    tidy_Cursor_printAbridgedTokens( cursor );
+  }
+  putchar( '"' );
+
   printf( " (%s), \"%s\":%u,%u\n", kind_cs, abs_path, line, col );
 
   clang_disposeString( abs_path_cxs );
