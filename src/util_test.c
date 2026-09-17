@@ -66,11 +66,13 @@ static bool trim_equal( char const *before, char const *after ) {
 static bool test_fputs_escaped( void ) {
   TEST_FUNC_BEGIN();
 
-  static char const TEST_STR[] = "hello \"\b\f\n\r\t\v\\\" world";
+  static char const TEST_STR[] = "hello \"\a\b\f\n\r\t\v\x1B\\\" world";
   char buf[ 80 ] = { 0 };
 
   buf_puts_escaped( buf, sizeof( buf ), TEST_STR );
-  TEST( strcmp( buf, "hello \\\"\\b\\f\\n\\r\\t\\v\\\\\\\" world" ) == 0 );
+  TEST(
+    strcmp( buf, "hello \\\"\\a\\b\\f\\n\\r\\t\\v\\x1B\\\\\\\" world" ) == 0
+  );
 
   buf_puts_escaped( buf, sizeof( buf ), NULL );
   TEST( strcmp( buf, "null" ) == 0 );
