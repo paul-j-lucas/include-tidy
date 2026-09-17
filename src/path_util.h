@@ -81,14 +81,14 @@ char const* path_cwd( size_t *rv_len );
  * Extracts the directory portion of \a path.
  *
  * @param path The path to extract the directory portion of.
- * @param dir_buf A buffer to receive the directory portion of \a path.  It
+ * @param rv_dir_buf A buffer to receive the directory portion of \a path.  It
  * will not end with <tt>'/'</tt> (unless \a path is exactly <tt>'/'</tt>).
- * @return Returns \a dir_buf.
+ * @return Returns \a rv_dir_buf.
  *
  * @sa path_basename()
  */
 PJL_DISCARD
-char* path_dirname( char const *path, char dir_buf[static PATH_MAX + 1] );
+char* path_dirname( char const *path, char rv_dir_buf[static PATH_MAX + 1] );
 
 /**
  * Gets whether \a path ends with \a end_path.
@@ -202,14 +202,16 @@ char const* path_no_dot_slash( char const *path );
  * Gets the pathname of \a path without its filename extension, if any.
  *
  * @param path The path.
- * @param path_buf A path buffer to use only if \a path has an extension.
+ * @param rv_path_buf A path buffer to use only if \a path has an extension.
  * @return If \a path has no extension, returns \a path as-is; otherwise copies
- * \a path into \a path_buf without the extension and returns \a path_buf.
+ * \a path into \a rv_path_buf without the extension and returns \a
+ * rv_path_buf.
  *
  * @sa path_ext()
  */
 NODISCARD
-char const* path_no_ext( char const *path, char path_buf[static PATH_MAX + 1] );
+char const* path_no_ext( char const *path,
+                         char rv_path_buf[static PATH_MAX + 1] );
 
 /**
  * Normalizes a path by:

@@ -58,25 +58,25 @@ char const* path_basename( char const *path ) {
   return path;
 }
 
-char* path_dirname( char const *path, char dir_buf[static PATH_MAX + 1] ) {
+char* path_dirname( char const *path, char rv_dir_buf[static PATH_MAX + 1] ) {
   assert( path != NULL );
 
   char const *const slash = strrchr( path, '/' );
   size_t dir_len;
 
   if ( slash == NULL ) {
-    dir_buf[0] = '.';
+    rv_dir_buf[0] = '.';
     dir_len = 1;
   }
   else {
     dir_len = STATIC_CAST( size_t, slash - path );
     if ( dir_len == 0 )                 // "/"
       dir_len = 1;
-    memcpy( dir_buf, path, dir_len );
+    memcpy( rv_dir_buf, path, dir_len );
   }
 
-  dir_buf[ dir_len ] = '\0';
-  return dir_buf;
+  rv_dir_buf[ dir_len ] = '\0';
+  return rv_dir_buf;
 }
 
 char const* path_cwd( size_t *rv_len ) {
@@ -140,7 +140,7 @@ char const* path_no_dot_slash( char const *path ) {
 }
 
 char const* path_no_ext( char const *path,
-                         char path_buf[static PATH_MAX + 1] ) {
+                         char rv_path_buf[static PATH_MAX + 1] ) {
   assert( path != NULL );
 
   ssize_t last_dot = -1, last_slash = -1;
@@ -164,7 +164,7 @@ char const* path_no_ext( char const *path,
 
   size_t const len = last_dot < PATH_MAX ?
     STATIC_CAST( size_t, last_dot ) : PATH_MAX - 1;
-  return strncpy_0( path_buf, path, len );
+  return strncpy_0( rv_path_buf, path, len );
 }
 
 char* path_normalize( char const *path ) {
