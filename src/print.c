@@ -299,8 +299,8 @@ static void tidy_Cursor_printAbridgedTokens( CXCursor cursor ) {
     prev_token_is_semicolon = strcmp( token_cs, ";" ) == 0;
     prev_token_kind = token_kind;
     prev_token_is_space_after_keyword = prev_token_kind == CXToken_Keyword &&
-      (str_is_any( token_cs, "for", "if", "switch", "while" ) ||
-       (tidy_source_is_cxx && str_is_any( token_cs, "catch" )));
+      (str_is_any_list( token_cs, "for", "if", "switch", "while" ) ||
+       (tidy_source_is_cxx && str_is_any_list( token_cs, "catch" )));
 
     clang_disposeString( token_cxs );
   } // for

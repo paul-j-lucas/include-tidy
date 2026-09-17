@@ -984,7 +984,7 @@ bool str_is_any( char const *s, char const *strings[static 1] );
  * @param ... The strings to look at.
  * @return Returns `true` only if \a S is among ...
  */
-#define str_is_any(S,...)                                             \
+#define str_is_any_list(S,...)                                        \
   str_is_any( (S),                                                    \
               (char const*[]){ __VA_ARGS__ VA_OPT( (,), __VA_ARGS__ ) \
                                (void*)0 } )
