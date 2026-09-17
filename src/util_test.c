@@ -80,6 +80,27 @@ static bool test_fputs_escaped( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_str_is_any( void ) {
+  TEST_FUNC_BEGIN();
+
+  static char const *const TEST_STRINGS[] = {
+    "apple", "banana", "cherry", NULL
+  };
+
+  TEST( str_is_any( "apple", TEST_STRINGS ) );
+  TEST( str_is_any( "banana", TEST_STRINGS ) );
+  TEST( str_is_any( "cherry", TEST_STRINGS ) );
+
+  TEST( !str_is_any( "app", TEST_STRINGS ) );
+  TEST( !str_is_any( "orange", TEST_STRINGS ) );
+  TEST( !str_is_any( "", TEST_STRINGS ) );
+
+  static char const *const EMPTY_STRINGS[] = { NULL };
+  TEST( !str_is_any( "apple", EMPTY_STRINGS ) );
+
+  TEST_FUNC_END();
+}
+
 static bool test_str_trim( void ) {
   TEST_FUNC_BEGIN();
 
@@ -110,6 +131,7 @@ int main( int argc, char const *const argv[] ) {
   test_prog_init( argc, argv );
 
   test_fputs_escaped();
+  test_str_is_any();
   test_str_trim();
 
   return test_exit_status;

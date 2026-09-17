@@ -174,7 +174,7 @@ void perror_exit( int status ) {
 }
 // LCOV_EXCL_STOP
 
-bool str_is_any( char const *s, char const *strings[static 1] ) {
+bool str_is_any( char const *s, char const *const strings[static 1] ) {
   assert( s != NULL );
 
   for (;;) {

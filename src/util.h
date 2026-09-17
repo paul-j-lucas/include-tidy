@@ -974,7 +974,7 @@ inline bool str_ends_with( char const *s, char const *end, size_t end_len ) {
  * @return Returns `true` only if \a s is among \a strings.
  */
 NODISCARD
-bool str_is_any( char const *s, char const *strings[static 1] );
+bool str_is_any( char const *s, char const *const strings[static 1] );
 
 /**
  * Convenience macro for calling str_is_any() constructing a compound array of
