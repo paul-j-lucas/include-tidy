@@ -1,5 +1,8 @@
 2026-09-17  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c, clang_util.h, symbol.c: Added tidy_Cursor_isReservedName().
+   * etc/config.toml: Added std::istringstream -> sstream.
+   * include-enoent.out, include-enoent.test: Removed debug test.
    * toml_lite.c: Suppressed warning.
    * configure.ac: Added -Wno-format-zero-length.
    * config_file.c: #include fix.
