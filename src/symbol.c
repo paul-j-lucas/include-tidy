@@ -273,6 +273,9 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
                         symbols_init_data *sid ) {
   assert( sid != NULL );
 
+  if ( tidy_Cursor_isReservedName( sym_csr ) )
+    return;
+
   tidy_typedef const *const found_tdef = typedef_find( sym_csr );
   char *sym_name = found_tdef != NULL ?
     check_strdup( found_tdef->alias_name ) :

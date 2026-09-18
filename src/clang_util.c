@@ -37,6 +37,7 @@
 
 // standard
 #include <assert.h>
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -657,6 +658,47 @@ bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
       /* suppress warning */;
   } // switch
   return false;
+}
+
+bool tidy_Cursor_isReservedName( CXCursor cursor ) {
+  bool              is_reserved = false;
+  CXString const    name_cxs = clang_getCursorSpelling( cursor );
+  char const *const name = clang_getCString( name_cxs );
+
+  if ( name == NULL || name[0] == '\0' )
+    goto done;
+
+  enum CXLanguageKind const lang = clang_getCursorLanguage( cursor );
+
+  if ( lang == CXLanguage_CPlusPlus && strstr( name, "__" ) != NULL ) {
+    is_reserved = true;
+  }
+  else if ( name[0] == '_' ) {
+    if ( isupper( name[1] ) ) {
+      is_reserved = true;
+    }
+    else {
+      switch ( lang ) {
+        case CXLanguage_C:;
+          enum CXLinkageKind const linkage = clang_getCursorLinkage( cursor );
+          if ( linkage == CXLinkage_External )
+            is_reserved = true;
+          break;
+        case CXLanguage_CPlusPlus:;
+          CXCursor const sem_parent = clang_getCursorSemanticParent( cursor );
+          enum CXCursorKind const kind = clang_getCursorKind( sem_parent );
+          if ( kind == CXCursor_TranslationUnit )
+            is_reserved = true;
+          break;
+        default:
+          /* suppress warning */;
+      } // switch
+    }
+  }
+
+done:
+  clang_disposeString( name_cxs );
+  return is_reserved;
 }
 
 bool tidy_Cursor_isScopeDecl( CXCursor cursor ) {

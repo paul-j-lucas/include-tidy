@@ -361,6 +361,22 @@ bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
                                         CXCursor *rv_cls_csr );
 
 /**
+ * Gets whether \a cursor has a name that is reserved in its language.
+ *
+ * @remarks A name is reserved if it matches any of these patterns:
+ *
+ *      _*          // C: external only; C++: global namespace only.
+ *      _[A-Z_]*    // Both C and C++.
+ *      *__*        // C++ only.
+ *
+ * @param cursor The cursot to check
+ * @return Returns `true` only if \a cursor has a name that is reserved in the
+ * current language.
+ */
+NODISCARD
+bool tidy_Cursor_isReservedName( CXCursor cursor );
+
+/**
  * Gets whether \a cursor is a class, class template, enumeration, namespace,
  * structure, or union declaration.
  *
