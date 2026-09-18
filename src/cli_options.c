@@ -1276,7 +1276,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   if ( IS_VERBOSE( SRC_FILE_ALWAYS ) ) {
     verbose_section_begin( /*printed_header=*/NULL );
-    verbose_printf( "source file: \"%s\"\n", tidy_source_path );
+    verbose_printf( "source file = \"%s\"\n", tidy_source_path );
   }
 
   // Keep a copy of *pargc as it is now for --help and --version below before
@@ -1332,7 +1332,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   if ( opt_directory != NULL ) {
     if ( IS_VERBOSE( DIRECTORY ) ) {
       verbose_section_begin( /*printed_header=*/NULL );
-      verbose_printf( "change directory: \"%s\"\n", opt_directory );
+      verbose_printf( "directory = \"%s\"\n", opt_directory );
     }
     if ( chdir( opt_directory ) != 0 )
       fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
