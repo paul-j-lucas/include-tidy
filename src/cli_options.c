@@ -1288,7 +1288,6 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     "-D__include_tidy__",
     "-Qunused-arguments",
     "-Wno-unknown-warning-option",
-    "-I.",                              // libclang has no paths by default
   };
   insert_argv( pargc, pargv, 1, ARRAY_SIZE( LIBCLANG_ARGS ), LIBCLANG_ARGS );
 
