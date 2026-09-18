@@ -1,3 +1,7 @@
+2026-09-18  Paul J. Lucas <paul@lucasmail.org>
+
+   * Makefile.am: Override am__tar to preserve symlinks in dist tar file.
+
 2026-09-17  Paul J. Lucas <paul@lucasmail.org>
 
    * cli_options.c, cli-options.out: Now consistent in verbose ouput where key
