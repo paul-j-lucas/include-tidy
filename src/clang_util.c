@@ -666,7 +666,7 @@ bool tidy_Cursor_isReservedName( CXCursor cursor ) {
   char const *const name = clang_getCString( name_cxs );
 
   if ( name == NULL || name[0] == '\0' )
-    goto done;
+    goto done;                          // LCOV_EXCL_LINE
 
   enum CXLanguageKind const lang = clang_getCursorLanguage( cursor );
 
