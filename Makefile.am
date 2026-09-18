@@ -25,6 +25,7 @@ EXTRA_DIST =		bootstrap \
 			Doxygen.sed \
 			Doxyfile \
 			include-tidy.css \
+			lcovrc \
 			m4/gnulib-cache.m4 \
 			m4/update_m4.sh \
 			makedoc.sh \
