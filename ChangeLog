@@ -1,5 +1,7 @@
 2026-09-17  Paul J. Lucas <paul@lucasmail.org>
 
+   * cli_options.c, cli-options.out: Now consistent in verbose ouput where key
+     = value and heading:
    * cli_options.c: No longer pass -I. to libclang.
    * clang_util.c, clang_util.h, symbol.c, test/Makefile.am, _reserved.h,
      reserved.c, reserved.cpp, reserved.out, reserved.test: Now passing lang
