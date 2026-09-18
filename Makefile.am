@@ -33,6 +33,10 @@ EXTRA_DIST =		bootstrap \
 
 DOCS_DIR =		docs
 
+# Override am__tar so the options don't contain -h that causes symlinks to be
+# followed since test/data/symlink.h is a symlink needed for a test.
+am__tar =		$(AMTAR) --format=ustar -cf - "$$tardir"
+
 if ENABLE_COVERAGE
 COVERAGE_INFO =		$(top_builddir)/coverage.info
 COVERAGE_DIR =		coverage
