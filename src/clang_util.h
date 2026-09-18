@@ -361,7 +361,7 @@ bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
                                         CXCursor *rv_cls_csr );
 
 /**
- * Gets whether \a cursor has a name that is reserved in its language.
+ * Gets whether \a cursor has a name that is reserved in \a lang.
  *
  * @remarks A name is reserved if it matches any of these patterns:
  *
@@ -369,12 +369,13 @@ bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
  *      _[A-Z_]*    // Both C and C++.
  *      *__*        // C++ only.
  *
- * @param cursor The cursot to check
- * @return Returns `true` only if \a cursor has a name that is reserved in the
- * current language.
+ * @param cursor The cursor to check
+ * @param lang The language to use.
+ * @return Returns `true` only if \a cursor has a name that is reserved in \a
+ * lang.
  */
 NODISCARD
-bool tidy_Cursor_isReservedName( CXCursor cursor );
+bool tidy_Cursor_isReservedName( CXCursor cursor, enum CXLanguageKind lang );
 
 /**
  * Gets whether \a cursor is a class, class template, enumeration, namespace,

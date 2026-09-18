@@ -84,6 +84,7 @@ TESTS+=	tests/c_ast_h.test \
 	tests/english_h.test \
 	tests/p_macro_h.test \
 	tests/red_black_h.test \
+	tests/reserved.test \
 	tests/show_c.test \
 	tests/slist_h.test \
 	tests/types_h.test

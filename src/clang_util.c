@@ -660,15 +660,13 @@ bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
   return false;
 }
 
-bool tidy_Cursor_isReservedName( CXCursor cursor ) {
+bool tidy_Cursor_isReservedName( CXCursor cursor, enum CXLanguageKind lang ) {
   bool              is_reserved = false;
   CXString const    name_cxs = clang_getCursorSpelling( cursor );
   char const *const name = clang_getCString( name_cxs );
 
   if ( name == NULL || name[0] == '\0' )
     goto done;                          // LCOV_EXCL_LINE
-
-  enum CXLanguageKind const lang = clang_getCursorLanguage( cursor );
 
   if ( lang == CXLanguage_CPlusPlus && strstr( name, "__" ) != NULL ) {
     is_reserved = true;
