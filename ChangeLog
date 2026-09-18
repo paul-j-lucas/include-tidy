@@ -1,5 +1,9 @@
 2026-09-17  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c, clang_util.h, symbol.c, test/Makefile.am, _reserved.h,
+     reserved.c, reserved.cpp, reserved.out, reserved.test: Now passing lang
+     parameter to tidy_Cursor_isReservedName().
+   * clang_util.c: Code coverage exclusion comments.
    * clang_util.c, clang_util.h, symbol.c: Added tidy_Cursor_isReservedName().
    * etc/config.toml: Added std::istringstream -> sstream.
    * include-enoent.out, include-enoent.test: Removed debug test.
