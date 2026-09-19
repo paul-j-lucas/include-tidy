@@ -1,5 +1,6 @@
 2026-09-19  Paul J. Lucas <paul@lucasmail.org>
 
+   * array.c, array.h: Added restrict.
    * src/Makefile.am: Removed: if ENABLE_COVERAGE.
 
 2026-09-18  Paul J. Lucas <paul@lucasmail.org>
