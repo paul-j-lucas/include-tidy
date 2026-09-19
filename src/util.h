@@ -452,10 +452,6 @@
                           #TYPE " must be an integral type" ) \
     - IS_SIGNED_TYPE(TYPE))
 
-/// @cond DOXYGEN_IGNORE
-#define NAME2_HELPER(A,B)         A##B
-/// @endcond
-
 /**
  * Concatenate \a A and \a B together to form a single token.
  *
@@ -466,6 +462,10 @@
  * @param B The second name.
  */
 #define NAME2(A,B)                NAME2_HELPER(A,B)
+
+/// @cond DOXYGEN_IGNORE
+#define NAME2_HELPER(A,B)         A##B
+/// @endcond
 
 /**
  * No-operation statement.  (Useful for a `goto` target.)
