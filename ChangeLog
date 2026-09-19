@@ -1,3 +1,7 @@
+2026-09-19  Paul J. Lucas <paul@lucasmail.org>
+
+   * src/Makefile.am: Removed: if ENABLE_COVERAGE.
+
 2026-09-18  Paul J. Lucas <paul@lucasmail.org>
 
    * Makefile.am: Added lcovrc to EXTRA_DIST.
