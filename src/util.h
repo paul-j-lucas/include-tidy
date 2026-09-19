@@ -177,8 +177,8 @@
 #define CHARIFY_y 'y'
 #define CHARIFY_z 'z'
 
-#define CHARIFY_IMPL(X)           CHARIFY_##X
-#define STRINGIFY_IMPL(X)         #X
+#define CHARIFY_HELPER(X)         CHARIFY_##X
+#define STRINGIFY_HELPER(X)       #X
 
 /// @endcond
 
@@ -278,7 +278,7 @@
  *
  * @sa #STRINGIFY()
  */
-#define CHARIFY(X)                CHARIFY_IMPL(X)
+#define CHARIFY(X)                CHARIFY_HELPER(X)
 
 /**
  * C version of C++'s `const_cast`.
@@ -668,7 +668,7 @@
  *
  * @sa #CHARIFY()
  */
-#define STRINGIFY(X)              STRINGIFY_IMPL(X)
+#define STRINGIFY(X)              STRINGIFY_HELPER(X)
 
 /**
  * Strips the enclosing parentheses from \a ARG.
