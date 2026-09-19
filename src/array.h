@@ -195,7 +195,7 @@ void* array_push_array_back( array_t *restrict dst_array,
  * R is \a res_len).
  */
 PJL_DISCARD
-bool array_reserve( array_t *array, size_t res_len );
+bool array_reserve( array_t *restrict array, size_t res_len );
 
 ////////// inline functions ///////////////////////////////////////////////////
 
@@ -371,7 +371,7 @@ inline void* array_bsearch( array_t *array, void const *key,
  *
  * @note This is an O(N) operation.
  */
-void array_dedup( array_t *array, array_cmp_fn_t cmp_fn,
+void array_dedup( array_t *restrict array, array_cmp_fn_t cmp_fn,
                   array_free_fn_t free_fn );
 
 /**

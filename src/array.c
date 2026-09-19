@@ -66,7 +66,7 @@ void array_cleanup( array_t *restrict array, array_free_fn_t free_fn ) {
   array_init( array, esize );
 }
 
-void array_dedup( array_t *array, array_cmp_fn_t cmp_fn,
+void array_dedup( array_t *restrict array, array_cmp_fn_t cmp_fn,
                   array_free_fn_t free_fn ) {
   assert( array != NULL );
   assert( cmp_fn != NULL );
@@ -112,7 +112,7 @@ void* array_push_array_back( array_t *restrict dst_array,
   return dst_end;
 }
 
-bool array_reserve( array_t *array, size_t res_len ) {
+bool array_reserve( array_t *restrict array, size_t res_len ) {
   assert( array != NULL );
 
   if ( res_len <= array->cap - array->len )
