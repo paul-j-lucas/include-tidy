@@ -77,15 +77,15 @@ static inline size_t round_up_pow_2( size_t n, size_t multiple ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-unsigned check_asprintf( char **ps, char const *format, ... ) {
-  assert( ps != NULL );
+unsigned check_asprintf( char **rv_s, char const *format, ... ) {
+  assert( rv_s != NULL );
   assert( format != NULL );
 
   va_list args;
   va_start( args, format );
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
-  int const raw_len = vasprintf( ps, format, args );
+  int const raw_len = vasprintf( rv_s, format, args );
 #pragma GCC diagnostic pop
   va_end( args );
 

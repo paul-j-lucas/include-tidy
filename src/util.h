@@ -782,14 +782,14 @@ extern char const WS_CHARS[];
 /**
  * Calls **asprintf**(3) and checks for failure.
  *
- * @param ps A pointer to the string to receive the printed result.  The caller
- * is responsible for freeing it.
+ * @param rv_s A pointer to the string to receive the printed result.  The
+ * caller is responsible for freeing it.
  * @param format The `printf()` style format string.
  * @return Returns the number of characters printed.
  */
 PJL_DISCARD
 PJL_PRINTF_LIKE_FUNC(2)
-unsigned check_asprintf( char **ps, char const *format, ... );
+unsigned check_asprintf( char **rv_s, char const *format, ... );
 
 /**
  * Calls **realloc**(3) and checks for failure.
