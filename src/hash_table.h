@@ -40,7 +40,7 @@
 
 /**
  * @defgroup hash-table-group Hash Table
- * Types for defining and functions for manipulating hash tables.
+ * A type for a hash table and functions for manipulating said hash table.
  *
  * @sa [Hash Table](https://en.wikipedia.org/wiki/Hash_table)
  *
@@ -50,7 +50,8 @@
 ////////// macros /////////////////////////////////////////////////////////////
 
 /**
- * Gets a pointer to the internal data of \a ENTRY.
+ * Gets a pointer to the internal data of \a ENTRY for when \ref
+ * ht_dloc::HT_DINT "HT_DINT" was used with ht_init().
  *
  * @param ENTRY The ht_entry to get a pointer to the data of.
  * @return Returns a pointer to the data internal to \a ENTRY.
@@ -64,9 +65,11 @@
 #define HT_DINT(ENTRY)            ( (void*)(ENTRY)->data )
 
 /**
- * Gets an lvalue reference to a pointer to the external data of \a ENTRY.  As
- * an lvalue reference, `HT_DPTR` can appear on the left-hand side of an `=`
- * and be assigned to.
+ * Gets an lvalue reference to a pointer to the external data of \a ENTRY for
+ * when \ref ht_dloc::HT_DPTR "HT_DPTR" was used with ht_init().
+ *
+ * @remarks As an lvalue reference, `HT_DPTR` can appear on the left-hand side
+ * of an `=` and be assigned to.
  *
  * @param ENTRY The ht_entry to get a pointer to the data of.
  * @return Returns a pointer to the data \a ENTRY points to.

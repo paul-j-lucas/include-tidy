@@ -79,9 +79,10 @@
 
 /**
  * Gets an lvalue reference to a pointer to the external data of \a NODE for
- * when \ref rb_dloc::RB_DPTR "RB_DPTR" was used with rb_tree_init(). As an
- * lvalue reference, `RB_DPTR` can appear on the left-hand side of an `=` and
- * be assigned to.
+ * when \ref rb_dloc::RB_DPTR "RB_DPTR" was used with rb_tree_init().
+ *
+ * @remarks As an lvalue reference, `RB_DPTR` can appear on the left-hand side
+ * of an `=` and be assigned to.
  *
  * @param NODE The rb_node to get a pointer to the data of.
  * @return Returns a pointer to the data \a NODE points to.
