@@ -59,10 +59,10 @@
 /// @parblock
 /// An array of `int`:
 ///
-///       array_t array_of_int = ARRAY_INIT( sizeof(int) );
-///       *(int*)array_push_back( &array_of_int ) = 42;
-///       // ...
-///       array_cleanup( &array_of_int, /*free_fn=*/NULL );
+///     array_t array_of_int = ARRAY_INIT( sizeof(int) );
+///     *(int*)array_push_back( &array_of_int ) = 42;
+///     // ...
+///     array_cleanup( &array_of_int, /*free_fn=*/NULL );
 ///
 /// Note that \ref array_push_back _only_ makes space for a new element and
 /// does _not_ actually push it; instead, it returns the address for the new
@@ -76,11 +76,11 @@
 /// @parblock
 /// An array of `char*`:
 ///
-///       array_t array_of_str = ARRAY_INIT( sizeof(char*) );
-///       *(char**)array_push_back( &array_of_str ) = strdup( "hello" );
-///       *(char**)array_push_back( &array_of_str ) = strdup( "world" );
-///       // ...
-///       array_cleanup( &array_of_str, &free_pptr );
+///     array_t array_of_str = ARRAY_INIT( sizeof(char*) );
+///     *(char**)array_push_back( &array_of_str ) = strdup( "hello" );
+///     *(char**)array_push_back( &array_of_str ) = strdup( "world" );
+///     // ...
+///     array_cleanup( &array_of_str, &free_pptr );
 ///
 /// Similar to the previous example, except now the element `T` is `char*`, so,
 /// as before, the pointer is of type `T*` or `char**`.
