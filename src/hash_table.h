@@ -38,139 +38,139 @@
 
 /// @endcond
 
-/**
- * @defgroup hash-table-group Hash Table
- * A type for a hash table and functions for manipulating said hash table.
- *
- * @remarks
- * @parblock
- * Unlike many hash table implementations that map keys to values, this one
- * contains only entries, hence it's more a hash _set_ than a hash _map_.
- * However, entries can be any of any type including structures where any
- * member(s) can comprise they "key" (that which is hashed) and, optionally,
- * any other member(s) can comprise the "value."  To this implementation,
- * entries are opaque.
- *
- * Also unlike many hash table implementations, this one allows user code to
- * choose whether entries' data are stored "internally" with the entry itself
- * or as only a pointer to data elsewhere.  (See ht_dloc.)  When data are
- * stored internally, entries can be of different sizes.
- * @endparblock
- *
- * @par Example
- * @parblock
- * A hash table of word counts.
- *
- *      struct word_count {
- *        char     *word;
- *        unsigned  count;
- *      };
- *
- *      int word_count_cmp( void const *p_i, void const *p_j ) {
- *        struct word_count const *const wc_i = p_i;
- *        struct word_count const *const wc_j = p_j;
- *        return strcmp( wc_i->word, wc_j->word );
- *      }
- *
- *      ht_hash_val_t word_count_hash( void const *p ) {
- *        struct word_count const *const wc = p;
- *        return fnv1a_s( wc->word );
- *      }
- *
- *      void word_count_cleanup( void const *p ) {
- *        if ( p != NULL ) {
- *          struct word_count const *const wc = p;
- *          free( wc->word );
- *        }
- *      }
- *
- *      void add_word( hash_table_t *table, char const *word ) {
- *        struct word_count ins_wc = { .word = word, .count = 1 };
- *        ht_insert_rv_t hti = ht_insert( table, &ins_wc, sizeof *ins_wc );
- *        if ( hti.inserted ) {
- *          struct word_count *const new_wc = HT_DINT( hti.entry );
- *          new_wc->word = strdup( word );
- *        }
- *      }
- *
- *      int main() {
- *        hash_table_t table;
- *        ht_init( &table, HT_DINT, 2.0, 10,
- *                 &word_count_cmp, &word_count_hash );
- *        add_word( &table, "hello" );
- *        ht_cleanup( &table, &word_count_cleanup );
- *      }
- *
- * **Notes**:
- *
- *  + The example assumes the existence of a string hash function `fnv1a_s`.
- *
- *  + \ref ht_cmp_fn_t "Comparison functions" return 0 when two entries are
- *    equal (just like `strcmp` does with strings).
- *
- *  + Since this hash table stores data internally (\ref ht_dloc::HT_DINT
- *    "HT_DINT"), this clean-up function frees only `word` and _not_ the
- *    `word_count` structure itself.
- *
- *  + For `ins_wc` (the `word_count` potentially being inserted), its `word` is
- *    not duplicated before insertion since the duplication will be pointless
- *    if the word already exists (if `inserted` is false) and it would have to
- *    be freed.  Instead, `word` is duplicated only if `inserted` is true.
- * @endparblock
- *
- * @par Example
- * @parblock
- * For comparison, here's the same hash table of word counts, but now storing
- * data via pointer (\ref ht_dloc::HT_DPTR "HT_DPTR").  Only the differences
- * from the previous example are shown:
- *
- *      void word_count_free( void const *p ) {
- *        if ( p != NULL ) {
- *          struct word_count const *const wc = p;
- *          free( wc->word );
- *          free( wc );
- *        }
- *      }
- *
- *      void add_word( hash_table_t *table, char const *word ) {
- *        struct word_count ins_wc = { .word = word };
- *        ht_insert_rv_t hti = ht_insert( table, &ins_wc, 0 );
- *        if ( hti.inserted ) {
- *          struct word_count *const new_wc = malloc( sizeof *new_wc );
- *          new_wc->word = strdup( word );
- *          new_wc->count = 1;
- *          HT_DPTR( hti.entry ) = new_wc;
- *        }
- *      }
- *
- *      int main() {
- *        hash_table_t table;
- *        ht_init( &table, HT_DPTR, 2.0, 10,
- *                 &word_count_cmp, &word_count_hash );
- *        add_word( &table, "hello" );
- *        ht_cleanup( &table, &word_count_free );
- *      }
- *
- * **Notes**:
- *
- *  + Now that the hash table stores a pointer to the data (\ref
- *    ht_dloc::HT_DPTR "HT_DPTR"), this free function frees both `word` _and_
- *    the `word_count` structure itself.
- *
- *  + Now `.count` of `ins_wc` no longer needs to be set explicitly to 1 since
- *    this object will not be copied, but instead `malloc`'d (see below).
- *
- *  + Now the value of the `data_size` argument doesn't matter (since it's
- *    always the size of a pointer) and so can be 0.
- *
- *  + Now an entire `word_count` structure has to be `malloc`'d and assigned
- *    via the #HT_DPTR macro.  Note that `count` must now also be initialized
- *    since it's not copied from `ins_wc`.
- * @endparblock
- *
- * @sa [Hash Table](https://en.wikipedia.org/wiki/Hash_table)
- * @{
- */
+///
+/// @defgroup hash-table-group Hash Table
+/// A type for a hash table and functions for manipulating said hash table.
+///
+/// @remarks
+/// @parblock
+/// Unlike many hash table implementations that map keys to values, this one
+/// contains only entries, hence it's more a hash _set_ than a hash _map_.
+/// However, entries can be any of any type including structures where any
+/// member(s) can comprise they "key" (that which is hashed) and, optionally,
+/// any other member(s) can comprise the "value."  To this implementation,
+/// entries are opaque.
+///
+/// Also unlike many hash table implementations, this one allows user code to
+/// choose whether entries' data are stored "internally" with the entry itself
+/// or as only a pointer to data elsewhere.  (See ht_dloc.)  When data are
+/// stored internally, entries can be of different sizes.
+/// @endparblock
+///
+/// @par Example
+/// @parblock
+/// A hash table of word counts.
+///
+///       struct word_count {
+///         char     *word;
+///         unsigned  count;
+///       };
+///
+///       int word_count_cmp( void const *p_i, void const *p_j ) {
+///         struct word_count const *const wc_i = p_i;
+///         struct word_count const *const wc_j = p_j;
+///         return strcmp( wc_i->word, wc_j->word );
+///       }
+///
+///       ht_hash_val_t word_count_hash( void const *p ) {
+///         struct word_count const *const wc = p;
+///         return fnv1a_s( wc->word );
+///       }
+///
+///       void word_count_cleanup( void const *p ) {
+///         if ( p != NULL ) {
+///           struct word_count const *const wc = p;
+///           free( wc->word );
+///         }
+///       }
+///
+///       void add_word( hash_table_t *table, char const *word ) {
+///         struct word_count ins_wc = { .word = word, .count = 1 };
+///         ht_insert_rv_t hti = ht_insert( table, &ins_wc, sizeof *ins_wc );
+///         if ( hti.inserted ) {
+///           struct word_count *const new_wc = HT_DINT( hti.entry );
+///           new_wc->word = strdup( word );
+///         }
+///       }
+///
+///       int main() {
+///         hash_table_t table;
+///         ht_init( &table, HT_DINT, 2.0, 10,
+///                  &word_count_cmp, &word_count_hash );
+///         add_word( &table, "hello" );
+///         ht_cleanup( &table, &word_count_cleanup );
+///       }
+///
+/// **Notes**:
+///
+/// + The example assumes the existence of a string hash function `fnv1a_s`.
+///
+/// + \ref ht_cmp_fn_t "Comparison functions" return 0 when two entries are
+///   equal (just like `strcmp` does with strings).
+///
+/// + Since this hash table stores data internally (\ref ht_dloc::HT_DINT
+///   "HT_DINT"), this clean-up function frees only `word` and _not_ the
+///   `word_count` structure itself.
+///
+/// + For `ins_wc` (the `word_count` potentially being inserted), its `word` is
+///   not duplicated before insertion since the duplication will be pointless
+///   if the word already exists (if `inserted` is false) and it would have to
+///   be freed.  Instead, `word` is duplicated only if `inserted` is true.
+/// @endparblock
+///
+/// @par Example
+/// @parblock
+/// For comparison, here's the same hash table of word counts, but now storing
+/// data via pointer (\ref ht_dloc::HT_DPTR "HT_DPTR").  Only the differences
+/// from the previous example are shown:
+///
+///       void word_count_free( void const *p ) {
+///         if ( p != NULL ) {
+///           struct word_count const *const wc = p;
+///           free( wc->word );
+///           free( wc );
+///         }
+///       }
+///
+///       void add_word( hash_table_t *table, char const *word ) {
+///         struct word_count ins_wc = { .word = word };
+///         ht_insert_rv_t hti = ht_insert( table, &ins_wc, 0 );
+///         if ( hti.inserted ) {
+///           struct word_count *const new_wc = malloc( sizeof *new_wc );
+///           new_wc->word = strdup( word );
+///           new_wc->count = 1;
+///           HT_DPTR( hti.entry ) = new_wc;
+///         }
+///       }
+///
+///       int main() {
+///         hash_table_t table;
+///         ht_init( &table, HT_DPTR, 2.0, 10,
+///                  &word_count_cmp, &word_count_hash );
+///         add_word( &table, "hello" );
+///         ht_cleanup( &table, &word_count_free );
+///       }
+///
+/// **Notes**:
+///
+/// + Now that the hash table stores a pointer to the data (\ref
+///   ht_dloc::HT_DPTR "HT_DPTR"), this free function frees both `word` _and_
+///   the `word_count` structure itself.
+///
+/// + Now `.count` of `ins_wc` no longer needs to be set explicitly to 1 since
+///   this object will not be copied, but instead `malloc`'d (see below).
+///
+/// + Now the value of the `data_size` argument doesn't matter (since it's
+///   always the size of a pointer) and so can be 0.
+///
+/// + Now an entire `word_count` structure has to be `malloc`'d and assigned
+///   via the #HT_DPTR macro.  Note that `count` must now also be initialized
+///   since it's not copied from `ins_wc`.
+/// @endparblock
+///
+/// @sa [Hash Table](https://en.wikipedia.org/wiki/Hash_table)
+/// @{
+///
 
 ////////// macros /////////////////////////////////////////////////////////////
 
