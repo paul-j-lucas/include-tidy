@@ -200,7 +200,7 @@ bool array_reserve( array_t *restrict array, size_t res_len );
 ////////// inline functions ///////////////////////////////////////////////////
 
 /**
- * Gets a pointer to the element at \a offset of \a array.
+ * Gets a pointer to the element at \a index of \a array.
  *
  * @param array A pointer to the \ref array.
  * @param index The index (starting at 0) of the element to get.
@@ -237,7 +237,7 @@ inline void* nonconst_array_at_nc( array_t *array, size_t index ) {
 /// @endcond
 
 /**
- * Gets a pointer to the element at \a offset of \a array.
+ * Gets a pointer to the element at \a index of \a array.
  *
  * @param array A pointer to the \ref array.
  * @param index The index (starting at 0) of the element to get.
