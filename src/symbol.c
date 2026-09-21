@@ -297,7 +297,8 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     .name = sym_name
   };
   sym_name = NULL;                      // new_sym owns this now
-  ht_insert_rv_t const hti = ht_insert( &symbol_set, &new_sym, sizeof new_sym );
+  ht_insert_rv_t const hti
+    = ht_table_insert( &symbol_set, &new_sym, sizeof new_sym );
   tidy_symbol *const sym = HT_DINT( hti.entry );
   ++sym->ref_count;
 
@@ -515,7 +516,7 @@ static CXCursor macro_getCursorByNameToken( CXToken token, CXCursor scope_csr,
   CXCursor const rv_csr =
     strcmp( token_cs, "__VA_ARGS__" ) != 0 &&
     strcmp( token_cs, "__VA_OPT__" ) != 0 &&
-    ht_find( param_set, token_cs ) == NULL ?
+    ht_table_find( param_set, token_cs ) == NULL ?
       tidy_getCursorByName( token_cs, scope_csr )
     :
       clang_getNullCursor();
@@ -557,7 +558,7 @@ static unsigned macro_get_params( CXToken const tokens[static 2],
     switch ( kind ) {
       case CXToken_Identifier:
         PJL_DISCARD_RV(
-          ht_insert(
+          ht_table_insert(
             param_set, CONST_CAST( char*, token_cs ),
             strlen( token_cs ) + 1/*\0*/
           )
@@ -667,7 +668,7 @@ static void print_statistics( void ) {
   verbose_printf( "  symbol set:\n" );
   verbose_printf(
     "    ss-load-factor = " TIDY_STAT_LF_FMT "\n",
-    ht_load_factor( &symbol_set )
+    ht_table_load_factor( &symbol_set )
   );
   verbose_printf( "    ss-size = %u\n", symbol_set.size );
 }
@@ -777,7 +778,9 @@ static bool symbol_is_excluded( CXCursor sym_csr ) {
  */
 static void symbols_cleanup( void ) {
   print_statistics();
-  ht_cleanup( &symbol_set, POINTER_CAST( ht_free_fn_t, &tidy_symbol_cleanup ) );
+  ht_table_cleanup(
+    &symbol_set, POINTER_CAST( ht_free_fn_t, &tidy_symbol_cleanup )
+  );
 }
 
 /**
@@ -1130,7 +1133,7 @@ static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
   // set of them.
   //
   hash_table_t param_set;
-  ht_init(
+  ht_table_init(
     &param_set, HT_DINT, 2.0, 10,
     POINTER_CAST( ht_cmp_fn_t, &strcmp ),
     POINTER_CAST( ht_hash_fn_t, &fnv1a_s )
@@ -1146,7 +1149,7 @@ static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
     maybe_add_symbol( sym_csr, sym_csr, sid );
   } // for
 
-  ht_cleanup( &param_set, /*free_fn=*/NULL );
+  ht_table_cleanup( &param_set, /*free_fn=*/NULL );
   clang_disposeTokens( tidy_tu, tokens, token_count );
 }
 
@@ -1307,7 +1310,7 @@ static void visit_OverloadedDeclRef( CXCursor overloaded_csr, CXCursor parent,
 
 void symbols_init( void ) {
   ASSERT_RUN_ONCE();
-  ht_init(
+  ht_table_init(
     &symbol_set, HT_DINT, 2.0, 128,
     POINTER_CAST( ht_cmp_fn_t, &tidy_symbol_cmp ),
     POINTER_CAST( ht_hash_fn_t, &tidy_symbol_hash )

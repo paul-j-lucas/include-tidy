@@ -94,7 +94,8 @@
 ///
 ///       void add_word( hash_table_t *table, char const *word ) {
 ///         struct word_count ins_wc = { .word = word, .count = 1 };
-///         ht_insert_rv_t hti = ht_insert( table, &ins_wc, sizeof *ins_wc );
+///         ht_insert_rv_t hti =
+///           ht_table_insert( table, &ins_wc, sizeof *ins_wc );
 ///         if ( hti.inserted ) {
 ///           struct word_count *const new_wc = HT_DINT( hti.entry );
 ///           new_wc->word = strdup( word );
@@ -103,10 +104,10 @@
 ///
 ///       int main() {
 ///         hash_table_t table;
-///         ht_init( &table, HT_DINT, 2.0, 10,
-///                  &word_count_cmp, &word_count_hash );
+///         ht_table_init( &table, HT_DINT, 2.0, 10,
+///                        &word_count_cmp, &word_count_hash );
 ///         add_word( &table, "hello" );
-///         ht_cleanup( &table, &word_count_cleanup );
+///         ht_table_cleanup( &table, &word_count_cleanup );
 ///       }
 ///
 /// **Notes**:
@@ -142,7 +143,7 @@
 ///
 ///       void add_word( hash_table_t *table, char const *word ) {
 ///         struct word_count ins_wc = { .word = word };
-///         ht_insert_rv_t hti = ht_insert( table, &ins_wc, 0 );
+///         ht_insert_rv_t hti = ht_table_insert( table, &ins_wc, 0 );
 ///         if ( hti.inserted ) {
 ///           struct word_count *const new_wc = malloc( sizeof *new_wc );
 ///           new_wc->word = strdup( word );
@@ -153,10 +154,10 @@
 ///
 ///       int main() {
 ///         hash_table_t table;
-///         ht_init( &table, HT_DPTR, 2.0, 10,
-///                  &word_count_cmp, &word_count_hash );
+///         ht_table_init( &table, HT_DPTR, 2.0, 10,
+///                        &word_count_cmp, &word_count_hash );
 ///         add_word( &table, "hello" );
-///         ht_cleanup( &table, &word_count_free );
+///         ht_table_cleanup( &table, &word_count_free );
 ///       }
 ///
 /// **Notes**:
@@ -184,7 +185,7 @@
 
 /**
  * Gets a pointer to the internal data of \a ENTRY for when \ref
- * ht_dloc::HT_DINT "HT_DINT" was used with ht_init().
+ * ht_dloc::HT_DINT "HT_DINT" was used with ht_table_init().
  *
  * @param ENTRY The ht_entry to get a pointer to the data of.
  * @return Returns a pointer to the data internal to \a ENTRY.
@@ -199,7 +200,7 @@
 
 /**
  * Gets an lvalue reference to a pointer to the external data of \a ENTRY for
- * when \ref ht_dloc::HT_DPTR "HT_DPTR" was used with ht_init().
+ * when \ref ht_dloc::HT_DPTR "HT_DPTR" was used with ht_table_init().
  *
  * @remarks As an lvalue reference, `HT_DPTR` can appear on the left-hand side
  * of an `=` and be assigned to.
@@ -264,7 +265,8 @@ typedef struct ht_insert_rv   ht_insert_rv_t;
 typedef struct ht_iterator    ht_iterator_t;
 
 /**
- * The signature for a function passed to ht_init() used to compare entry data.
+ * The signature for a function passed to ht_table_init() used to compare entry
+ * data.
  *
  * @remarks This function need only compare for equality; neither less nor
  * greater than comparisons are necessary.
@@ -280,7 +282,7 @@ typedef struct ht_iterator    ht_iterator_t;
 typedef int (*ht_cmp_fn_t)( void const *i_data, void const *j_data );
 
 /**
- * The signature for a function passed to ht_cleanup() used to free data
+ * The signature for a function passed to ht_table_cleanup() used to free data
  * associated with each entry (if necessary).
  *
  * @param data A pointer to the data to free.
@@ -288,7 +290,8 @@ typedef int (*ht_cmp_fn_t)( void const *i_data, void const *j_data );
 typedef void (*ht_free_fn_t)( void *data );
 
 /**
- * The signature for a function pass to ht_init() used to hash entry data.
+ * The signature for a function pass to ht_table_init() used to hash entry
+ * data.
  *
  * @param data A pointer to the data to hash.
  * @return Returns a hash value for \a data.
@@ -325,7 +328,7 @@ struct ht_entry {
 };
 
 /**
- * The return value of ht_insert().
+ * The return value of ht_table_insert().
  */
 struct ht_insert_rv {
   /**
@@ -360,53 +363,6 @@ struct ht_iterator {
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Cleans-up a hash table.
- *
- * @param table The hash table to clean up.  If NULL, does nothing.
- * @param free_fn A pointer to a function used to free data associated with
- * each entry or NULL if unnecessary.
- *
- * @sa ht_init()
- */
-void ht_cleanup( hash_table_t *table, ht_free_fn_t free_fn );
-
-/**
- * Deletes an entry from a hash table.
- *
- * @remarks
- * @parblock
- * This function deletes _only_ the entry from \a table.  If \ref
- * ht_entry::data "data" also needs to be deleted because \ref hash_table::dloc
- * "dloc" is \ref ht_dloc::HT_DPTR "RB_DPTR", the caller must delete it
- * explicitly.  For example, for some type `T` that is an entry's \ref
- * ht_entry::data "data":
- *
- *      ht_entry_t *const entry = ht_find( table, find_data );
- *      if ( entry != NULL ) {
- *        T *const found_t = ht_entry_data( entry );
- *        T_cleanup( found_t );         // if necessary
- *        free( found_t );
- *        ht_delete( table, entry );
- *      }
- * @endparblock
- *
- * @param table The hash table to delete from.
- * @param entry The entry to delete.
- */
-void ht_delete( hash_table_t *table, ht_entry_t *entry );
-
-/**
- * Gets whether a hash table is empty.
- *
- * @param table The hash table to check.
- * @return Returns `true` only if \a table is empty.
- */
-NODISCARD
-inline bool ht_empty( hash_table_t const *table ) {
-  return table->size == 0;
-}
-
-/**
  * Gets a pointer to an \a entry's data.
  *
  * @param table A pointer to the hash_table of \a entry.
@@ -425,51 +381,6 @@ inline void* ht_entry_data( hash_table_t const *table,
                             ht_entry_t const *entry ) {
   return table->dloc == HT_DINT ? HT_DINT( entry ) : HT_DPTR( entry );
 }
-
-/**
- * Attempts to find \a data within a hash table.
- *
- * @param table The hash table to search.
- * @param data The data to search for.
- * @return Returns a pointer to the entry containing \a data or NULL if not
- * found.
- */
-NODISCARD
-ht_entry_t* ht_find( hash_table_t const *table, void const *data );
-
-/**
- * Initializes a hash table.
- *
- * @param table The hash table to initialize.
- * @param dloc Where data for each entry is stored.
- * @param max_lf The maximum load factor.
- * @param est_size The estimated number of entries.
- * @param cmp_fn The comparison function to use.
- * @param hash_fn The hash function to use.
- * @sa ht_cleanup()
- */
-void ht_init( hash_table_t *table, ht_dloc_t dloc, double max_lf,
-              unsigned est_size, ht_cmp_fn_t cmp_fn, ht_hash_fn_t hash_fn );
-
-/**
- * Attempts to insert \a data into \a table.
- *
- * @param table The hash table to insert into.
- * @param data The data to insert.
- * @param data_size If \a table's \ref hash_table::dloc "dloc" is:
- *  + #HT_DINT: The size of \a data.  If an entry is inserted, then this number
- *    of bytes are copied from \a data into the new entry's \ref ht_entry::data
- *    "data".
- *  + #HT_DPTR: Not used.  If an entry is inserted, then the pointer value of
- *    \a data itself is copied into the new entry's \ref ht_entry::data "data".
- *
- * @return Returns an \ref ht_insert_rv where its \ref ht_insert_rv::entry
- * "entry" points to either the newly inserted entry or the existing entry
- * having the same \ref ht_entry::data "data" and \ref ht_insert_rv::inserted
- * "inserted" is `true` only if \ref ht_entry::data "data" was inserted.
- */
-NODISCARD
-ht_insert_rv_t ht_insert( hash_table_t *table, void *data, size_t data_size );
 
 /**
  * Initializes a hash table iterator.
@@ -494,13 +405,108 @@ NODISCARD
 void* ht_iterator_next( ht_iterator_t *it );
 
 /**
+ * Cleans-up a hash table.
+ *
+ * @param table The hash table to clean up.  If NULL, does nothing.
+ * @param free_fn A pointer to a function used to free data associated with
+ * each entry or NULL if unnecessary.
+ *
+ * @sa ht_table_init()
+ */
+void ht_table_cleanup( hash_table_t *table, ht_free_fn_t free_fn );
+
+/**
+ * Deletes an entry from a hash table.
+ *
+ * @remarks
+ * @parblock
+ * This function deletes _only_ the entry from \a table.  If \ref
+ * ht_entry::data "data" also needs to be deleted because \ref hash_table::dloc
+ * "dloc" is \ref ht_dloc::HT_DPTR "RB_DPTR", the caller must delete it
+ * explicitly.  For example, for some type `T` that is an entry's \ref
+ * ht_entry::data "data":
+ *
+ *      ht_entry_t *const entry = ht_table_find( table, find_data );
+ *      if ( entry != NULL ) {
+ *        T *const found_t = ht_entry_data( entry );
+ *        T_cleanup( found_t );         // if necessary
+ *        free( found_t );
+ *        ht_table_delete( table, entry );
+ *      }
+ * @endparblock
+ *
+ * @param table The hash table to delete from.
+ * @param entry The entry to delete.
+ */
+void ht_table_delete( hash_table_t *table, ht_entry_t *entry );
+
+/**
+ * Gets whether a hash table is empty.
+ *
+ * @param table The hash table to check.
+ * @return Returns `true` only if \a table is empty.
+ */
+NODISCARD
+inline bool ht_table_empty( hash_table_t const *table ) {
+  return table->size == 0;
+}
+
+/**
+ * Attempts to find \a data within a hash table.
+ *
+ * @param table The hash table to search.
+ * @param data The data to search for.
+ * @return Returns a pointer to the entry containing \a data or NULL if not
+ * found.
+ */
+NODISCARD
+ht_entry_t* ht_table_find( hash_table_t const *table, void const *data );
+
+/**
+ * Initializes a hash table.
+ *
+ * @param table The hash table to initialize.
+ * @param dloc Where data for each entry is stored.
+ * @param max_lf The maximum load factor.
+ * @param est_size The estimated number of entries.
+ * @param cmp_fn The comparison function to use.
+ * @param hash_fn The hash function to use.
+ *
+ * @sa ht_table_cleanup()
+ */
+void ht_table_init( hash_table_t *table, ht_dloc_t dloc, double max_lf,
+                    unsigned est_size, ht_cmp_fn_t cmp_fn,
+                    ht_hash_fn_t hash_fn );
+
+/**
+ * Attempts to insert \a data into \a table.
+ *
+ * @param table The hash table to insert into.
+ * @param data The data to insert.
+ * @param data_size If \a table's \ref hash_table::dloc "dloc" is:
+ *  + #HT_DINT: The size of \a data.  If an entry is inserted, then this number
+ *    of bytes are copied from \a data into the new entry's \ref ht_entry::data
+ *    "data".
+ *  + #HT_DPTR: Not used.  If an entry is inserted, then the pointer value of
+ *    \a data itself is copied into the new entry's \ref ht_entry::data "data".
+ *
+ * @return Returns an \ref ht_insert_rv where its \ref ht_insert_rv::entry
+ * "entry" points to either the newly inserted entry or the existing entry
+ * having the same \ref ht_entry::data "data" and \ref ht_insert_rv::inserted
+ * "inserted" is `true` only if \ref ht_entry::data "data" was inserted.
+ */
+NODISCARD
+ht_insert_rv_t ht_table_insert( hash_table_t *table, void *data,
+                                size_t data_size );
+
+/**
  * Calculates the current load factor of \a table.
  *
  * @param table The hash table to calculate the load factor of.
  * @return Returns the load factor of \a table.
  */
 NODISCARD
-inline double ht_load_factor( hash_table_t const *table ) {
+inline double ht_table_load_factor( hash_table_t const *table ) {
   extern unsigned const HT_PRIME[];
   return (double)table->size / HT_PRIME[ table->prime_idx ];
 }

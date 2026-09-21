@@ -720,7 +720,7 @@ static void ignore_parse( config_parse_fn_args const *config ) {
   if ( !toml_bool_parse( config, &ignore ) || !ignore )
     return;
   PJL_DISCARD_RV(
-    ht_insert(
+    ht_table_insert(
       &ignore_symbol_set, CONST_CAST( char*, config->table->key.name ),
       strlen( config->table->key.name ) + 1/*\0*/
     )
@@ -752,7 +752,7 @@ static void ignore_symbols_parse_string( config_parse_fn_args const *config ) {
   assert( config != NULL );
   assert( config->value->type == TOML_STRING );
 
-  ht_insert_rv_t const hti = ht_insert(
+  ht_insert_rv_t const hti = ht_table_insert(
     &ignore_symbol_set, CONST_CAST( char*, config->value->s ),
     strlen( config->value->s ) + 1/*\0*/
   );
@@ -975,7 +975,7 @@ static void config_cleanup( void ) {
   FREE( tidy_associated_header_rel_path );
   array_cleanup( &std_c_includes, &free_pptr );
   array_cleanup( &std_cxx_includes, &free_pptr );
-  ht_cleanup( &ignore_symbol_set, /*free_fn=*/NULL );
+  ht_table_cleanup( &ignore_symbol_set, /*free_fn=*/NULL );
   rb_tree_cleanup(
     &symbol_includes_map,
     POINTER_CAST( rb_free_fn_t, &symbol_includes_cleanup )
@@ -1565,7 +1565,7 @@ static void toml_value_print( toml_value const *value, FILE *fout ) {
 void config_init( void ) {
   ASSERT_RUN_ONCE();
 
-  ht_init(
+  ht_table_init(
     &ignore_symbol_set, HT_DINT, 2.0, 10,
     POINTER_CAST( ht_cmp_fn_t, &strcmp ),
     POINTER_CAST( ht_hash_fn_t, &fnv1a_s )
@@ -1636,7 +1636,7 @@ CXFile config_symbol_get_include( char const *sym_name ) {
 }
 
 bool config_symbol_is_ignored( char const *sym_name ) {
-  return ht_find( &ignore_symbol_set, sym_name ) != NULL;
+  return ht_table_find( &ignore_symbol_set, sym_name ) != NULL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

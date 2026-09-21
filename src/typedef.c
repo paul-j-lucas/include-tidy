@@ -65,7 +65,7 @@ static void print_statistics( void ) {
   verbose_printf( "  typedef map:\n" );
   verbose_printf(
     "    tm-load-factor = " TIDY_STAT_LF_FMT "\n",
-    ht_load_factor( &typedef_map )
+    ht_table_load_factor( &typedef_map )
   );
   verbose_printf( "    tm-size = %u\n", typedef_map.size );
 }
@@ -85,7 +85,7 @@ static void tidy_typedef_cleanup( tidy_typedef *tdef ) {
  */
 static void typedefs_cleanup( void ) {
   print_statistics();
-  ht_cleanup(
+  ht_table_cleanup(
     &typedef_map, POINTER_CAST( ht_free_fn_t, &tidy_typedef_cleanup )
   );
 }
@@ -150,7 +150,7 @@ void typedef_add( CXCursor cursor ) {
 
   tidy_typedef new_tdef = { .type_csr = cursor };
   ht_insert_rv_t const hti =
-    ht_insert( &typedef_map, &new_tdef, sizeof new_tdef );
+    ht_table_insert( &typedef_map, &new_tdef, sizeof new_tdef );
   if ( hti.inserted ) {
     tidy_typedef *const tdef = HT_DINT( hti.entry );
     tdef->alias_name = tidy_Cursor_getScopedSpelling( cursor );
@@ -159,13 +159,13 @@ void typedef_add( CXCursor cursor ) {
 
 tidy_typedef const* typedef_find( CXCursor cursor ) {
   tidy_typedef const find_tdef = { .type_csr = cursor };
-  ht_entry_t const *const found_ht = ht_find( &typedef_map, &find_tdef );
+  ht_entry_t const *const found_ht = ht_table_find( &typedef_map, &find_tdef );
   return found_ht != NULL ? HT_DINT( found_ht ) : NULL;
 }
 
 void typedefs_init( void ) {
   ASSERT_RUN_ONCE();
-  ht_init(
+  ht_table_init(
     &typedef_map, HT_DINT, 2.0, 769,
     POINTER_CAST( ht_cmp_fn_t, &tidy_typedef_cmp ),
     POINTER_CAST( ht_hash_fn_t, &tidy_typedef_hash )

@@ -1132,7 +1132,7 @@ char const* toml_error_msg( toml_file const *toml ) {
 void toml_file_cleanup( toml_file *toml ) {
   if ( likely( toml != NULL ) ) {
     // Table names are copied into the entries, so nothing to free.
-    ht_cleanup( &toml->table_names, /*free_fn=*/NULL );
+    ht_table_cleanup( &toml->table_names, /*free_fn=*/NULL );
     *toml = (toml_file){ 0 };
   }
 }
@@ -1152,7 +1152,7 @@ void toml_file_init( toml_file *toml, FILE *file ) {
     }
   };
 
-  ht_init(
+  ht_table_init(
     &toml->table_names, HT_DINT, 2.0, 32,
     POINTER_CAST( ht_cmp_fn_t, &strcmp ),
     POINTER_CAST( ht_hash_fn_t, &fnv1a_s )
@@ -1162,7 +1162,7 @@ void toml_file_init( toml_file *toml, FILE *file ) {
 void toml_table_cleanup( toml_table *table ) {
   if ( likely( table != NULL ) ) {
     toml_key_cleanup( &table->key );
-    ht_cleanup(
+    ht_table_cleanup(
       &table->keys_values,
       POINTER_CAST( ht_free_fn_t, &toml_key_value_cleanup )
     );
@@ -1175,7 +1175,7 @@ toml_value const* toml_table_find( toml_table const *table, char const *key ) {
   assert( key != NULL );
 
   toml_key_value const kv = { .key = { .name = key } };
-  ht_entry_t const *const found_ht = ht_find( &table->keys_values, &kv );
+  ht_entry_t const *const found_ht = ht_table_find( &table->keys_values, &kv );
   if ( found_ht == NULL )
     return NULL;
   toml_key_value const *const found_kv = HT_DINT( found_ht );
@@ -1185,7 +1185,7 @@ toml_value const* toml_table_find( toml_table const *table, char const *key ) {
 void toml_table_init( toml_table *table ) {
   assert( table != NULL );
   table->key = (toml_key){ 0 };
-  ht_init(
+  ht_table_init(
     &table->keys_values, HT_DINT, 2.0, 64,
     POINTER_CAST( ht_cmp_fn_t, &toml_key_value_cmp ),
     POINTER_CAST( ht_hash_fn_t, &toml_key_value_hash )
@@ -1226,7 +1226,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
   } // switch
 
   if ( table_key.name != NULL ) {
-    ht_insert_rv_t const hti = ht_insert(
+    ht_insert_rv_t const hti = ht_table_insert(
       &toml->table_names,
       CONST_CAST( char*, table_key.name ), table_name_len + 1
     );
@@ -1252,7 +1252,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
       break;
 
     ht_insert_rv_t const hti =
-      ht_insert( &table->keys_values, &new_kv, sizeof new_kv );
+      ht_table_insert( &table->keys_values, &new_kv, sizeof new_kv );
     if ( !hti.inserted ) {
       toml->loc = new_kv.key.loc;
       toml->error = TOML_ERR_DUPLICATE_KEY;

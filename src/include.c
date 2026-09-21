@@ -400,7 +400,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       included->depth = included->includer->depth + 1;
     }
     array_init( &included->lines, sizeof(unsigned) );
-    ht_init(
+    ht_table_init(
       // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
       // symbol_set in symbol.c.
       &included->symbol_set, HT_DPTR, 2.0, 64,
@@ -804,7 +804,7 @@ static void print_statistics( void ) {
   rb_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include const *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    double const lf = ht_load_factor( &include->symbol_set );
+    double const lf = ht_table_load_factor( &include->symbol_set );
     if ( lf > max_lf ) {
       max_include = include;
       max_lf = lf;
@@ -903,7 +903,7 @@ static void tidy_include_cleanup( tidy_include *include ) {
     array_cleanup( &include->lines, /*free_fn=*/NULL );
 
     // Because the nodes point to existing tidy_symbol objects, use NULL.
-    ht_cleanup( &include->symbol_set, /*free_fn=*/NULL );
+    ht_table_cleanup( &include->symbol_set, /*free_fn=*/NULL );
   }
 }
 
@@ -1042,7 +1042,9 @@ tidy_include const* include_add_symbol( CXFile include_file,
   if ( include != NULL ) {
     include = include_get_proxy( include );
     PJL_DISCARD_RV(
-      ht_insert( &include->symbol_set, CONST_CAST( tidy_symbol*, sym ), 0 )
+      ht_table_insert(
+        &include->symbol_set, CONST_CAST( tidy_symbol*, sym ), 0
+      )
     );
     include->is_needed = true;
   }

@@ -64,12 +64,14 @@ static void test_ht_fill( hash_table_t *table, unsigned n ) {
   data.val = 1;
   for ( unsigned i = 0; i < n; ++i ) {
     data.key[0] = STATIC_CAST( char, 'A' + i );
-    PJL_DISCARD_RV( ht_insert( table, &data, sizeof data ) );
+    PJL_DISCARD_RV( ht_table_insert( table, &data, sizeof data ) );
   } // for
 }
 
-static void test_ht_init( hash_table_t *table ) {
-  ht_init( table, HT_DINT, TEST_LOAD_FACTOR_MAX, 0, &test_cmp, &test_hash );
+static void test_ht_table_init( hash_table_t *table ) {
+  ht_table_init(
+    table, HT_DINT, TEST_LOAD_FACTOR_MAX, 0, &test_cmp, &test_hash
+  );
 }
 
 static void test_ht_seen( hash_table_t *table, bool seen[] ) {
@@ -88,17 +90,17 @@ static bool test_find_delete() {
   TEST_FUNC_BEGIN();
 
   hash_table_t table;
-  test_ht_init( &table );
+  test_ht_table_init( &table );
   test_ht_fill( &table, 5 );
   TEST( table.size == 5 );
 
   ht_entry_t *entry;
-  entry = ht_find( &table, &TEST_LIT( "X", 0 ) );
+  entry = ht_table_find( &table, &TEST_LIT( "X", 0 ) );
   TEST( entry == NULL );
 
-  entry = ht_find( &table, &TEST_LIT( "D", 0 ) );
+  entry = ht_table_find( &table, &TEST_LIT( "D", 0 ) );
   if ( TEST( entry != NULL ) ) {
-    ht_delete( &table, entry );
+    ht_table_delete( &table, entry );
 
     bool seen[ 128 ];
     test_ht_seen( &table, seen );
@@ -110,7 +112,7 @@ static bool test_find_delete() {
     TEST(  seen[ 'E' ] );
   }
 
-  ht_cleanup( &table, /*free_fn=*/NULL );
+  ht_table_cleanup( &table, /*free_fn=*/NULL );
   TEST_FUNC_END();
 }
 
@@ -118,27 +120,27 @@ static bool test_insert_delete() {
   TEST_FUNC_BEGIN();
 
   hash_table_t table;
-  test_ht_init( &table );
+  test_ht_table_init( &table );
 
   ht_insert_rv_t hti =
-    ht_insert( &table, &TEST_LIT( "A", 0 ), sizeof(test_data) );
-  if ( TEST( !ht_empty( &table ) ) && TEST( hti.inserted ) ) {
+    ht_table_insert( &table, &TEST_LIT( "A", 0 ), sizeof(test_data) );
+  if ( TEST( !ht_table_empty( &table ) ) && TEST( hti.inserted ) ) {
     test_data *t = HT_DINT( hti.entry );
     TEST( strcmp( t->key, "A" ) == 0 );
     TEST( t->val == 0 );
 
-    hti = ht_insert( &table, &TEST_LIT( "A", 1 ), sizeof(test_data) );
+    hti = ht_table_insert( &table, &TEST_LIT( "A", 1 ), sizeof(test_data) );
     TEST( !hti.inserted );
 
     t = HT_DINT( hti.entry );
     TEST( strcmp( t->key, "A" ) == 0 );
     TEST( t->val == 0 );
 
-    ht_delete( &table, hti.entry );
-    TEST( ht_empty( &table ) );
+    ht_table_delete( &table, hti.entry );
+    TEST( ht_table_empty( &table ) );
   }
 
-  ht_cleanup( &table, /*free_fn=*/NULL );
+  ht_table_cleanup( &table, /*free_fn=*/NULL );
   TEST_FUNC_END();
 }
 
@@ -146,7 +148,7 @@ static bool test_grow() {
   TEST_FUNC_BEGIN();
 
   hash_table_t table;
-  test_ht_init( &table );
+  test_ht_table_init( &table );
   test_ht_fill( &table, 26 );
   TEST( table.size == 26 );
 
@@ -180,7 +182,7 @@ static bool test_grow() {
   TEST( seen[ 'Y' ] );
   TEST( seen[ 'Z' ] );
 
-  ht_cleanup( &table, /*free_fn=*/NULL );
+  ht_table_cleanup( &table, /*free_fn=*/NULL );
   TEST_FUNC_END();
 }
 
@@ -188,7 +190,7 @@ static bool test_iter() {
   TEST_FUNC_BEGIN();
 
   hash_table_t table;
-  test_ht_init( &table );
+  test_ht_table_init( &table );
   test_ht_fill( &table, 5 );
   TEST( table.size == 5 );
 
@@ -201,7 +203,7 @@ static bool test_iter() {
   TEST( seen[ 'D' ] );
   TEST( seen[ 'E' ] );
 
-  ht_cleanup( &table, /*free_fn=*/NULL );
+  ht_table_cleanup( &table, /*free_fn=*/NULL );
   TEST_FUNC_END();
 }
 
