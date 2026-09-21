@@ -54,7 +54,7 @@
 /// @parblock
 /// Unlike many hash table implementations that map keys to values, this one
 /// contains only entries, hence it's more a hash _set_ than a hash _map_.
-/// However, entries can be any of any type including structures where any
+/// However, entries can be of any type including structures where any
 /// member(s) can comprise they "key" (that which is hashed) and, optionally,
 /// any other member(s) can comprise the "value."  To this implementation,
 /// entries are opaque.
