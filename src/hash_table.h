@@ -55,14 +55,14 @@
 /// Unlike many hash table implementations that map keys to values, this one
 /// contains only entries, hence it's more a hash _set_ than a hash _map_.
 /// However, entries can be of any type including structures where any
-/// member(s) can comprise they "key" (that which is hashed) and, optionally,
+/// member(s) can comprise the "key" (that which is hashed) and, optionally,
 /// any other member(s) can comprise the "value."  To this implementation,
 /// entries are opaque.
 ///
 /// Also unlike many hash table implementations, this one allows user code to
 /// choose whether entries' data are stored "internally" with the entry itself
-/// or as only a pointer to data elsewhere.  (See ht_dloc.)  When data are
-/// stored internally, entries can be of different sizes.
+/// or as only a pointer to data elsewhere.  (See ht_dloc.)  Entries can be of
+/// different sizes even when data are stored internally.
 /// @endparblock
 ///
 /// @par Example
