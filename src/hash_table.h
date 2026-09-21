@@ -21,6 +21,14 @@
 #ifndef pjl_hash_table_h
 #define pjl_hash_table_h
 
+/**
+ * @file
+ * Declares a type for a hash table as well as functions for manipulating said
+ * hash table.
+ *
+ * @sa [Hash Table](https://en.wikipedia.org/wiki/Hash_table)
+ */
+
 // local
 #include "pjl_config.h"
 
