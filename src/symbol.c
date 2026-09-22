@@ -297,8 +297,8 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     .name = sym_name
   };
   sym_name = NULL;                      // new_sym owns this now
-  ht_insert_rv_t const hti
-    = ht_table_insert( &symbol_set, &new_sym, sizeof new_sym );
+  ht_insert_rv_t const hti =
+    ht_table_insert( &symbol_set, &new_sym, sizeof new_sym );
   tidy_symbol *const sym = HT_DINT( hti.entry );
   ++sym->ref_count;
 
@@ -557,11 +557,8 @@ static unsigned macro_get_params( CXToken const tokens[static 2],
 
     switch ( kind ) {
       case CXToken_Identifier:
-        PJL_DISCARD_RV(
-          ht_table_insert(
-            param_set, CONST_CAST( char*, token_cs ),
-            strlen( token_cs ) + 1/*\0*/
-          )
+        ht_table_insert(
+          param_set, CONST_CAST( char*, token_cs ), strlen( token_cs ) + 1/*\0*/
         );
         break;
       case CXToken_Punctuation:

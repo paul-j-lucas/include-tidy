@@ -719,11 +719,9 @@ static void ignore_parse( config_parse_fn_args const *config ) {
   bool ignore;
   if ( !toml_bool_parse( config, &ignore ) || !ignore )
     return;
-  PJL_DISCARD_RV(
-    ht_table_insert(
-      &ignore_symbol_set, CONST_CAST( char*, config->table->key.name ),
-      strlen( config->table->key.name ) + 1/*\0*/
-    )
+  ht_table_insert(
+    &ignore_symbol_set, CONST_CAST( char*, config->table->key.name ),
+    strlen( config->table->key.name ) + 1/*\0*/
   );
 }
 

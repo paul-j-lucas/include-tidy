@@ -43,6 +43,9 @@
 #ifndef NODISCARD
 # define NODISCARD                      /* nothing */
 #endif /* NODISCARD */
+#ifndef PJL_DISCARD
+# define PJL_DISCARD                    /* nothing */
+#endif /* PJL_DISCARD */
 
 /// @endcond
 
@@ -495,7 +498,7 @@ void ht_table_init( hash_table_t *table, ht_dloc_t dloc, double max_lf,
  * having the same \ref ht_entry::data "data" and \ref ht_insert_rv::inserted
  * "inserted" is `true` only if \ref ht_entry::data "data" was inserted.
  */
-NODISCARD
+PJL_DISCARD
 ht_insert_rv_t ht_table_insert( hash_table_t *table, void *data,
                                 size_t data_size );
 

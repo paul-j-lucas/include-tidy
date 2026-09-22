@@ -64,7 +64,7 @@ static void test_ht_fill( hash_table_t *table, unsigned n ) {
   data.val = 1;
   for ( unsigned i = 0; i < n; ++i ) {
     data.key[0] = STATIC_CAST( char, 'A' + i );
-    PJL_DISCARD_RV( ht_table_insert( table, &data, sizeof data ) );
+    ht_table_insert( table, &data, sizeof data );
   } // for
 }
 

@@ -1041,11 +1041,7 @@ tidy_include const* include_add_symbol( CXFile include_file,
   tidy_include *include = include_find_by_File( include_file );
   if ( include != NULL ) {
     include = include_get_proxy( include );
-    PJL_DISCARD_RV(
-      ht_table_insert(
-        &include->symbol_set, CONST_CAST( tidy_symbol*, sym ), 0
-      )
-    );
+    ht_table_insert( &include->symbol_set, CONST_CAST( tidy_symbol*, sym ), 0 );
     include->is_needed = true;
   }
   return include;
