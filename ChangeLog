@@ -1,3 +1,8 @@
+2026-09-21  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c, hash_table.h, hash_table_test.c, include.c, symbol.c:
+     ht_table_insert is no longe NODISCARD.
+
 2026-09-19  Paul J. Lucas <paul@lucasmail.org>
 
    * array.c, array.h: Added restrict.
