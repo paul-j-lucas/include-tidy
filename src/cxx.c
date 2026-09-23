@@ -52,6 +52,69 @@
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
+ * Gets whether \a call_csr and the called C++ function (or operator) \a fn_csr
+ * constitutes an include-what-you-use (IWYU) exception.
+ *
+ * @param call_csr A CallExpr cursor.
+ * @param fn_csr The cursor of the function or operator being called.
+ * @return Returns `true` only if the member function or operator (and the
+ * header that declares it) should _not_ be added ---  an IWYU exception.
+ *
+ * @note This function should be called only when the file being tidied is C++.
+ */
+NODISCARD
+static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
+  assert( tidy_source_is_cxx );
+
+  CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( call_csr );
+  // Ensure the callee is a member function, e.g., obj.f() or ptr->f().
+  if ( clang_getCursorKind( callee_csr ) != CXCursor_MemberRefExpr )
+    return false;
+
+#ifdef NEED_tidy_Cursor_isInheritedMemberFunctionCall
+  // See comment above tidy_Cursor_isInheritedMemberFunctionCall() declaration.
+
+  CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( callee_csr );
+  if ( clang_Cursor_isNull( obj_csr ) )
+    return false;
+
+  //
+  // Check whether the object's class inherits from the member function's
+  // class.  If it does, including the object's class header provides the
+  // function's declaration --- an IWYU exception.
+  //
+  CXCursor const obj_cls_csr = tidy_Cursor_getUnderlyingType( obj_csr );
+  CXCursor const fn_cls_csr = clang_getCursorSemanticParent( fn_csr );
+  if ( tidy_Cursor_isInheritedFrom( obj_cls_csr, fn_cls_csr ) )
+    return true;
+
+  //
+  // Check whether the member function call is on one inherited from a base
+  // class: if not, it must be on our own class whose declaration must have
+  // already been seen so we don't need its header --- an IWYU exception.
+  //
+  CXCursor base_csr;
+  if ( !tidy_Cursor_isInheritedMemberFunctionCall( obj_csr, &base_csr ) )
+    return true;
+
+  //
+  // Check whether the base class through which the member function is called
+  // either is or derived from the function's class. If so, the base class's
+  // header provides the function's declaration --- an IWYU exception.
+  //
+  if ( clang_equalCursors( base_csr, fn_cls_csr ) ||
+        tidy_Cursor_isInheritedFrom( base_csr, fn_cls_csr ) ) {
+    return true;
+  }
+
+  return false;
+#else
+  (void)fn_csr;
+  return true;
+#endif /* NEED_tidy_Cursor_isInheritedMemberFunctionCall */
+}
+
+/**
  * Gets whether a symbol is referenced via an explicit C++ scope qualifier that
  * acts as its proxy.
  *
@@ -90,8 +153,8 @@
  * @note This function should be called only when the file being tidied is C++.
  */
 NODISCARD
-static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
-                                     CXCursor scope_csr ) {
+static bool is_cxx_proxy_qualified( CXCursor cursor, CXCursor parent,
+                                    CXCursor scope_csr ) {
   assert( tidy_source_is_cxx );
 
   CXSourceLocation const cursor_loc = clang_getCursorLocation( cursor );
@@ -183,69 +246,6 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
 done:
   clang_disposeTokens( tu, tokens, token_count );
   return matched;
-}
-
-/**
- * Gets whether \a call_csr and the called C++ function (or operator) \a fn_csr
- * constitutes an include-what-you-use (IWYU) exception.
- *
- * @param call_csr A CallExpr cursor.
- * @param fn_csr The cursor of the function or operator being called.
- * @return Returns `true` only if the member function or operator (and the
- * header that declares it) should _not_ be added ---  an IWYU exception.
- *
- * @note This function should be called only when the file being tidied is C++.
- */
-NODISCARD
-static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
-  assert( tidy_source_is_cxx );
-
-  CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( call_csr );
-  // Ensure the callee is a member function, e.g., obj.f() or ptr->f().
-  if ( clang_getCursorKind( callee_csr ) != CXCursor_MemberRefExpr )
-    return false;
-
-#ifdef NEED_tidy_Cursor_isInheritedMemberFunctionCall
-  // See comment above tidy_Cursor_isInheritedMemberFunctionCall() declaration.
-
-  CXCursor const obj_csr = tidy_Cursor_getFirstExposedChild( callee_csr );
-  if ( clang_Cursor_isNull( obj_csr ) )
-    return false;
-
-  //
-  // Check whether the object's class inherits from the member function's
-  // class.  If it does, including the object's class header provides the
-  // function's declaration --- an IWYU exception.
-  //
-  CXCursor const obj_cls_csr = tidy_Cursor_getUnderlyingType( obj_csr );
-  CXCursor const fn_cls_csr = clang_getCursorSemanticParent( fn_csr );
-  if ( tidy_Cursor_isInheritedFrom( obj_cls_csr, fn_cls_csr ) )
-    return true;
-
-  //
-  // Check whether the member function call is on one inherited from a base
-  // class: if not, it must be on our own class whose declaration must have
-  // already been seen so we don't need its header --- an IWYU exception.
-  //
-  CXCursor base_csr;
-  if ( !tidy_Cursor_isInheritedMemberFunctionCall( obj_csr, &base_csr ) )
-    return true;
-
-  //
-  // Check whether the base class through which the member function is called
-  // either is or derived from the function's class. If so, the base class's
-  // header provides the function's declaration --- an IWYU exception.
-  //
-  if ( clang_equalCursors( base_csr, fn_cls_csr ) ||
-        tidy_Cursor_isInheritedFrom( base_csr, fn_cls_csr ) ) {
-    return true;
-  }
-
-  return false;
-#else
-  (void)fn_csr;
-  return true;
-#endif /* NEED_tidy_Cursor_isInheritedMemberFunctionCall */
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -489,7 +489,7 @@ bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent, CXCursor dec_csr,
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
 
   if ( !clang_isDeclaration( kind ) &&
-        has_cxx_qualifier_proxy( cursor, parent, scope_csr ) ) {
+        is_cxx_proxy_qualified( cursor, parent, scope_csr ) ) {
     return true;
   }
 
