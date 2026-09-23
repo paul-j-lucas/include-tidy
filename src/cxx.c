@@ -157,6 +157,10 @@ static bool is_cxx_proxy_qualified_ref( CXCursor cursor, CXCursor parent,
                                         CXCursor scope_csr ) {
   assert( tidy_source_is_cxx );
 
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  if ( clang_isDeclaration( kind ) )    // not a reference
+    return false;
+
   CXSourceLocation const cursor_loc = clang_getCursorLocation( cursor );
   unsigned const cursor_offset = tidy_getSpellingLocation_offset( cursor_loc );
   if ( cursor_offset == 0 )
@@ -486,12 +490,8 @@ bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent, CXCursor dec_csr,
                             CXCursor scope_csr ) {
   assert( tidy_source_is_cxx );
 
-  enum CXCursorKind const kind = clang_getCursorKind( cursor );
-
-  if ( !clang_isDeclaration( kind ) &&
-        is_cxx_proxy_qualified_ref( cursor, parent, scope_csr ) ) {
+  if ( is_cxx_proxy_qualified_ref( cursor, parent, scope_csr ) )
     return true;
-  }
 
   // The remaining IWYU exceptions apply only within a C++ class scope.
 
