@@ -1237,7 +1237,7 @@ static void visit_MemberRefExpr( CXCursor mbr_ref_csr, CXCursor parent,
       //      #include <time.h>
       //      typedef struct timespec timespec_t;
       //
-      //      // Foo.c
+      //      // foo.c
       //      #include "types.h"
       //      void f( timespec_t *time ) {
       //        time_t t = time->tv_sec;
@@ -1245,7 +1245,7 @@ static void visit_MemberRefExpr( CXCursor mbr_ref_csr, CXCursor parent,
       //      }
       //
       // Since types.h includes time.h, timespec_t is an alias for a complete
-      // type since the definition of timespec has been seen.  Therefore, Foo.c
+      // type since the definition of timespec has been seen.  Therefore, foo.c
       // need only include types.h and not time.h to access tv_sec (that
       // requires a complete type).
       //
