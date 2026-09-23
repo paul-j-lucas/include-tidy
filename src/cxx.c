@@ -153,8 +153,8 @@ static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
  * @note This function should be called only when the file being tidied is C++.
  */
 NODISCARD
-static bool is_cxx_proxy_qualified( CXCursor cursor, CXCursor parent,
-                                    CXCursor scope_csr ) {
+static bool is_cxx_proxy_qualified_ref( CXCursor cursor, CXCursor parent,
+                                        CXCursor scope_csr ) {
   assert( tidy_source_is_cxx );
 
   CXSourceLocation const cursor_loc = clang_getCursorLocation( cursor );
@@ -489,7 +489,7 @@ bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent, CXCursor dec_csr,
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
 
   if ( !clang_isDeclaration( kind ) &&
-        is_cxx_proxy_qualified( cursor, parent, scope_csr ) ) {
+        is_cxx_proxy_qualified_ref( cursor, parent, scope_csr ) ) {
     return true;
   }
 
