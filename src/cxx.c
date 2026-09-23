@@ -95,7 +95,7 @@ static bool has_cxx_qualifier_proxy( CXCursor cursor, CXCursor parent,
   assert( tidy_source_is_cxx );
 
   CXSourceLocation const cursor_loc = clang_getCursorLocation( cursor );
-  unsigned cursor_offset = tidy_getSpellingLocation_offset( cursor_loc );
+  unsigned const cursor_offset = tidy_getSpellingLocation_offset( cursor_loc );
   if ( cursor_offset == 0 )
     return false;                       // LCOV_EXCL_LINE
 
