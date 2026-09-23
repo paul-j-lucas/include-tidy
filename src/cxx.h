@@ -111,6 +111,59 @@ bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr );
  * Gets whether the referenced C++ class member \a obj_csr constitutes an
  * include-what-you-use (IWYU) exception.
  *
+ * @par Example
+ * @parblock
+ * Given:
+ *
+ *      // container.hpp
+ *      #include <set>
+ *
+ *      class container {
+ *      public:
+ *        using iterator = std::set<int>::iterator;
+ *        iterator begin();
+ *      };
+ *
+ *      // test.cpp
+ *      #include "container.hpp"
+ *
+ *      void f( container &c ) {
+ *        auto it = c.begin();
+ *        // ...
+ *      }
+ *
+ * Here, \a obj_csr is `it` that's initialized by `begin()` that returns an
+ * `iterator`.  Since `iterator` is declared within `container`, its header
+ * must have already provided a valid declaration for `iterator` so `test.cpp`
+ * need not include `<set>` --- an IWYU exception.
+ * @endparblock
+ *
+ * @par Example
+ * @parblock
+ * Given:
+ *
+ *      // Data.hpp
+ *      struct Data { ... };
+ *
+ *      // Processor.hpp
+ *      #include "Data.hpp"
+ *      struct Processor {
+ *        void process( Data const& );
+ *      };
+ *
+ *      // Processor.cpp
+ *      #include "Processor.hpp"
+ *      void Processor::process( Data const &data ) {
+ *        // ...
+ *      }
+ *
+ * Here, the definition of `process` has a parameter of type `Data`.
+ * Ordinarily, this would mean that `Processor.cpp` would need to include
+ * `Data.hpp`; however, `Processor.hpp` must have provided the declaration of
+ * `Data` since the declaration of `process` requires it, so `Processor.cpp`
+ * need not include `Data.hpp` --- --- an IWYU exception.
+ * @endparblock
+ *
  * @param obj_csr The C++ object whose member is being referenced.
  * @return Returns `true` only if \a obj_csr (and the header that declares it)
  * referencing the class member should _not_ be added --- an IWYU exception.
