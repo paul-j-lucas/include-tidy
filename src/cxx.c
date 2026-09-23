@@ -366,7 +366,7 @@ bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
     // Even though test.cpp uses std::erase_if() declared in <set>, it's
     // sufficient that only int_set.hpp is included and <set> isn't because:
     //
-    //  + s of type int_set is an for std::set; and:
+    //  + s of type int_set is an alias for std::set; and:
     //  + In order to declare int_set, int_set.hpp must have included <set>.
     //
     // Therefore, we allow the transitive include of <set> --- an IWYU
