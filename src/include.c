@@ -772,8 +772,8 @@ static void maybe_print_include( tidy_include const *include,
  * @param path The path.
  * @param if_ext_0 The character that the first character of the filename
  * extension of \a path must match ignoring case.
- * @param path_buf A path buffer to use only if \a path has an extension and
- * its first character matches \a if_ext_0.
+ * @param rv_path_buf Receives \a path without the its extension, but only if
+ * \a path has an extension and its first character matches \a if_ext_0.
  * @return Returns \a path without its extension, but only if the first
  * character of its extension matches \a if_ext_0 ignoring case; NULL
  * otherwise.

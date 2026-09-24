@@ -61,17 +61,18 @@ struct tidy_ipath {
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Adds \a include_path to the global list of include (`-I`) paths.
+ * Adds \a include_path, if it exists, is a directory, and is not a duplicate,
+ * to the global list of include (`-I`) paths.
  *
  * @param include_path The include path to add.
  */
 void ipath_add( char const *include_path );
 
 /**
- * Attempts to find \a rel_path among the include paths.
+ * Attempts to find \a rel_path among the global list of include (`-I`) paths.
  *
  * @param rel_path The relative path to find.
- * @param rv_abs_path_buf If found, received the absolute path of \a rel_path.
+ * @param rv_abs_path_buf If found, receives the absolute path of \a rel_path.
  * May be NULL.
  * @return Returns `true` only if \a rel_path is found.
  */
@@ -79,7 +80,8 @@ NODISCARD
 bool ipath_find( char const *rel_path, strbuf_t *rv_abs_path_buf );
 
 /**
- * Relativizes \a abs_path against one of the `-I` absolute paths.
+ * Relativizes \a abs_path against one of the global list of include (`-I`)
+ * absolute paths.
  *
  * @par Example
  * If the option `-I/opt/local/libexec/llvm-21/include` were given and \a
@@ -88,13 +90,14 @@ bool ipath_find( char const *rel_path, strbuf_t *rv_abs_path_buf );
  *
  * @param abs_path The absolute path of a file being included.
  * @return Returns the shortened path of \a abs_path relative to one of the
- * `-I` absolute paths.  The caller is responsible for freeing it.
+ * gloval list of include (`-I`) absolute paths.  The caller is responsible for
+ * freeing it.
  */
 NODISCARD
 char* ipath_relativize( char const *abs_path );
 
 /**
- * Initializes the list of `-I` paths.
+ * Initializes the global list of include (`-I`) paths.
  */
 void ipaths_init( void );
 
