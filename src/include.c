@@ -1060,14 +1060,17 @@ tidy_include* include_find_by_rel_path( char const *rel_path ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
-  char abs_path[ PATH_MAX + 1 ];
-  if ( ipath_find( rel_path, abs_path ) ) {
-    CXFile const file = clang_getFile( tidy_tu, abs_path );
+  strbuf_t      abs_path_buf = STRBUF_INIT();
+  tidy_include *include = NULL;
+
+  if ( ipath_find( rel_path, &abs_path_buf ) ) {
+    CXFile const file = clang_getFile( tidy_tu, abs_path_buf.str );
     if ( file != NULL )
-      return include_find_by_File( file );
+      include = include_find_by_File( file );
   }
 
-  return NULL;
+  strbuf_cleanup( &abs_path_buf );
+  return include;
 }
 
 void include_get_delims( tidy_include const *include, char delim[static 2] ) {

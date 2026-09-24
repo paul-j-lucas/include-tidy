@@ -102,26 +102,29 @@ void ipath_add( char const *path ) {
   };
 }
 
-bool ipath_find( char const *rel_path, char rv_abs_path[static PATH_MAX + 1] ) {
+bool ipath_find( char const *rel_path, strbuf_t *rv_abs_path_buf ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
+  strbuf_t  abs_path_buf = STRBUF_INIT();
   bool      is_found = false;
-  strbuf_t  sbuf = STRBUF_INIT();
 
   for ( size_t i = 0; i < ipaths.len; ++i ) {
     tidy_ipath const *const ipath = array_at_nc( &ipaths, i );
-    strbuf_putsn( &sbuf, ipath->abs_path, ipath->abs_path_len );
-    strbuf_paths( &sbuf, rel_path );
-    if ( access( sbuf.str, F_OK ) == 0 ) {
-      strncpy_0( rv_abs_path, sbuf.str, PATH_MAX );
+    strbuf_putsn( &abs_path_buf, ipath->abs_path, ipath->abs_path_len );
+    strbuf_paths( &abs_path_buf, rel_path );
+    if ( access( abs_path_buf.str, F_OK ) == 0 ) {
       is_found = true;
       break;
     }
-    strbuf_reset( &sbuf );
+    strbuf_reset( &abs_path_buf );
   } // for
 
-  strbuf_cleanup( &sbuf );
+  if ( is_found && rv_abs_path_buf != NULL )
+    *rv_abs_path_buf = abs_path_buf;
+  else
+    strbuf_cleanup( &abs_path_buf );
+
   return is_found;
 }
 

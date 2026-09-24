@@ -28,11 +28,11 @@
 
 // local
 #include "pjl_config.h"
+#include "strbuf.h"
 
 /// @cond DOXYGEN_IGNORE
 
 // standard
-#include <limits.h>                     /* for PATH_MAX */
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -71,11 +71,12 @@ void ipath_add( char const *include_path );
  * Attempts to find \a rel_path among the include paths.
  *
  * @param rel_path The relative path to find.
- * @param abs_path If found, the absolute path of \a rel_path is copied here.
+ * @param rv_abs_path_buf If found, received the absolute path of \a rel_path.
+ * May be NULL.
  * @return Returns `true` only if \a rel_path is found.
  */
 NODISCARD
-bool ipath_find( char const *rel_path, char rv_abs_path[static PATH_MAX + 1] );
+bool ipath_find( char const *rel_path, strbuf_t *rv_abs_path_buf );
 
 /**
  * Relativizes \a abs_path against one of the `-I` absolute paths.
