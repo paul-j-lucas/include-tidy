@@ -121,7 +121,8 @@ bool array_reserve( array_t *restrict array, size_t res_len ) {
       // LCOV_EXCL_STOP
     }
     array->cap += delta;
-  }
+  } // while
+
   array->elements = check_realloc( array->elements, array->cap * array->esize );
   return true;
 }
