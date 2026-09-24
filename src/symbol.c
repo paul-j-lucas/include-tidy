@@ -1167,8 +1167,9 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
     return;                             // LCOV_EXCL_LINE
 
   //
-  // Explicitly call symbol_is_excluded() and get_symbol_file() so we can avoid
-  // calling the expensive is_cxx_mbr_or_base_iwyu_exc() unless necessary.
+  // Call symbol_is_excluded() and get_symbol_file() ourselves to avoid calling
+  // is_cxx_proxy_qual_ref_iwyu_exc() and is_cxx_mbr_or_base_iwyu_exc() unless
+  // necessary since they're both expensive.
   //
   if ( !symbol_is_excluded( dec_csr ) ) {
     CXFile const dec_file = get_symbol_file( dec_csr, sid );
