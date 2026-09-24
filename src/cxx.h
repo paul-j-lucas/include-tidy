@@ -139,7 +139,7 @@ bool is_cxx_mbr_or_base_iwyu_exc( CXCursor dec_csr, CXCursor scope_csr );
  *        iterator begin();
  *      };
  *
- *      // test.cpp
+ *      // foo.cpp
  *      #include "container.hpp"
  *
  *      void f( container &c ) {
@@ -149,7 +149,7 @@ bool is_cxx_mbr_or_base_iwyu_exc( CXCursor dec_csr, CXCursor scope_csr );
  *
  * Here, \a obj_csr is `it` that's initialized by `begin()` that returns an
  * `iterator`.  Since `iterator` is declared within `container`, its header
- * must have already provided a valid declaration for `iterator` so `test.cpp`
+ * must have already provided a valid declaration for `iterator` so `foo.cpp`
  * need not include `<set>` --- an IWYU exception.
  * @endparblock
  *
@@ -201,7 +201,7 @@ bool is_cxx_mbr_ref_iwyu_exc( CXCursor obj_csr );
  *      #include <set>
  *      using int_set = std::set<int>;
  *
- *      // test.cpp
+ *      // foo.cpp
  *      #include "int_set.hpp"
  *
  *      void f() {
@@ -210,7 +210,7 @@ bool is_cxx_mbr_ref_iwyu_exc( CXCursor obj_csr );
  *
  * where \a cursor refers to `value_type`, the actual cursor libclang resolves
  * it to is `std::set<int>::value_type`.  The problem is that \b include-tidy
- * will think `test.cpp` requires `<set>` explicitly even though `test.cpp`
+ * will think `foo.cpp` requires `<set>` explicitly even though `foo.cpp`
  * includes `int_set.hpp` that declared `int_set`.  The fact that `int_set` is
  * a `std::set` should be irrelevant and `<set>` should not be required.
  * @endparblock
