@@ -134,24 +134,25 @@ void array_unique( array_t *restrict array, array_cmp_fn_t cmp_fn,
   if ( array->len < 2 )
     return;
 
-  size_t dst_idx = 1;
+  void             *dst = array_front_nc( array );
+  char const *const end = array_at_nc( array, array->len );
+  size_t const      esize = array->esize;
+  size_t            new_len = 1;
 
-  for ( size_t src_idx = 1; src_idx < array->len; ++src_idx ) {
-    void *const last = array_at_nc( array, dst_idx - 1 );
-    void *const curr = array_at_nc( array, src_idx );
-
-    if ( (*cmp_fn)( last, curr ) == 0 ) {
+  for ( char *src = array_at_nc( array, 1 ); src < end; src += esize ) {
+    if ( (*cmp_fn)( dst, src ) == 0 ) {
       if ( free_fn != NULL )
-        (*free_fn)( curr );
+        (*free_fn)( src );
       continue;
     }
 
-    if ( src_idx != dst_idx )
-      memcpy( array_at_nc( array, dst_idx ), curr, array->esize );
-    ++dst_idx;
+    dst = array_at_nc( array, new_len );
+    if ( dst != src )
+      memcpy( dst, src, esize );
+    ++new_len;
   } // for
 
-  array->len = dst_idx;
+  array->len = new_len;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
