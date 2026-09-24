@@ -174,7 +174,7 @@ static bool test_array_push_array_back( void ) {
   TEST_FUNC_END();
 }
 
-static bool test_array_sort_dedup_bsearch( void ) {
+static bool test_array_sort_unique_bsearch( void ) {
   TEST_FUNC_BEGIN();
 
   array_t a = ARRAY_INIT( sizeof(int) );
@@ -206,7 +206,7 @@ static bool test_array_sort_dedup_bsearch( void ) {
     TEST( *(int*)e == 4 );
 
   test_cleanup_called = 0;
-  array_dedup( &a, &test_int_cmp, &test_cleanup );
+  array_unique( &a, &test_int_cmp, &test_cleanup );
   TEST( test_cleanup_called == 2 );
   TEST( a.elements != NULL );
   TEST( a.len == 5 );
@@ -226,7 +226,7 @@ static bool test_array_sort_dedup_bsearch( void ) {
     TEST( *(int*)e == 3 );
 
   array_cleanup( &a, NULL );
-  array_dedup( &a, &test_int_cmp, &test_cleanup );
+  array_unique( &a, &test_int_cmp, &test_cleanup );
 
   TEST_FUNC_END();
 }
@@ -240,7 +240,7 @@ int main( int argc, char const *const argv[] ) {
     test_array_cleanup();
     test_array_grow();
     test_array_push_array_back();
-    test_array_sort_dedup_bsearch();
+    test_array_sort_unique_bsearch();
   }
 
   return test_exit_status;

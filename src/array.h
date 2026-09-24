@@ -127,7 +127,7 @@ typedef int (*array_cmp_fn_t)( void const *i_element, void const *j_element );
 
 /**
  * The signature for a function passed to either array_cleanup() or
- * array_dedup() used to free an element (if necessary).
+ * array_unique() used to free an element (if necessary).
  *
  * @param element A pointer to the element to free.
  */
@@ -361,20 +361,6 @@ inline void* array_bsearch( array_t *array, void const *key,
 }
 
 /**
- * De-duplicates a sorted array by overwriting element _i_ with element _i_ +
- * { 1 ... _n_-1 } where the elements compare equal.
- *
- * @param array The sorted array to dedup.
- * @param cmp_fn The comparison function to use.
- * @param free_fn A pointer to a function used to free duplicate elements or
- * NULL if unnecessary.
- *
- * @note This is an O(N) operation.
- */
-void array_dedup( array_t *restrict array, array_cmp_fn_t cmp_fn,
-                  array_free_fn_t free_fn );
-
-/**
  * Gets a pointer to the element at the front of \a array.
  *
  * @param array A pointer to the \ref array.
@@ -532,6 +518,21 @@ inline void* array_push_back( array_t *array ) {
 inline void array_qsort( array_t *array, array_cmp_fn_t cmp_fn ) {
   qsort( array->elements, array->len, array->esize, cmp_fn );
 }
+
+/**
+ * Removes consecutive duplicate elements from a sorted array by overwriting
+ * element _i_ with element _i_ + { 1 ... _n_-1 } where the elements compare
+ * equal.
+ *
+ * @param array The sorted array to remove duplicate elements from.
+ * @param cmp_fn The comparison function to use.
+ * @param free_fn A pointer to a function used to free duplicate elements or
+ * NULL if unnecessary.
+ *
+ * @note This is an O(N) operation.
+ */
+void array_unique( array_t *restrict array, array_cmp_fn_t cmp_fn,
+                   array_free_fn_t free_fn );
 
 ///////////////////////////////////////////////////////////////////////////////
 
