@@ -59,10 +59,12 @@
  * @parblock
  * Given:
  *
+ *      // point.hpp
  *      struct point {
  *        int x, y;
  *      };
  *
+ *      // proxy.hpp
  *      class proxy {
  *      public:
  *        point* operator->() const {
@@ -72,6 +74,7 @@
  *        point *_p;
  *      };
  *
+ *      // proxy.cpp
  *      void f( proxy p ) {
  *        p->x = 0;
  *      }
