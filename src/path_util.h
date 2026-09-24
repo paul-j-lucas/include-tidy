@@ -28,6 +28,7 @@
 
 // local
 #include "pjl_config.h"
+#include "strbuf.h"
 
 /// @cond DOXYGEN_IGNORE
 
@@ -81,14 +82,14 @@ char const* path_cwd( size_t *rv_len );
  * Extracts the directory portion of \a path.
  *
  * @param path The path to extract the directory portion of.
- * @param rv_dir_buf A buffer to receive the directory portion of \a path.  It
- * will not end with <tt>'/'</tt> (unless \a path is exactly <tt>'/'</tt>).
- * @return Returns \a rv_dir_buf.
+ * @param rv_dir_buf Receives the directory portion of \a path.  It will not
+ * end with <tt>'/'</tt> (unless \a path is exactly <tt>'/'</tt>).
+ * @return Returns the directory portion of path.
  *
  * @sa path_basename()
  */
 PJL_DISCARD
-char* path_dirname( char const *path, char rv_dir_buf[static PATH_MAX + 1] );
+char* path_dirname( char const *path, strbuf_t *rv_dir_buf );
 
 /**
  * Gets whether \a path ends with \a end_path.

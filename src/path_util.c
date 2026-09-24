@@ -81,25 +81,24 @@ char const* path_cwd( size_t *rv_len ) {
   return cwd_path_buf;
 }
 
-char* path_dirname( char const *path, char rv_dir_buf[static PATH_MAX + 1] ) {
+char* path_dirname( char const *path, strbuf_t *rv_dir_buf ) {
   assert( path != NULL );
+  assert( rv_dir_buf != NULL );
+
+  strbuf_reset( rv_dir_buf );
 
   char const *const slash = strrchr( path, '/' );
-  size_t dir_len;
-
   if ( slash == NULL ) {
-    rv_dir_buf[0] = '.';
-    dir_len = 1;
+    strbuf_putc( rv_dir_buf, '.' );
   }
   else {
-    dir_len = STATIC_CAST( size_t, slash - path );
+    size_t dir_len = STATIC_CAST( size_t, slash - path );
     if ( dir_len == 0 )                 // "/"
       dir_len = 1;
-    memcpy( rv_dir_buf, path, dir_len );
+    strbuf_putsn( rv_dir_buf, path, dir_len );
   }
 
-  rv_dir_buf[ dir_len ] = '\0';
-  return rv_dir_buf;
+  return rv_dir_buf->str;
 }
 
 bool path_ends_with( char const *path, char const *end_path,

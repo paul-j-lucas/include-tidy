@@ -21,6 +21,7 @@
 // local
 #include "pjl_config.h"
 #include "path_util.h"
+#include "strbuf.h"
 #include "unit_test.h"
 #include "util.h"
 
@@ -43,25 +44,26 @@
 static bool test_path_dirname( void ) {
   TEST_FUNC_BEGIN();
 
-  char buf[ PATH_MAX + 1 ];
+  strbuf_t sbuf = STRBUF_INIT();
 
   // Standard multi-level paths
-  TEST( strcmp( path_dirname( "/usr/local/bin", buf ), "/usr/local" ) == 0 );
-  TEST( strcmp( path_dirname( "foo/bar/baz.txt", buf ), "foo/bar" ) == 0 );
-  TEST( strcmp( path_dirname( "foo/bar", buf ), "foo" ) == 0 );
+  TEST( strcmp( path_dirname( "/usr/local/bin", &sbuf ), "/usr/local" ) == 0 );
+  TEST( strcmp( path_dirname( "foo/bar/baz.txt", &sbuf ), "foo/bar" ) == 0 );
+  TEST( strcmp( path_dirname( "foo/bar", &sbuf ), "foo" ) == 0 );
 
   // Paths with no directory component
-  TEST( strcmp( path_dirname( "file.txt", buf ), "." ) == 0 );
-  TEST( strcmp( path_dirname( "", buf ), "." ) == 0 );
+  TEST( strcmp( path_dirname( "file.txt", &sbuf ), "." ) == 0 );
+  TEST( strcmp( path_dirname( "", &sbuf ), "." ) == 0 );
 
   // Root and single-level absolute paths
-  TEST( strcmp( path_dirname( "/", buf ), "/" ) == 0 );
-  TEST( strcmp( path_dirname( "/etc", buf ), "/" ) == 0 );
+  TEST( strcmp( path_dirname( "/", &sbuf ), "/" ) == 0 );
+  TEST( strcmp( path_dirname( "/etc", &sbuf ), "/" ) == 0 );
 
   // Paths ending with a slash
-  TEST( strcmp( path_dirname( "dir/", buf ), "dir" ) == 0 );
-  TEST( strcmp( path_dirname( "/var/log/", buf ), "/var/log" ) == 0 );
+  TEST( strcmp( path_dirname( "dir/", &sbuf ), "dir" ) == 0 );
+  TEST( strcmp( path_dirname( "/var/log/", &sbuf ), "/var/log" ) == 0 );
 
+  strbuf_cleanup( &sbuf );
   TEST_FUNC_END();
 }
 

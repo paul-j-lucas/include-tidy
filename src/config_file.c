@@ -52,7 +52,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <fnmatch.h>
-#include <limits.h>
 #if HAVE_PWD_H
 # include <pwd.h>                       /* for getpwuid() */
 #endif /* HAVE_PWD_H */
@@ -1032,10 +1031,10 @@ static FILE* config_file_find( char const *config_path,
     case 2:
       // Try dirname(tidy_source_path)/include-tidy.toml.
       ++case_num;
-      static char source_dir[ PATH_MAX + 1 ];
-      path_dirname( tidy_source_path, source_dir );
+      static strbuf_t source_dir_buf = STRBUF_INIT();
+      path_dirname( tidy_source_path, &source_dir_buf );
       strbuf_reset( &path_buf );
-      strbuf_puts( &path_buf, source_dir );
+      strbuf_putsn( &path_buf, source_dir_buf.str, source_dir_buf.len );
       strbuf_paths( &path_buf, PACKAGE ".toml" );
       config_file = config_open( path_buf.str, CONFIG_OPT_IGNORE_ENOENT );
       if ( config_file != NULL )
@@ -1047,7 +1046,7 @@ static FILE* config_file_find( char const *config_path,
       ++case_num;
       size_t cwd_path_len;
       char const *const cwd_path = path_cwd( &cwd_path_len );
-      if ( strcmp( cwd_path, source_dir ) != 0 ) {
+      if ( strcmp( cwd_path, source_dir_buf.str ) != 0 ) {
         strbuf_reset( &path_buf );
         strbuf_putsn( &path_buf, cwd_path, cwd_path_len );
         strbuf_paths( &path_buf, PACKAGE ".toml" );
