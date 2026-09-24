@@ -1,3 +1,13 @@
+2026-09-24  Paul J. Lucas <paul@lucasmail.org>
+
+   * include.c, path_util.c, path_util.h, path_util_test.c, proxies.c:
+     Eliminated uses of PATH_MAX.
+   * cli_options.c, config_file.c, path_util.c, path_util.h, path_util_test.c:
+     path_dirname() now uses strbuf.
+   * include.c, ipath.c, ipath.h: Eliminated use of PATH_MAX.
+   * symbol.c: Moved call to tidy_Cursor_isReservedName() inside
+     symbol_is_excluded().
+
 2026-09-23  Paul J. Lucas <paul@lucasmail.org>
 
    * array.c: More efficient array_unique.
