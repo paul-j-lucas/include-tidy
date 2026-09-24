@@ -273,17 +273,6 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
                         symbols_init_data *sid ) {
   assert( sid != NULL );
 
-  //
-  // We can't use clang_getCursorLanguage() because libclang doesn't initially
-  // set what it thinks the current language is until it encounters something
-  // language-specific.  So just use tidy_source_is_cxx.
-  //
-  enum CXLanguageKind const lang = tidy_source_is_cxx ?
-    CXLanguage_CPlusPlus : CXLanguage_C;
-
-  if ( tidy_Cursor_isReservedName( sym_csr, lang ) )
-    return;
-
   tidy_typedef const *const found_tdef = typedef_find( sym_csr );
   char *sym_name = found_tdef != NULL ?
     check_strdup( found_tdef->alias_name ) :
@@ -707,6 +696,17 @@ NODISCARD
 static bool symbol_is_excluded( CXCursor sym_csr ) {
   if ( tidy_Cursor_isInvalid( sym_csr ) )
     return true;
+
+  //
+  // We can't use clang_getCursorLanguage() because libclang doesn't initially
+  // set what it thinks the current language is until it encounters something
+  // language-specific.  So just use tidy_source_is_cxx.
+  //
+  enum CXLanguageKind const lang =
+    tidy_source_is_cxx ? CXLanguage_CPlusPlus : CXLanguage_C;
+  if ( tidy_Cursor_isReservedName( sym_csr, lang ) )
+    return true;
+
   enum CXCursorKind const sym_kind = clang_getCursorKind( sym_csr );
   switch ( sym_kind ) {
     case CXCursor_CXXMethod:
