@@ -932,22 +932,21 @@ static int tidy_include_cmp_by_id( tidy_include const *i_include,
 /**
  * Compares two \ref tidy_include objects by their relative paths for printing.
  *
- * @param pi_data A pointer to the the first tidy_include pointer.
- * @param pj_data A pointer to the second tidy_include pointer.
+ * @param i_pp A pointer to the the first tidy_include pointer.
+ * @param j_pp A pointer to the second tidy_include pointer.
  * @return Returns a number less than 0, 0, or greater than 0 if the relative
- * path of \a *pi_data is less than, equal to, or greater than the relative
- * path of \a *pj_data, respectively.
+ * path of \a *i_pp is less than, equal to, or greater than the relative path
+ * of \a *j_pp, respectively.
  */
 NODISCARD
-static int tidy_include_cmp_for_print( void const *pi_data,
-                                       void const *pj_data ) {
-  assert( pi_data != NULL );
-  assert( pj_data != NULL );
+static int tidy_include_cmp_for_print( void const *i_pp, void const *j_pp ) {
+  assert( i_pp != NULL );
+  assert( j_pp != NULL );
 
   tidy_include const *const i_include =
-    *POINTER_CAST( tidy_include const**, pi_data );
+    *POINTER_CAST( tidy_include const**, i_pp );
   tidy_include const *const j_include =
-    *POINTER_CAST( tidy_include const**, pj_data );
+    *POINTER_CAST( tidy_include const**, j_pp );
 
   if ( i_include->sort_rank < j_include->sort_rank )
     return -1;
