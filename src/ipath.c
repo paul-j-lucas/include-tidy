@@ -102,7 +102,7 @@ void ipath_add( char const *path ) {
   };
 }
 
-bool ipath_find( char const *rel_path, char abs_path[static PATH_MAX + 1] ) {
+bool ipath_find( char const *rel_path, char rv_abs_path[static PATH_MAX + 1] ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
@@ -114,7 +114,7 @@ bool ipath_find( char const *rel_path, char abs_path[static PATH_MAX + 1] ) {
     strbuf_putsn( &sbuf, ipath->abs_path, ipath->abs_path_len );
     strbuf_paths( &sbuf, rel_path );
     if ( access( sbuf.str, F_OK ) == 0 ) {
-      strncpy_0( abs_path, sbuf.str, PATH_MAX );
+      strncpy_0( rv_abs_path, sbuf.str, PATH_MAX );
       is_found = true;
       break;
     }
