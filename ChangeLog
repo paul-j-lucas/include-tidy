@@ -1,3 +1,8 @@
+2026-09-23  Paul J. Lucas <paul@lucasmail.org>
+
+   * array.c: More efficient array_unique.
+   * cxx.c: Added const.
+
 2026-09-21  Paul J. Lucas <paul@lucasmail.org>
 
    * config_file.c, hash_table.h, hash_table_test.c, include.c, symbol.c:
