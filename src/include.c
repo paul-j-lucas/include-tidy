@@ -53,7 +53,6 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
-#include <limits.h>                     /* PATH_MAX */
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 #include <stdalign.h>
 #endif /* NEED_II_MATRIX */
@@ -126,8 +125,7 @@ NODISCARD
 static bool         is_associated_header( tidy_include const*, char const* );
 
 NODISCARD
-static char const*  path_no_ext_if( char const*, char,
-                                    char[static PATH_MAX + 1] );
+static char const*  path_no_ext_if( char const*, char, strbuf_t* );
 
 static void         print_statistics( void );
 
@@ -194,23 +192,23 @@ static tidy_include* get_associated_header( void ) {
   static tidy_include *assoc_include;
 
   RUN_ONCE {
-    char path_buf[ PATH_MAX + 1 ];
+    strbuf_t path_buf = STRBUF_INIT();
     char const *const source_path_no_ext =
-      path_no_ext_if( tidy_source_path, 'c', path_buf );
-    if ( source_path_no_ext == NULL )
-      return NULL;
-
-    rb_iterator_t iter;
-    rb_iterator_init( &iter, &tidy_include_set );
-    for ( tidy_include *include;
-          (include = rb_iterator_next( &iter )) != NULL; ) {
-      if ( !include->is_local )
-        continue;
-      if ( is_associated_header( include, source_path_no_ext ) ) {
-        assoc_include = include;
-        break;
-      }
-    } // for
+      path_no_ext_if( tidy_source_path, 'c', &path_buf );
+    if ( source_path_no_ext != NULL ) {
+      rb_iterator_t iter;
+      rb_iterator_init( &iter, &tidy_include_set );
+      for ( tidy_include *include;
+            (include = rb_iterator_next( &iter )) != NULL; ) {
+        if ( !include->is_local )
+          continue;
+        if ( is_associated_header( include, source_path_no_ext ) ) {
+          assoc_include = include;
+          break;
+        }
+      } // for
+    }
+    strbuf_cleanup( &path_buf );
   }
 
   return assoc_include;
@@ -548,21 +546,27 @@ static bool is_associated_header( tidy_include const *include,
   if ( tidy_associated_header_rel_path != NULL )
     return strcmp( include->rel_path, tidy_associated_header_rel_path ) == 0;
 
-  char path_buf[ PATH_MAX + 1 ];
+  strbuf_t path_buf = STRBUF_INIT();
   char const *const include_rel_path_no_ext =
-    path_no_ext_if( include->rel_path, 'h', path_buf );
-  if ( include_rel_path_no_ext == NULL )
-    return false;
-  //
-  // If this include file's name matches the source file's (without extension),
-  // it's the .h associated with the .c, so sort this include file first, e.g.:
-  //
-  //      // foo.c
-  //      #include "foo.h"              // associated header sorted first
-  //      #include "a.h"
-  //      #include "b.h"
-  //
-  return strcmp( include_rel_path_no_ext, source_file_no_ext ) == 0;
+    path_no_ext_if( include->rel_path, 'h', &path_buf );
+  bool is_match = false;
+
+  if ( include_rel_path_no_ext != NULL ) {
+    //
+    // If this include file's name matches the source file's (without
+    // extension), it's the .h associated with the .c, so sort this include
+    // file first, e.g.:
+    //
+    //      // foo.c
+    //      #include "foo.h"              // associated header sorted first
+    //      #include "a.h"
+    //      #include "b.h"
+    //
+    is_match = strcmp( include_rel_path_no_ext, source_file_no_ext ) == 0;
+  }
+
+  strbuf_cleanup( &path_buf );
+  return is_match;
 }
 
 /**
@@ -776,14 +780,15 @@ static void maybe_print_include( tidy_include const *include,
  */
 NODISCARD
 static char const* path_no_ext_if( char const *path, char if_ext_0,
-                                   char path_buf[static PATH_MAX + 1] ) {
+                                   strbuf_t *rv_path_buf ) {
   assert( path != NULL );
+  assert( rv_path_buf != NULL );
 
   char const *const ext = path_ext( path );
   if ( ext == NULL || tolower( ext[0] ) != if_ext_0 )
     return NULL;
   tidy_file_ext const *const file_ext = file_ext_find( ext );
-  return file_ext != NULL ? path_no_ext( path, path_buf ) : NULL;
+  return file_ext != NULL ? path_no_ext( path, rv_path_buf ) : NULL;
 }
 
 /**

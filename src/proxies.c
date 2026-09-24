@@ -34,6 +34,7 @@
 #include "path_util.h"
 #include "print.h"
 #include "red_black.h"
+#include "strbuf.h"
 #include "trans_unit.h"
 #include "util.h"
 
@@ -44,7 +45,6 @@
 
 // standard
 #include <assert.h>
-#include <limits.h>                     /* for PATH_MAX */
 #include <stdbool.h>
 #include <stdlib.h>                     /* for atexit(3) */
 #include <string.h>
@@ -63,20 +63,13 @@
  * returns `cstring`.
  *
  * @param c_name The C header name.
- * @param path_buf A path buffer to receive the C++ header name, if any.
- * @return
- * @parblock
- * Returns \a path_buf containing the corresponding C++ header name of \a
- * c_name only if \a c_name:
- *  + Has a filename extension of `.h`; and:
- *  + \a path_buf is big enough to hold the result.
- *
- * Otherwise returns NULL.
- * @endparblock
+ * @param rv_path_buf A path buffer to receive the C++ header name, if any.
+ * @return Returns \a rv_path_buf containing the corresponding C++ header name
+ * of \a c_name only if \a c_name has a filename extension of `.h`; otherwise
+ * returns NULL.
  */
 PJL_DISCARD
-static char const* get_cxx_header( char const *c_name,
-                                   char path_buf[static PATH_MAX + 1] ) {
+static char const* get_cxx_header( char const *c_name, strbuf_t *rv_path_buf ) {
   assert( c_name != NULL );
 
   char const *const c_ext = path_ext( c_name );
@@ -85,13 +78,10 @@ static char const* get_cxx_header( char const *c_name,
 
   char const *const dot = c_ext - 1;
   size_t const base_len = STATIC_CAST( size_t, dot - c_name );
-  if ( base_len + 1/*'c'*/ + 1/*'\0'*/ > PATH_MAX )
-    return NULL;                        // LCOV_EXCL_LINE
 
-  path_buf[0] = 'c';
-  memcpy( path_buf + 1, c_name, base_len );
-  path_buf[ base_len + 1 ] = '\0';
-  return path_buf;
+  strbuf_putc( rv_path_buf, 'c' );
+  strbuf_putsn( rv_path_buf, c_name, base_len );
+  return rv_path_buf->str;
 }
 
 /**
@@ -165,9 +155,9 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   if ( !path_is_filename( included->rel_path ) )
     goto skip;
 
-  char cxx_path[ PATH_MAX + 1 ];
-  if ( get_cxx_header( included->rel_path, cxx_path ) != NULL ) {
-    if ( strcmp( includer->rel_path, cxx_path ) == 0 ) {
+  strbuf_t cxx_path_buf = STRBUF_INIT();
+  if ( get_cxx_header( included->rel_path, &cxx_path_buf ) != NULL ) {
+    if ( strcmp( includer->rel_path, cxx_path_buf.str ) == 0 ) {
       //
       // This handles a case like:
       //
@@ -184,9 +174,10 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       // This handles a case similar to the above except check to see if the
       // standard C++ wrapper has been included at all.
       //
-      proxy = include_find_by_rel_path( cxx_path );
+      proxy = include_find_by_rel_path( cxx_path_buf.str );
     }
   }
+  strbuf_cleanup( &cxx_path_buf );
 
 done:
   if ( proxy != NULL ) {

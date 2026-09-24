@@ -138,8 +138,7 @@ char const* path_no_dot_slash( char const *path ) {
   return path;
 }
 
-char const* path_no_ext( char const *path,
-                         char rv_path_buf[static PATH_MAX + 1] ) {
+char const* path_no_ext( char const *path, strbuf_t *rv_path_buf ) {
   assert( path != NULL );
 
   ssize_t last_dot = -1, last_slash = -1;
@@ -161,9 +160,8 @@ char const* path_no_ext( char const *path,
     return path;
   }
 
-  size_t const len = last_dot < PATH_MAX ?
-    STATIC_CAST( size_t, last_dot ) : PATH_MAX - 1;
-  return strncpy_0( rv_path_buf, path, len );
+  size_t const len = STATIC_CAST( size_t, last_dot );
+  return strbuf_putsn( rv_path_buf, path, len );
 }
 
 char* path_normalize( char const *path ) {

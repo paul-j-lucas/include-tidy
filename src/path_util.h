@@ -33,7 +33,6 @@
 /// @cond DOXYGEN_IGNORE
 
 // standard
-#include <limits.h>                     /* for PATH_MAX */
 #include <stdbool.h>
 #include <string.h>
 
@@ -205,14 +204,13 @@ char const* path_no_dot_slash( char const *path );
  * @param path The path.
  * @param rv_path_buf A path buffer to use only if \a path has an extension.
  * @return If \a path has no extension, returns \a path as-is; otherwise copies
- * \a path into \a rv_path_buf without the extension and returns \a
- * rv_path_buf.
+ * \a path into \a rv_path_buf without the extension and returns the path
+ * without the extension.
  *
  * @sa path_ext()
  */
 NODISCARD
-char const* path_no_ext( char const *path,
-                         char rv_path_buf[static PATH_MAX + 1] );
+char const* path_no_ext( char const *path, strbuf_t *rv_path_buf );
 
 /**
  * Normalizes a path by:

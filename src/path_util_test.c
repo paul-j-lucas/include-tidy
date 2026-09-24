@@ -28,7 +28,6 @@
 /// @cond DOXYGEN_IGNORE
 
 // standard
-#include <limits.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -109,21 +108,22 @@ static bool test_path_no_ext( void ) {
   TEST_FUNC_BEGIN();
 
   char const *path;
-  char path_buf[ PATH_MAX + 1 ];
+  strbuf_t path_buf = STRBUF_INIT();
 
-  TEST( (path = path_no_ext( "a", path_buf )) != NULL )
+  TEST( (path = path_no_ext( "a", &path_buf )) != NULL )
     && TEST( strcmp( path, "a" ) == 0 );
-  TEST( (path = path_no_ext( "a.", path_buf )) != NULL )
+  TEST( (path = path_no_ext( "a.", &path_buf )) != NULL )
     && TEST( strcmp( path, "a" ) == 0 );
-  TEST( (path = path_no_ext( "a.b", path_buf )) != NULL )
+  TEST( (path = path_no_ext( "a.b", &path_buf )) != NULL )
     && TEST( strcmp( path, "a" ) == 0 );
-  TEST( (path = path_no_ext( "a.b/c", path_buf )) != NULL )
+  TEST( (path = path_no_ext( "a.b/c", &path_buf )) != NULL )
     && TEST( strcmp( path, "a.b/c" ) == 0 );
-  TEST( (path = path_no_ext( ".a", path_buf )) != NULL )
+  TEST( (path = path_no_ext( ".a", &path_buf )) != NULL )
     && TEST( strcmp( path, ".a" ) == 0 );
-  TEST( (path = path_no_ext( "a/.b", path_buf )) != NULL )
+  TEST( (path = path_no_ext( "a/.b", &path_buf )) != NULL )
     && TEST( strcmp( path, "a/.b" ) == 0 );
 
+  strbuf_cleanup( &path_buf );
   TEST_FUNC_END();
 }
 
