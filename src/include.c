@@ -1106,8 +1106,8 @@ void includes_init( void ) {
   );
   ATEXIT( &includes_cleanup );
 
-  includes_init_data iid = { 0 };
   CXCursor cursor = clang_getTranslationUnitCursor( tidy_tu );
+  includes_init_data iid = { 0 };
   clang_visitChildren( cursor, &includes_init_visitor, &iid );
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
   ii_matrix_init( tidy_include_set.size + 1 );
