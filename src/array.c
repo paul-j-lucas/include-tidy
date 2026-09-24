@@ -146,10 +146,9 @@ void array_unique( array_t *restrict array, array_cmp_fn_t cmp_fn,
       continue;
     }
 
-    dst = array_at_nc( array, new_len );
+    dst = array_at_nc( array, new_len++ );
     if ( dst != src )
       memcpy( dst, src, esize );
-    ++new_len;
   } // for
 
   array->len = new_len;
