@@ -160,7 +160,7 @@ struct symbols_init_data {
    * @note This is set only while the current cursor being visited is a
    * function and not while _inside_ the function.
    *
-   * @sa is_cxx_fn_iwyu_exception()
+   * @sa is_cxx_fn_iwyu_exc()
    */
   CXCursor cxx_deferred_fn_csr;
 
@@ -1017,7 +1017,7 @@ static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
     clang_visitChildren( call_csr, &symbols_init_visitor, sid );
     sid->cxx_deferred_fn_csr = prev_deferred_fn_csr;
 
-    if ( !is_function || is_cxx_fn_iwyu_exception( call_csr, fn_csr ) )
+    if ( !is_function || is_cxx_fn_iwyu_exc( call_csr, fn_csr ) )
       return true;
   }
 
@@ -1168,7 +1168,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
 
   //
   // Explicitly call symbol_is_excluded() and get_symbol_file() so we can avoid
-  // calling the expensive is_cxx_iwyu_exception() unless necessary.
+  // calling the expensive is_cxx_mbr_or_base_iwyu_exc() unless necessary.
   //
   if ( !symbol_is_excluded( dec_csr ) ) {
     CXFile const dec_file = get_symbol_file( dec_csr, sid );
@@ -1179,7 +1179,9 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
           return;
 
         CXCursor const scope_csr = sid_cxx_scope( sid, parent );
-        if ( is_cxx_iwyu_exception( cursor, parent, dec_csr, scope_csr ) )
+        if ( is_cxx_proxy_qual_ref_iwyu_exc( cursor, parent, scope_csr ) )
+          return;
+        if ( is_cxx_mbr_or_base_iwyu_exc( dec_csr, scope_csr ) )
           return;
       }
       add_symbol( dec_csr, dec_csr, dec_file, sid );
@@ -1218,9 +1220,9 @@ static void visit_MemberRefExpr( CXCursor mbr_ref_csr, CXCursor parent,
     goto skip;
 
   if ( tidy_source_is_cxx ) {
-    if ( is_cxx_arrow_iwyu_exception( obj_csr, mbr_cls_csr ) )
+    if ( is_cxx_arrow_iwyu_exc( obj_csr, mbr_cls_csr ) )
       return;
-    if ( is_cxx_mbr_ref_iwyu_exception( obj_csr ) )
+    if ( is_cxx_mbr_ref_iwyu_exc( obj_csr ) )
       return;
   }
 

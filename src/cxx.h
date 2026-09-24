@@ -88,7 +88,7 @@
  * @note This function should be called only when the file being tidied is C++.
  */
 NODISCARD
-bool is_cxx_arrow_iwyu_exception( CXCursor call_csr, CXCursor mbr_cls_csr );
+bool is_cxx_arrow_iwyu_exc( CXCursor call_csr, CXCursor mbr_cls_csr );
 
 /**
  * Gets whether the symbol for a C++ function or operator (and the header that
@@ -105,7 +105,22 @@ bool is_cxx_arrow_iwyu_exception( CXCursor call_csr, CXCursor mbr_cls_csr );
  * @sa symbols_init_data::cxx_deferred_fn_csr
  */
 NODISCARD
-bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr );
+bool is_cxx_fn_iwyu_exc( CXCursor call_csr, CXCursor fn_csr );
+
+/**
+ * Gets whether \a cursor (a declaration) is a member of or derived from a
+ * class and therefore constitutes an include-what-you-use (IWYU) exception for
+ * C++.
+ *
+ * @param dec_csr The declaration cursor.
+ * @param scope_csr The cursor for the scope that should be used.
+ * @return Returns `true` only if \a dec_csr (and the header that declares it)
+ * should _not_ be added --- an IWYU exception.
+ *
+ * @note This function should be called only when the file being tidied is C++.
+ */
+NODISCARD
+bool is_cxx_mbr_or_base_iwyu_exc( CXCursor dec_csr, CXCursor scope_csr );
 
 /**
  * Gets whether the referenced C++ class member \a obj_csr constitutes an
@@ -171,24 +186,50 @@ bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr );
  * @note This function should be called only when the file being tidied is C++.
  */
 NODISCARD
-bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr );
+bool is_cxx_mbr_ref_iwyu_exc( CXCursor obj_csr );
 
 /**
- * Checks whether \a cursor and its declaration \a dec_csr constitute an
- * include-what-you-use (IWYU) exception for C++.
+ * Gets whether a symbol is referenced via an explicit C++ scope qualifier that
+ * acts as its proxy and therefore constitutes an include-what-you-use (IWYU)
+ * exception for C++.
  *
- * @param cursor The cursor to check.
- * @param parent The parent cursor of \a cursor.
- * @param dec_csr The referenced cursor (declaration) of \a cursor.
- * @param scope_csr The cursor for the scope that should be used.
- * @return Returns `true` only if \a dec_csr (and the header that declares it)
- * should _not_ be added --- an IWYU exception.
+ * @par Example
+ * @parblock
+ * Given:
+ *
+ *      // int_set.hpp
+ *      #include <set>
+ *      using int_set = std::set<int>;
+ *
+ *      // test.cpp
+ *      #include "int_set.hpp"
+ *
+ *      void f() {
+ *        int_set::value_type v;
+ *      }
+ *
+ * where \a cursor refers to `value_type`, the actual cursor libclang resolves
+ * it to is `std::set<int>::value_type`.  The problem is that \b include-tidy
+ * will think `test.cpp` requires `<set>` explicitly even though `test.cpp`
+ * includes `int_set.hpp` that declared `int_set`.  The fact that `int_set` is
+ * a `std::set` should be irrelevant and `<set>` should not be required.
+ * @endparblock
+ *
+ * @remarks To handle this, we resort to checking the actual tokens before \a
+ * cursor to see if they comprise a C++ class qualifier.  If a qualifier is
+ * present, it serves as the "proxy" for any nested members within it.
+ *
+ * @param cursor The cursor for the the symbol.
+ * @param parent The parent of \a cursor.
+ * @param scope_csr The cursor representing the surrounding C++ class scope, if
+ * any.
+ * @return Returns `true` only if \a cursor is explicitly qualified.
  *
  * @note This function should be called only when the file being tidied is C++.
  */
 NODISCARD
-bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent, CXCursor dec_csr,
-                            CXCursor scope_csr );
+bool is_cxx_proxy_qual_ref_iwyu_exc( CXCursor cursor, CXCursor parent,
+                                     CXCursor scope_csr );
 
 ///////////////////////////////////////////////////////////////////////////////
 

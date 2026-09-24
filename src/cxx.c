@@ -63,7 +63,7 @@
  * @note This function should be called only when the file being tidied is C++.
  */
 NODISCARD
-static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
+static bool is_cxx_mbr_fn_iwyu_exc( CXCursor call_csr, CXCursor fn_csr ) {
   assert( tidy_source_is_cxx );
 
   CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( call_csr );
@@ -103,7 +103,7 @@ static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
   // header provides the function's declaration --- an IWYU exception.
   //
   if ( clang_equalCursors( base_csr, fn_cls_csr ) ||
-        tidy_Cursor_isInheritedFrom( base_csr, fn_cls_csr ) ) {
+       tidy_Cursor_isInheritedFrom( base_csr, fn_cls_csr ) ) {
     return true;
   }
 
@@ -114,147 +114,9 @@ static bool is_cxx_mbr_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
 #endif /* NEED_tidy_Cursor_isInheritedMemberFunctionCall */
 }
 
-/**
- * Gets whether a symbol is referenced via an explicit C++ scope qualifier that
- * acts as its proxy.
- *
- * @par Example
- * @parblock
- * Given:
- *
- *      // int_set.hpp
- *      #include <set>
- *      using int_set = std::set<int>;
- *
- *      // test.cpp
- *      #include "int_set.hpp"
- *
- *      void f() {
- *        int_set::value_type v;
- *      }
- *
- * where \a cursor refers to `value_type`, the actual cursor libclang resolves
- * it to is `std::set<int>::value_type`.  The problem is that \b include-tidy
- * will think `test.cpp` requires `<set>` explicitly even though `test.cpp`
- * includes `int_set.hpp` that declared `int_set`.  The fact that `int_set` is
- * a `std::set` should be irrelevant and `<set>` should not be required.
- * @endparblock
- *
- * @remarks To handle this, we resort to checking the actual tokens before \a
- * cursor to see if they comprise a C++ class qualifier.  If a qualifier is
- * present, it serves as the "proxy" for any nested members within it.
- *
- * @param cursor The cursor for the the symbol.
- * @param parent The parent of \a cursor.
- * @param scope_csr The cursor representing the surrounding C++ class scope, if
- * any.
- * @return Returns `true` only if \a cursor is explicitly qualified.
- *
- * @note This function should be called only when the file being tidied is C++.
- */
-NODISCARD
-static bool is_cxx_proxy_qualified_ref( CXCursor cursor, CXCursor parent,
-                                        CXCursor scope_csr ) {
-  assert( tidy_source_is_cxx );
-
-  enum CXCursorKind const kind = clang_getCursorKind( cursor );
-  if ( clang_isDeclaration( kind ) )    // not a reference
-    return false;
-
-  CXSourceLocation const cursor_loc = clang_getCursorLocation( cursor );
-  unsigned const cursor_offset = tidy_getSpellingLocation_offset( cursor_loc );
-  if ( cursor_offset == 0 )
-    return false;                       // LCOV_EXCL_LINE
-
-  CXSourceRange range = clang_getCursorExtent( parent );
-  if ( unlikely( clang_Range_isNull( range ) ) )
-    range = clang_getCursorExtent( cursor );  // LCOV_EXCL_LINE
-  if ( unlikely( clang_Range_isNull( range ) ) )
-    return false;                       // LCOV_EXCL_LINE
-
-  CXTranslationUnit tu = clang_Cursor_getTranslationUnit( cursor );
-  CXToken *tokens;
-  unsigned token_count;
-  clang_tokenize( tu, range, &tokens, &token_count );
-  if ( unlikely( token_count == 0 ) )
-    return false;                       // LCOV_EXCL_LINE
-
-  // Locate the specific token index corresponding to cursor.
-  unsigned cursor_token_idx = token_count;
-  for ( unsigned i = 0; i < token_count; ++i ) {
-    CXSourceLocation const token_loc = clang_getTokenLocation( tu, tokens[i] );
-    unsigned const token_offset = tidy_getSpellingLocation_offset( token_loc );
-    if ( token_offset == cursor_offset ) {
-      cursor_token_idx = i;
-      break;
-    }
-  } // for
-
-  bool matched = false;
-
-  if ( cursor_token_idx == 0 || cursor_token_idx == token_count )
-    goto done;
-
-  int i = STATIC_CAST( int, cursor_token_idx );
-  CXToken const *ptoken = tidy_Token_getPrev( tokens, &i );
-  if ( ptoken == NULL || !tidy_Token_isScopeQualifier( tu, *ptoken ) )
-    goto done;
-
-  CXCursor *const cursors = MALLOC( CXCursor, token_count );
-  clang_annotateTokens( tu, tokens, token_count, cursors );
-
-  // Scan backwards past template brackets <...> to find the qualifier token.
-  int angle_depth = 0;
-  while ( (ptoken = tidy_Token_getPrev( tokens, &i )) != NULL ) {
-    int const match = clang_getTokenKind( *ptoken ) == CXToken_Punctuation ?
-                      tidy_Token_isEqualToAny( tu, *ptoken, ">", "<" ) : -1;
-    switch ( match ) {
-      case 0:
-        ++angle_depth;
-        continue;
-      case 1:
-        --angle_depth;
-        continue;
-      default:
-        if ( angle_depth > 0 )
-          continue;
-        break;
-    } // switch
-
-    CXCursor qual_csr = clang_getCursorReferenced( cursors[i] );
-    if ( unlikely( tidy_Cursor_isInvalid( qual_csr ) ) )
-      qual_csr = cursors[i];            // LCOV_EXCL_LINE
-    if ( tidy_Cursor_isInvalid( qual_csr ) )
-      break;                            // LCOV_EXCL_LINE
-
-    CXCursor const qual_parent = clang_getCursorSemanticParent( qual_csr );
-    CXCursor const canon_qual_csr =
-      tidy_Cursor_getCanonicalTypeDeclaration( qual_csr );
-
-    if ( tidy_Cursor_isClassDecl( qual_csr ) ||
-         tidy_Cursor_isClassDecl( canon_qual_csr ) ) {
-      matched = true;
-    }
-    else if ( tidy_Cursor_isClassDecl( scope_csr ) ) {
-      if ( clang_equalCursors( scope_csr, qual_parent ) ||
-           clang_equalCursors( scope_csr, qual_csr ) ) {
-        matched = true;
-      }
-    }
-
-    break;
-  } // for
-
-  free( cursors );
-
-done:
-  clang_disposeTokens( tu, tokens, token_count );
-  return matched;
-}
-
 ////////// extern functions ///////////////////////////////////////////////////
 
-bool is_cxx_arrow_iwyu_exception( CXCursor call_csr, CXCursor mbr_cls_csr ) {
+bool is_cxx_arrow_iwyu_exc( CXCursor call_csr, CXCursor mbr_cls_csr ) {
   assert( tidy_source_is_cxx );
 
   enum CXCursorKind const kind = clang_getCursorKind( call_csr );
@@ -285,14 +147,14 @@ bool is_cxx_arrow_iwyu_exception( CXCursor call_csr, CXCursor mbr_cls_csr ) {
   return !clang_equalCursors( obj_cls_csr, mbr_cls_csr );
 }
 
-bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
+bool is_cxx_fn_iwyu_exc( CXCursor call_csr, CXCursor fn_csr ) {
   assert( tidy_source_is_cxx );
 
   enum CXCursorKind const fn_kind = clang_getCursorKind( fn_csr );
   switch ( fn_kind ) {
     case CXCursor_ConversionFunction:
     case CXCursor_CXXMethod:
-      if ( is_cxx_mbr_fn_iwyu_exception( call_csr, fn_csr ) )
+      if ( is_cxx_mbr_fn_iwyu_exc( call_csr, fn_csr ) )
         return true;
       break;
     default:
@@ -416,7 +278,74 @@ bool is_cxx_fn_iwyu_exception( CXCursor call_csr, CXCursor fn_csr ) {
   return false;
 }
 
-bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
+bool is_cxx_mbr_or_base_iwyu_exc( CXCursor dec_csr, CXCursor scope_csr ) {
+  assert( tidy_source_is_cxx );
+
+  if ( !tidy_Cursor_isClassDecl( scope_csr ) )
+    return false;
+
+  if ( clang_equalCursors( scope_csr, dec_csr ) ||
+       tidy_Cursor_isInheritedFrom( scope_csr, dec_csr ) ) {
+    //
+    // Don't add the symbol (and the header that declares it) if it's either
+    // the current class or one of its base classes.  Given:
+    //
+    //      // Base.hpp
+    //      struct Base {
+    //        Base( int );
+    //      };
+    //
+    //      // Derived.hpp
+    //      #include "Base.hpp"
+    //      struct Derived : Base {
+    //        Derived( int n ) : Base{ n } { }
+    //      };
+    //
+    // Here, where scope_csr is Derived and dec_csr is Base, even though Base
+    // (declared in Base.hpp) is referenced inside Derived's implementation,
+    // Base (and Base.hpp) is not needed because Derived.hpp includes Base.hpp,
+    // and that's sufficient --- an IWYU exception.
+    //
+    return true;
+  }
+
+  CXCursor const dec_parent = clang_getCursorSemanticParent( dec_csr );
+  if ( clang_equalCursors( scope_csr, dec_parent ) ||
+       tidy_Cursor_isInheritedFrom( scope_csr, dec_parent ) ) {
+    //
+    // Don't add the symbol (and the header that declares it) if it's a member
+    // (e.g., typedef, data member, etc.) declared within the current class or
+    // inherited from a base class.  Given:
+    //
+    //      // Base.hpp
+    //      struct Base {
+    //        using value_type = int;
+    //      };
+    //
+    //      // Derived.hpp
+    //      #include "Base.hpp"
+    //      struct Derived : Base {
+    //        void f();
+    //      };
+    //
+    //      // Derived.cpp
+    //      #include "Derived.hpp"
+    //      void Derived::f() {
+    //        value_type v = 42;
+    //      }
+    //
+    // Here, where scope_csr is Derived and dec_parent is Base, despite
+    // referencing value_type (declared in Base.hpp) inside Derived, Base (and
+    // Base.hpp) is not needed because Derived.cpp includes Derived.hpp that
+    // includes Base.hpp, and that's sufficient --- an IWYU exception.
+    //
+    return true;
+  }
+
+  return false;
+}
+
+bool is_cxx_mbr_ref_iwyu_exc( CXCursor obj_csr ) {
   assert( tidy_source_is_cxx );
 
   if ( tidy_Cursor_isInvalid( obj_csr ) )
@@ -486,77 +415,103 @@ bool is_cxx_mbr_ref_iwyu_exception( CXCursor obj_csr ) {
   return false;
 }
 
-bool is_cxx_iwyu_exception( CXCursor cursor, CXCursor parent, CXCursor dec_csr,
-                            CXCursor scope_csr ) {
+bool is_cxx_proxy_qual_ref_iwyu_exc( CXCursor cursor, CXCursor parent,
+                                     CXCursor scope_csr ) {
   assert( tidy_source_is_cxx );
 
-  if ( is_cxx_proxy_qualified_ref( cursor, parent, scope_csr ) )
-    return true;
-
-  // The remaining IWYU exceptions apply only within a C++ class scope.
-
-  if ( !tidy_Cursor_isClassDecl( scope_csr ) )
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  if ( clang_isDeclaration( kind ) )    // not a reference
     return false;
 
-  if ( clang_equalCursors( scope_csr, dec_csr ) ||
-       tidy_Cursor_isInheritedFrom( scope_csr, dec_csr ) ) {
-    //
-    // Don't add the symbol (and the header that declares it) if it's either
-    // the current class or one of its base classes.  Given:
-    //
-    //      // Base.hpp
-    //      struct Base {
-    //        Base( int );
-    //      };
-    //
-    //      // Derived.hpp
-    //      #include "Base.hpp"
-    //      struct Derived : Base {
-    //        Derived( int n ) : Base{ n } { }
-    //      };
-    //
-    // Here, where scope_csr is Derived and dec_csr is Base, even though Base
-    // (declared in Base.hpp) is referenced inside Derived's implementation,
-    // Base (and Base.hpp) is not needed because Derived.hpp includes Base.hpp,
-    // and that's sufficient --- an IWYU exception.
-    //
-    return true;
-  }
+  CXSourceLocation const cursor_loc = clang_getCursorLocation( cursor );
+  unsigned const cursor_offset = tidy_getSpellingLocation_offset( cursor_loc );
+  if ( cursor_offset == 0 )
+    return false;                       // LCOV_EXCL_LINE
 
-  CXCursor const dec_parent = clang_getCursorSemanticParent( dec_csr );
-  if ( clang_equalCursors( scope_csr, dec_parent ) ||
-       tidy_Cursor_isInheritedFrom( scope_csr, dec_parent ) ) {
-    //
-    // Don't add the symbol (and the header that declares it) if it's a member
-    // (e.g., typedef, data member, etc.) declared within the current class or
-    // inherited from a base class.  Given:
-    //
-    //      // Base.hpp
-    //      struct Base {
-    //        using value_type = int;
-    //      };
-    //
-    //      // Derived.hpp
-    //      #include "Base.hpp"
-    //      struct Derived : Base {
-    //        void f();
-    //      };
-    //
-    //      // Derived.cpp
-    //      #include "Derived.hpp"
-    //      void Derived::f() {
-    //        value_type v = 42;
-    //      }
-    //
-    // Here, where scope_csr is Derived and dec_parent is Base, despite
-    // referencing value_type (declared in Base.hpp) inside Derived, Base (and
-    // Base.hpp) is not needed because Derived.cpp includes Derived.hpp that
-    // includes Base.hpp, and that's sufficient --- an IWYU exception.
-    //
-    return true;
-  }
+  CXSourceRange range = clang_getCursorExtent( parent );
+  if ( unlikely( clang_Range_isNull( range ) ) )
+    range = clang_getCursorExtent( cursor );  // LCOV_EXCL_LINE
+  if ( unlikely( clang_Range_isNull( range ) ) )
+    return false;                       // LCOV_EXCL_LINE
 
-  return false;
+  CXTranslationUnit tu = clang_Cursor_getTranslationUnit( cursor );
+  CXToken *tokens;
+  unsigned token_count;
+  clang_tokenize( tu, range, &tokens, &token_count );
+  if ( unlikely( token_count == 0 ) )
+    return false;                       // LCOV_EXCL_LINE
+
+  // Locate the specific token index corresponding to cursor.
+  unsigned cursor_token_idx = token_count;
+  for ( unsigned i = 0; i < token_count; ++i ) {
+    CXSourceLocation const token_loc = clang_getTokenLocation( tu, tokens[i] );
+    unsigned const token_offset = tidy_getSpellingLocation_offset( token_loc );
+    if ( token_offset == cursor_offset ) {
+      cursor_token_idx = i;
+      break;
+    }
+  } // for
+
+  bool matched = false;
+
+  if ( cursor_token_idx == 0 || cursor_token_idx == token_count )
+    goto done;
+
+  int i = STATIC_CAST( int, cursor_token_idx );
+  CXToken const *ptoken = tidy_Token_getPrev( tokens, &i );
+  if ( ptoken == NULL || !tidy_Token_isScopeQualifier( tu, *ptoken ) )
+    goto done;
+
+  CXCursor *const cursors = MALLOC( CXCursor, token_count );
+  clang_annotateTokens( tu, tokens, token_count, cursors );
+
+  // Scan backwards past template brackets <...> to find the qualifier token.
+  int angle_depth = 0;
+  while ( (ptoken = tidy_Token_getPrev( tokens, &i )) != NULL ) {
+    int const match = clang_getTokenKind( *ptoken ) == CXToken_Punctuation ?
+                      tidy_Token_isEqualToAny( tu, *ptoken, ">", "<" ) : -1;
+    switch ( match ) {
+      case 0:
+        ++angle_depth;
+        continue;
+      case 1:
+        --angle_depth;
+        continue;
+      default:
+        if ( angle_depth > 0 )
+          continue;
+        break;
+    } // switch
+
+    CXCursor qual_csr = clang_getCursorReferenced( cursors[i] );
+    if ( unlikely( tidy_Cursor_isInvalid( qual_csr ) ) )
+      qual_csr = cursors[i];            // LCOV_EXCL_LINE
+    if ( tidy_Cursor_isInvalid( qual_csr ) )
+      break;                            // LCOV_EXCL_LINE
+
+    CXCursor const qual_parent = clang_getCursorSemanticParent( qual_csr );
+    CXCursor const canon_qual_csr =
+      tidy_Cursor_getCanonicalTypeDeclaration( qual_csr );
+
+    if ( tidy_Cursor_isClassDecl( qual_csr ) ||
+         tidy_Cursor_isClassDecl( canon_qual_csr ) ) {
+      matched = true;
+    }
+    else if ( tidy_Cursor_isClassDecl( scope_csr ) ) {
+      if ( clang_equalCursors( scope_csr, qual_parent ) ||
+           clang_equalCursors( scope_csr, qual_csr ) ) {
+        matched = true;
+      }
+    }
+
+    break;
+  } // for
+
+  free( cursors );
+
+done:
+  clang_disposeTokens( tu, tokens, token_count );
+  return matched;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
