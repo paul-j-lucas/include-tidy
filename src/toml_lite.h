@@ -301,7 +301,7 @@ void toml_table_cleanup( toml_table *table );
  */
 NODISCARD
 inline bool toml_table_empty( toml_table const *table ) {
-  return table->ordered_kv_ptrs.len == 0;
+  return ht_table_empty( &table->keys_values );
 }
 
 /**
