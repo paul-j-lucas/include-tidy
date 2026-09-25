@@ -492,7 +492,6 @@ CXCursor tidy_Cursor_getVarInit( CXCursor expr_csr ) {
 
 CXCursor tidy_Cursor_getVarInitNoUnaryOps( CXCursor expr_csr ) {
   while ( !tidy_Cursor_isInvalid( expr_csr ) ) {
-    expr_csr = tidy_Cursor_skipUnexposedDown( expr_csr );
     CXCursor const init_csr = tidy_Cursor_getVarInit( expr_csr );
     enum CXCursorKind const kind = clang_getCursorKind( init_csr );
     switch ( kind ) {
