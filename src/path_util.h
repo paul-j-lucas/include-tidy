@@ -195,6 +195,10 @@ inline bool path_is_relative( char const *path ) {
  *
  * @param path The path to strip `./` from.
  * @return Returns \a path without leading `./`.
+ *
+ * @warning If \a path starts with `./`, the pointer returned is within \a
+ * path. If \a path was dynamically allocated, \a path --- and not a pointer
+ * with \a path --- must be freed.
  */
 char const* path_no_dot_slash( char const *path );
 
@@ -202,10 +206,10 @@ char const* path_no_dot_slash( char const *path );
  * Gets the pathname of \a path without its filename extension, if any.
  *
  * @param path The path.
- * @param rv_path_buf A path buffer to use only if \a path has an extension.
- * @return If \a path has no extension, returns \a path as-is; otherwise copies
- * \a path into \a rv_path_buf without the extension and returns the path
- * without the extension.
+ * @param rv_path_buf Receives \a path without its extension, but only if \a
+ * path has an extension.
+ * @return If \a path has no extension, returns \a path as-is; otherwise
+ * returns \a path without its extension in \a rv_path_buf.
  *
  * @sa path_ext()
  */
