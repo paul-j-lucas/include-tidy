@@ -1252,7 +1252,7 @@ static void visit_MemberRefExpr( CXCursor mbr_ref_csr, CXCursor parent,
       // need only include types.h and not time.h to access tv_sec (that
       // requires a complete type).
       //
-      if ( !tidy_Cursor_isTypeAliasComplete( type_csr ) )
+      if ( !tidy_Cursor_isTypeComplete( type_csr ) )
         break;
       CXCursor const def_cls_csr = clang_getCursorDefinition( mbr_cls_csr );
       if ( tidy_Cursor_isInvalid( def_cls_csr ) )

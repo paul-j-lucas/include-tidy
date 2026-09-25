@@ -413,7 +413,7 @@ bool tidy_Cursor_isTemplateSpecializationOf( CXCursor cursor,
                                              CXCursor template_csr );
 
 /**
- * Gets whether \a alias_csr is an alias for a complete type.
+ * Gets whether \a cursor is a complete type.
  *
  * @par Example
  * @parblock
@@ -431,11 +431,11 @@ bool tidy_Cursor_isTemplateSpecializationOf( CXCursor cursor,
  * unknown.
  * @endparblock
  *
- * @param alias_csr The cursor for a type alias.
- * @return Returns `true` only if \a alias_csr is an alias for a complete type.
+ * @param cursor The cursor check.
+ * @return Returns `true` only if \a cursor is a complete type.
  */
 NODISCARD
-bool tidy_Cursor_isTypeAliasComplete( CXCursor alias_csr );
+bool tidy_Cursor_isTypeComplete( CXCursor cursor );
 
 /**
  * Gets whether \a alias_csr is an alias type for \a underlying_csr.

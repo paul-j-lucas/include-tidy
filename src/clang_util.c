@@ -738,8 +738,8 @@ bool tidy_Cursor_isTemplateSpecializationOf( CXCursor cursor,
   return false;
 }
 
-bool tidy_Cursor_isTypeAliasComplete( CXCursor alias_csr ) {
-  CXType type = clang_getCursorType( alias_csr );
+bool tidy_Cursor_isTypeComplete( CXCursor cursor ) {
+  CXType type = clang_getCursorType( cursor );
   type = clang_getCanonicalType( type );
   return clang_Type_getSizeOf( type ) > 0;
 }
