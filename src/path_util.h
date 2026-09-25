@@ -200,6 +200,7 @@ inline bool path_is_relative( char const *path ) {
  * path. If \a path was dynamically allocated, \a path --- and not a pointer
  * with \a path --- must be freed.
  */
+NODISCARD
 char const* path_no_dot_slash( char const *path );
 
 /**
@@ -226,6 +227,7 @@ char const* path_no_ext( char const *path, strbuf_t *rv_path_buf );
  * @return Returns a normalized path.  The caller is responsible for freeing
  * it.
  */
+NODISCARD
 char* path_normalize( char const *path );
 
 ///////////////////////////////////////////////////////////////////////////////
