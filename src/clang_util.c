@@ -369,7 +369,7 @@ static bool tidy_Cursor_isInheritable( CXCursor cursor ) {
   switch ( kind ) {
     // data members
     case CXCursor_FieldDecl:
-    case CXCursor_VarDecl:
+    case CXCursor_VarDecl:              // static data members
     // member functions
     case CXCursor_CXXMethod:
     case CXCursor_ConversionFunction:
