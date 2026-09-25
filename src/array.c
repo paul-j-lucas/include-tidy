@@ -141,14 +141,13 @@ void array_unique( array_t *restrict array, array_cmp_fn_t cmp_fn,
   size_t            new_len = 1;
 
   for ( char *src = array_at_nc( array, 1 ); src < end; src += esize ) {
-    if ( (*cmp_fn)( dst, src ) == 0 ) {
-      if ( free_fn != NULL )
-        (*free_fn)( src );
-    }
-    else {
+    if ( (*cmp_fn)( dst, src ) != 0 ) {
       dst = array_at_nc( array, new_len++ );
       if ( dst != src )
         memcpy( dst, src, esize );
+    }
+    else if ( free_fn != NULL ) {
+      (*free_fn)( src );
     }
   } // for
 
