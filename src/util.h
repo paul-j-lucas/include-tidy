@@ -1010,6 +1010,10 @@ inline char* strncpy_0( char *restrict dst, char const *restrict src,
  *
  * @param s The string to trim whitespace from.
  * @return Returns a pointer to within \a s having all whitespace trimmed.
+ *
+ * @warning If \a s starts with whitespace, the pointer returned is within \a
+ * s. If \a s was dynamically allocated, \a s --- and not a pointer with \a s
+ * --- must be freed.
  */
 NODISCARD
 char* str_trim( char *s );
