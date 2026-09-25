@@ -741,7 +741,7 @@ bool tidy_Cursor_isTemplateSpecializationOf( CXCursor cursor,
 bool tidy_Cursor_isTypeAliasComplete( CXCursor alias_csr ) {
   CXType type = clang_getCursorType( alias_csr );
   type = clang_getCanonicalType( type );
-  return type.kind == CXType_Record && clang_Type_getSizeOf( type ) > 0;
+  return clang_Type_getSizeOf( type ) > 0;
 }
 
 bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr ) {
