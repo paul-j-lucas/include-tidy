@@ -1,5 +1,7 @@
 2026-09-25  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c: Removed unnecessary call of tidy_Cursor_skipUnexposedDown().
+   * array.c: Now using REALLOC.
    * toml_lite.h: Now using ht_table_empty.
 
 2026-09-24  Paul J. Lucas <paul@lucasmail.org>
