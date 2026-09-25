@@ -1,3 +1,7 @@
+2026-09-25  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_lite.h: Now using ht_table_empty.
+
 2026-09-24  Paul J. Lucas <paul@lucasmail.org>
 
    * Doxyfile: Removed HAVE_UNSIGNED_INT128 -- no longer needed.
