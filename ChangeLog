@@ -1,5 +1,6 @@
 2026-09-24  Paul J. Lucas <paul@lucasmail.org>
 
+   * path_util.h: Added NODISCARD.
    * include.c, path_util.c, path_util.h, path_util_test.c, proxies.c:
      Eliminated uses of PATH_MAX.
    * cli_options.c, config_file.c, path_util.c, path_util.h, path_util_test.c:
