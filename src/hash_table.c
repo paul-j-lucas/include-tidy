@@ -166,8 +166,9 @@ ht_entry_t* ht_table_find( hash_table_t const *table, void const *data ) {
   assert( table != NULL );
   assert( data != NULL );
 
-  ht_hash_val_t const b =
-    (*table->hash_fn)( data ) % HT_PRIME[ table->prime_idx ];
+  ht_hash_val_t const hash = (*table->hash_fn)( data );
+  ht_hash_val_t const b = hash % HT_PRIME[ table->prime_idx ];
+
   for ( ht_entry_t *entry = table->buckets[b].next; entry != NULL;
         entry = entry->next ) {
     if ( (*table->cmp_fn)( data, ht_entry_data( table, entry ) ) == 0 )
@@ -207,9 +208,8 @@ ht_insert_rv_t ht_table_insert( hash_table_t *table, void *data,
   assert( data != NULL );
   assert( table->dloc == HT_DPTR || data_size > 0 );
 
-  unsigned n_buckets = HT_PRIME[ table->prime_idx ];
   ht_hash_val_t const hash = (*table->hash_fn)( data );
-  ht_hash_val_t b = hash % n_buckets;
+  ht_hash_val_t b = hash % HT_PRIME[ table->prime_idx ];
   ht_entry_t *head = &table->buckets[b], *entry;
 
   for ( entry = head->next; entry != NULL; entry = entry->next ) {
@@ -220,8 +220,7 @@ ht_insert_rv_t ht_table_insert( hash_table_t *table, void *data,
   ++table->size;
   double const lf = ht_table_load_factor( table );
   if ( lf >= table->max_lf && likely( ht_table_grow( table ) ) ) {
-    n_buckets = HT_PRIME[ table->prime_idx ];
-    b = hash % n_buckets;
+    b = hash % HT_PRIME[ table->prime_idx ];
     head = &table->buckets[b];
   }
 
