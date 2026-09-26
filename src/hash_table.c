@@ -137,14 +137,16 @@ void ht_table_cleanup( hash_table_t *table, ht_free_fn_t free_fn ) {
   if ( table == NULL || table->buckets == NULL )
     return;
 
-  for ( unsigned b = 0; b < HT_PRIME[ table->prime_idx ]; ++b ) {
+  unsigned const n_buckets = HT_PRIME[ table->prime_idx ];
+
+  for ( unsigned b = 0; b < n_buckets; ++b ) {
     for ( ht_entry_t *entry = table->buckets[b].next, *next;
           entry != NULL; entry = next ) {
       if ( free_fn != NULL )
         (*free_fn)( ht_entry_data( table, entry ) );
       next = entry->next;
       free( entry );
-    }
+    } // for
   } // for
 
   free( table->buckets );
