@@ -51,8 +51,8 @@
  * uniformly distributed, _h(k)_ `%` _m_ produces more collisions at bucket
  * index _i_ where it’s a factor of _m_.
  *
- * Additionally, _m_ should be as far away from a power of 2 as possibe. If _m_
- * &asymp; 2<sup>_b_</sup>, then all but the lower _b_ bits of _h(k)_ are
+ * Additionally, _m_ should be as far away from a power of 2 as possible. If
+ * _m_ &asymp; 2<sup>_b_</sup>, then all but the lower _b_ bits of _h(k)_ are
  * discarded.
  * @endparblock
  */
