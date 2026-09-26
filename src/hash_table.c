@@ -84,8 +84,7 @@ static bool ht_table_grow( hash_table_t *table ) {
   for ( unsigned b = 0; b < old_n_buckets; ++b ) {
     for ( ht_entry_t *entry = table->buckets[b].next, *next;
           entry != NULL; entry = next ) {
-      ht_hash_val_t const hash = entry->hash;
-      ht_entry_t *const new_head = &new_buckets[ hash % new_n_buckets ];
+      ht_entry_t *const new_head = &new_buckets[ entry->hash % new_n_buckets ];
 
       next = entry->next;
       entry->next = new_head->next;
