@@ -68,6 +68,8 @@
 /// different sizes even when data are stored internally.
 /// @endparblock
 ///
+/// @note This implementaiton uses separate chaining.
+///
 /// @par Example
 /// @parblock
 /// A hash table of word counts.
@@ -470,12 +472,15 @@ ht_entry_t* ht_table_find( hash_table_t const *table, void const *data );
  *
  * @param table The hash table to initialize.
  * @param dloc Where data for each entry is stored.
- * @param max_lf The maximum load factor.
+ * @param max_lf The maximum load factor.  Since this implementation uses
+ * separate chaining, the value that gives best performance is typically
+ * between 1 and 3.
  * @param est_size The estimated number of entries.
  * @param cmp_fn The comparison function to use.
  * @param hash_fn The hash function to use.
  *
  * @sa ht_table_cleanup()
+ * @sa [Cornell CS 312 Lecture 20: Hash tables and amortized analysis](https://www.cs.cornell.edu/courses/cs312/2008sp/lectures/lec20.html)
  */
 void ht_table_init( hash_table_t *table, ht_dloc_t dloc, double max_lf,
                     unsigned est_size, ht_cmp_fn_t cmp_fn,
