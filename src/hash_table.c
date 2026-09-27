@@ -68,14 +68,12 @@ unsigned const HT_PRIME[] = {
  * Grows a hash table.
  *
  * @param table The hash table to grow.
- * @return Returns `true` only if the table was grown (very likely).
  */
-NODISCARD
-static bool ht_table_grow( hash_table_t *table ) {
+static void ht_table_grow( hash_table_t *table ) {
   assert( table != NULL );
 
   if ( unlikely( table->prime_idx >= ARRAY_SIZE( HT_PRIME ) - 1 ) )
-    return false;
+    return;
 
   unsigned const old_n_buckets = HT_PRIME[ table->prime_idx ];
   unsigned const new_n_buckets = HT_PRIME[ ++table->prime_idx ];
@@ -98,7 +96,6 @@ static bool ht_table_grow( hash_table_t *table ) {
 
   free( table->buckets );
   table->buckets = new_buckets;
-  return true;
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -210,20 +207,13 @@ ht_insert_rv_t ht_table_insert( hash_table_t *table, void *data,
   assert( table->dloc == HT_DPTR || data_size > 0 );
 
   ht_hash_val_t const hash = (*table->hash_fn)( data );
-  ht_hash_val_t b = hash % HT_PRIME[ table->prime_idx ];
-  ht_entry_t *head = &table->buckets[b], *entry;
+  ht_hash_val_t const b = hash % HT_PRIME[ table->prime_idx ];
+  ht_entry_t *const head = &table->buckets[b], *entry;
 
   for ( entry = head->next; entry != NULL; entry = entry->next ) {
     if ( (*table->cmp_fn)( data, ht_entry_data( table, entry ) ) == 0 )
       return (ht_insert_rv_t){ entry, .inserted = false };
   } // for
-
-  ++table->size;
-  double const lf = ht_table_load_factor( table );
-  if ( lf >= table->max_lf && likely( ht_table_grow( table ) ) ) {
-    b = hash % HT_PRIME[ table->prime_idx ];
-    head = &table->buckets[b];
-  }
 
   if ( table->dloc == HT_DINT ) {
     entry = malloc( sizeof *entry + data_size );
@@ -238,6 +228,11 @@ ht_insert_rv_t ht_table_insert( hash_table_t *table, void *data,
   if ( head->next != NULL )
     head->next->prev = entry;
   head->next = entry;
+
+  ++table->size;
+  double const lf = ht_table_load_factor( table );
+  if ( lf >= table->max_lf )
+    ht_table_grow( table );
 
   return (ht_insert_rv_t){ entry, .inserted = true };
 }
