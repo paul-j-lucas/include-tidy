@@ -1,3 +1,7 @@
+2026-09-26  Paul J. Lucas <paul@lucasmail.org>
+
+   * hash_table.c: Now possibly growing table last -- makes code cleaner.
+
 2026-09-25  Paul J. Lucas <paul@lucasmail.org>
 
    * clang_util.c: No longer checking type for class.
