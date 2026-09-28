@@ -130,7 +130,7 @@ static char const TOML_ERR_MSG_UNTERMINATED_STRING[] = "unterminated string";
 NODISCARD
 static bool toml_space_comments_skip( toml_file* ),
             toml_space_skip( toml_file* ),
-            toml_string_parse( toml_file*, char, strbuf_t* ),
+            toml_string_parse( toml_file*, int, strbuf_t* ),
             toml_unicode_parse( toml_file*, unsigned, strbuf_t* ),
             toml_value_parse( toml_file*, toml_value* );
 
@@ -733,7 +733,7 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
     }
 
     if ( c == '"' || c == '\'' ) {
-      if ( !toml_string_parse( toml, STATIC_CAST( char, c ), &key_buf ) )
+      if ( !toml_string_parse( toml, c, &key_buf ) )
         goto error;
       is_dot_allowed = true;
       c = toml_getc( toml );
@@ -953,7 +953,7 @@ static bool toml_space_skip( toml_file *toml ) {
  * @return Returns `true` only if a string was parsed successfully.
  */
 NODISCARD
-static bool toml_string_parse( toml_file *toml, char quote, strbuf_t *sbuf ) {
+static bool toml_string_parse( toml_file *toml, int quote, strbuf_t *sbuf ) {
   assert( toml != NULL );
   assert( quote == '"' || quote == '\'' );
   assert( sbuf != NULL );
@@ -1151,7 +1151,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *rv_value ) {
       case '"':
       case '\'':;
         strbuf_t sbuf = STRBUF_INIT();
-        if ( !toml_string_parse( toml, STATIC_CAST( char, c ), &sbuf ) )
+        if ( !toml_string_parse( toml, c, &sbuf ) )
           return false;
         *rv_value = (toml_value){
           .type = TOML_STRING,
