@@ -1,5 +1,8 @@
 2026-09-28  Paul J. Lucas <paul@lucasmail.org>
 
+   * toml_lite.c: Eliminated uncessary explicit check for EOF.
+   * toml_lite.c: Added toml_is_bare_key_char().
+   * configure.ac: Upped version to 3.1.
    * toml_test.c: More TOML tests.
    * toml_lite.c: Fixed: Now handle TOML literal strings.
    * toml_lite.c, toml_test.c, config-bad-toml.out: Fixed: now support TOML
