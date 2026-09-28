@@ -1,5 +1,6 @@
 2026-09-28  Paul J. Lucas <paul@lucasmail.org>
 
+   * toml_lite.c: Added missing strbuf_cleanup().
    * toml_lite.c: s/char/int/ and eliminated casts.
    * toml_lite.c: Eliminated last_c_was_dot.
    * toml_lite.c, toml_test.c: Now distinguishing between leading and
