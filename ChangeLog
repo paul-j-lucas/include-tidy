@@ -1,3 +1,10 @@
+2026-09-28  Paul J. Lucas <paul@lucasmail.org>
+
+   * toml_test.c: More TOML tests.
+   * toml_lite.c: Fixed: Now handle TOML literal strings.
+   * toml_lite.c, toml_test.c, config-bad-toml.out: Fixed: now support TOML
+     keys better.
+
 2026-09-27  Paul J. Lucas <paul@lucasmail.org>
 
    * configure.ac, src/Makefile.am, toml_lite.c, toml_lite.h, toml_test.c,
