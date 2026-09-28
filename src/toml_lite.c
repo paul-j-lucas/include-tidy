@@ -128,7 +128,7 @@ static char const TOML_ERR_MSG_UNTERMINATED_STRING[] = "unterminated string";
 NODISCARD
 static bool toml_space_comments_skip( toml_file* ),
             toml_space_skip( toml_file* ),
-            toml_string_parse( toml_file*, strbuf_t* ),
+            toml_string_parse( toml_file*, char, strbuf_t* ),
             toml_unicode_parse( toml_file*, unsigned, strbuf_t* ),
             toml_value_parse( toml_file*, toml_value* );
 
@@ -727,8 +727,8 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
       break;
     }
 
-    if ( c == '"' ) {
-      if ( !toml_string_parse( toml, &key_buf ) )
+    if ( c == '"' || c == '\'' ) {
+      if ( !toml_string_parse( toml, STATIC_CAST( char, c ), &key_buf ) )
         goto error;
       is_dot_allowed = true;
       last_c_was_dot = false;
@@ -945,80 +945,78 @@ static bool toml_space_skip( toml_file *toml ) {
  * @note Assumes the caller has already parsed the `"`.
  *
  * @param toml The toml_file to use.
+ * @param quote The quote character to use as the delimiter.
  * @param sbuf The strbuf_t to append the string onto.
  * @return Returns `true` only if a string was parsed successfully.
  */
 NODISCARD
-static bool toml_string_parse( toml_file *toml, strbuf_t *sbuf ) {
+static bool toml_string_parse( toml_file *toml, char quote, strbuf_t *sbuf ) {
   assert( toml != NULL );
+  assert( quote == '"' || quote == '\'' );
   assert( sbuf != NULL );
-
-  bool ok = false;
-  strbuf_t temp_sbuf = STRBUF_INIT();
 
   for (;;) {
     int c = toml_getc( toml );
     switch ( c ) {
       case EOF:
         toml->error = TOML_ERR_UNEXPECTED_EOF;
-        goto done;
+        return false;
       case TOML_CHAR_INVALID:
         toml->error = TOML_ERR_INVALID_CHAR;
-        goto done;
+        return false;
       case '\r':
       case '\n':
         toml->error = TOML_ERR_INVALID_STRING;
         toml->error_msg = TOML_ERR_MSG_UNTERMINATED_STRING;
-        goto done;
+        return false;
       case '"':
-        strbuf_putsn( sbuf, temp_sbuf.str, temp_sbuf.len );
-        ok = true;
-        goto done;
+      case '\'':
+        if ( c == quote )
+          return true;
+        break;
       case '\\':
-        c = toml_getc( toml );
-        switch ( c ) {
-          case '"'  : c = '"';  break;
-          case 'b'  : c = '\b'; break;
-          case 'e'  : c = 0x1B; break;
-          case 'f'  : c = '\f'; break;
-          case 'n'  : c = '\n'; break;
-          case 'r'  : c = '\r'; break;
-          case 't'  : c = '\t'; break;
-          case '\\' : c = '\\'; break;
+        if ( quote != '\'' ) {
+          c = toml_getc( toml );
+          switch ( c ) {
+            case '"'  : c = '"';  break;
+            case 'b'  : c = '\b'; break;
+            case 'e'  : c = 0x1B; break;
+            case 'f'  : c = '\f'; break;
+            case 'n'  : c = '\n'; break;
+            case 'r'  : c = '\r'; break;
+            case 't'  : c = '\t'; break;
+            case '\\' : c = '\\'; break;
 
-          case 'u':
-            if ( !toml_unicode_parse( toml, 4, &temp_sbuf ) )
-              goto done;
-            continue;
-          case 'U':
-            if ( !toml_unicode_parse( toml, 8, &temp_sbuf ) )
-              goto done;
-            continue;
-          case 'x':
-            if ( !toml_unicode_parse( toml, 2, &temp_sbuf ) )
-              goto done;
-            continue;
+            case 'u':
+              if ( !toml_unicode_parse( toml, 4, sbuf ) )
+                return false;
+              continue;
+            case 'U':
+              if ( !toml_unicode_parse( toml, 8, sbuf ) )
+                return false;
+              continue;
+            case 'x':
+              if ( !toml_unicode_parse( toml, 2, sbuf ) )
+                return false;
+              continue;
 
-          case EOF:
-            toml->error = TOML_ERR_UNEXPECTED_EOF;
-            goto done;
-          case TOML_CHAR_INVALID:
-            toml->error = TOML_ERR_INVALID_CHAR;
-            goto done;
-          default:
-            toml->error = TOML_ERR_INVALID_STRING;
-            toml->error_msg = TOML_ERR_MSG_INVALID_ESCAPE_SEQUENCE;
-            goto done;
-        } // switch
+            case EOF:
+              toml->error = TOML_ERR_UNEXPECTED_EOF;
+              return false;
+            case TOML_CHAR_INVALID:
+              toml->error = TOML_ERR_INVALID_CHAR;
+              return false;
+            default:
+              toml->error = TOML_ERR_INVALID_STRING;
+              toml->error_msg = TOML_ERR_MSG_INVALID_ESCAPE_SEQUENCE;
+              return false;
+          } // switch
+        }
         break;
     } // switch
 
-    strbuf_putc( &temp_sbuf, STATIC_CAST( char, c ) );
+    strbuf_putc( sbuf, STATIC_CAST( char, c ) );
   } // for
-
-done:
-  strbuf_cleanup( &temp_sbuf );
-  return ok;
 }
 
 /**
@@ -1147,9 +1145,10 @@ static bool toml_value_parse( toml_file *toml, toml_value *rv_value ) {
     int const c = toml_getc( toml );
     toml_loc const value_loc = toml->loc;
     switch ( c ) {
-      case '"':;
+      case '"':
+      case '\'':;
         strbuf_t sbuf = STRBUF_INIT();
-        if ( !toml_string_parse( toml, &sbuf ) )
+        if ( !toml_string_parse( toml, STATIC_CAST( char, c ), &sbuf ) )
           return false;
         *rv_value = (toml_value){
           .type = TOML_STRING,
