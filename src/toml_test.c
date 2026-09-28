@@ -275,6 +275,8 @@ static bool test_keys( void ) {
     "\"c c\" = 3        \n"
     "d.hello.x = 4      \n"
     "e.\"hello.x\" = 5  \n"
+    "'foo' = 6          \n"
+    "'g \"x\"' = 7      \n"
   );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
@@ -304,6 +306,16 @@ static bool test_keys( void ) {
     TEST( value != NULL ) &&
       TEST( value->type == TOML_INT ) &&
       TEST( value->i == 5 );
+
+    value = toml_table_find( &test.table, "foo" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 6 );
+
+    value = toml_table_find( &test.table, "g \"x\"" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 7 );
   }
 
   TEST_FUNC_END();
@@ -967,6 +979,7 @@ static bool test_value_string( void ) {
     "sr = \"x\\ry\"           \n"
     "st = \"x\\ty\"           \n"
     "ss = \"x\\\\y\"          \n"
+    "ssq = 'xyz'              \n"
     "x = \"\\x42IT\"          \n"
     "u = \"\\u0042IT\"        \n"
     "U = \"\\U00000042IT\"    \n"
@@ -1023,6 +1036,11 @@ static bool test_value_string( void ) {
     TEST( value != NULL ) &&
       TEST( value->type == TOML_STRING ) &&
       TEST( strcmp( value->s, "x\\y" ) == 0 );
+
+    value = toml_table_find( &test.table, "ssq" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "xyz" ) == 0 );
 
     value = toml_table_find( &test.table, "x" );
     TEST( value != NULL ) &&
