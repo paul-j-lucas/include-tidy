@@ -1,3 +1,8 @@
+2026-09-27  Paul J. Lucas <paul@lucasmail.org>
+
+   * configure.ac, src/Makefile.am, toml_lite.c, toml_lite.h, toml_test.c,
+     unicode.c, unicode.h: Added: Support for TOML Unicode escape sequences.
+
 2026-09-26  Paul J. Lucas <paul@lucasmail.org>
 
    * hash_table.c: Now possibly growing table last -- makes code cleaner.
