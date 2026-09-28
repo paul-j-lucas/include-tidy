@@ -193,6 +193,20 @@ static inline void toml_col_inc( toml_file *toml ) {
 }
 
 /**
+ * Gets whether \a c is valid as part of a bare TOML key.
+ *
+ * @param c The character to check.
+ * @return Returns `true` only if \a c is valid as part of a bare TOML key.
+ */
+NODISCARD
+static inline bool toml_is_bare_key_char( int c ) {
+  return  (c >= 'A' && c <= 'Z') ||
+          (c >= 'a' && c <= 'z') ||
+          (c >= '0' && c <= '9') ||
+          (c == '-' || c == '_');
+}
+
+/**
  * Gets whether \a c is an invalid TOML character.
  *
  * @param c The character to check.
@@ -659,12 +673,6 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
   assert( toml != NULL );
   assert( rv_key != NULL );
 
-  static char const BARE_KEY_CHARS[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz"
-    "0123456789"
-    "-_";
-
   int c = toml_getc( toml );
 
   switch ( c ) {
@@ -736,13 +744,13 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
       continue;
     }
 
-    if ( strchr( BARE_KEY_CHARS, c ) != NULL ) {
+    if ( toml_is_bare_key_char( c ) ) {
       do {
         strbuf_putc( &key_buf, STATIC_CAST( char, c ) );
         c = toml_getc( toml );
         if ( c == TOML_CHAR_INVALID )
           goto error;
-      } while ( c != EOF && strchr( BARE_KEY_CHARS, c ) != NULL );
+      } while ( c != EOF && toml_is_bare_key_char( c ) );
       is_dot_allowed = true;
       last_c_was_dot = false;
       continue;
