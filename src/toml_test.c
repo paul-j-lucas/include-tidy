@@ -219,7 +219,7 @@ static bool test_key_empty( void ) {
   TEST( !toml_table_next( &test.toml, &test.table ) )
     && TEST( test.toml.error == TOML_ERR_INVALID_KEY )
     && TEST( test.toml.loc.line == 1 )
-    && TEST( test.toml.loc.col == 2 );
+    && TEST( test.toml.loc.col == 3 );
 
   toml_error_print( &test.toml );
   toml_test_cleanup( &test );
@@ -227,25 +227,6 @@ static bool test_key_empty( void ) {
 }
 
 static bool test_key_invalid_char( void ) {
-  TEST_FUNC_BEGIN();
-
-  toml_test test;
-  toml_test_init( &test,
-    "[test]\n"
-    "k\x01"
-  );
-
-  TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_INVALID_CHAR )
-    && TEST( test.toml.loc.line == 2 )
-    && TEST( test.toml.loc.col  == 2 );
-
-  toml_error_print( &test.toml );
-  toml_test_cleanup( &test );
-  TEST_FUNC_END();
-}
-
-static bool test_key_invalid_char2( void ) {
   TEST_FUNC_BEGIN();
 
   toml_test test;
@@ -261,6 +242,70 @@ static bool test_key_invalid_char2( void ) {
 
   toml_error_print( &test.toml );
   toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_key_unexpected_char( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]\n"
+    "k$ = 1"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_UNEXPECTED_CHAR )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 2 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_keys( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]             \n"
+    "a = 1              \n"
+    "\"b\" = 2          \n"
+    "\"c c\" = 3        \n"
+    "d.hello.x = 4      \n"
+    "e.\"hello.x\" = 5  \n"
+  );
+
+  if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
+    toml_value const *value;
+
+    value = toml_table_find( &test.table, "a" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 1 );
+
+    value = toml_table_find( &test.table, "b" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 2 );
+
+    value = toml_table_find( &test.table, "c c" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 3 );
+
+    value = toml_table_find( &test.table, "d.hello.x" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 4 );
+
+    value = toml_table_find( &test.table, "e.hello.x" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_INT ) &&
+      TEST( value->i == 5 );
+  }
+
   TEST_FUNC_END();
 }
 
@@ -1222,6 +1267,7 @@ int main( int argc, char const *const argv[] ) {
   test_prog_init( argc, argv );
 
   test_comments();
+  test_keys();
 
   test_value_bool();
   test_value_int();
@@ -1237,7 +1283,7 @@ int main( int argc, char const *const argv[] ) {
     test_key_duplicate();
     test_key_empty();
     test_key_invalid_char();
-    test_key_invalid_char2();
+    test_key_unexpected_char();
 
     test_table_name_duplicate();
     test_table_name_eof();

@@ -663,55 +663,93 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789"
-    "-._";
+    "-_";
 
-  int             c = toml_getc( toml );
-  unsigned const  first_col = toml->loc.col;
-  strbuf_t        key_buf = STRBUF_INIT();
+  int c = toml_getc( toml );
 
   switch ( c ) {
-    case '"':
-      if ( !toml_string_parse( toml, &key_buf ) )
-        return false;
-      goto done;
-    case '.':
-      toml->error = TOML_ERR_INVALID_KEY;
-      toml->error_msg = TOML_ERR_MSG_BARE_KEY_NO_BEGIN_DOT;
-      return false;
     case TOML_CHAR_INVALID: // impossible due to toml_space_comments_skip()
-      INTERNAL_ERROR( "unexpected invalid character\n" );
+      unreachable();
     case EOF:
       // An EOF here isn't necessarily an error.  It could just mean there are
       // no more keys (and values).
       return false;
   } // switch
 
-  char c_prev = '\0';
+  unsigned const  first_col = toml->loc.col;
+  bool            is_dot_allowed = false;
+  strbuf_t        key_buf = STRBUF_INIT();
+  bool            last_c_was_dot = false;
 
-  do {
+  while ( c != EOF ) {
     if ( c == ' ' || c == '\t' ) {
       if ( !toml_space_comments_skip( toml ) )
         goto error;
       c = toml_getc( toml );
-      if ( c_prev != '.' && c != '.' ) {
-        toml_ungetc( toml, c );
-        break;
-      }
+      continue;
     }
 
-    if ( strchr( BARE_KEY_CHARS, c ) == NULL ) {
-      toml_ungetc( toml, c );
+    if ( c == '.' ) {
+      if ( !is_dot_allowed ) {
+        toml->error = TOML_ERR_INVALID_KEY;
+        toml->error_msg = TOML_ERR_MSG_BARE_KEY_NO_BEGIN_DOT;
+        goto error;
+      }
+      if ( last_c_was_dot ) {
+        toml->error = TOML_ERR_INVALID_KEY;
+        toml->error_msg = TOML_ERR_MSG_EMPTY_KEY;
+        goto error;
+      }
+      strbuf_putc( &key_buf, '.' );
+      is_dot_allowed = false;
+      last_c_was_dot = true;
+      c = toml_getc( toml );
+      continue;
+    }
+
+    if ( is_dot_allowed ) {
+      //
+      // If a '.' is allowed, it means:
+      //
+      //  + We're NOT at the beginning since '.' can't start a key; and:
+      //  + We've just parsed a complete key segment, e.g. foo or "bar".
+      //
+      // Now, there are only two possible cases.
+      //
+      //  1. The key can continue after a dot separator --- which means a
+      //     consecutive dot is NOT allowed (is_dot_allowed == false), hence
+      //     this "if" would not be true and we won't break; or:
+      //
+      //  2. The key has ended (is followed by '=', ']', or an unexpected
+      //     character).  A dot WOULD be allowed (is_dot_allowed == true) if
+      //     there were more segments --- but since there aren't more, break.
+      //
       break;
     }
 
-    c_prev = STATIC_CAST( char, c );
-    strbuf_putc( &key_buf, c_prev );
-    c = toml_getc( toml );
-    if ( c == TOML_CHAR_INVALID ) {
-      toml->error = TOML_ERR_INVALID_CHAR;
-      goto error;
+    if ( c == '"' ) {
+      if ( !toml_string_parse( toml, &key_buf ) )
+        goto error;
+      is_dot_allowed = true;
+      last_c_was_dot = false;
+      c = toml_getc( toml );
+      continue;
     }
-  } while ( c != EOF );
+
+    if ( strchr( BARE_KEY_CHARS, c ) != NULL ) {
+      do {
+        strbuf_putc( &key_buf, STATIC_CAST( char, c ) );
+        c = toml_getc( toml );
+        if ( c == TOML_CHAR_INVALID )
+          goto error;
+      } while ( c != EOF && strchr( BARE_KEY_CHARS, c ) != NULL );
+      is_dot_allowed = true;
+      last_c_was_dot = false;
+      continue;
+    }
+
+    break;
+  } // while
 
   if ( key_buf.len == 0 ) {
     toml->error = TOML_ERR_INVALID_KEY;
@@ -719,14 +757,16 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
     goto error;
   }
 
-  if ( key_buf.str[ key_buf.len - 1 ] == '.' ) {
+  if ( last_c_was_dot ) {
     toml->loc.col = first_col + STATIC_CAST( unsigned, key_buf.len ) - 1;
     toml->error = TOML_ERR_INVALID_KEY;
     toml->error_msg = TOML_ERR_MSG_BARE_KEY_NO_END_DOT;
     goto error;
   }
 
-done:
+  if ( c != EOF )
+    toml_ungetc( toml, c );
+
   if ( rv_key_len != NULL )
     *rv_key_len = key_buf.len;
   rv_key->name = strbuf_take( &key_buf );
@@ -905,31 +945,34 @@ static bool toml_space_skip( toml_file *toml ) {
  * @note Assumes the caller has already parsed the `"`.
  *
  * @param toml The toml_file to use.
- * @param rv_sbuf The strbuf_t to parse the string into.
+ * @param sbuf The strbuf_t to append the string onto.
  * @return Returns `true` only if a string was parsed successfully.
  */
 NODISCARD
-static bool toml_string_parse( toml_file *toml, strbuf_t *rv_sbuf ) {
+static bool toml_string_parse( toml_file *toml, strbuf_t *sbuf ) {
   assert( toml != NULL );
-  assert( rv_sbuf != NULL );
+  assert( sbuf != NULL );
 
-  strbuf_t sbuf = STRBUF_INIT();
+  bool ok = false;
+  strbuf_t temp_sbuf = STRBUF_INIT();
 
   for (;;) {
     int c = toml_getc( toml );
     switch ( c ) {
       case EOF:
         toml->error = TOML_ERR_UNEXPECTED_EOF;
-        goto error;
+        goto done;
       case TOML_CHAR_INVALID:
         toml->error = TOML_ERR_INVALID_CHAR;
-        goto error;
+        goto done;
       case '\r':
       case '\n':
         toml->error = TOML_ERR_INVALID_STRING;
         toml->error_msg = TOML_ERR_MSG_UNTERMINATED_STRING;
-        goto error;
+        goto done;
       case '"':
+        strbuf_putsn( sbuf, temp_sbuf.str, temp_sbuf.len );
+        ok = true;
         goto done;
       case '\\':
         c = toml_getc( toml );
@@ -944,42 +987,38 @@ static bool toml_string_parse( toml_file *toml, strbuf_t *rv_sbuf ) {
           case '\\' : c = '\\'; break;
 
           case 'u':
-            if ( !toml_unicode_parse( toml, 4, &sbuf ) )
-              goto error;
+            if ( !toml_unicode_parse( toml, 4, &temp_sbuf ) )
+              goto done;
             continue;
           case 'U':
-            if ( !toml_unicode_parse( toml, 8, &sbuf ) )
-              goto error;
+            if ( !toml_unicode_parse( toml, 8, &temp_sbuf ) )
+              goto done;
             continue;
           case 'x':
-            if ( !toml_unicode_parse( toml, 2, &sbuf ) )
-              goto error;
+            if ( !toml_unicode_parse( toml, 2, &temp_sbuf ) )
+              goto done;
             continue;
 
           case EOF:
             toml->error = TOML_ERR_UNEXPECTED_EOF;
-            goto error;
+            goto done;
           case TOML_CHAR_INVALID:
             toml->error = TOML_ERR_INVALID_CHAR;
-            goto error;
+            goto done;
           default:
             toml->error = TOML_ERR_INVALID_STRING;
             toml->error_msg = TOML_ERR_MSG_INVALID_ESCAPE_SEQUENCE;
-            goto error;
+            goto done;
         } // switch
         break;
     } // switch
 
-    strbuf_putc( &sbuf, STATIC_CAST( char, c ) );
+    strbuf_putc( &temp_sbuf, STATIC_CAST( char, c ) );
   } // for
 
 done:
-  *rv_sbuf = sbuf;
-  return true;
-
-error:
-  strbuf_cleanup( &sbuf );
-  return false;
+  strbuf_cleanup( &temp_sbuf );
+  return ok;
 }
 
 /**
