@@ -912,16 +912,20 @@ static bool test_value_string( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test]               \n"
-    "s1 = \"ab\"          \n"
-    "s2 = \"\\\"ab\\\"\"  \n"
-    "sb = \"x\\by\"       \n"
-    "se = \"x\\ey\"       \n"
-    "sf = \"x\\fy\"       \n"
-    "sn = \"x\\ny\"       \n"
-    "sr = \"x\\ry\"       \n"
-    "st = \"x\\ty\"       \n"
-    "ss = \"x\\\\y\"      \n"
+    "[test]                   \n"
+    "s1 = \"ab\"              \n"
+    "s2 = \"\\\"ab\\\"\"      \n"
+    "sb = \"x\\by\"           \n"
+    "se = \"x\\ey\"           \n"
+    "sf = \"x\\fy\"           \n"
+    "sn = \"x\\ny\"           \n"
+    "sr = \"x\\ry\"           \n"
+    "st = \"x\\ty\"           \n"
+    "ss = \"x\\\\y\"          \n"
+    "x = \"\\x42IT\"          \n"
+    "u = \"\\u0042IT\"        \n"
+    "U = \"\\U00000042IT\"    \n"
+    "smiley = \"\\U0001F642\" \n"
   );
 
   if ( TEST( toml_table_next( &test.toml, &test.table ) ) ) {
@@ -974,6 +978,26 @@ static bool test_value_string( void ) {
     TEST( value != NULL ) &&
       TEST( value->type == TOML_STRING ) &&
       TEST( strcmp( value->s, "x\\y" ) == 0 );
+
+    value = toml_table_find( &test.table, "x" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "BIT" ) == 0 );
+
+    value = toml_table_find( &test.table, "u" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "BIT" ) == 0 );
+
+    value = toml_table_find( &test.table, "U" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "BIT" ) == 0 );
+
+    value = toml_table_find( &test.table, "smiley" );
+    TEST( value != NULL ) &&
+      TEST( value->type == TOML_STRING ) &&
+      TEST( strcmp( value->s, "\xF0\x9F\x99\x82" ) == 0 );
   }
 
   toml_error_print( &test.toml );
@@ -986,14 +1010,33 @@ static bool test_value_string_bad_escape( void ) {
 
   toml_test test;
   toml_test_init( &test,
-    "[test]         \n"
-    "s = \"a\\xb\"  \n"
+    "[test]       \n"
+    "s = \"a\\y\" \n"
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
     && TEST( test.toml.error == TOML_ERR_INVALID_STRING )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 8 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
+static bool test_value_string_bad_unicode( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]         \n"
+    "s = \"a\\x1\"  \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_STRING )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 10 );
 
   toml_error_print( &test.toml );
   toml_test_cleanup( &test );
@@ -1230,6 +1273,7 @@ int main( int argc, char const *const argv[] ) {
     test_value_string_bad_escape();
     test_value_string_bad_escape_eof();
     test_value_string_bad_escape_invalid_char();
+    test_value_string_bad_unicode();
     test_value_string_eof();
     test_value_string_invalid_char();
     test_value_string_unterminated();

@@ -109,6 +109,7 @@ enum toml_error {
   TOML_ERR_INVALID_INT,                 ///< Invalid integer.
   TOML_ERR_INVALID_KEY,                 ///< Invalid key.
   TOML_ERR_INVALID_STRING,              ///< Invalid string.
+  TOML_ERR_INVALID_UNICODE,             ///< Invalid Unicode character.
   TOML_ERR_UNEX_CHAR,                   ///< Unexpected character.
   TOML_ERR_UNEX_EOF,                    ///< Unexpected end of file.
 };

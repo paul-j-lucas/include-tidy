@@ -105,6 +105,16 @@ AC_TYPE_SSIZE_T
 AC_TYPE_UINT64_T
 AC_CHECK_MEMBERS([struct passwd.pw_dir],[],[],[[#include <pwd.h>]])
 PJL_COMPILE([__builtin_expect],[], [(void)__builtin_expect(1,1);])
+PJL_COMPILE([char8_t],
+  [#include <uchar.h>
+  ],
+  [char8_t c;]
+)
+PJL_COMPILE([char32_t],
+  [#include <uchar.h>
+  ],
+  [char32_t c;]
+)
 PJL_COMPILE([__VA_OPT__],
   [#define VA_OPT_TEST(...) __VA_OPT__(int) __VA_ARGS__
   ],

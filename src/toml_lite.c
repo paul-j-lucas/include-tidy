@@ -30,6 +30,7 @@
 #include "fnv1a.h"
 #include "hash_table.h"
 #include "strbuf.h"
+#include "unicode.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -98,6 +99,7 @@ static char const *const TOML_ERROR_MSGS[] = {
   [ TOML_ERR_INVALID_INT      ] = "invalid integer",
   [ TOML_ERR_INVALID_KEY      ] = "invalid key",
   [ TOML_ERR_INVALID_STRING   ] = "invalid string",
+  [ TOML_ERR_INVALID_UNICODE  ] = "invalid Unicode code-point",
   [ TOML_ERR_UNEX_CHAR        ] = "unexpected character",
   [ TOML_ERR_UNEX_EOF         ] = "unexpected end of file",
 };
@@ -127,6 +129,7 @@ NODISCARD
 static bool toml_space_comments_skip( toml_file* ),
             toml_space_skip( toml_file* ),
             toml_string_parse( toml_file*, strbuf_t* ),
+            toml_unicode_parse( toml_file*, unsigned, strbuf_t* ),
             toml_value_parse( toml_file*, toml_value* );
 
 NODISCARD
@@ -940,6 +943,19 @@ static bool toml_string_parse( toml_file *toml, strbuf_t *rv_sbuf ) {
           case 't'  : c = '\t'; break;
           case '\\' : c = '\\'; break;
 
+          case 'u':
+            if ( !toml_unicode_parse( toml, 4, &sbuf ) )
+              goto error;
+            continue;
+          case 'U':
+            if ( !toml_unicode_parse( toml, 8, &sbuf ) )
+              goto error;
+            continue;
+          case 'x':
+            if ( !toml_unicode_parse( toml, 2, &sbuf ) )
+              goto error;
+            continue;
+
           case EOF:
             toml->error = TOML_ERR_UNEX_EOF;
             goto error;
@@ -1005,6 +1021,50 @@ static bool toml_table_header_parse( toml_file *toml, toml_key *rv_key,
   }
 
   *rv_key = key;
+  return true;
+}
+
+/**
+ * Parses the hexadecimal digits comprising a TOML escape sequence for a
+ * Unicode code-point.
+ *
+ * @param toml The toml_file to use.
+ * @param n The number of hexadecimal digits to parse: 2, 4, or 8.
+ * @param sbuf Only if the parse is successful and the code-point is valid,
+ * appends the UTF-8 bytes for the parsed Unicode code-point to this buffer.
+ * @return Returns `true` only if \a n hexadecimal digits were parsed
+ * successfully and the Unicode code-point is valid.
+ */
+NODISCARD
+static bool toml_unicode_parse( toml_file *toml, unsigned n, strbuf_t *sbuf ) {
+  assert( toml != NULL );
+  assert( sbuf != NULL );
+
+  char32_t cp = 0;
+  for ( unsigned i = 0; i < n; ++i ) {
+    int const c = toml_getc( toml );
+    if ( unlikely( c == EOF ) ) {
+      toml->error = TOML_ERR_UNEX_EOF;
+      return false;
+    }
+    if ( !isxdigit( c ) ) {
+      toml->error = TOML_ERR_INVALID_STRING;
+      toml->error_msg = TOML_ERR_MSG_INVALID_ESCAPE_SEQUENCE;
+      return false;
+    }
+
+    int const nibble = isalpha( c ) ? toupper( c ) - 'A' + 10 : c - '0';
+    cp = (cp << 4) | STATIC_CAST( unsigned, nibble );
+  } // for
+
+  if ( !cp_is_valid( cp ) ) {
+    toml->error = TOML_ERR_INVALID_UNICODE;
+    return false;
+  }
+
+  char8_t u8c[ UTF8_CHAR_SIZE_MAX ];
+  n = utf32c_8c( cp, u8c );
+  strbuf_putsn( sbuf, POINTER_CAST( char const*, u8c ), n );
   return true;
 }
 

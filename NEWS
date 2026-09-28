@@ -5,6 +5,12 @@ See the end of the file for license conditions.
 
 -------------------------------------------------------------------------------
 
+* Changes in Include-tidy 3.1
+
+** TOML Unicode support
+The `\x`, `\u`, and `\U` escape sequences in TOML are now supported.
+
+
 * Changes in Include-tidy 3.0
 
 ** Better config. file error messages

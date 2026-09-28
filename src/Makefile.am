@@ -81,6 +81,7 @@ include_tidy_SOURCES =	array.c array.h \
 			trans_unit.c trans_unit.h \
 			typedef.c typedef.h \
 			type_traits.h \
+			unicode.c unicode.h \
 			util.c util.h
 
 BASE_TEST_SOURCES =	pjl_config.h config.h \
@@ -112,6 +113,7 @@ strbuf_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 toml_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 			hash_table.c hash_table.h \
 			toml_lite.c toml_lite.h \
+			unicode.c unicode.h \
 			toml_test.c
 
 util_test_SOURCES = 	$(BASE_TEST_SOURCES) \
