@@ -1151,14 +1151,16 @@ static bool toml_value_parse( toml_file *toml, toml_value *rv_value ) {
       case '"':
       case '\'':;
         strbuf_t sbuf = STRBUF_INIT();
-        if ( !toml_string_parse( toml, c, &sbuf ) )
-          return false;
-        *rv_value = (toml_value){
-          .type = TOML_STRING,
-          .loc = value_loc,
-          .s = strbuf_take( &sbuf )
-        };
-        return true;
+        if ( toml_string_parse( toml, c, &sbuf ) ) {
+          *rv_value = (toml_value){
+            .type = TOML_STRING,
+            .loc = value_loc,
+            .s = strbuf_take( &sbuf )
+          };
+          return true;
+        }
+        strbuf_cleanup( &sbuf );
+        return false;
 
       case '#': // impossible since caller called toml_space_comments_skip()
         INTERNAL_ERROR( "unexpected '#'\n" );
