@@ -750,7 +750,7 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
         c = toml_getc( toml );
         if ( c == TOML_CHAR_INVALID )
           goto error;
-      } while ( c != EOF && toml_is_bare_key_char( c ) );
+      } while ( toml_is_bare_key_char( c ) );
       is_dot_allowed = true;
       last_c_was_dot = false;
       continue;
