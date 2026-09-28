@@ -200,8 +200,8 @@ static inline void toml_col_inc( toml_file *toml ) {
  */
 NODISCARD
 static inline bool toml_is_bare_key_char( int c ) {
-  return  (c >= 'A' && c <= 'Z') ||
-          (c >= 'a' && c <= 'z') ||
+  return  (c >= 'a' && c <= 'z') ||
+          (c >= 'A' && c <= 'Z') ||
           (c >= '0' && c <= '9') ||
           (c == '-' || c == '_');
 }
