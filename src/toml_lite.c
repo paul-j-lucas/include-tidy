@@ -689,7 +689,6 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
   unsigned const  first_col = toml->loc.col;
   bool            is_dot_allowed = false;
   strbuf_t        key_buf = STRBUF_INIT();
-  bool            last_c_was_dot = false;
 
   while ( c != EOF ) {
     if ( c == ' ' || c == '\t' ) {
@@ -709,7 +708,6 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
       }
       strbuf_putc( &key_buf, '.' );
       is_dot_allowed = false;
-      last_c_was_dot = true;
       c = toml_getc( toml );
       continue;
     }
@@ -738,7 +736,6 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
       if ( !toml_string_parse( toml, STATIC_CAST( char, c ), &key_buf ) )
         goto error;
       is_dot_allowed = true;
-      last_c_was_dot = false;
       c = toml_getc( toml );
       continue;
     }
@@ -751,7 +748,6 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
           goto error;
       } while ( toml_is_bare_key_char( c ) );
       is_dot_allowed = true;
-      last_c_was_dot = false;
       continue;
     }
 
@@ -764,7 +760,7 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
     goto error;
   }
 
-  if ( last_c_was_dot ) {
+  if ( !is_dot_allowed ) {              // means the last char was '.'
     toml->loc.col = first_col + STATIC_CAST( unsigned, key_buf.len ) - 1;
     toml->error = TOML_ERR_INVALID_KEY;
     toml->error_msg = TOML_ERR_MSG_BARE_KEY_NO_END_DOT;
