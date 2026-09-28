@@ -108,6 +108,8 @@ static char const *const TOML_ERROR_MSGS[] = {
 
 static char const TOML_ERR_MSG_BARE_KEY_NO_BEGIN_DOT[] =
   "bare key can not begin with '.'";
+static char const TOML_ERR_MSG_BARE_KEY_NO_CONSECUTIVE_DOTS[] =
+  "bare key can not contain \"..'\"";
 static char const TOML_ERR_MSG_BARE_KEY_NO_END_DOT[] =
   "bare key can not end with '.'";
 static char const TOML_ERR_MSG_EMPTY_KEY[] = "empty key";
@@ -700,12 +702,9 @@ static bool toml_key_parse( toml_file *toml, toml_key *rv_key,
     if ( c == '.' ) {
       if ( !is_dot_allowed ) {
         toml->error = TOML_ERR_INVALID_KEY;
-        toml->error_msg = TOML_ERR_MSG_BARE_KEY_NO_BEGIN_DOT;
-        goto error;
-      }
-      if ( last_c_was_dot ) {
-        toml->error = TOML_ERR_INVALID_KEY;
-        toml->error_msg = TOML_ERR_MSG_EMPTY_KEY;
+        toml->error_msg = key_buf.len == 0 ?
+          TOML_ERR_MSG_BARE_KEY_NO_BEGIN_DOT :
+          TOML_ERR_MSG_BARE_KEY_NO_CONSECUTIVE_DOTS;
         goto error;
       }
       strbuf_putc( &key_buf, '.' );

@@ -130,6 +130,25 @@ static bool test_comments( void ) {
   TEST_FUNC_END();
 }
 
+static bool test_key_bad_consecutive_dots( void ) {
+  TEST_FUNC_BEGIN();
+
+  toml_test test;
+  toml_test_init( &test,
+    "[test]               \n"
+    "hello..world = false \n"
+  );
+
+  TEST( !toml_table_next( &test.toml, &test.table ) )
+    && TEST( test.toml.error == TOML_ERR_INVALID_KEY )
+    && TEST( test.toml.loc.line == 2 )
+    && TEST( test.toml.loc.col  == 7 );
+
+  toml_error_print( &test.toml );
+  toml_test_cleanup( &test );
+  TEST_FUNC_END();
+}
+
 static bool test_key_bad_leading_dot( void ) {
   TEST_FUNC_BEGIN();
 
@@ -1296,6 +1315,7 @@ int main( int argc, char const *const argv[] ) {
 
   if ( test_failures == 0 ) {
     test_key_bad_leading_dot();
+    test_key_bad_consecutive_dots();
     test_key_bad_string();
     test_key_bad_trailing_dot();
     test_key_duplicate();
