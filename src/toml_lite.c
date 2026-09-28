@@ -100,8 +100,8 @@ static char const *const TOML_ERROR_MSGS[] = {
   [ TOML_ERR_INVALID_KEY      ] = "invalid key",
   [ TOML_ERR_INVALID_STRING   ] = "invalid string",
   [ TOML_ERR_INVALID_UNICODE  ] = "invalid Unicode code-point",
-  [ TOML_ERR_UNEX_CHAR        ] = "unexpected character",
-  [ TOML_ERR_UNEX_EOF         ] = "unexpected end of file",
+  [ TOML_ERR_UNEXPECTED_CHAR  ] = "unexpected character",
+  [ TOML_ERR_UNEXPECTED_EOF   ] = "unexpected end of file",
 };
 
 /// @cond DOXYGEN_IGNORE
@@ -302,7 +302,7 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
         INTERNAL_ERROR( "unexpected '#'\n" );
       case ',':
         if ( !need_comma ) {
-          toml->error = TOML_ERR_UNEX_CHAR;
+          toml->error = TOML_ERR_UNEXPECTED_CHAR;
           toml->error_msg = TOML_ERR_MSG_EXTRA_COMMA;
           goto done;
         }
@@ -312,13 +312,13 @@ static bool toml_array_parse( toml_file *toml, toml_array *rv_a ) {
         ok = true;
         goto done;
       case EOF:
-        toml->error = TOML_ERR_UNEX_EOF;
+        toml->error = TOML_ERR_UNEXPECTED_EOF;
         goto done;
       case TOML_CHAR_INVALID: // impossible due to toml_space_comments_skip()
         INTERNAL_ERROR( "unexpected invalid character\n" );
       default:
         if ( need_comma ) {
-          toml->error = TOML_ERR_UNEX_CHAR;
+          toml->error = TOML_ERR_UNEXPECTED_CHAR;
           toml->error_msg = TOML_ERR_MSG_MISSING_COMMA;
           goto done;
         }
@@ -396,7 +396,7 @@ error:
   toml_recover( toml );
   toml->loc = err_loc;
   toml_col_inc( toml );
-  toml->error = TOML_ERR_UNEX_CHAR;
+  toml->error = TOML_ERR_UNEXPECTED_CHAR;
   return false;
 }
 
@@ -420,12 +420,12 @@ static bool toml_char_parse( toml_file *toml, char want_c ) {
 
   switch ( c ) {
     case EOF:
-      toml->error = TOML_ERR_UNEX_EOF;
+      toml->error = TOML_ERR_UNEXPECTED_EOF;
       break;
     case TOML_CHAR_INVALID: // impossible due to toml_space_comments_skip()
       INTERNAL_ERROR( "unexpected invalid character\n" );
     default:
-      toml->error = TOML_ERR_UNEX_CHAR;
+      toml->error = TOML_ERR_UNEXPECTED_CHAR;
       break;
   } // switch
   return false;
@@ -919,7 +919,7 @@ static bool toml_string_parse( toml_file *toml, strbuf_t *rv_sbuf ) {
     int c = toml_getc( toml );
     switch ( c ) {
       case EOF:
-        toml->error = TOML_ERR_UNEX_EOF;
+        toml->error = TOML_ERR_UNEXPECTED_EOF;
         goto error;
       case TOML_CHAR_INVALID:
         toml->error = TOML_ERR_INVALID_CHAR;
@@ -957,7 +957,7 @@ static bool toml_string_parse( toml_file *toml, strbuf_t *rv_sbuf ) {
             continue;
 
           case EOF:
-            toml->error = TOML_ERR_UNEX_EOF;
+            toml->error = TOML_ERR_UNEXPECTED_EOF;
             goto error;
           case TOML_CHAR_INVALID:
             toml->error = TOML_ERR_INVALID_CHAR;
@@ -1010,7 +1010,7 @@ static bool toml_table_header_parse( toml_file *toml, toml_key *rv_key,
       // encountered EOF.  Ordinarily, not parsing a key isn't an error, but it
       // is when parsing a table header.
       //
-      toml->error = TOML_ERR_UNEX_EOF;
+      toml->error = TOML_ERR_UNEXPECTED_EOF;
     }
     return false;
   }
@@ -1044,7 +1044,7 @@ static bool toml_unicode_parse( toml_file *toml, unsigned n, strbuf_t *sbuf ) {
   for ( unsigned i = 0; i < n; ++i ) {
     int const c = toml_getc( toml );
     if ( unlikely( c == EOF ) ) {
-      toml->error = TOML_ERR_UNEX_EOF;
+      toml->error = TOML_ERR_UNEXPECTED_EOF;
       return false;
     }
     if ( !isxdigit( c ) ) {
@@ -1171,7 +1171,7 @@ static bool toml_value_parse( toml_file *toml, toml_value *rv_value ) {
         INTERNAL_ERROR( "unexpected invalid character\n" );
 
       default:
-        toml->error = TOML_ERR_UNEX_CHAR;
+        toml->error = TOML_ERR_UNEXPECTED_CHAR;
         return false;
     } // switch
   } // for

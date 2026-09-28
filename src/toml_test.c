@@ -334,7 +334,7 @@ static bool test_table_name_eof( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
+    && TEST( test.toml.error == TOML_ERR_UNEXPECTED_EOF )
     && TEST( test.toml.loc.line == 1 )
     && TEST( test.toml.loc.col == 1 );
 
@@ -471,7 +471,7 @@ static bool test_unex_char( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
+    && TEST( test.toml.error == TOML_ERR_UNEXPECTED_CHAR )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 7 );
 
@@ -490,7 +490,7 @@ static bool test_unex_eof( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
+    && TEST( test.toml.error == TOML_ERR_UNEXPECTED_EOF )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 5 );
 
@@ -539,7 +539,7 @@ static bool test_value_array_bad_comma( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
+    && TEST( test.toml.error == TOML_ERR_UNEXPECTED_CHAR )
     && TEST( test.toml.loc.line == 3 )
     && TEST( test.toml.loc.col  == 3 );
 
@@ -560,7 +560,7 @@ static bool test_value_array_bad_value( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
+    && TEST( test.toml.error == TOML_ERR_UNEXPECTED_CHAR )
     && TEST( test.toml.loc.line == 3 )
     && TEST( test.toml.loc.col  == 3 );
 
@@ -582,7 +582,7 @@ static bool test_value_array_missing_comma( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
+    && TEST( test.toml.error == TOML_ERR_UNEXPECTED_CHAR )
     && TEST( test.toml.loc.line == 4 )
     && TEST( test.toml.loc.col  == 3 );
 
@@ -601,7 +601,7 @@ static bool test_value_array_unex_eof( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
+    && TEST( test.toml.error == TOML_ERR_UNEXPECTED_EOF )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 8 );
 
@@ -649,7 +649,7 @@ static bool test_value_bool_bad_value( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
+    && TEST( test.toml.error == TOML_ERR_UNEXPECTED_CHAR )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 5 );
 
@@ -668,7 +668,7 @@ static bool test_value_bool_extra_chars( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
+    && TEST( test.toml.error == TOML_ERR_UNEXPECTED_CHAR )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 8 );
 
@@ -1053,7 +1053,7 @@ static bool test_value_string_bad_escape_eof( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
+    && TEST( test.toml.error == TOML_ERR_UNEXPECTED_EOF )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 7 );
 
@@ -1091,7 +1091,7 @@ static bool test_value_string_eof( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_EOF )
+    && TEST( test.toml.error == TOML_ERR_UNEXPECTED_EOF )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 6 );
 
@@ -1148,7 +1148,7 @@ static bool test_value_unexpected_char( void ) {
   );
 
   TEST( !toml_table_next( &test.toml, &test.table ) )
-    && TEST( test.toml.error == TOML_ERR_UNEX_CHAR )
+    && TEST( test.toml.error == TOML_ERR_UNEXPECTED_CHAR )
     && TEST( test.toml.loc.line == 2 )
     && TEST( test.toml.loc.col  == 5 );
 
