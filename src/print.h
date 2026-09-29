@@ -310,6 +310,17 @@ PJL_PRINTF_LIKE_FUNC(1)
 int verbose_printf( char const *format, ... );
 
 /**
+ * Gets whether statistics should be printed.
+ *
+ * @remarks If so, the `statistics:` header is printed only the first time this
+ * function is called.
+ *
+ * @return Returns `true` only if statistics should be printed.
+ */
+NODISCARD
+bool verbose_print_statistics( void );
+
+/**
  * This should be called once just before starting to print a new verbose
  * output section to print a blank line to separate sections if necessary.
  *
@@ -320,17 +331,6 @@ int verbose_printf( char const *format, ... );
  */
 PJL_DISCARD
 bool verbose_section_begin( bool *printed_header );
-
-/**
- * Gets whether statistics should be printed.
- *
- * @remarks If so, the `statistics:` header is printed only the first time this
- * function is called.
- *
- * @return Returns `true` only if statistics should be printed.
- */
-NODISCARD
-bool verbose_print_statistics( void );
 
 ///////////////////////////////////////////////////////////////////////////////
 
