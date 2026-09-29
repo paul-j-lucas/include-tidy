@@ -56,27 +56,6 @@
  * @{
  */
 
-////////// typedefs ///////////////////////////////////////////////////////////
-
-typedef struct fl_vprint_args fl_vprint_args;
-
-////////// structs ////////////////////////////////////////////////////////////
-
-/**
- * Additional arguments for fl_vprint_impl().
- */
-struct fl_vprint_args {
-  char const *caller_file;              ///< Caller source file.
-  int         caller_line;              ///< Caller source line.
-  char const *origin;                   ///< Message origin, if any.
-  char const *what;                     ///< Print what: `error` or `warning`.
-  char const *what_color;               ///< Color for \ref what.
-
-  char const *source_path;              ///< Source path or NULL for none.
-  unsigned    source_line;              ///< Source line or zero for none.
-  unsigned    source_col;               ///< Source column or zero for none.
-};
-
 ////////// local functions ////////////////////////////////////////////////////
 
 // LCOV_EXCL_START
@@ -129,36 +108,46 @@ static enum CXChildVisitResult cursor_ranges_visitor( CXCursor cursor,
  * called from.
  * @note A newline is _not_ printed.
  *
- * @param vp_args The The fl_vprint_args to use.
+ * @param caller_file The name of the file where this function was called from.
+ * @param caller_line The line number within \a caller_file where this function
+ * was called from.
+ * @param origin Message origin, if any.
+ * @param source_path The source file's path or NULL for none.
+ * @param source_line The source file's error line or zero for none.
+ * @param source_col The source file's error column or zero for none.
+ * @param what What kind of message, e.g., `"error"` or `"warning"`.
+ * @param what_color The color to print \a what in, if any.
  * @param format The `printf()` style format string.
  * @param args The `printf()` arguments.
  */
-static void fl_vprint_impl( fl_vprint_args const *vp_args, char const *format,
-                            va_list args ) {
-  assert( vp_args != NULL );
-  assert( vp_args->caller_file != NULL );
-  assert( vp_args->caller_line > 0 );
-  assert( vp_args->what != NULL );
+static void fl_vprint_impl( char const *caller_file, int caller_line,
+                            char const *origin, char const *source_path,
+                            unsigned source_line, unsigned source_col,
+                            char const *what, char const *what_color,
+                            char const *format, va_list args ) {
+  assert( caller_file != NULL );
+  assert( caller_line > 0 );
+  assert( what != NULL );
   assert( format != NULL );
 
-  if ( vp_args->origin != NULL ) {
-    EPRINTF( "%s (via %s): ", vp_args->origin, prog_name );
+  if ( origin != NULL ) {
+    EPRINTF( "%s (via %s): ", origin, prog_name );
   }
-  else if ( vp_args->source_path != NULL ) {
+  else if ( source_path != NULL ) {
     color_start( stderr, sgr_locus );
-    EPRINTF( "\"%s\"", path_no_dot_slash( vp_args->source_path ) );
+    EPRINTF( "\"%s\"", path_no_dot_slash( source_path ) );
     color_end( stderr, sgr_locus );
 
-    if ( vp_args->source_line > 0 ) {
+    if ( source_line > 0 ) {
       EPUTC( ':' );
       color_start( stderr, sgr_locus );
-      EPRINTF( "%u", vp_args->source_line );
+      EPRINTF( "%u", source_line );
       color_end( stderr, sgr_locus );
 
-      if ( vp_args->source_col > 0 ) {
+      if ( source_col > 0 ) {
         EPUTC( ',' );
         color_start( stderr, sgr_locus );
-        EPRINTF( "%u", vp_args->source_col );
+        EPRINTF( "%u", source_col );
         color_end( stderr, sgr_locus );
       }
     }
@@ -168,14 +157,14 @@ static void fl_vprint_impl( fl_vprint_args const *vp_args, char const *format,
     EPRINTF( "%s: ", prog_name );
   }
 
-  color_start( stderr, vp_args->what_color );
-  EPUTS( vp_args->what );
-  color_end( stderr, vp_args->what_color );
+  color_start( stderr, what_color );
+  EPUTS( what );
+  color_end( stderr, what_color );
   EPUTS( ": " );
 
   // LCOV_EXCL_START
   if ( opt_debug )
-    EPRINTF( "[%s:%d] ", vp_args->caller_file, vp_args->caller_line );
+    EPRINTF( "[%s:%d] ", caller_file, caller_line );
   // LCOV_EXCL_STOP
 
 #pragma GCC diagnostic push
@@ -315,16 +304,9 @@ void fl_print_error( char const *caller_file, int caller_line,
   va_list args;
   va_start( args, format );
   fl_vprint_impl(
-    &(fl_vprint_args){
-      .caller_file = caller_file,
-      .caller_line = caller_line,
-      .origin = origin,
-      .source_path = source_path,
-      .source_line = source_line,
-      .source_col = source_col,
-      .what = "error",
-      .what_color = sgr_error
-    },
+    caller_file, caller_line, origin,
+    source_path, source_line, source_col,
+    "error", sgr_error,
     format, args
   );
   va_end( args );
@@ -340,15 +322,9 @@ void fl_print_warning( char const *caller_file, int caller_line,
   va_list args;
   va_start( args, format );
   fl_vprint_impl(
-    &(fl_vprint_args){
-      .caller_file = caller_file,
-      .caller_line = caller_line,
-      .source_path = source_path,
-      .source_line = source_line,
-      .source_col = source_col,
-      .what = "warning",
-      .what_color = sgr_warning
-    },
+    caller_file, caller_line, /*origin=*/NULL,
+    source_path, source_line, source_col,
+    "warning", sgr_warning,
     format, args
   );
   va_end( args );
