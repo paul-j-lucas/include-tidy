@@ -58,14 +58,14 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
-typedef struct fl_print_args fl_print_args;
+typedef struct fl_vprint_args fl_vprint_args;
 
 ////////// structs ////////////////////////////////////////////////////////////
 
 /**
  * Additional arguments for fl_vprint_impl().
  */
-struct fl_print_args {
+struct fl_vprint_args {
   char const   *caller_file;            ///< Caller source file.
   int           caller_line;            ///< Caller source line.
   char const   *what;                   ///< Print what: `error` or `warning`.
@@ -140,36 +140,36 @@ static enum CXChildVisitResult cursor_ranges_visitor( CXCursor cursor,
  * called from.
  * @note A newline is _not_ printed.
  *
- * @param flpa The The fl_print_args to use.
+ * @param vp_args The The fl_vprint_args to use.
  * @param format The `printf()` style format string.
  * @param args The `printf()` arguments.
  */
-static void fl_vprint_impl( fl_print_args const *flpa, char const *format,
+static void fl_vprint_impl( fl_vprint_args const *vp_args, char const *format,
                             va_list args ) {
-  assert( flpa != NULL );
-  assert( flpa->caller_file != NULL );
-  assert( flpa->caller_line > 0 );
-  assert( flpa->what != NULL );
+  assert( vp_args != NULL );
+  assert( vp_args->caller_file != NULL );
+  assert( vp_args->caller_line > 0 );
+  assert( vp_args->what != NULL );
   assert( format != NULL );
 
-  if ( flpa->is_libclang_message ) {
+  if ( vp_args->is_libclang_message ) {
     EPRINTF( "libclang (via %s): ", prog_name );
   }
-  else if ( flpa->source_path != NULL ) {
+  else if ( vp_args->source_path != NULL ) {
     color_start( stderr, sgr_locus );
-    EPRINTF( "\"%s\"", path_no_dot_slash( flpa->source_path ) );
+    EPRINTF( "\"%s\"", path_no_dot_slash( vp_args->source_path ) );
     color_end( stderr, sgr_locus );
 
-    if ( flpa->source_line > 0 ) {
+    if ( vp_args->source_line > 0 ) {
       EPUTC( ':' );
       color_start( stderr, sgr_locus );
-      EPRINTF( "%u", flpa->source_line );
+      EPRINTF( "%u", vp_args->source_line );
       color_end( stderr, sgr_locus );
 
-      if ( flpa->source_col > 0 ) {
+      if ( vp_args->source_col > 0 ) {
         EPUTC( ',' );
         color_start( stderr, sgr_locus );
-        EPRINTF( "%u", flpa->source_col );
+        EPRINTF( "%u", vp_args->source_col );
         color_end( stderr, sgr_locus );
       }
     }
@@ -179,14 +179,14 @@ static void fl_vprint_impl( fl_print_args const *flpa, char const *format,
     EPRINTF( "%s: ", prog_name );
   }
 
-  color_start( stderr, flpa->what_color );
-  EPUTS( flpa->what );
-  color_end( stderr, flpa->what_color );
+  color_start( stderr, vp_args->what_color );
+  EPUTS( vp_args->what );
+  color_end( stderr, vp_args->what_color );
   EPUTS( ": " );
 
   // LCOV_EXCL_START
   if ( opt_debug )
-    EPRINTF( "[%s:%d] ", flpa->caller_file, flpa->caller_line );
+    EPRINTF( "[%s:%d] ", vp_args->caller_file, vp_args->caller_line );
   // LCOV_EXCL_STOP
 
 #pragma GCC diagnostic push
@@ -325,7 +325,7 @@ void fl_print_error( char const *caller_file, int caller_line,
   va_list args;
   va_start( args, format );
   fl_vprint_impl(
-    &(fl_print_args){
+    &(fl_vprint_args){
       .caller_file = caller_file,
       .caller_line = caller_line,
       .source_path = source_path,
@@ -348,7 +348,7 @@ void fl_print_libclang_error( char const *caller_file, int caller_line,
   va_list args;
   va_start( args, format );
   fl_vprint_impl(
-    &(fl_print_args){
+    &(fl_vprint_args){
       .caller_file = caller_file,
       .caller_line = caller_line,
       .is_libclang_message = true,
@@ -370,7 +370,7 @@ void fl_print_warning( char const *caller_file, int caller_line,
   va_list args;
   va_start( args, format );
   fl_vprint_impl(
-    &(fl_print_args){
+    &(fl_vprint_args){
       .caller_file = caller_file,
       .caller_line = caller_line,
       .source_path = source_path,
