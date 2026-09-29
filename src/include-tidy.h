@@ -38,6 +38,11 @@
 ////////// macros /////////////////////////////////////////////////////////////
 
 /**
+ * **include-tidy** primary author.
+ */
+#define TIDY_AUTHOR               "Paul J. Lucas"
+
+/**
  * **include-tidy** latest copyright year.
  */
 #define TIDY_COPYRIGHT_YEAR       "2026"
@@ -55,11 +60,6 @@
  * @sa #TIDY_LICENSE
  */
 #define TIDY_LICENSE_URL          "https://gnu.org/licenses/gpl.html"
-
-/**
- * **include-tidy** primary author.
- */
-#define TIDY_AUTHOR               "Paul J. Lucas"
 
 /**
  * Hash table load factor statistic `printf` format.
