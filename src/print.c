@@ -66,20 +66,15 @@ typedef struct fl_vprint_args fl_vprint_args;
  * Additional arguments for fl_vprint_impl().
  */
 struct fl_vprint_args {
-  char const   *caller_file;            ///< Caller source file.
-  int           caller_line;            ///< Caller source line.
-  char const   *origin;                 ///< Origin of message, if any.
-  char const   *what;                   ///< Print what: `error` or `warning`.
-  char const   *what_color;             ///< Color for \ref what.
+  char const *caller_file;              ///< Caller source file.
+  int         caller_line;              ///< Caller source line.
+  char const *msg_origin;               ///< Message origin, if any.
+  char const *what;                     ///< Print what: `error` or `warning`.
+  char const *what_color;               ///< Color for \ref what.
 
-  /**
-   * Fields for source file messages.
-   */
-  struct {
-    char const *source_path;            ///< Source path or NULL for none.
-    unsigned    source_line;            ///< Source line or zero for none.
-    unsigned    source_col;             ///< Source column or zero for none.
-  };
+  char const *source_path;              ///< Source path or NULL for none.
+  unsigned    source_line;              ///< Source line or zero for none.
+  unsigned    source_col;               ///< Source column or zero for none.
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -146,8 +141,8 @@ static void fl_vprint_impl( fl_vprint_args const *vp_args, char const *format,
   assert( vp_args->what != NULL );
   assert( format != NULL );
 
-  if ( vp_args->origin != NULL ) {
-    EPRINTF( "%s (via %s): ", vp_args->origin, prog_name );
+  if ( vp_args->msg_origin != NULL ) {
+    EPRINTF( "%s (via %s): ", vp_args->msg_origin, prog_name );
   }
   else if ( vp_args->source_path != NULL ) {
     color_start( stderr, sgr_locus );
@@ -345,7 +340,7 @@ void fl_print_libclang_error( char const *caller_file, int caller_line,
     &(fl_vprint_args){
       .caller_file = caller_file,
       .caller_line = caller_line,
-      .origin = "libclang",
+      .msg_origin = "libclang",
       .what = "error",
       .what_color = sgr_error
     },
