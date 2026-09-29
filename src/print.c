@@ -66,8 +66,8 @@ typedef struct fl_print_args fl_print_args;
  * Additional arguments for fl_print_impl().
  */
 struct fl_print_args {
-  char const   *tidy_file;              ///< Called-from source file.
-  int           tidy_line;              ///< Called-from source line.
+  char const   *caller_file;            ///< Caller source file.
+  int           caller_line;            ///< Caller source line.
   char const   *what;                   ///< Print what: `error` or `warning`.
   char const   *what_color;             ///< Color for \ref what.
 
@@ -147,8 +147,8 @@ static enum CXChildVisitResult cursor_ranges_visitor( CXCursor cursor,
 static void fl_print_impl( fl_print_args const *flpa, char const *format,
                            va_list args ) {
   assert( flpa != NULL );
-  assert( flpa->tidy_file != NULL );
-  assert( flpa->tidy_line > 0 );
+  assert( flpa->caller_file != NULL );
+  assert( flpa->caller_line > 0 );
   assert( flpa->what != NULL );
   assert( format != NULL );
 
@@ -186,7 +186,7 @@ static void fl_print_impl( fl_print_args const *flpa, char const *format,
 
   // LCOV_EXCL_START
   if ( opt_debug )
-    EPRINTF( "[%s:%d] ", flpa->tidy_file, flpa->tidy_line );
+    EPRINTF( "[%s:%d] ", flpa->caller_file, flpa->caller_line );
   // LCOV_EXCL_STOP
 
 #pragma GCC diagnostic push
@@ -315,19 +315,19 @@ static void tidy_Cursor_printAbridgedTokens( CXCursor cursor ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void fl_print_error( char const *tidy_file, int tidy_line,
+void fl_print_error( char const *caller_file, int caller_line,
                      char const *source_path, unsigned source_line,
                      unsigned source_col, char const *format, ... ) {
-  assert( tidy_file != NULL );
-  assert( tidy_line > 0 );
+  assert( caller_file != NULL );
+  assert( caller_line > 0 );
   assert( format != NULL );
 
   va_list args;
   va_start( args, format );
   fl_print_impl(
     &(fl_print_args){
-      .tidy_file = tidy_file,
-      .tidy_line = tidy_line,
+      .caller_file = caller_file,
+      .caller_line = caller_line,
       .source_path = source_path,
       .source_line = source_line,
       .source_col = source_col,
@@ -339,18 +339,18 @@ void fl_print_error( char const *tidy_file, int tidy_line,
   va_end( args );
 }
 
-void fl_print_libclang_error( char const *tidy_file, int tidy_line,
+void fl_print_libclang_error( char const *caller_file, int caller_line,
                                 char const *format, ... ) {
-  assert( tidy_file != NULL );
-  assert( tidy_line > 0 );
+  assert( caller_file != NULL );
+  assert( caller_line > 0 );
   assert( format != NULL );
 
   va_list args;
   va_start( args, format );
   fl_print_impl(
     &(fl_print_args){
-      .tidy_file = tidy_file,
-      .tidy_line = tidy_line,
+      .caller_file = caller_file,
+      .caller_line = caller_line,
       .is_libclang_message = true,
       .what = "error",
       .what_color = sgr_error
@@ -360,19 +360,19 @@ void fl_print_libclang_error( char const *tidy_file, int tidy_line,
   va_end( args );
 }
 
-void fl_print_warning( char const *tidy_file, int tidy_line,
+void fl_print_warning( char const *caller_file, int caller_line,
                        char const *source_path, unsigned source_line,
                        unsigned source_col, char const *format, ... ) {
-  assert( tidy_file != NULL );
-  assert( tidy_line > 0 );
+  assert( caller_file != NULL );
+  assert( caller_line > 0 );
   assert( format != NULL );
 
   va_list args;
   va_start( args, format );
   fl_print_impl(
     &(fl_print_args){
-      .tidy_file = tidy_file,
-      .tidy_line = tidy_line,
+      .caller_file = caller_file,
+      .caller_line = caller_line,
       .source_path = source_path,
       .source_line = source_line,
       .source_col = source_col,

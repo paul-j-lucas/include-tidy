@@ -188,9 +188,9 @@
  * @note This function isn't normally called directly; use the #print_error()
  * or #print_file_error() macros instead.
  *
- * @param tidy_file The name of the file where this function was called from.
- * @param tidy_line The line number within \a tidy_file where this function was
- * called from.
+ * @param caller_file The name of the file where this function was called from.
+ * @param caller_line The line number within \a caller_file where this function
+ * was called from.
  * @param source_path The source file's path or NULL for none.
  * @param source_line The source file's error line or zero for none.
  * @param source_col The source file's error column or zero for none.
@@ -202,7 +202,7 @@
  * @sa #print_file_error()
  */
 PJL_PRINTF_LIKE_FUNC(6)
-void fl_print_error( char const *tidy_file, int tidy_line,
+void fl_print_error( char const *caller_file, int caller_line,
                      char const *source_path, unsigned source_line,
                      unsigned source_col, char const *format, ... );
 
@@ -215,16 +215,16 @@ void fl_print_error( char const *tidy_file, int tidy_line,
  * @note This function isn't normally called directly; use the
  * #print_libclang_error() macro macro instead.
  *
- * @param tidy_file The name of the file where this function was called from.
- * @param tidy_line The line number within \a tidy_file where this function was
- * called from.
+ * @param caller_file The name of the file where this function was called from.
+ * @param caller_line The line number within \a caller_file where this function
+ * was called from.
  * @param format The `printf()` style format string.
  * @param ... The `printf()` arguments.
  *
  * @sa print_libclang_error()
  */
 PJL_PRINTF_LIKE_FUNC(3)
-void fl_print_libclang_error( char const *tidy_file, int tidy_line,
+void fl_print_libclang_error( char const *caller_file, int caller_line,
                               char const *format, ... );
 
 /**
@@ -236,9 +236,9 @@ void fl_print_libclang_error( char const *tidy_file, int tidy_line,
  * @note This function isn't normally called directly; use the
  * #print_file_warning() macro instead.
  *
- * @param tidy_file The name of the file where this function was called from.
- * @param tidy_line The line number within \a tidy_file where this function was
- * called from.
+ * @param caller_file The name of the file where this function was called from.
+ * @param caller_line The line number within \a caller_file where this function
+ * was called from.
  * @param source_path The source file's path or NULL for none.
  * @param source_line The source file's error line or zero for none.
  * @param source_col The source file's error column or zero for none.
@@ -249,7 +249,7 @@ void fl_print_libclang_error( char const *tidy_file, int tidy_line,
  * @sa #print_file_warning()
  */
 PJL_PRINTF_LIKE_FUNC(6)
-void fl_print_warning( char const *tidy_file, int tidy_line,
+void fl_print_warning( char const *caller_file, int caller_line,
                        char const *source_path, unsigned source_line,
                        unsigned source_col, char const *format, ... );
 
