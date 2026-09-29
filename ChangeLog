@@ -1,5 +1,8 @@
 2026-09-29  Paul J. Lucas <paul@lucasmail.org>
 
+   * src/Makefile.am, cli_options.c, config_file.c, include.c, print.c,
+     print.h, proxies.c, symbol.c, typedef.c, verbose.c, verbose.h: Moved
+     verbose_* functions into verbose.[hc].
    * print.c: Eliminated fl_vprint_args.
    * print.c, print.h, trans_unit.c: print function clean-up.
    * print.c: s/is_libclang_message/origin/
