@@ -111,7 +111,7 @@ void trans_unit_check_for_errors( void ) {
           print_source_line( diag_file_cs, diag_line, diag_col, diag_offset );
         }
         else {
-          print_libclang_error( "%s\n", diag_msg_cs );
+          print_error_from( "libclang", "%s\n", diag_msg_cs );
         }
 
         clang_disposeString( diag_msg_cxs );

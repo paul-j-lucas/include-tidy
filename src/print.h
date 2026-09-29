@@ -64,7 +64,7 @@
  * @sa #print_file_warning()
  */
 #define print_error(FORMAT, ...)                                \
-  fl_print_error( __FILE__, __LINE__,                           \
+  fl_print_error( __FILE__, __LINE__, /*origin=*/NULL,          \
     NULL, 0, 0, (FORMAT) VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__ \
   )
 
@@ -86,7 +86,7 @@
  * @sa #print_file_warning()
  */
 #define print_file_error(SOURCE_PATH, SOURCE_LINE, SOURCE_COL, FORMAT, ...) \
-  fl_print_error( __FILE__, __LINE__,                                       \
+  fl_print_error( __FILE__, __LINE__, /*origin=*/NULL,                      \
     (SOURCE_PATH), (SOURCE_LINE), (SOURCE_COL), (FORMAT)                    \
     VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__                                  \
   )
@@ -135,18 +135,19 @@
   )
 
 /**
- * Prints an error message from libclang.
+ * Prints an error message from \a ORIGIN.
  *
  * @note In debug mode, also prints the file & line where the function was
  * called from.
  * @note A newline is _not_ printed.
  *
+ * @param ORIGIN Message origin.
  * @param FORMAT The `printf()` style format string.
  * @param ... The `printf()` arguments.
  */
-#define print_libclang_error(FORMAT, ...)                               \
-  fl_print_libclang_error(                                              \
-    __FILE__, __LINE__, (FORMAT) VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__ \
+#define print_error_from(ORIGIN, FORMAT, ...)                   \
+  fl_print_error( __FILE__, __LINE__, (ORIGIN),                 \
+    NULL, 0, 0, (FORMAT) VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__ \
   )
 
 /**
@@ -186,6 +187,7 @@
  * @param caller_file The name of the file where this function was called from.
  * @param caller_line The line number within \a caller_file where this function
  * was called from.
+ * @param origin Message origin, if any.
  * @param source_path The source file's path or NULL for none.
  * @param source_line The source file's error line or zero for none.
  * @param source_col The source file's error column or zero for none.
@@ -196,31 +198,11 @@
  * @sa #print_error()
  * @sa #print_file_error()
  */
-PJL_PRINTF_LIKE_FUNC(6)
+PJL_PRINTF_LIKE_FUNC(7)
 void fl_print_error( char const *caller_file, int caller_line,
-                     char const *source_path, unsigned source_line,
-                     unsigned source_col, char const *format, ... );
-
-/**
- * Prints an error message from libclang.
- *
- * @note In debug mode, also prints the file & line where the function was
- * called from.
- * @note A newline is _not_ printed.
- * @note This function isn't normally called directly; use the
- * #print_libclang_error() macro macro instead.
- *
- * @param caller_file The name of the file where this function was called from.
- * @param caller_line The line number within \a caller_file where this function
- * was called from.
- * @param format The `printf()` style format string.
- * @param ... The `printf()` arguments.
- *
- * @sa print_libclang_error()
- */
-PJL_PRINTF_LIKE_FUNC(3)
-void fl_print_libclang_error( char const *caller_file, int caller_line,
-                              char const *format, ... );
+                     char const *origin, char const *source_path,
+                     unsigned source_line, unsigned source_col,
+                     char const *format, ... );
 
 /**
  * Prints a warning message to standard error.

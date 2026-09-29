@@ -68,7 +68,7 @@ typedef struct fl_vprint_args fl_vprint_args;
 struct fl_vprint_args {
   char const *caller_file;              ///< Caller source file.
   int         caller_line;              ///< Caller source line.
-  char const *msg_origin;               ///< Message origin, if any.
+  char const *origin;                   ///< Message origin, if any.
   char const *what;                     ///< Print what: `error` or `warning`.
   char const *what_color;               ///< Color for \ref what.
 
@@ -141,8 +141,8 @@ static void fl_vprint_impl( fl_vprint_args const *vp_args, char const *format,
   assert( vp_args->what != NULL );
   assert( format != NULL );
 
-  if ( vp_args->msg_origin != NULL ) {
-    EPRINTF( "%s (via %s): ", vp_args->msg_origin, prog_name );
+  if ( vp_args->origin != NULL ) {
+    EPRINTF( "%s (via %s): ", vp_args->origin, prog_name );
   }
   else if ( vp_args->source_path != NULL ) {
     color_start( stderr, sgr_locus );
@@ -305,8 +305,9 @@ static void tidy_Cursor_printAbridgedTokens( CXCursor cursor ) {
 ////////// extern functions ///////////////////////////////////////////////////
 
 void fl_print_error( char const *caller_file, int caller_line,
-                     char const *source_path, unsigned source_line,
-                     unsigned source_col, char const *format, ... ) {
+                     char const *origin, char const *source_path,
+                     unsigned source_line, unsigned source_col,
+                     char const *format, ... ) {
   assert( caller_file != NULL );
   assert( caller_line > 0 );
   assert( format != NULL );
@@ -317,30 +318,10 @@ void fl_print_error( char const *caller_file, int caller_line,
     &(fl_vprint_args){
       .caller_file = caller_file,
       .caller_line = caller_line,
+      .origin = origin,
       .source_path = source_path,
       .source_line = source_line,
       .source_col = source_col,
-      .what = "error",
-      .what_color = sgr_error
-    },
-    format, args
-  );
-  va_end( args );
-}
-
-void fl_print_libclang_error( char const *caller_file, int caller_line,
-                              char const *format, ... ) {
-  assert( caller_file != NULL );
-  assert( caller_line > 0 );
-  assert( format != NULL );
-
-  va_list args;
-  va_start( args, format );
-  fl_vprint_impl(
-    &(fl_vprint_args){
-      .caller_file = caller_file,
-      .caller_line = caller_line,
-      .msg_origin = "libclang",
       .what = "error",
       .what_color = sgr_error
     },
