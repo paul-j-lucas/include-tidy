@@ -1080,6 +1080,11 @@ static bool toml_unicode_parse( toml_file *toml, unsigned n, strbuf_t *sbuf ) {
   assert( toml != NULL );
   assert( sbuf != NULL );
 
+  toml_loc const err_loc = {
+    .line = toml->loc.line,
+    .col  = toml->loc.col - 1
+  };
+
   char32_t cp = 0;
   for ( unsigned i = 0; i < n; ++i ) {
     int const c = toml_getc( toml );
@@ -1099,6 +1104,7 @@ static bool toml_unicode_parse( toml_file *toml, unsigned n, strbuf_t *sbuf ) {
 
   if ( !cp_is_valid( cp ) ) {
     toml->error = TOML_ERR_INVALID_UNICODE;
+    toml->loc = err_loc;
     return false;
   }
 
