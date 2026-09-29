@@ -329,7 +329,7 @@ void fl_print_error( char const *caller_file, int caller_line,
 }
 
 void fl_print_libclang_error( char const *caller_file, int caller_line,
-                                char const *format, ... ) {
+                              char const *format, ... ) {
   assert( caller_file != NULL );
   assert( caller_line > 0 );
   assert( format != NULL );
