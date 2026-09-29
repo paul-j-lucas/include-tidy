@@ -63,7 +63,7 @@ typedef struct fl_print_args fl_print_args;
 ////////// structs ////////////////////////////////////////////////////////////
 
 /**
- * Additional arguments for fl_print_impl().
+ * Additional arguments for fl_vprint_impl().
  */
 struct fl_print_args {
   char const   *caller_file;            ///< Caller source file.
@@ -144,8 +144,8 @@ static enum CXChildVisitResult cursor_ranges_visitor( CXCursor cursor,
  * @param format The `printf()` style format string.
  * @param args The `printf()` arguments.
  */
-static void fl_print_impl( fl_print_args const *flpa, char const *format,
-                           va_list args ) {
+static void fl_vprint_impl( fl_print_args const *flpa, char const *format,
+                            va_list args ) {
   assert( flpa != NULL );
   assert( flpa->caller_file != NULL );
   assert( flpa->caller_line > 0 );
@@ -324,7 +324,7 @@ void fl_print_error( char const *caller_file, int caller_line,
 
   va_list args;
   va_start( args, format );
-  fl_print_impl(
+  fl_vprint_impl(
     &(fl_print_args){
       .caller_file = caller_file,
       .caller_line = caller_line,
@@ -347,7 +347,7 @@ void fl_print_libclang_error( char const *caller_file, int caller_line,
 
   va_list args;
   va_start( args, format );
-  fl_print_impl(
+  fl_vprint_impl(
     &(fl_print_args){
       .caller_file = caller_file,
       .caller_line = caller_line,
@@ -369,7 +369,7 @@ void fl_print_warning( char const *caller_file, int caller_line,
 
   va_list args;
   va_start( args, format );
-  fl_print_impl(
+  fl_vprint_impl(
     &(fl_print_args){
       .caller_file = caller_file,
       .caller_line = caller_line,
