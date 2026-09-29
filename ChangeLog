@@ -1,5 +1,11 @@
 2026-09-28  Paul J. Lucas <paul@lucasmail.org>
 
+   * toml_test.c: More Unicode escape tests.
+   * toml_lite.c: Fixed: correct error location for invalid Unicode escape.
+   * toml_test.c: More TOML Unicode tests.
+   * toml_lite.c: Added assert().
+   * unicode.c: Code coverage exclusion comments.
+   * unicode.c: Added 'u' suffix.
    * toml_lite.c: Added missing strbuf_cleanup().
    * toml_lite.c: s/char/int/ and eliminated casts.
    * toml_lite.c: Eliminated last_c_was_dot.
