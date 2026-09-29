@@ -35,10 +35,10 @@
 #include "include-tidy.h"
 #include "include.h"
 #include "options.h"
-#include "print.h"
 #include "trans_unit.h"
 #include "typedef.h"
 #include "util.h"
+#include "verbose.h"
 
 /// @cond DOXYGEN_IGNORE
 

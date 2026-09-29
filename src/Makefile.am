@@ -82,7 +82,8 @@ include_tidy_SOURCES =	array.c array.h \
 			typedef.c typedef.h \
 			type_traits.h \
 			unicode.c unicode.h \
-			util.c util.h
+			util.c util.h \
+			verbose.c verbose.h
 
 BASE_TEST_SOURCES =	pjl_config.h config.h \
 			array.c array.h \

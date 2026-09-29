@@ -32,11 +32,7 @@
 
 /// @cond DOXYGEN_IGNORE
 
-// libclang
-#include <clang-c/Index.h>
-
 // standard
-#include <stdbool.h>
 #include <stddef.h>                     /* for NULL */
 
 /// @endcond
@@ -158,29 +154,6 @@
     VA_OPT( (,), __VA_ARGS__ ) __VA_ARGS__  \
   )
 
-/**
- * Prints a cursor's "spelling", kind, and source location, preceded by a label
- * that's the stringification of \a CURSOR.
- *
- * @param CURSOR The cursor to print.
- *
- * @sa #verbose_print_cursor()
- * @sa verbose_print_cursor_impl()
- */
-#define VERBOSE_DEBUG_CURSOR(CURSOR) \
-  verbose_print_cursor_impl( #CURSOR, (CURSOR) )
-
-/**
- * Prints a cursor's "spelling", kind, and source location.
- *
- * @param CURSOR The cursor to print.
- *
- * @sa #VERBOSE_DEBUG_CURSOR()
- * @sa verbose_print_cursor_impl()
- */
-#define verbose_print_cursor(CURSOR) \
-  verbose_print_cursor_impl( "", (CURSOR) )
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
@@ -260,77 +233,6 @@ void print_include( char const *sgr_color, char const delims[static 2],
  */
 void print_source_line( char const *path, unsigned line, unsigned col,
                         unsigned offset );
-
-/**
- * Prints each value of \a argv preceded by its index.
- *
- * @note verbose_section_begin() is called implicitly.
- *
- * @param label A label to print before the word `argv`.  A space is printed
- * after the label.
- * @param argc The argument count of \a argv.
- * @param argv The command-line argument values.
- */
-void verbose_print_argv( char const *label, int argc,
-                         char const *const argv[] );
-
-/**
- * Prints a cursor's "spelling", kind, and source location.
- *
- * @note This function isn't normally called directly; use either the
- * #verbose_print_cursor() or #VERBOSE_DEBUG_CURSOR() macro instead.
- *
- * @param label A label to print before the cursor.  May be either NULL or the
- * empty string for none.  If neither, prints a space after the label.
- * @param cursor The cursor to print.
- *
- * @sa #VERBOSE_DEBUG_CURSOR()
- * @sa #verbose_print_cursor()
- */
-void verbose_print_cursor_impl( char const *label, CXCursor cursor );
-
-#ifndef NDEBUG
-/**
- * Prints the tokens for \a cursor.
- *
- * @param cursor The cursor to print the tokens for.
- */
-void verbose_print_tokens( CXCursor cursor );
-#endif /* NDEBUG */
-
-/**
- * Prints output preceeded by `"// tidy | "`.
- *
- * @param format The `printf()` format string literal to use.
- * @param ... The `printf()` arguments.
- * @return Returns the number of characters printed.
- */
-PJL_DISCARD
-PJL_PRINTF_LIKE_FUNC(1)
-int verbose_printf( char const *format, ... );
-
-/**
- * Gets whether statistics should be printed.
- *
- * @remarks If so, the `statistics:` header is printed only the first time this
- * function is called.
- *
- * @return Returns `true` only if statistics should be printed.
- */
-NODISCARD
-bool verbose_print_statistics( void );
-
-/**
- * This should be called once just before starting to print a new verbose
- * output section to print a blank line to separate sections if necessary.
- *
- * @param printed_header If not NULL, a pointer to flag to be tested and, if
- * `false`, sets it to `true`.
- * @return Returns `true` only if \a printed_header is NULL or \a
- * *printed_header was `false` initially.
- */
-PJL_DISCARD
-bool verbose_section_begin( bool *printed_header );
 
 ///////////////////////////////////////////////////////////////////////////////
 

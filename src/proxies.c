@@ -32,11 +32,11 @@
 #include "include.h"
 #include "options.h"
 #include "path_util.h"
-#include "print.h"
 #include "red_black.h"
 #include "strbuf.h"
 #include "trans_unit.h"
 #include "util.h"
+#include "verbose.h"
 
 /// @cond DOXYGEN_IGNORE
 

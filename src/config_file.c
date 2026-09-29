@@ -42,6 +42,7 @@
 #include "strbuf.h"
 #include "toml_lite.h"
 #include "util.h"
+#include "verbose.h"
 
 /// @cond DOXYGEN_IGNORE
 

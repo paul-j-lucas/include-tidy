@@ -43,6 +43,7 @@
 #include "symbol.h"
 #include "trans_unit.h"
 #include "util.h"
+#include "verbose.h"
 
 /// @cond DOXYGEN_IGNORE
 

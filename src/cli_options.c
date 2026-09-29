@@ -35,6 +35,7 @@
 #include "print.h"
 #include "strbuf.h"
 #include "util.h"
+#include "verbose.h"
 
 /// @cond DOXYGEN_IGNORE
 
