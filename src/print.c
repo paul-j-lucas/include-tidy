@@ -68,15 +68,9 @@ typedef struct fl_vprint_args fl_vprint_args;
 struct fl_vprint_args {
   char const   *caller_file;            ///< Caller source file.
   int           caller_line;            ///< Caller source line.
+  char const   *origin;                 ///< Origin of message, if any.
   char const   *what;                   ///< Print what: `error` or `warning`.
   char const   *what_color;             ///< Color for \ref what.
-
-  /**
-   * Fields for libclang messages.
-   */
-  struct {
-    bool        is_libclang_message;    ///< Is message from libclang?
-  };
 
   /**
    * Fields for source file messages.
@@ -152,8 +146,8 @@ static void fl_vprint_impl( fl_vprint_args const *vp_args, char const *format,
   assert( vp_args->what != NULL );
   assert( format != NULL );
 
-  if ( vp_args->is_libclang_message ) {
-    EPRINTF( "libclang (via %s): ", prog_name );
+  if ( vp_args->origin != NULL ) {
+    EPRINTF( "%s (via %s): ", vp_args->origin, prog_name );
   }
   else if ( vp_args->source_path != NULL ) {
     color_start( stderr, sgr_locus );
@@ -351,7 +345,7 @@ void fl_print_libclang_error( char const *caller_file, int caller_line,
     &(fl_vprint_args){
       .caller_file = caller_file,
       .caller_line = caller_line,
-      .is_libclang_message = true,
+      .origin = "libclang",
       .what = "error",
       .what_color = sgr_error
     },
