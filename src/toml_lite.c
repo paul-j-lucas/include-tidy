@@ -1104,6 +1104,7 @@ static bool toml_unicode_parse( toml_file *toml, unsigned n, strbuf_t *sbuf ) {
 
   char8_t u8c[ UTF8_CHAR_SIZE_MAX ];
   n = utf32c_8c( cp, u8c );
+  assert( n > 0 );
   strbuf_putsn( sbuf, POINTER_CAST( char const*, u8c ), n );
   return true;
 }
