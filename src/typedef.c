@@ -29,6 +29,7 @@
 #include "clang_util.h"
 #include "fnv1a.h"
 #include "hash_table.h"
+#include "include-tidy.h"
 #include "print.h"
 #include "util.h"
 

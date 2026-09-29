@@ -61,6 +61,11 @@
  */
 #define TIDY_AUTHOR               "Paul J. Lucas"
 
+/**
+ * Hash table load factor `printf` format.
+ */
+#define TIDY_STAT_LF_FMT          "%4.2f"
+
 ////////// enums //////////////////////////////////////////////////////////////
 
 /**

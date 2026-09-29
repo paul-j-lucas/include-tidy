@@ -50,11 +50,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Hash table load factor `printf` format.
- */
-#define TIDY_STAT_LF_FMT          "%4.2f"
-
-/**
  * Prints an error message to standard error.
  *
  * @note In debug mode, also prints the file & line where the function was
