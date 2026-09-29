@@ -1,5 +1,8 @@
 2026-09-29  Paul J. Lucas <paul@lucasmail.org>
 
+   * print.c, print.h, trans_unit.c: print function clean-up.
+   * print.c: s/is_libclang_message/origin/
+   * include-tidy.h, print.h, typedef.c: Moved TIDY_STAT_LF_FMT.
    * util.c, util.h: Removed strncpy_0() --- not used.
 
 2026-09-28  Paul J. Lucas <paul@lucasmail.org>
