@@ -1000,8 +1000,8 @@ static bool test_value_string( void ) {
     "ss = \"x\\\\y\"          \n"
     "ssq = 'xyz'              \n"
     "x = \"\\x42IT\"          \n"
-    "u = \"\\u0042IT\"        \n"
-    "U = \"\\U00000042IT\"    \n"
+    "euro = \"\\u20AC\"       \n"
+    "pound = \"\\xA3\"        \n"
     "smiley = \"\\U0001F642\" \n"
   );
 
@@ -1066,15 +1066,15 @@ static bool test_value_string( void ) {
       TEST( value->type == TOML_STRING ) &&
       TEST( strcmp( value->s, "BIT" ) == 0 );
 
-    value = toml_table_find( &test.table, "u" );
+    value = toml_table_find( &test.table, "euro" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_STRING ) &&
-      TEST( strcmp( value->s, "BIT" ) == 0 );
+      TEST( strcmp( value->s, "\xE2\x82\xAC" ) == 0 );
 
-    value = toml_table_find( &test.table, "U" );
+    value = toml_table_find( &test.table, "pound" );
     TEST( value != NULL ) &&
       TEST( value->type == TOML_STRING ) &&
-      TEST( strcmp( value->s, "BIT" ) == 0 );
+      TEST( strcmp( value->s, "\xC2\xA3" ) == 0 );
 
     value = toml_table_find( &test.table, "smiley" );
     TEST( value != NULL ) &&
