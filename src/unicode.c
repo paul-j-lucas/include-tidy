@@ -74,7 +74,7 @@ unsigned utf32c_8c( char32_t cp, char8_t u8c[static UTF8_CHAR_SIZE_MAX] ) {
     return 4;
   }
 
-  return 0;
+  return 0;                             // LCOV_EXCL_LINE
 }
 
 ///////////////////////////////////////////////////////////////////////////////
