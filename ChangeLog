@@ -1,5 +1,6 @@
 2026-09-29  Paul J. Lucas <paul@lucasmail.org>
 
+   * print.c: Eliminated fl_vprint_args.
    * print.c, print.h, trans_unit.c: print function clean-up.
    * print.c: s/is_libclang_message/origin/
    * include-tidy.h, print.h, typedef.c: Moved TIDY_STAT_LF_FMT.
