@@ -36,7 +36,7 @@
 
 static bool trim_equal( char const *before, char const *after ) {
   char *const dup = check_strdup( before );
-  bool const is_equal = strcmp( str_trim( dup ), after ) == 0;
+  bool const is_equal = strcmp( str_trim( dup, strlen( dup ) ), after ) == 0;
   free( dup );
   return is_equal;
 }

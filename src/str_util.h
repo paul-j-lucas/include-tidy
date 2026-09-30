@@ -47,6 +47,18 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * Like **strrchr**(3) except it takes \a n, the number of bytes to start the
+ * reverse search at.
+ *
+ * @param s Thr string to check.
+ * @param n The index to start the reverse search at.
+ * @param c The character to find.
+ * @return Returns a pointer to the last \a c relative to \a n in \a s or NULL
+ * if none.
+ */
+char* strnrchr( char const *s, size_t n, int c );
+
+/**
  * Gets whether \a s ends with \a end.
  *
  * @param s The string to check.
@@ -87,6 +99,7 @@ bool str_is_any( char const *s, char const *const strings[static 1] );
  * Trims both leading and trailing whitespace from a string.
  *
  * @param s The string to trim whitespace from.
+ * @param n The length of \a s.
  * @return Returns a pointer to within \a s having all whitespace trimmed.
  *
  * @warning If \a s starts with whitespace, the pointer returned is within \a
@@ -94,7 +107,7 @@ bool str_is_any( char const *s, char const *const strings[static 1] );
  * --- must be freed.
  */
 NODISCARD
-char* str_trim( char *s );
+char* str_trim( char *s, size_t n );
 
 ///////////////////////////////////////////////////////////////////////////////
 

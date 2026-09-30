@@ -58,11 +58,30 @@ bool str_is_any( char const *s, char const *const strings[static 1] ) {
   } // for
 }
 
-char* str_trim( char *s ) {
+char* strnrchr( char const *s, size_t n, int c ) {
   assert( s != NULL );
-  SKIP_WS( s );
-  for ( size_t len = strlen( s ); len > 0 && isspace( s[ --len ] ); )
-    s[ len ] = '\0';
+
+  while ( n-- > 0 ) {
+    if ( s[n] == c )
+      return STATIC_CAST( char*, s + n );
+  } // while
+
+  return NULL;
+}
+
+char* str_trim( char *s, size_t n ) {
+  assert( s != NULL );
+
+  size_t left = 0;
+  while ( left < n && isspace( s[ left ] ) )
+    ++left;
+
+  s += left;
+  n -= left;
+
+  while ( n > 0 && isspace( s[ --n ] ) )
+    s[ n ] = '\0';
+
   return s;
 }
 

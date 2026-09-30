@@ -245,7 +245,8 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
     }
   } // for
 
-  while ( getline( &line_buf, &line_cap, fcompiler ) != -1 ) {
+  ssize_t line_len;
+  while ( (line_len = getline( &line_buf, &line_cap, fcompiler )) != -1 ) {
     if ( strcmp( line_buf, COMPILER_SEARCH_END "\n" ) == 0 ) {
       found_search_end = true;
       break;
@@ -261,7 +262,7 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
       continue;
 #endif /* __APPLE__ */
 
-    char const *const include_path = str_trim( line_buf );
+    char const *const include_path = str_trim( line_buf, line_len );
     if ( unlikely( path_is_relative( include_path ) ) )
       continue;                         // LCOV_EXCL_LINE
 
