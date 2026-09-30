@@ -1,3 +1,8 @@
+2026-09-30  Paul J. Lucas <paul@lucasmail.org>
+
+   * src/Makefile.am, cli_options.c, str_util.c, str_util.h, str_util_test.c,
+     util.c, util.h, util_test.c, verbose.c: Split off str_util.[hc].
+
 2026-09-29  Paul J. Lucas <paul@lucasmail.org>
 
    * fnv1a.c, fnv1a.h: Added FNV1A_C().
