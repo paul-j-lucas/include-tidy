@@ -35,6 +35,8 @@
  * @{
  */
 
+////////// macros /////////////////////////////////////////////////////////////
+
 /**
  * Convenience macro for iterating over all supported C/C++ file extensions.
  *

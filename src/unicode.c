@@ -79,8 +79,12 @@ unsigned utf32c_8c( char32_t cp, char8_t u8c[static UTF8_CHAR_SIZE_MAX] ) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/** @} */
+
+/// @cond DOXYGEN_IGNORE
+
 extern inline bool cp_is_valid( unsigned long long );
 
-/** @} */
+/// @endcond
 
 /* vim:set et sw=2 ts=2: */

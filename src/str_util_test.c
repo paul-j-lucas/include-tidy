@@ -30,8 +30,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#pragma GCC diagnostic ignored "-Wunused-value"
-
 ////////// local functions ////////////////////////////////////////////////////
 
 static bool trim_equal( char const *before, char const *after ) {

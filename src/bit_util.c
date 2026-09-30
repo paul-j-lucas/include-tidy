@@ -37,8 +37,12 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/// @cond DOXYGEN_IGNORE
+
 extern inline bool is_01_bit( uint64_t );
 extern inline bool is_0n_bit_only_in_set( uint64_t, uint64_t );
 extern inline bool is_1_bit( uint64_t );
+
+/// @endcond
 
 /* vim:set et sw=2 ts=2: */

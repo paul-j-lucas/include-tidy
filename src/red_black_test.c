@@ -28,19 +28,26 @@
 #include <stdbool.h>
 #include <string.h>
 
-///////////////////////////////////////////////////////////////////////////////
+////////// enums //////////////////////////////////////////////////////////////
 
 enum rb_test_cmd {
   RB_TEST_INSERT,
   RB_TEST_DELETE
 };
-typedef enum rb_test_cmd rb_test_cmd_t;
+
+////////// typedefs ///////////////////////////////////////////////////////////
+
+typedef enum    rb_test_cmd         rb_test_cmd_t;
+typedef struct  rb_test_instruction rb_test_instruction_t;
+
+////////// structs ////////////////////////////////////////////////////////////
 
 struct rb_test_instruction {
   rb_test_cmd_t   cmd;
   char const     *key;
 };
-typedef struct rb_test_instruction rb_test_instruction_t;
+
+////////// local constants ////////////////////////////////////////////////////
 
 // This sequence of instructions used to cause the tree's invariants to break,
 // so it's now a test.

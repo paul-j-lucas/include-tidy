@@ -61,6 +61,8 @@
  * @{
  */
 
+////////// macros /////////////////////////////////////////////////////////////
+
 /// Command-line option character as a character literal.
 #define COPT(X)                   CHARIFY(OPT_##X)
 

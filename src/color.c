@@ -42,6 +42,15 @@
 #include <sys/stat.h>                   /* for stat() */
 #include <unistd.h>                     /* for isatty() */
 
+/// @endcond
+
+/**
+ * @addtogroup printing-color-group
+ * @{
+ */
+
+////////// macros /////////////////////////////////////////////////////////////
+
 //
 // Macros for Select Graphics Rendition SGR colors and other terminal
 // cababilities.
@@ -72,6 +81,8 @@
 #define SGR_END             "\33[m"     /**< End color sequence.          */
 #define SGR_EL              "\33[K"     /**< Erase in Line (EL) sequence. */
 
+/// @cond DOXYGEN_IGNORE
+
 //
 // Color capabilities.  Names containing Upper-case are unique to cdecl and
 // upper-case to avoid conflict with gcc.
@@ -84,11 +95,6 @@
 #define COLOR_CAP_WARNING         "warning"
 
 /// @endcond
-
-/**
- * @addtogroup printing-color-group
- * @{
- */
 
 ////////// local functions ////////////////////////////////////////////////////
 
