@@ -26,6 +26,7 @@ check_PROGRAMS =	array_test \
 			hash_table_test \
 			path_util_test \
 			red_black_test \
+			str_util_test \
 			strbuf_test \
 			toml_test \
 			util_test
@@ -75,12 +76,13 @@ include_tidy_SOURCES =	array.c array.h \
 			print.c print.h \
 			proxies.c proxies.h \
 			red_black.c red_black.h \
+			str_util.c str_util.h \
 			strbuf.c strbuf.h \
 			symbol.c symbol.h \
 			toml_lite.c toml_lite.h \
 			trans_unit.c trans_unit.h \
-			typedef.c typedef.h \
 			type_traits.h \
+			typedef.c typedef.h \
 			unicode.c unicode.h \
 			util.c util.h \
 			verbose.c verbose.h
@@ -89,10 +91,11 @@ BASE_TEST_SOURCES =	pjl_config.h config.h \
 			array.c array.h \
 			fnv1a.c fnv1a.h \
 			path_util.c path_util.h \
+			str_util.c str_util.h \
 			strbuf.c strbuf.h \
 			type_traits.h \
-			util.c util.h \
-			unit_test.c unit_test.h
+			unit_test.c unit_test.h \
+			util.c util.h
 
 array_test_SOURCES =	$(BASE_TEST_SOURCES) \
 			array_test.c
@@ -107,6 +110,9 @@ path_util_test_SOURCES=	$(BASE_TEST_SOURCES) \
 red_black_test_SOURCES=	$(BASE_TEST_SOURCES) \
 			red_black.c red_black.h \
 			red_black_test.c
+
+str_util_test_SOURCES= 	$(BASE_TEST_SOURCES) \
+			str_util_test.c
 
 strbuf_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 			strbuf_test.c

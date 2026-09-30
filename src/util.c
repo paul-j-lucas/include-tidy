@@ -35,7 +35,6 @@
 
 // standard
 #include <assert.h>
-#include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -174,26 +173,6 @@ void perror_exit( int status ) {
 }
 // LCOV_EXCL_STOP
 
-bool str_is_any( char const *s, char const *const strings[static 1] ) {
-  assert( s != NULL );
-
-  for (;;) {
-    char const *const next = *strings++;
-    if ( next == NULL )
-      return false;
-    if ( strcmp( s, next ) == 0 )
-      return true;
-  } // for
-}
-
-char* str_trim( char *s ) {
-  assert( s != NULL );
-  SKIP_WS( s );
-  for ( size_t len = strlen( s ); len > 0 && isspace( s[ --len ] ); )
-    s[ len ] = '\0';
-  return s;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */
@@ -211,7 +190,6 @@ extern inline char* (nonconst_empty_if_null)( char* );
 extern inline char const* (null_if_empty)( char const* );
 
 extern inline char const* plural_s( unsigned long long );
-extern inline bool str_ends_with( char const*, char const*, size_t );
 extern inline bool true_or_set( bool* );
 extern inline bool true_clear( bool* );
 

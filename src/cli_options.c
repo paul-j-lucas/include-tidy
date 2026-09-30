@@ -33,6 +33,7 @@
 #include "options.h"
 #include "path_util.h"
 #include "print.h"
+#include "str_util.h"
 #include "strbuf.h"
 #include "util.h"
 #include "verbose.h"

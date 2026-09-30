@@ -953,56 +953,6 @@ inline char const* plural_s( unsigned long long n ) {
 }
 
 /**
- * Gets whether \a s ends with \a end.
- *
- * @param s The string to check.
- * @param end The end string.
- * @param end_len The length of \a end.
- * @return Returns `true` only if \a s ends with \a end.
- */
-NODISCARD
-inline bool str_ends_with( char const *s, char const *end, size_t end_len ) {
-  size_t const s_len = strlen( s );
-  return s_len >= end_len && strcmp( s + s_len - end_len, end ) == 0;
-}
-
-/**
- * Gets whether \a s is among \a strings.
- *
- * @param s The string to look for.
- * @param strings The NULL terminated array of strings to look at.
- * @return Returns `true` only if \a s is among \a strings.
- */
-NODISCARD
-bool str_is_any( char const *s, char const *const strings[static 1] );
-
-/**
- * Convenience macro for calling str_is_any() constructing a compound array of
- * string literals ending with NULL.
- *
- * @param S The string to look for.
- * @param ... The strings to look at.
- * @return Returns `true` only if \a S is among ...
- */
-#define str_is_any_list(S,...)                                        \
-  str_is_any( (S),                                                    \
-              (char const*[]){ __VA_ARGS__ VA_OPT( (,), __VA_ARGS__ ) \
-                               (void*)0 } )
-
-/**
- * Trims both leading and trailing whitespace from a string.
- *
- * @param s The string to trim whitespace from.
- * @return Returns a pointer to within \a s having all whitespace trimmed.
- *
- * @warning If \a s starts with whitespace, the pointer returned is within \a
- * s. If \a s was dynamically allocated, \a s --- and not a pointer with \a s
- * --- must be freed.
- */
-NODISCARD
-char* str_trim( char *s );
-
-/**
  * Checks \a flag: if `false`, sets it to `true`.
  *
  * @param flag A pointer to the Boolean flag to be tested and, if `false`, sets
