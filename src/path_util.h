@@ -107,13 +107,14 @@ char* path_dirname( char const *path, strbuf_t *rv_dir_buf );
  * @endparblock
  *
  * @param path The absolute path to check against.
+ * @param path_len The length of \a path.
  * @param end_path The relative path to check.
  * @param end_path_len The length of \a end_path.
  * @return Returns `true` only if \a path ends with \a end_path at a directory
  * boundary.
  */
 NODISCARD
-bool path_ends_with( char const *path, char const *end_path,
+bool path_ends_with( char const *path, size_t path_len, char const *end_path,
                      size_t end_path_len );
 
 /**

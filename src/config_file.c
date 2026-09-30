@@ -690,8 +690,8 @@ static void first_parse( config_parse_fn_args const *config ) {
   rb_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( path_ends_with( include->abs_path, config->table->key.name,
-                         rel_path_len ) ) {
+    if ( path_ends_with( include->abs_path, strlen( include->abs_path ),
+                         config->table->key.name, rel_path_len ) ) {
       include->sort_rank = TIDY_SORT_FIRST;
     }
   } // for
@@ -886,8 +886,9 @@ static void proxy_parse_string( config_parse_fn_args const *config ) {
   rb_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *from_include;
         (from_include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( !path_ends_with( from_include->abs_path, config->value->s,
-                          rel_path_len ) ) {
+    if ( !path_ends_with( from_include->abs_path,
+                          strlen( from_include->abs_path ),
+                          config->value->s, rel_path_len ) ) {
       continue;
     }
     if ( from_include->proxy != NULL ) {
@@ -1345,7 +1346,8 @@ static void include_handle( char const *config_path, char const *key_name,
   rb_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *include;
         (include = rb_iterator_next( &iter )) != NULL; ) {
-    if ( path_ends_with( include->abs_path, rel_path, rel_path_len ) ) {
+    if ( path_ends_with( include->abs_path, strlen( include->abs_path ),
+                         rel_path, rel_path_len ) ) {
       if ( include->handling == TIDY_HANDLE_DEFAULT ) {
         include->handling = handling;
       }

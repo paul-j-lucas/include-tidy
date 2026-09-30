@@ -101,12 +101,11 @@ char* path_dirname( char const *path, strbuf_t *rv_dir_buf ) {
   return rv_dir_buf->str;
 }
 
-bool path_ends_with( char const *path, char const *end_path,
+bool path_ends_with( char const *path, size_t path_len, char const *end_path,
                      size_t end_path_len ) {
   assert( path != NULL );
   assert( end_path != NULL );
 
-  size_t const path_len = strlen( path );
   if ( end_path_len > path_len )
     return false;
   char const *const suffix = path + (path_len - end_path_len);

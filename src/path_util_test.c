@@ -69,9 +69,12 @@ static bool test_path_dirname( void ) {
 static bool test_path_ends_with( void ) {
   TEST_FUNC_BEGIN();
 
-  TEST(  path_ends_with( "/var/bar/x.log", STR_STRLEN( "bar/x.log" ) ) );
-  TEST( !path_ends_with( "/var/bar/x.log", STR_STRLEN( "foobar/x.log" ) ) );
-  TEST( !path_ends_with( "/var/bar/x.log", STR_STRLEN( "foobarbaz/x.log" ) ) );
+  TEST(  path_ends_with( STR_STRLEN( "/var/bar/x.log" ),
+                         STR_STRLEN( "bar/x.log" ) ) );
+  TEST( !path_ends_with( STR_STRLEN( "/var/bar/x.log" ),
+                         STR_STRLEN( "foobar/x.log" ) ) );
+  TEST( !path_ends_with( STR_STRLEN( "/var/bar/x.log" ),
+                         STR_STRLEN( "foobarbaz/x.log" ) ) );
 
   TEST_FUNC_END();
 }
