@@ -264,8 +264,8 @@ static char const *const TABLE_KINDS[] = {
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-char const       *tidy_associated_header_rel_path;
-bool              tidy_is_source_path_ignored;
+char const       *tidy_config_assoc_header_rel_path;
+bool              tidy_config_is_source_path_ignored;
 
 /// @endcond
 
@@ -556,7 +556,7 @@ static void associated_header_parse( config_parse_fn_args const *config ) {
   if ( !toml_string_parse( config, &string_value ) )
     return;
   if ( strcmp( config->table->key.name, tidy_source_path ) == 0 )
-    tidy_associated_header_rel_path = check_strdup( string_value );
+    tidy_config_assoc_header_rel_path = check_strdup( string_value );
 }
 
 /**
@@ -707,7 +707,7 @@ static void ignore_as_argument_parse( config_parse_fn_args const *config ) {
   if ( !toml_bool_parse( config, &ignore ) || !ignore )
     return;
   if ( strcmp( config->table->key.name, tidy_source_path ) == 0 )
-    tidy_is_source_path_ignored = true;
+    tidy_config_is_source_path_ignored = true;
 };
 
 /**
@@ -970,7 +970,7 @@ static void symbols_parse_string( config_parse_fn_args const *config ) {
  * Cleans-up all configuration data.
  */
 static void config_cleanup( void ) {
-  FREE( tidy_associated_header_rel_path );
+  FREE( tidy_config_assoc_header_rel_path );
   array_cleanup( &std_c_includes, &free_pptr );
   array_cleanup( &std_cxx_includes, &free_pptr );
   ht_table_cleanup( &ignore_symbol_set, /*free_fn=*/NULL );

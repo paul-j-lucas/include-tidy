@@ -155,7 +155,7 @@ int main( int argc, char const *argv[] ) {
   trans_unit_init( argc, argv );
   includes_init();
   config_init();
-  if ( !tidy_is_source_path_ignored ) {
+  if ( !tidy_config_is_source_path_ignored ) {
     trans_unit_check_for_errors();
     implicit_proxies_init();
     symbols_init();

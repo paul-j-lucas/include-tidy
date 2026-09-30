@@ -53,9 +53,12 @@
  * The associated header for the file being tidied, if any, and only if set
  * explicitly via the `associated-header` configuration key.
  */
-extern char const  *tidy_associated_header_rel_path;
+extern char const  *tidy_config_assoc_header_rel_path;
 
-extern bool         tidy_is_source_path_ignored;  ///< Ignore tidy_source_path?
+/**
+ * Ignore \ref tidy_source_path?
+ */
+extern bool         tidy_config_is_source_path_ignored;
 
 ////////// extern functions ///////////////////////////////////////////////////
 

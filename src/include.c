@@ -544,8 +544,8 @@ static bool is_associated_header( tidy_include const *include,
   assert( include != NULL );
   assert( source_file_no_ext != NULL );
 
-  if ( tidy_associated_header_rel_path != NULL )
-    return strcmp( include->rel_path, tidy_associated_header_rel_path ) == 0;
+  if ( tidy_config_assoc_header_rel_path != NULL )
+    return strcmp( include->rel_path, tidy_config_assoc_header_rel_path ) == 0;
 
   strbuf_t path_buf = STRBUF_INIT();
   char const *const include_rel_path_no_ext =
