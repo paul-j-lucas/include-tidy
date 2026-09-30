@@ -26,7 +26,6 @@
 // local
 #include "pjl_config.h"
 #include "str_util.h"
-#include "util.h"
 
 /// @cond DOXYGEN_IGNORE
 
@@ -56,17 +55,6 @@ bool str_is_any( char const *s, char const *const strings[static 1] ) {
     if ( strcmp( s, next ) == 0 )
       return true;
   } // for
-}
-
-char* strnrchr( char const *s, size_t n, int c ) {
-  assert( s != NULL );
-
-  while ( n-- > 0 ) {
-    if ( s[n] == c )
-      return STATIC_CAST( char*, s + n );
-  } // while
-
-  return NULL;
 }
 
 char* str_trim( char *s, size_t n ) {

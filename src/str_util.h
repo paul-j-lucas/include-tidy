@@ -47,18 +47,6 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Like **strrchr**(3) except it takes \a n, the number of bytes to start the
- * reverse search at.
- *
- * @param s Thr string to check.
- * @param n The index to start the reverse search at.
- * @param c The character to find.
- * @return Returns a pointer to the last \a c relative to \a n in \a s or NULL
- * if none.
- */
-char* strnrchr( char const *s, size_t n, int c );
-
-/**
  * Gets whether \a s ends with \a end.
  *
  * @param s The string to check.
