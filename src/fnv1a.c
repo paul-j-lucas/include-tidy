@@ -53,7 +53,7 @@
  * @sa fnv1a_mem()
  * @sa fnv1a_s()
  */
-static fnv1a_t const FNV1A_PRIME = 1099511628211UL;
+static fnv1a_t const FNV1A_PRIME = FNV1A_C(1099511628211);
 
 ////////// extern functions ///////////////////////////////////////////////////
 

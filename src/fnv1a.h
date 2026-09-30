@@ -50,17 +50,26 @@
 ////////// macros /////////////////////////////////////////////////////////////
 
 /**
+ * Creates an appropriate integer literal of \a N for fnv1a_t.
+ *
+ * @param N The integer literal to use.
+ * @return Returns \a N of type fnv1a_t.
+ */
+#define FNV1A_C(N)                UINT64_C(N)
+
+/**
  * Initialization value for Fowler-Noll-Vo hash function.
  *
  * @sa fnv1a_mem()
  */
-#define FNV1A_INIT                14695981039346656037UL
+#define FNV1A_INIT                FNV1A_C(14695981039346656037)
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
 /**
  * Result type for Fowler-Noll-Vo hash functions.
  *
+ * @sa #FNV1A_C()
  * @sa fnv1a_mem()
  * @sa fnv1a_s()
  */
