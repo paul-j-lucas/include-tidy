@@ -1,5 +1,6 @@
 2026-09-29  Paul J. Lucas <paul@lucasmail.org>
 
+   * fnv1a.c, fnv1a.h: Added FNV1A_C().
    * src/Makefile.am, cli_options.c, config_file.c, include.c, print.c,
      print.h, proxies.c, symbol.c, typedef.c, verbose.c, verbose.h: Moved
      verbose_* functions into verbose.[hc].
