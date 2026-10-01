@@ -1,3 +1,9 @@
+2026-10-01  Paul J. Lucas <paul@lucasmail.org>
+
+   * str_util.c, util.c: Fixed extern inline.
+   * config_file.c, include-tidy.c, include-tidy.h, include.c, options.c,
+     options.h, proxies.c, symbol.c: Moved test code.
+
 2026-09-30  Paul J. Lucas <paul@lucasmail.org>
 
    * clang_util.c, include-tidy.c, str_util.h, util.h: Moved functions.
