@@ -28,6 +28,7 @@
 #include "ipath.h"
 #include "array.h"
 #include "path_util.h"
+#include "str_util.h"
 #include "strbuf.h"
 #include "util.h"
 
@@ -97,7 +98,7 @@ void ipath_add( char const *path ) {
   } // for
 
   *(tidy_ipath*)array_push_back( &ipaths ) = (tidy_ipath){
-    .abs_path = check_strdup( path_buf ),
+    .abs_path = strdup_or_exit( path_buf ),
     .abs_path_len = strlen( path_buf )
   };
 }
@@ -155,7 +156,7 @@ char* ipath_relativize( char const *abs_path ) {
 
   shortest_include_path = path_no_dot_slash( shortest_include_path );
   assert( path_is_relative( shortest_include_path ) );
-  return check_strdup( shortest_include_path );
+  return strdup_or_exit( shortest_include_path );
 }
 
 void ipaths_init( void ) {

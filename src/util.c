@@ -39,7 +39,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for malloc(), ... */
-#include <string.h>
 #include <sysexits.h>
 
 /// @endcond
@@ -76,7 +75,7 @@ static inline size_t round_up_pow_2( size_t n, size_t multiple ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-unsigned check_asprintf( char **rv_s, char const *format, ... ) {
+unsigned asprintf_or_exit( char **rv_s, char const *format, ... ) {
   assert( rv_s != NULL );
   assert( format != NULL );
 
@@ -90,20 +89,6 @@ unsigned check_asprintf( char **rv_s, char const *format, ... ) {
 
   PERROR_EXIT_IF( raw_len < 0, EX_OSERR );
   return STATIC_CAST( unsigned, raw_len );
-}
-
-void* check_realloc( void *p, size_t size ) {
-  assert( size > 0 );
-  p = realloc( p, size );
-  PERROR_EXIT_IF( p == NULL, EX_OSERR );
-  return p;
-}
-
-char* check_strdup( char const *s ) {
-  assert( s != NULL );
-  char *const dup = strdup( s );
-  PERROR_EXIT_IF( dup == NULL, EX_OSERR );
-  return dup;
 }
 
 void fatal_error( int status, char const *format, ... ) {
@@ -172,6 +157,13 @@ void perror_exit( int status ) {
   exit( status );
 }
 // LCOV_EXCL_STOP
+
+void* realloc_or_exit( void *p, size_t size ) {
+  assert( size > 0 );
+  p = realloc( p, size );
+  PERROR_EXIT_IF( p == NULL, EX_OSERR );
+  return p;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

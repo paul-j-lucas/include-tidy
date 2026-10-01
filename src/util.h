@@ -405,17 +405,17 @@
 #endif /* HAVE___BUILTIN_EXPECT */
 
 /**
- * Convenience macro for calling check_realloc().
+ * Convenience macro for calling realloc_or_exit().
  *
  * @param TYPE The type to allocate.
  * @param N The number of objects of \a TYPE to allocate.  It _must_ be &gt; 0.
  * @return Returns a pointer to \a N uninitialized objects of \a TYPE.
  *
- * @sa check_realloc()
  * @sa #REALLOC()
+ * @sa realloc_or_exit()
  */
 #define MALLOC(TYPE,N) \
-  check_realloc( NULL, sizeof(TYPE) * STATIC_CAST( size_t, (N) ) )
+  realloc_or_exit( NULL, sizeof(TYPE) * STATIC_CAST( size_t, (N) ) )
 
 /**
  * Gets the number of characters needed to represent the largest magnitide
@@ -580,17 +580,17 @@
 #define PUTS(S)                   fputs( (S), stdout )
 
 /**
- * Convenience macro for calling check_realloc().
+ * Convenience macro for calling realloc_or_exit().
  *
  * @param PTR The pointer to memory to reallocate.  It is set to the newly
  * reallocated memory.
  * @param N The number of objects of \a TYPE to reallocate.
  *
- * @sa check_realloc()
+ * @sa realloc_or_exit()
  * @sa #MALLOC()
  */
 #define REALLOC(PTR,N) \
-  ((PTR) = check_realloc( (PTR), sizeof *(PTR) * STATIC_CAST( size_t, (N) ) ))
+  ((PTR) = realloc_or_exit( (PTR), sizeof *(PTR) * STATIC_CAST( size_t, (N) ) ))
 
 /**
  * Runs a statement at most once even if control passes through it more than
@@ -789,28 +789,7 @@ extern char const WS_CHARS[];
  */
 PJL_DISCARD
 PJL_PRINTF_LIKE_FUNC(2)
-unsigned check_asprintf( char **rv_s, char const *format, ... );
-
-/**
- * Calls **realloc**(3) and checks for failure.
- * If reallocation fails, prints an error message and exits.
- *
- * @param p The pointer to reallocate.  If NULL, new memory is allocated.
- * @param size The number of bytes to allocate.
- * @return Returns a pointer to the allocated memory.
- */
-NODISCARD
-void* check_realloc( void *p, size_t size );
-
-/**
- * Calls **strdup**(3) and checks for failure.
- * If memory allocation fails, prints an error message and exits.
- *
- * @param s The null-terminated string to duplicate.
- * @return Returns a copy of \a s.
- */
-NODISCARD
-char* check_strdup( char const *s );
+unsigned asprintf_or_exit( char **rv_s, char const *format, ... );
 
 /**
  * Checks whether \a s is null: if so, returns the empty string.
@@ -951,6 +930,18 @@ NODISCARD
 inline char const* plural_s( unsigned long long n ) {
   return n == 1 ? "" : "s";
 }
+
+/**
+ * Calls **realloc**(3) and checks for failure.
+ *
+ * @remarks If reallocation fails, prints an error message and exits.
+ *
+ * @param p The pointer to reallocate.  If NULL, new memory is allocated.
+ * @param size The number of bytes to allocate.
+ * @return Returns a pointer to the allocated memory.
+ */
+NODISCARD
+void* realloc_or_exit( void *p, size_t size );
 
 /**
  * Checks \a flag: if `false`, sets it to `true`.

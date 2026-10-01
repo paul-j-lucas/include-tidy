@@ -47,6 +47,17 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * Calls **strdup**(3) and checks for failure.
+ *
+ * @remarks If memory allocation fails, prints an error message and exits.
+ *
+ * @param s The null-terminated string to duplicate.
+ * @return Returns a copy of \a s.
+ */
+NODISCARD
+char* strdup_or_exit( char const *s );
+
+/**
  * Gets whether \a s ends with \a end.
  *
  * @param s The string to check.

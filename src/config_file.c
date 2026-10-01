@@ -39,6 +39,7 @@
 #include "print.h"
 #include "proxies.h"
 #include "red_black.h"
+#include "str_util.h"
 #include "strbuf.h"
 #include "toml_lite.h"
 #include "util.h"
@@ -556,7 +557,7 @@ static void associated_header_parse( config_parse_fn_args const *config ) {
   if ( !toml_string_parse( config, &string_value ) )
     return;
   if ( strcmp( config->table->key.name, tidy_source_path ) == 0 )
-    tidy_config_assoc_header_rel_path = check_strdup( string_value );
+    tidy_config_assoc_header_rel_path = strdup_or_exit( string_value );
 }
 
 /**
@@ -1472,7 +1473,7 @@ static void symbol_include_add( char const *from_sym_name,
     rb_tree_insert( &symbol_includes_map, &new_si, sizeof new_si );
   symbol_includes *const si = RB_DINT( rbi.node );
   if ( rbi.inserted ) {
-    si->from_sym_name = check_strdup( from_sym_name );
+    si->from_sym_name = strdup_or_exit( from_sym_name );
     rb_tree_init(
       &si->to_include_set, RB_DPTR,
       POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_rel_path )

@@ -22,7 +22,6 @@
 #include "pjl_config.h"
 #include "unit_test.h"
 #include "str_util.h"
-#include "util.h"
 
 // standard
 #include <stdbool.h>
@@ -33,7 +32,7 @@
 ////////// local functions ////////////////////////////////////////////////////
 
 static bool trim_equal( char const *before, char const *after ) {
-  char *const dup = check_strdup( before );
+  char *const dup = strdup_or_exit( before );
   bool const is_equal = strcmp( str_trim( dup, strlen( dup ) ), after ) == 0;
   free( dup );
   return is_equal;

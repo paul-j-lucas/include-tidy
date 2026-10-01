@@ -35,6 +35,7 @@
 #include "include-tidy.h"
 #include "include.h"
 #include "options.h"
+#include "str_util.h"
 #include "trans_unit.h"
 #include "typedef.h"
 #include "util.h"
@@ -275,7 +276,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
 
   tidy_typedef const *const found_tdef = typedef_find( sym_csr );
   char *sym_name = found_tdef != NULL ?
-    check_strdup( found_tdef->alias_name ) :
+    strdup_or_exit( found_tdef->alias_name ) :
     tidy_Cursor_getScopedSpelling( name_csr );
 
   if ( config_symbol_is_ignored( sym_name ) )

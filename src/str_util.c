@@ -26,6 +26,7 @@
 // local
 #include "pjl_config.h"
 #include "str_util.h"
+#include "util.h"
 
 /// @cond DOXYGEN_IGNORE
 
@@ -35,6 +36,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <sysexits.h>
 
 /// @endcond
 
@@ -44,6 +46,13 @@
  */
 
 ////////// extern functions ///////////////////////////////////////////////////
+
+char* strdup_or_exit( char const *s ) {
+  assert( s != NULL );
+  char *const dup = strdup( s );
+  PERROR_EXIT_IF( dup == NULL, EX_OSERR );
+  return dup;
+}
 
 bool str_is_any( char const *s, char const *const strings[static 1] ) {
   assert( s != NULL );

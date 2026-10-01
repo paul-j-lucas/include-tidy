@@ -214,7 +214,7 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
     " 2>&1";      // redirect stderr to stdout
 
   char *command = NULL;
-  check_asprintf( &command, COMMAND, compiler_path, source_lang );
+  asprintf_or_exit( &command, COMMAND, compiler_path, source_lang );
 
   FILE *const fcompiler = popen( command, "r" );
   free( command );
@@ -268,7 +268,7 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
       continue;                         // LCOV_EXCL_LINE
 
     char *new_arg = NULL;
-    check_asprintf( &new_arg, "-isystem%s", include_path );
+    asprintf_or_exit( &new_arg, "-isystem%s", include_path );
     insert_argv( pargc, pargv, isystem_argi++, 1,
                  CONST_CAST( char const**, &new_arg ) );
   } // while
@@ -903,7 +903,7 @@ static void move_tidy_args( int *pargc, char const *argv[],
 
         // Convert option to -I<dir> for include-tidy.
         char *new_arg = NULL;
-        check_asprintf( &new_arg, "-I%s", dir_arg );
+        asprintf_or_exit( &new_arg, "-I%s", dir_arg );
         tidy_argv[ tidy_argc++ ] = new_arg;
 
         goto next_argv;

@@ -39,6 +39,7 @@
 #include "path_util.h"
 #include "print.h"
 #include "red_black.h"
+#include "str_util.h"
 #include "strbuf.h"
 #include "symbol.h"
 #include "trans_unit.h"
@@ -362,7 +363,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
 
   if ( rbi.inserted ) {
     CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
-    included->abs_path = check_strdup( clang_getCString( abs_path_cxs ) );
+    included->abs_path = strdup_or_exit( clang_getCString( abs_path_cxs ) );
     clang_disposeString( abs_path_cxs );
 
     included->file     = included_file;
@@ -596,7 +597,7 @@ static char* make_symbols_comment( tidy_include const *include ) {
         most_ref_sym = sym;
     } // for
 
-    return check_strdup( most_ref_sym->name );
+    return strdup_or_exit( most_ref_sym->name );
   }
 
   //
@@ -722,7 +723,7 @@ static void maybe_print_include( tidy_include const *include,
       reset_opt_comment_style = true;
     }
     unsigned const line = *(unsigned*)array_front_nc( &include->lines );
-    check_asprintf( &comment, "DELETE LINE %u", line );
+    asprintf_or_exit( &comment, "DELETE LINE %u", line );
     sgr_color = sgr_include_del;
     do_print_include = true;
   }
@@ -748,12 +749,12 @@ static void maybe_print_include( tidy_include const *include,
       free( comment );
       unsigned const line = *(unsigned*)array_at_nc( &include->lines, i );
       if ( include->is_needed ) {
-        check_asprintf( &comment,
+        asprintf_or_exit( &comment,
           "DELETE LINE %u (same as line %u)", line, first_line
         );
       }
       else {
-        check_asprintf( &comment, "DELETE LINE %u", line );
+        asprintf_or_exit( &comment, "DELETE LINE %u", line );
       }
       print_include( sgr_include_del, delims, include->rel_path, comment );
     } // for
@@ -890,7 +891,7 @@ static char* tidy_File_getRelativePath( CXFile file ) {
   //  + Therefore, strdup the relativized path (the portion within path) and
   //    free the original path now.
 
-  char *const rel_path = check_strdup( ipath_relativize( path ) );
+  char *const rel_path = strdup_or_exit( ipath_relativize( path ) );
   free( path );
   return rel_path;
 }
