@@ -171,16 +171,7 @@ void* realloc_or_exit( void *p, size_t size ) {
 
 /// @cond DOXYGEN_IGNORE
 
-// See comment for NONCONST_OVERLOAD regarding ().
-extern inline char const* (empty_if_null)( char const* );
-
 extern inline bool false_set( bool* );
-
-// See comment for NONCONST_OVERLOAD regarding ().
-extern inline char* (nonconst_null_if_empty)( char* );
-extern inline char* (nonconst_empty_if_null)( char* );
-extern inline char const* (null_if_empty)( char const* );
-
 extern inline char const* plural_s( unsigned long long );
 extern inline bool true_or_set( bool* );
 extern inline bool true_clear( bool* );

@@ -88,6 +88,12 @@ char* str_trim( char *s, size_t n ) {
 
 /// @cond DOXYGEN_IGNORE
 
+// See comment for NONCONST_OVERLOAD regarding ().
+extern inline char const* (empty_if_null)( char const* );
+extern inline char* (nonconst_null_if_empty)( char* );
+extern inline char* (nonconst_empty_if_null)( char* );
+extern inline char const* (null_if_empty)( char const* );
+
 extern inline bool str_ends_with( char const*, char const*, size_t );
 
 /// @endcond
