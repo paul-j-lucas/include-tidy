@@ -1,5 +1,6 @@
 2026-09-30  Paul J. Lucas <paul@lucasmail.org>
 
+   * clang_util.c, include-tidy.c, str_util.h, util.h: Moved functions.
    * str_util.c, str_util.h: Removed strnrchr() -- not used.
    * cli_options.c, config_file.c, path_util.c, path_util.h, path_util_test.c:
      path_ends_with() now takes path_len.
