@@ -792,30 +792,6 @@ PJL_PRINTF_LIKE_FUNC(2)
 unsigned asprintf_or_exit( char **rv_s, char const *format, ... );
 
 /**
- * Checks whether \a s is null: if so, returns the empty string.
- *
- * @param s The pointer to check.
- * @return If \a s is null, returns the empty string; otherwise returns \a s.
- *
- * @sa null_if_empty()
- */
-NODISCARD
-inline char const* empty_if_null( char const *s ) {
-  return s == NULL ? "" : s;
-}
-
-/// @cond DOXYGEN_IGNORE
-// LCOV_EXCL_START
-NODISCARD
-inline char* nonconst_empty_if_null( char *s ) {
-  return CONST_CAST( char*, empty_if_null( s ) );
-}
-// LCOV_EXCL_STOP
-
-#define empty_if_null(S)          NONCONST_OVERLOAD( empty_if_null, (S) )
-/// @endcond
-
-/**
  * Checks \a flag: if `false`, sets it to `true`.
  *
  * @param flag A pointer to the Boolean flag to be tested and, if `false`,
@@ -880,33 +856,6 @@ void free_pptr( void *pptr );
 NODISCARD
 void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim );
 #endif /* NEED_MATRIX_NEW */
-
-/**
- * Checks whether \a s is null, an empty string, or consists only of
- * whitespace.
- *
- * @param s The null-terminated string to check.
- * @return If \a s is either null or the empty string, returns NULL; otherwise
- * returns a pointer to the first non-whitespace character in \a s.
- *
- * @sa empty_if_null()
- */
-NODISCARD
-inline char const* null_if_empty( char const *s ) {
-  return s != NULL && *SKIP_CHARS( s, WS_CHARS ) == '\0' ? NULL : s;
-}
-
-/// @cond DOXYGEN_IGNORE
-// LCOV_EXCL_START
-NODISCARD
-inline char* nonconst_null_if_empty( char *s ) {
-  return CONST_CAST( char*, null_if_empty( s ) );
-}
-// LCOV_EXCL_STOP
-
-#define nonconst_null_if_empty(S) \
-  NONCONST_OVERLOAD( nonconst_null_if_empty, (S) )
-/// @endcond
 
 /**
  * Prints an error message for `errno` to standard error and exits.

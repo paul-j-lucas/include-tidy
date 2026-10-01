@@ -33,6 +33,7 @@
 #include "options.h"
 #include "path_util.h"
 #include "proxies.h"
+#include "str_util.h"
 #include "symbol.h"
 #include "trans_unit.h"
 #include "util.h"
