@@ -28,7 +28,6 @@
 #include "proxies.h"
 #include "cli_options.h"
 #include "config_file.h"
-#include "include-tidy.h"
 #include "include.h"
 #include "options.h"
 #include "path_util.h"
@@ -218,12 +217,12 @@ static void include_proxies_dump( bool want_explicit ) {
     include_get_delims( include->proxy, proxy_delims );
 
     char const *include_path, *proxy_path;
-    if ( tidy_test != TIDY_TEST_NONE ) {
+    if ( opt_test != TIDY_TEST_NONE ) {
       include_path = include->rel_path;
       proxy_path = include->proxy->rel_path;
     }
     else {
-      // LCOV_EXCL_START: coverage is run when tidy_test != TIDY_TEST_NONE.
+      // LCOV_EXCL_START: coverage is run when opt_test != TIDY_TEST_NONE.
       include_path = include->abs_path;
       proxy_path = include->proxy->abs_path;
       // LCOV_EXCL_STOP

@@ -64,6 +64,7 @@ char const   *opt_config_path;
 bool          opt_debug;
 tidy_error    opt_error;
 unsigned      opt_line_length = OPT_LINE_LENGTH_DEFAULT;
+tidy_test     opt_test;
 tidy_verbose  opt_verbose;
 
 /// @endcond
@@ -213,6 +214,29 @@ bool opt_line_length_parse( char const *s ) {
   if ( ull > OPT_LINE_LENGTH_MAX )
     return false;
   opt_line_length = STATIC_CAST( unsigned, ull );
+  return true;
+}
+
+bool opt_test_parse( char const *test_format ) {
+  assert( test_format != NULL );
+
+  option_str_set_all_or_none( &test_format, OPT_TEST_ALL );
+  tidy_test test = TIDY_TEST_NONE;
+
+  for ( char const *s = test_format; *s != '\0'; ++s ) {
+    switch ( *s ) {
+      case 'e':
+        test |= TIDY_TEST_NO_ETC_XDG;
+        break;
+      case 'h':
+        test |= TIDY_TEST_NO_HOME;
+        break;
+      default:
+        return false;                   // LCOV_EXCL_LINE
+    } // switch
+  } // for
+
+  opt_test = test;
   return true;
 }
 

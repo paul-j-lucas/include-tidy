@@ -466,7 +466,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
 
     char delims[2];
     include_get_delims( included, delims );
-    char const *const included_path = tidy_test != TIDY_TEST_NONE ?
+    char const *const included_path = opt_test != TIDY_TEST_NONE ?
       included->rel_path : included->abs_path;
 
     if ( IS_VERBOSE( INCLUDES_ALL ) ) {
@@ -821,7 +821,7 @@ static void print_statistics( void ) {
   if ( max_include != NULL ) {
     char delims[2];
     include_get_delims( max_include, delims );
-    char const *const max_include_path = tidy_test != TIDY_TEST_NONE ?
+    char const *const max_include_path = opt_test != TIDY_TEST_NONE ?
       max_include->rel_path : max_include->abs_path;
     verbose_printf( "    is-max-load-factor:\n" );
     verbose_printf(

@@ -58,6 +58,7 @@
 #define OPT_COMPILER_DEFAULT      "clang" /**< Default compiler path. */
 #define OPT_LINE_LENGTH_DEFAULT   80      /**< Default line length. */
 #define OPT_LINE_LENGTH_MAX       512     /**< Maximum line length. */
+#define OPT_TEST_ALL              "eh"    /**< All test values. */
 #define OPT_VERBOSE_ALL           "acCdfFiIpPsSz" /**< All verbose values. */
 
 ////////// enums //////////////////////////////////////////////////////////////
@@ -79,6 +80,15 @@ enum tidy_error {
   TIDY_ERROR_IF_VIOLATIONS,             ///< Non-zero if violations.
   TIDY_ERROR_ALWAYS,                    ///< Always exit with non-zero.
   TIDY_ERROR_NEVER                      ///< Never exit with non-zero.
+};
+
+/**
+ * Test mode.
+ */
+enum tidy_test {
+  TIDY_TEST_NONE        = 0,            ///< Not being tested.
+  TIDY_TEST_NO_ETC_XDG  = 1 << 0,       ///< Don't read files under `/etc/xdg`.
+  TIDY_TEST_NO_HOME     = 1 << 1,       ///< Don't read files under `$HOME`.
 };
 
 /**
@@ -111,6 +121,7 @@ enum tidy_verbose {
 
 typedef enum tidy_comment tidy_comment;
 typedef enum tidy_error   tidy_error;
+typedef enum tidy_test    tidy_test;
 typedef enum tidy_verbose tidy_verbose;
 
 ////////// extern option variables ////////////////////////////////////////////
@@ -125,6 +136,7 @@ extern char const  *opt_config_path;      ///< Configuration file path.
 extern bool         opt_debug;            ///< Print debugging output?
 extern tidy_error   opt_error;            ///< When to exit with non-zero.
 extern unsigned     opt_line_length;      ///< Line length.
+extern tidy_test    opt_test;             ///< Is **include-tidy** under test?
 extern tidy_verbose opt_verbose;          ///< Print verbose output?
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -178,10 +190,32 @@ bool opt_error_parse( char const *s );
  * Parses the line length.
  *
  * @param s The string to parse.
- * @return Returns the line length.
+ * @return Returns `true` only if \a s parsed successfully.
  */
 NODISCARD
 bool opt_line_length_parse( char const *s );
+
+/**
+ * Parses the value of the test environment variable.
+ *
+ * @param test_format
+ * @parblock
+ * The NULL-terminated **include-tidy** test format string (case sensitive) to
+ * parse.  Valid formats are:
+ *
+ * Format | Meaning
+ * -------|-----------------------------------------------------------------
+ * `e`    | Don't read files under `/etc/xdg/include-tidy` by default.
+ * `h`    | Don't read files under the user's home directory by default.
+ *
+ * Multiple formats may be given, one immediately after the other, e.g., `eh`.
+ * Alternatively, `*` may be given to mean "all" or either the empty string or
+ * `-` may be given to mean "none."
+ * @endparblock
+ * @return Returns `true` only if \a test_format parsed successfully.
+ */
+NODISCARD
+bool opt_test_parse( char const *test_format );
 
 /**
  * Parses the value of the **include-tidy** verbose option.
@@ -210,7 +244,7 @@ bool opt_line_length_parse( char const *s );
  * Alternatively, `*` may be given to mean "all" or either the empty string or
  * `-` may be given to mean "none."
  * @endparblock
- * @return Returns the parsed value.
+ * @return Returns `true` only if \a verbose_format parsed successfully.
  */
 NODISCARD
 bool opt_verbose_parse( char const *verbose_format );

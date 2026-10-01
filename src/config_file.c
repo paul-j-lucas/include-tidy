@@ -1091,7 +1091,7 @@ static FILE* config_file_find( char const *config_path,
       ++case_num;
       char const *config_dirs = null_if_empty( getenv( "XDG_CONFIG_DIRS" ) );
       if ( config_dirs == NULL ) {
-        if ( (tidy_test & TIDY_TEST_NO_ETC_XDG) == 1 )
+        if ( (opt_test & TIDY_TEST_NO_ETC_XDG) == 1 )
           break;
         config_dirs = "/etc/xdg";       // LCOV_EXCL_LINE
       }
@@ -1305,7 +1305,7 @@ static char const* home_dir( void ) {
   static char const *home;
 
   RUN_ONCE {
-    if ( (tidy_test & TIDY_TEST_NO_HOME) == 0 ) {
+    if ( (opt_test & TIDY_TEST_NO_HOME) == 0 ) {
       home = null_if_empty( getenv( "HOME" ) );
 #if HAVE_GETEUID && HAVE_GETPWUID && HAVE_STRUCT_PASSWD_PW_DIR
       if ( home == NULL ) {
@@ -1506,7 +1506,7 @@ static void symbol_includes_dump( void ) {
           (to_include = rb_iterator_next( &ti_iter )) != NULL; ) {
       char delims[2];
       include_get_delims( to_include, delims );
-      char const *const to_include_path = tidy_test != TIDY_TEST_NONE ?
+      char const *const to_include_path = opt_test != TIDY_TEST_NONE ?
         to_include->rel_path : to_include->abs_path;
       printf(
         "%s%c%s%c",

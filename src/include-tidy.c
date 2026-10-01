@@ -39,13 +39,8 @@
 #include "util.h"
 
 // system
-#include <assert.h>
 #include <stdlib.h>
 #include <sysexits.h>
-
-////////// macros /////////////////////////////////////////////////////////////
-
-#define INCLUDE_TIDY_TEST_ALL     "eh"  /**< All test values. */
 
 ////////// enums //////////////////////////////////////////////////////////////
 
@@ -63,11 +58,28 @@ enum {
 /// Otherwise Doxygen generates two entries.
 
 char const   *prog_name;
-tidy_test_t   tidy_test;
 
 /// @endcond
 
 ////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Initializes testing.
+ *
+ * @param env_var The name of the environment variable containing a test format
+ * string (case sensitive) to parse.
+ */
+void test_init( char const *env_var ) {
+  char const *const value = empty_if_null( getenv( env_var ) );
+  if ( !opt_test_parse( value ) ) {
+    // LCOV_EXCL_START
+    fatal_error( EX_USAGE,
+      "\"%s\": invalid value for %s; must be [" OPT_TEST_ALL "]|*|-\n",
+      value, env_var
+    );
+    // LCOV_EXCL_STOP
+  }
+}
 
 /**
  * Gets the status **include-tidy** should exit with.
@@ -85,58 +97,6 @@ static int tidy_status( void ) {
   return EX_OK;
 }
 
-/**
- * Parses the value of the test environment variable.
- *
- * @param env_var
- * @parblock
- * The name of the environment variable containing an **include-tidy** test
- * format string (case sensitive) to parse.  Valid formats are:
- *
- * Format | Meaning
- * -------|-----------------------------------------------------------------
- * `e`    | Don't read files under `/etc/xdg/include-tidy` by default.
- * `h`    | Don't read files under the user's home directory by default.
- *
- * Multiple formats may be given, one immediately after the other, e.g., `eh`.
- * Alternatively, `*` may be given to mean "all" or either the empty string or
- * `-` may be given to mean "none."
- * @endparblock
- * @return Returns the parsed value.
- */
-NODISCARD
-static tidy_test_t tidy_test_parse( char const *env_var ) {
-  assert( env_var != NULL );
-
-  char const *value = null_if_empty( getenv( env_var ) );
-  if ( value == NULL )
-    return TIDY_TEST_NONE;              // LCOV_EXCL_LINE
-
-  option_str_set_all_or_none( &value, INCLUDE_TIDY_TEST_ALL );
-  tidy_test_t t = TIDY_TEST_NONE;
-
-  for ( char const *s = value; *s != '\0'; ++s ) {
-    switch ( *s ) {
-      case 'e':
-        t |= TIDY_TEST_NO_ETC_XDG;
-        break;
-      case 'h':
-        t |= TIDY_TEST_NO_HOME;
-        break;
-      default:
-        // LCOV_EXCL_START
-        fatal_error( EX_USAGE,
-          "\"%s\": invalid value for %s;"
-          " must be [" INCLUDE_TIDY_TEST_ALL "]|*|-\n",
-          value, env_var
-        );
-        // LCOV_EXCL_STOP
-    } // switch
-  } // for
-
-  return t;
-}
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
@@ -148,9 +108,9 @@ static tidy_test_t tidy_test_parse( char const *env_var ) {
  */
 int main( int argc, char const *argv[] ) {
   prog_name = path_basename( argv[0] );
-  tidy_test = tidy_test_parse( "INCLUDE_TIDY_TEST" );
 
   // Initialization MUST happen in this order.
+  test_init( "INCLUDE_TIDY_TEST" );
   cli_options_init( &argc, &argv );
   colors_init();
   trans_unit_init( argc, argv );

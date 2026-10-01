@@ -312,12 +312,12 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     include_get_delims( to_include, delims );
 
     char const *from_sym_name, *to_include_path;
-    if ( tidy_test != TIDY_TEST_NONE ) {
+    if ( opt_test != TIDY_TEST_NONE ) {
       from_sym_name = sym->name;
       to_include_path = to_include->rel_path;
     }
     else {
-      // LCOV_EXCL_START: coverage is run when tidy_test != TIDY_TEST_NONE.
+      // LCOV_EXCL_START: coverage is run when opt_test != TIDY_TEST_NONE.
       from_sym_name = sym->key;
       to_include_path = to_include->abs_path;
       // LCOV_EXCL_STOP
