@@ -1,5 +1,9 @@
 2026-10-02  Paul J. Lucas <paul@lucasmail.org>
 
+   * src/Makefile.am, cli_options.c, cli_options.h, config_file.c,
+     config_file.h, cxx.c, include-tidy.c, include.c, include.h, proxies.c,
+     proxies.h, source.h, symbol.c, symbol.h, trans_unit.c, trans_unit.h,
+     verbose.c, verbose.h: Elimiated some global variables.
    * config_file.c, include.c, include.h, proxies.c, symbol.c:
      include_get_delims() now returns the delimiters.
 
