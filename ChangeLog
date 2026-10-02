@@ -1,5 +1,8 @@
 2026-10-01  Paul J. Lucas <paul@lucasmail.org>
 
+   * include.c: Now using tidy_dupCString().
+   * clang_util.c, clang_util.h, symbol.c, symbol.h: Now using
+     clang_getCursorUSR() for tidy_symbol::key.
    * str_util.c, util.c: Fixed extern inline.
    * config_file.c, include-tidy.c, include-tidy.h, include.c, options.c,
      options.h, proxies.c, symbol.c: Moved test code.
