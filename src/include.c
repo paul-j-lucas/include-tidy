@@ -363,9 +363,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
 
   if ( rbi.inserted ) {
     CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
-    included->abs_path = strdup_or_exit( clang_getCString( abs_path_cxs ) );
-    clang_disposeString( abs_path_cxs );
-
+    included->abs_path = tidy_dupCString( abs_path_cxs );
     included->file     = included_file;
     included->is_local = path_is_local( included->abs_path );
 
