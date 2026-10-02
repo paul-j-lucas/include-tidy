@@ -1504,8 +1504,7 @@ static void symbol_includes_dump( void ) {
     rb_iterator_init( &ti_iter, &si->to_include_set );
     for ( tidy_include const *to_include;
           (to_include = rb_iterator_next( &ti_iter )) != NULL; ) {
-      char delims[2];
-      include_get_delims( to_include, delims );
+      char const *const delims = include_get_delims( to_include );
       char const *const to_include_path = opt_test != TIDY_TEST_NONE ?
         to_include->rel_path : to_include->abs_path;
       printf(

@@ -462,8 +462,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       );
     }
 
-    char delims[2];
-    include_get_delims( included, delims );
+    char const *const delims = include_get_delims( included );
     char const *const included_path = opt_test != TIDY_TEST_NONE ?
       included->rel_path : included->abs_path;
 
@@ -698,7 +697,6 @@ static void maybe_print_include( tidy_include const *include,
   }
 
   char       *comment = NULL;
-  char        delims[2];
   bool        do_print_include = false;
   bool const  is_direct = include->depth == 0;
   bool        reset_opt_comment_style = false;
@@ -726,7 +724,7 @@ static void maybe_print_include( tidy_include const *include,
     do_print_include = true;
   }
 
-  include_get_delims( include, delims );
+  char const *const delims = include_get_delims( include );
   if ( do_print_include ) {
     if ( true_clear( &args->print_blank_line ) )
       putchar( '\n' );
@@ -817,8 +815,7 @@ static void print_statistics( void ) {
   } // for
 
   if ( max_include != NULL ) {
-    char delims[2];
-    include_get_delims( max_include, delims );
+    char const *const delims = include_get_delims( max_include );
     char const *const max_include_path = opt_test != TIDY_TEST_NONE ?
       max_include->rel_path : max_include->abs_path;
     verbose_printf( "    is-max-load-factor:\n" );
@@ -1077,19 +1074,6 @@ tidy_include* include_find_by_rel_path( char const *rel_path ) {
   return include;
 }
 
-void include_get_delims( tidy_include const *include, char delim[static 2] ) {
-  assert( include != NULL );
-
-  if ( include->is_local ) {
-    delim[0] = '"';
-    delim[1] = '"';
-  }
-  else {
-    delim[0] = '<';
-    delim[1] = '>';
-  }
-}
-
 // See comment for NONCONST_OVERLOAD regarding ().
 tidy_include const* (include_get_proxy)( tidy_include const *include ) {
   assert( include != NULL );
@@ -1202,6 +1186,7 @@ unsigned tidy_File_includes( CXFile ref_file, CXFile def_file ) {
 
 /// @cond DOXYGEN_IGNORE
 
+extern char const* include_get_delims( tidy_include const* );
 extern inline tidy_include* nonconst_include_get_proxy( tidy_include* );
 
 /// @endcond

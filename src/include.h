@@ -178,12 +178,18 @@ NODISCARD
 tidy_include* include_find_by_rel_path( char const *rel_path );
 
 /**
- * Gets the delimiters for \a include, either local or system, to use.
+ * Gets the `#include` delimiters for \a include, either local or system, to
+ * use.
  *
  * @param include The include file to get the delimiters for.
- * @param delims The 2-element array to receive the delimiters.
+ * @return Returns a string, \a d, where _d_`[0]` is the opening delimiter and
+ * _d_`[1]` is the closing delimiter, i.e., `""` (for local) or `<>` (for
+ * system).
  */
-void include_get_delims( tidy_include const *include, char delims[static 2] );
+NODISCARD
+inline char const* include_get_delims( tidy_include const *include ) {
+  return include->is_local ? "\"\"" : "<>";
+}
 
 /**
  * Gets the proxy for \a include, if any.

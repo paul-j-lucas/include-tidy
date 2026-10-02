@@ -308,8 +308,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
   if ( IS_VERBOSE( SYMBOLS ) ) {
     if ( verbose_section_begin( &sid->printed_symbols_header  ) )
       verbose_printf( "symbols:\n" );
-    char delims[2];
-    include_get_delims( to_include, delims );
+    char const *const delims = include_get_delims( to_include );
 
     char const *from_sym_name, *to_include_path;
     if ( opt_test != TIDY_TEST_NONE ) {

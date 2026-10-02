@@ -212,9 +212,8 @@ static void include_proxies_dump( bool want_explicit ) {
         want_explicit ? "explicit" : "implicit"
       );
     }
-    char delims[2], proxy_delims[2];
-    include_get_delims( include, delims );
-    include_get_delims( include->proxy, proxy_delims );
+    char const *const delims = include_get_delims( include );
+    char const *const proxy_delims = include_get_delims( include->proxy );
 
     char const *include_path, *proxy_path;
     if ( opt_test != TIDY_TEST_NONE ) {
