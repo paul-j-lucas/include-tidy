@@ -1,3 +1,8 @@
+2026-10-02  Paul J. Lucas <paul@lucasmail.org>
+
+   * config_file.c, include.c, include.h, proxies.c, symbol.c:
+     include_get_delims() now returns the delimiters.
+
 2026-10-01  Paul J. Lucas <paul@lucasmail.org>
 
    * include.c: Now using tidy_dupCString().
