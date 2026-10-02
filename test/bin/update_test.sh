@@ -93,7 +93,7 @@ trap "x=$?; rm -f $TMPDIR/*_$$_* 2>/dev/null; exit $x" EXIT HUP INT TERM
 
 DATA_DIR="$srcdir/data"
 EXPECTED_DIR="$srcdir/expected"
-ACTUAL_OUTPUT="$TMPDIR/cdecl_test_output_$$_"
+ACTUAL_OUTPUT="$TMPDIR/include_tidy_test_output_$$_"
 
 # If you update any of this, update the same in run_test.sh also.
 export INCLUDE_TIDY_TEST=eh
@@ -117,7 +117,7 @@ ulimit -c 0
 
 ########## Update tests #######################################################
 
-update_cdecl_test() {
+update_include_tidy_test() {
   TEST_PATH="$1"
   TEST_NAME=$(local_basename "$TEST_PATH")
   EXPECTED_OUTPUT="$EXPECTED_DIR/$(echo $TEST_NAME | sed s/test$/out/)"
@@ -137,7 +137,7 @@ update_cdecl_test() {
 for TEST in $*
 do
   case "$TEST" in
-  *.test) update_cdecl_test "$TEST" ;;
+  *.test) update_include_tidy_test "$TEST" ;;
   esac
 done
 
