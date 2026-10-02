@@ -53,12 +53,14 @@ extern CXTranslationUnit  tidy_tu;      ///< Translation unit.
 void trans_unit_check_for_errors( void );
 
 /**
- * Initializes \ref tidy_tu by parsing \ref tidy_source_path.
+ * Initializes \ref tidy_tu by parsing \a source_path.
  *
+ * @param source_path The path of the source file being tidied.
  * @param argc The command-line argument count.
  * @param argv The command-line argument values.
  */
-void trans_unit_init( int argc, char const *const argv[] );
+void trans_unit_init( char const *source_path,
+                      int argc, char const *const argv[] );
 
 ///////////////////////////////////////////////////////////////////////////////
 

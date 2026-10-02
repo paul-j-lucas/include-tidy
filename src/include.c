@@ -28,7 +28,6 @@
 #include "include.h"
 #include "array.h"
 #include "clang_util.h"
-#include "cli_options.h"
 #include "color.h"
 #include "config_file.h"
 #include "file_ext.h"
@@ -39,6 +38,7 @@
 #include "path_util.h"
 #include "print.h"
 #include "red_black.h"
+#include "source.h"
 #include "str_util.h"
 #include "strbuf.h"
 #include "symbol.h"
@@ -110,10 +110,11 @@ struct includes_init_data {
  * Additional arguments for maybe_print_include().
  */
 struct maybe_print_include_args {
-  bool        print_blank_line;         ///< Print a blank line?
-  bool        printed_any_includes;     ///< Print any includes?
-  bool        printed_source_file;      ///< Printed source file name?
-  print_group want_group;               ///< Print only this include group.
+  tidy_source const  *source;
+  bool                print_blank_line;     ///< Print a blank line?
+  bool                printed_any_includes; ///< Print any includes?
+  bool                printed_source_file;  ///< Printed source file name?
+  print_group         want_group;           ///< Print only this include group.
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -175,8 +176,8 @@ unsigned  tidy_includes_unnecessary;
  * Indicies are values of \ref tidy_include::instance_id "instance_id".
  *
  * The zeroth column is special in that if <code>ii_matrix[0][</code>\e
- * j<code>]</code> is &gt; 0, it means that \ref tidy_source_path includes
- * include file \e j.
+ * j<code>]</code> is &gt; 0, it means that the source path includes include
+ * file \e j.
  * @endparblock
  */
 static ii_matrix_t **ii_matrix;
@@ -187,16 +188,17 @@ static ii_matrix_t **ii_matrix;
 /**
  * For the source file being tidied, gets its associated header, if any.
  *
+ * @param source_path The source path being tidied.
  * @return Returns the associated header or NULL for none.
  */
 NODISCARD
-static tidy_include* get_associated_header( void ) {
+static tidy_include* get_associated_header( char const *source_path ) {
   static tidy_include *assoc_include;
 
   RUN_ONCE {
     strbuf_t path_buf = STRBUF_INIT();
     char const *const source_path_no_ext =
-      path_no_ext_if( tidy_source_path, 'c', &path_buf );
+      path_no_ext_if( source_path, 'c', &path_buf );
     if ( source_path_no_ext != NULL ) {
       rb_iterator_t iter;
       rb_iterator_init( &iter, &tidy_include_set );
@@ -225,7 +227,7 @@ static tidy_include* get_associated_header( void ) {
  *
  * @sa [Floyd-Warshall algorithm](https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm)
  */
-static void ii_matrix_init( unsigned N ) {
+static void ii_matrix_init( char const *source_path, unsigned N ) {
   ii_matrix = POINTER_CAST( ii_matrix_t**,
     matrix2d_new( sizeof(ii_matrix_t), alignof(ii_matrix_t), N, N )
   );
@@ -234,7 +236,7 @@ static void ii_matrix_init( unsigned N ) {
       ii_matrix[i][j] = 0;
   } // for
 
-  CXFile const source_file = clang_getFile( tidy_tu, tidy_source_path );
+  CXFile const source_file = clang_getFile( tidy_tu, source_path );
   clang_getInclusions( tidy_tu, &ii_matrix_visitor, source_file );
 
   for ( unsigned k = 0; k < N; ++k ) {
@@ -259,7 +261,7 @@ static void ii_matrix_init( unsigned N ) {
  * @param inclusion_stack The source locations of includes that lead up to \a
  * included_file being included.
  * @param inclusion_len The length of \a inclusion_stack.
- * @param data The `CXFile` for tidy_source_path.
+ * @param data The `CXFile` for a source_path.
  */
 static void ii_matrix_visitor( CXFile included_file,
                                CXSourceLocation *inclusion_stack,
@@ -531,8 +533,7 @@ skip:
  * being tidied.
  *
  * @param include The include to check.
- * @param source_file_no_ext tidy_source_path but without its filename
- * extension.
+ * @param source_file_no_ext A source path but without its filename extension.
  * @return Returns `true` only if \a include is the associated header for the
  * file currently being tidied.
  */
@@ -572,11 +573,14 @@ static bool is_associated_header( tidy_include const *include,
  * For \a include, makes a comment containing a comma-separated list of the
  * symbols used.
  *
+ * @param source The source file being tidied.
  * @param include The tidy_include to make the comment for.
  * @return Returns said comment.  The caller is responsible for freeing it.
  */
 NODISCARD
-static char* make_symbols_comment( tidy_include const *include ) {
+static char* make_symbols_comment( tidy_source const *source,
+                                   tidy_include const *include ) {
+  assert( source != NULL );
   assert( include != NULL );
 
   ht_iterator_t iter;
@@ -621,7 +625,7 @@ static char* make_symbols_comment( tidy_include const *include ) {
       break;
   } // switch
 
-  if ( tidy_source_is_cxx ) {
+  if ( source->is_cxx ) {
     //
     // Since C++ allows function, operator, and template overloading, there can
     // be multiple entries with the same name, so remove duplicates.
@@ -684,7 +688,8 @@ static void maybe_print_include( tidy_include const *include,
   print_group group;
   if ( include->is_local )
     group = PRINT_LOCAL;
-  else if ( config_is_standard_include( include->rel_path ) )
+  else if ( config_is_standard_include( include->rel_path,
+                                        args->source->is_cxx ) )
     group = PRINT_STANDARD;
   else
     group = PRINT_3RD_PARTY;
@@ -693,7 +698,7 @@ static void maybe_print_include( tidy_include const *include,
 
   if ( IS_VERBOSE( SRC_FILE_VIOLATIONS ) &&
        false_set( &args->printed_source_file ) ) {
-    verbose_printf( "%s\n", tidy_source_path );
+    verbose_printf( "%s\n", args->source->path );
   }
 
   char       *comment = NULL;
@@ -711,7 +716,7 @@ static void maybe_print_include( tidy_include const *include,
       do_print_include = true;
     }
     if ( do_print_include && opt_comment_style[0][0] != '\0' )
-      comment = make_symbols_comment( include );
+      comment = make_symbols_comment( args->source, include );
   }
   else if ( is_direct ) {
     if ( opt_comment_style[0][0] == '\0' ) {
@@ -1082,7 +1087,9 @@ tidy_include const* (include_get_proxy)( tidy_include const *include ) {
   return include;
 }
 
-void includes_init( void ) {
+void includes_init( tidy_source const *source ) {
+  assert( source != NULL );
+
   ASSERT_RUN_ONCE();
   rb_tree_init(
     &tidy_include_set, RB_DINT,
@@ -1094,15 +1101,17 @@ void includes_init( void ) {
   includes_init_data iid = { 0 };
   clang_visitChildren( cursor, &includes_init_visitor, &iid );
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-  ii_matrix_init( tidy_include_set.size + 1 );
+  ii_matrix_init( source->path, tidy_include_set.size + 1 );
 #endif /* NEED_II_MATRIX */
 }
 
-void includes_print( void ) {
+void includes_print( tidy_source const *source ) {
+  assert( source != NULL );
+
   array_t include_array = ARRAY_INIT( sizeof(tidy_include*) );
   array_reserve( &include_array, tidy_include_set.size );
 
-  tidy_include *const assoc_include = get_associated_header();
+  tidy_include *const assoc_include = get_associated_header( source->path );
   if ( assoc_include != NULL ) {
     assoc_include->is_needed = true;
     assoc_include->sort_rank = TIDY_SORT_ASSOCIATED;
@@ -1130,7 +1139,7 @@ void includes_print( void ) {
   array_qsort( &include_array, &tidy_include_cmp_for_print );
 
   // Print local includes.
-  maybe_print_include_args args = { 0 };
+  maybe_print_include_args args = { .source = source };
   for ( size_t i = 0; i < include_array.len; ++i ) {
     tidy_include const *const include =
       *(tidy_include const**)array_at_nc( &include_array, i );

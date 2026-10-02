@@ -28,6 +28,7 @@
 
 // local
 #include "pjl_config.h"                 /* must go first */
+#include "source.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -69,11 +70,6 @@
 /// Command-line option as a string literal.
 #define SOPT(X)                   STRINGIFY(OPT_##X)
 
-////////// extern variables  //////////////////////////////////////////////////
-
-extern bool         tidy_source_is_cxx; ///< Is \ref tidy_source_path C++?
-extern char const  *tidy_source_path;   ///< The file being tidied.
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
@@ -84,7 +80,7 @@ extern char const  *tidy_source_path;   ///< The file being tidied.
  *
  * @note This function must be called exactly once.
  */
-void cli_options_init( int *pargc, char const **pargv[] );
+tidy_source cli_options_init( int *pargc, char const **pargv[] );
 
 /**
  * Gets whether the option has been set.

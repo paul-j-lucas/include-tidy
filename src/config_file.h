@@ -32,6 +32,9 @@
 
 /// @cond DOXYGEN_IGNORE
 
+// local
+#include "source.h"
+
 // libclang
 #include <clang-c/Index.h>
 
@@ -55,19 +58,16 @@
  */
 extern char const  *tidy_config_assoc_header_rel_path;
 
-/**
- * Ignore \ref tidy_source_path?
- */
-extern bool         tidy_config_is_source_path_ignored;
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
  * Reads an **include-tidy** configuration file, if any.
  *
+ * @param source The source file being tidied.
+ *
  * @note This function must be called at most once.
  */
-void config_init( void );
+void config_init( tidy_source *source );
 
 /**
  * Gets whether \a rel_path refers to a standard C, C++, POSIX, BSD, or Linux
@@ -75,11 +75,12 @@ void config_init( void );
  *
  * @param rel_path The relative path of an include file, e.g., `"stdio.h"` or
  * `"sys/wait.h"`.
+ * @param is_cxx Is the source file being tidied C++?
  * @return Returns `true` only if \a rel_path refers to a standard include
  * file.
  */
 NODISCARD
-bool config_is_standard_include( char const *rel_path );
+bool config_is_standard_include( char const *rel_path, bool is_cxx );
 
 /**
  * Gets the header file that \a sym_name maps to, if any.

@@ -27,7 +27,6 @@
 #include "pjl_config.h"
 #include "symbol.h"
 #include "clang_util.h"
-#include "cli_options.h"
 #include "config_file.h"
 #include "cxx.h"
 #include "fnv1a.h"
@@ -35,6 +34,7 @@
 #include "include-tidy.h"
 #include "include.h"
 #include "options.h"
+#include "source.h"
 #include "str_util.h"
 #include "trans_unit.h"
 #include "typedef.h"
@@ -73,6 +73,7 @@ typedef struct symbols_init_data symbols_init_data;
  */
 struct symbols_init_data {
   CXFile    source_file;                ///< The file being tidied.
+  bool      is_cxx;                     ///< Is \ref source_file C++?
   bool      printed_symbols_header;     ///< Printed "symbols:" header?
 
   /**
@@ -238,7 +239,7 @@ struct symbols_init_data {
 ////////// local functions ////////////////////////////////////////////////////
 
 NODISCARD
-static bool     symbol_is_excluded( CXCursor );
+static bool     symbol_is_excluded( CXCursor, symbols_init_data const* );
 
 static void     tidy_symbol_cleanup( tidy_symbol* );
 
@@ -255,6 +256,20 @@ static void     visit_OverloadedDeclRef( CXCursor, CXCursor,
 ////////// local variables ////////////////////////////////////////////////////
 
 static hash_table_t symbol_set;         ///< Set of symbols.
+
+////////// inline functions ///////////////////////////////////////////////////
+
+/**
+ * Gets the libclang language given \a is_cxx.
+ *
+ * @param is_cxx True only if the source file being tidied is C++.
+ * @return Returns `CXLanguage_CPlusPlus` only if \a is_cxx is `true`;
+ * `CXLanguage_C` otherwise.
+ */
+NODISCARD
+static inline enum CXLanguageKind get_language( bool is_cxx ) {
+  return is_cxx ? CXLanguage_CPlusPlus : CXLanguage_C;
+}
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -407,6 +422,7 @@ static CXFile get_symbol_file( CXCursor sym_csr,
  * @param cursor The cursor to visit.
  * @param parent The parent cursor of \a cursor.
  * @param dec_csr The declaration cursor of \a cursor.
+ * @param sid The symbols_init_data to use.
  * @param rv_def_csr A pointer to receieve the definition cursor of \a cursor
  * only if the definition is needed.
  * @return Returns `true` only if the definition is needed.
@@ -414,12 +430,13 @@ static CXFile get_symbol_file( CXCursor sym_csr,
 NODISCARD
 static bool is_symbol_definition_needed( CXCursor cursor, CXCursor parent,
                                          CXCursor dec_csr,
+                                         symbols_init_data const *sid,
                                          CXCursor *rv_def_csr ) {
   assert( rv_def_csr != NULL );
 
   CXCursor cls_csr;
 
-  if ( tidy_source_is_cxx &&
+  if ( sid->is_cxx &&
        tidy_Cursor_isOutOfLineDefinition( cursor, parent, &cls_csr ) ) {
     *rv_def_csr = clang_getCursorDefinition( cls_csr );
     return true;
@@ -576,6 +593,7 @@ static unsigned macro_get_params( CXToken const tokens[static 2],
  * @param token_count The length of \a tokens.
  * @param ptoken_idx A pointer to the current index within \a tokens.
  * @param param_set The set of macro parameter names.
+ * @param lang The language of the source file being tidied.
  * @return Returns said cursor or the null cursor for none.
  *
  * @sa tidy_Token_getScopedNameCursor()
@@ -585,7 +603,8 @@ static
 CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
                                           unsigned token_count,
                                           unsigned *ptoken_idx,
-                                          hash_table_t const *param_set ) {
+                                          hash_table_t const *param_set,
+                                          enum CXLanguageKind lang ) {
   assert( param_set != NULL );
   unsigned token_idx = *ptoken_idx;
 
@@ -593,7 +612,7 @@ CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
   CXCursor rv_csr =
     macro_getCursorByNameToken( tokens[ *ptoken_idx ], tu_csr, param_set );
 
-  if ( tidy_source_is_cxx ) {
+  if ( lang == CXLanguage_CPlusPlus ) {
     while ( !tidy_Cursor_isInvalid( rv_csr ) ) {
       unsigned next_idx = token_idx;
       CXToken const *t;
@@ -636,7 +655,7 @@ CXCursor macro_Token_getScopedNameCursor( CXToken const tokens[],
  */
 static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
                               symbols_init_data *sid ) {
-  if ( symbol_is_excluded( sym_csr ) )
+  if ( symbol_is_excluded( sym_csr, sid ) )
     return;
   CXFile const sym_file = get_symbol_file( sym_csr, sid );
   if ( sym_file == NULL )
@@ -690,21 +709,23 @@ static CXCursor sid_cxx_scope( symbols_init_data const *sid,
  * Gets whether \a sym_csr should be excluded from the global set.
  *
  * @param sym_csr The symbol's cursor to check.
+ * @param sid The symbols_init_data to use.
  * @return Returns `true` only if \a sym_csr is excluded.
  */
 NODISCARD
-static bool symbol_is_excluded( CXCursor sym_csr ) {
+static bool symbol_is_excluded( CXCursor sym_csr,
+                                symbols_init_data const *sid ) {
   if ( tidy_Cursor_isInvalid( sym_csr ) )
     return true;
+
+  assert( sid != NULL );
 
   //
   // We can't use clang_getCursorLanguage() because libclang doesn't initially
   // set what it thinks the current language is until it encounters something
-  // language-specific.  So just use tidy_source_is_cxx.
+  // language-specific.  So just use sid->is_cxx.
   //
-  enum CXLanguageKind const lang =
-    tidy_source_is_cxx ? CXLanguage_CPlusPlus : CXLanguage_C;
-  if ( tidy_Cursor_isReservedName( sym_csr, lang ) )
+  if ( tidy_Cursor_isReservedName( sym_csr, get_language( sid->is_cxx ) ) )
     return true;
 
   enum CXCursorKind const sym_kind = clang_getCursorKind( sym_csr );
@@ -813,10 +834,13 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
   if ( !tidy_Cursor_isInFile( cursor, sid->source_file ) )
     goto skip;
 
-  if ( IS_VERBOSE( CURSORS ) )
-    verbose_print_cursor( cursor );     // LCOV_EXCL_LINE
+  if ( IS_VERBOSE( CURSORS ) ) {
+    // LCOV_EXCL_START
+    verbose_print_cursor( cursor, get_language( sid->is_cxx ) );
+    // LCOV_EXCL_STOP
+  }
 
-  if ( tidy_source_is_cxx ) {
+  if ( sid->is_cxx ) {
     //
     // Since a non-null value of cxx_statement_cls_csr must span across
     // multiple calls to symbols_init_visitor() for siblings, we have to know
@@ -873,7 +897,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       /* suppress warning */;
   } // switch
 
-  if ( tidy_source_is_cxx ) {
+  if ( sid->is_cxx ) {
     //
     // If it's a class scope, set cxx_statement_cls_csr.
     //
@@ -892,7 +916,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 skip:;
   // See the comment for symbols_init_data::cxx_current_fn_cls_csr.
   CXCursor const prev_cxx_current_fn_cls_csr = sid->cxx_current_fn_cls_csr;
-  if ( tidy_source_is_cxx && tidy_Cursor_isFunctionDecl( cursor ) ) {
+  if ( sid->is_cxx && tidy_Cursor_isFunctionDecl( cursor ) ) {
     CXCursor const fn_cls_csr = clang_getCursorSemanticParent( cursor );
     sid->cxx_current_fn_cls_csr = tidy_Cursor_isClassDecl( fn_cls_csr ) ?
       fn_cls_csr :
@@ -934,20 +958,22 @@ static void tidy_symbol_cleanup( tidy_symbol *sym ) {
  * @param token_count The length of \a tokens.
  * @param ptoken_idx A pointer to the current index within \a tokens.
  * @param scope_csr The scope to look in.
+ * @param lang The language of the source file being tidied.
  * @return Returns said cursor or the null cursor for none.
  */
 NODISCARD
 static CXCursor tidy_Token_getScopedNameCursor( CXToken const tokens[],
                                                 unsigned token_count,
                                                 unsigned *ptoken_idx,
-                                                CXCursor scope_csr ) {
+                                                CXCursor scope_csr,
+                                                enum CXLanguageKind lang ) {
   assert( ptoken_idx != NULL );
   unsigned token_idx = *ptoken_idx;
 
   CXCursor rv_csr =
     tidy_getCursorByNameToken( tidy_tu, tokens[ *ptoken_idx ], scope_csr );
 
-  if ( tidy_source_is_cxx ) {
+  if ( lang == CXLanguage_CPlusPlus ) {
     while ( !tidy_Cursor_isInvalid( rv_csr ) ) {
       unsigned next_idx = token_idx;
       CXToken const *t;
@@ -989,7 +1015,7 @@ static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
                             symbols_init_data *sid ) {
   assert( sid != NULL );
 
-  if ( tidy_source_is_cxx ) {
+  if ( sid->is_cxx ) {
     CXCursor const child_csr = tidy_Cursor_getFirstChild( call_csr );
     if ( !tidy_Cursor_isInvalid( child_csr ) ) {
       enum CXCursorKind const child_kind = clang_getCursorKind( child_csr );
@@ -1022,7 +1048,7 @@ static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
   }
 
   visit_most_kinds( call_csr, parent, sid );
-  return tidy_source_is_cxx;
+  return sid->is_cxx;
 }
 
 /**
@@ -1082,8 +1108,9 @@ static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
     if ( is_field_name )
       continue;
 
-    CXCursor const sym_csr =
-      tidy_Token_getScopedNameCursor( tokens, token_count, &i, cls_csr );
+    CXCursor const sym_csr = tidy_Token_getScopedNameCursor(
+      tokens, token_count, &i, cls_csr, get_language( sid->is_cxx )
+    );
     maybe_add_symbol( sym_csr, sym_csr, sid );
   } // for
 
@@ -1141,8 +1168,9 @@ static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
     1;                                  // tokens[0] = macro name; start at 1
 
   for ( ; i < token_count; ++i ) {
-    CXCursor const sym_csr =
-      macro_Token_getScopedNameCursor( tokens, token_count, &i, &param_set );
+    CXCursor const sym_csr = macro_Token_getScopedNameCursor(
+      tokens, token_count, &i, &param_set, get_language( sid->is_cxx )
+    );
     maybe_add_symbol( sym_csr, sym_csr, sid );
   } // for
 
@@ -1171,10 +1199,10 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   // is_cxx_proxy_qual_ref_iwyu_exc() and is_cxx_mbr_or_base_iwyu_exc() unless
   // necessary since they're both expensive.
   //
-  if ( !symbol_is_excluded( dec_csr ) ) {
+  if ( !symbol_is_excluded( dec_csr, sid ) ) {
     CXFile const dec_file = get_symbol_file( dec_csr, sid );
     if ( dec_file != NULL ) {
-      if ( tidy_source_is_cxx ) {
+      if ( sid->is_cxx ) {
         // See the comment for symbols_init_data::cxx_deferred_fn_csr.
         if ( clang_equalCursors( dec_csr, sid->cxx_deferred_fn_csr ) )
           return;
@@ -1190,7 +1218,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   }
 
   CXCursor def_csr;
-  if ( is_symbol_definition_needed( cursor, parent, dec_csr, &def_csr ) )
+  if ( is_symbol_definition_needed( cursor, parent, dec_csr, sid, &def_csr ) )
     maybe_add_symbol( dec_csr, def_csr, sid );
 }
 
@@ -1220,7 +1248,7 @@ static void visit_MemberRefExpr( CXCursor mbr_ref_csr, CXCursor parent,
   if ( tidy_Cursor_isInvalid( obj_csr ) )
     goto skip;
 
-  if ( tidy_source_is_cxx ) {
+  if ( sid->is_cxx ) {
     if ( is_cxx_arrow_iwyu_exc( obj_csr, mbr_cls_csr ) )
       return;
     if ( is_cxx_mbr_ref_iwyu_exc( obj_csr ) )
@@ -1308,8 +1336,10 @@ static void visit_OverloadedDeclRef( CXCursor overloaded_csr, CXCursor parent,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void symbols_init( void ) {
+void symbols_init( tidy_source const *source ) {
+  assert( source != NULL );
   ASSERT_RUN_ONCE();
+
   ht_table_init(
     &symbol_set, HT_DINT, 2.0, 128,
     POINTER_CAST( ht_cmp_fn_t, &tidy_symbol_cmp ),
@@ -1320,7 +1350,8 @@ void symbols_init( void ) {
 
   CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
   symbols_init_data sid = {
-    .source_file = clang_getFile( tidy_tu, tidy_source_path ),
+    .source_file = clang_getFile( tidy_tu, source->path ),
+    .is_cxx = source->is_cxx,
     .cxx_current_fn_cls_csr = clang_getNullCursor(),
     .cxx_deferred_fn_csr = clang_getNullCursor(),
     .cxx_statement_cls_csr = clang_getNullCursor()

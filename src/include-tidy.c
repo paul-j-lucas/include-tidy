@@ -33,6 +33,7 @@
 #include "options.h"
 #include "path_util.h"
 #include "proxies.h"
+#include "source.h"
 #include "str_util.h"
 #include "symbol.h"
 #include "trans_unit.h"
@@ -111,16 +112,16 @@ int main( int argc, char const *argv[] ) {
 
   // Initialization MUST happen in this order.
   test_init( "INCLUDE_TIDY_TEST" );
-  cli_options_init( &argc, &argv );
+  tidy_source source = cli_options_init( &argc, &argv );
   colors_init();
-  trans_unit_init( argc, argv );
-  includes_init();
-  config_init();
-  if ( !tidy_config_is_source_path_ignored ) {
+  trans_unit_init( source.path, argc, argv );
+  includes_init( &source );
+  config_init( &source );
+  if ( !source.is_ignored ) {
     trans_unit_check_for_errors();
-    implicit_proxies_init();
-    symbols_init();
-    includes_print();
+    implicit_proxies_init( &source );
+    symbols_init( &source );
+    includes_print( &source );
   }
   return tidy_status();
 }

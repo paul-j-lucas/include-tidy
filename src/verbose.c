@@ -28,7 +28,6 @@
 #include "verbose.h"
 #include "array.h"
 #include "clang_util.h"
-#include "cli_options.h"
 #include "options.h"
 #include "str_util.h"
 #include "util.h"
@@ -138,8 +137,10 @@ static bool is_loc_in_any_range( CXSourceLocation loc, array_t const *ranges ) {
  * CompoundStmt, print an abridged set of tokens comprising it.
  *
  * @param cursor The cursor to print the tokens for.
+ * @param lang The language of the source file being tidied.
  */
-static void tidy_Cursor_printAbridgedTokens( CXCursor cursor ) {
+static void tidy_Cursor_printAbridgedTokens( CXCursor cursor,
+                                             enum CXLanguageKind lang ) {
   CXSourceRange const     range = tidy_getCursorExtent( cursor );
   CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( cursor );
 
@@ -156,6 +157,7 @@ static void tidy_Cursor_printAbridgedTokens( CXCursor cursor ) {
   clang_visitChildren( cursor, cursor_ranges_visitor, &cursor_ranges );
 
   bool        eliding = false;          // eliding tokens?
+  bool const  is_cxx = lang == CXLanguage_CPlusPlus;
   bool        prev_token_is_semicolon = false;
   bool        prev_token_is_space_after_keyword = false;
   CXTokenKind prev_token_kind = STATIC_CAST( CXTokenKind, -1 );
@@ -201,7 +203,7 @@ static void tidy_Cursor_printAbridgedTokens( CXCursor cursor ) {
     prev_token_kind = token_kind;
     prev_token_is_space_after_keyword = prev_token_kind == CXToken_Keyword &&
       (str_is_any_list( token_cs, "for", "if", "switch", "while" ) ||
-       (tidy_source_is_cxx && str_is_any_list( token_cs, "catch" )));
+       (is_cxx && str_is_any_list( token_cs, "catch" )));
 
     clang_disposeString( token_cxs );
   } // for
@@ -227,7 +229,8 @@ void verbose_print_argv( char const *label, int argc,
 // LCOV_EXCL_STOP
 
 // LCOV_EXCL_START: function cursors have platform-specific signatures.
-void verbose_print_cursor_impl( char const *label, CXCursor cursor ) {
+void verbose_print_cursor_impl( char const *label, CXCursor cursor,
+                                enum CXLanguageKind lang ) {
   label = empty_if_null( label );
   char const *const space = label[0] != '\0' ? " " : "";
 
@@ -269,7 +272,7 @@ void verbose_print_cursor_impl( char const *label, CXCursor cursor ) {
     // The kind of cursor doesn't have a simple name, e.g., a CompoundStmt, so
     // print an abridged set of tokens comprising it.
     //
-    tidy_Cursor_printAbridgedTokens( cursor );
+    tidy_Cursor_printAbridgedTokens( cursor, lang );
   }
   putchar( '"' );
 

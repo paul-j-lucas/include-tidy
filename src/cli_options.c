@@ -33,6 +33,7 @@
 #include "options.h"
 #include "path_util.h"
 #include "print.h"
+#include "source.h"
 #include "str_util.h"
 #include "strbuf.h"
 #include "util.h"
@@ -149,16 +150,6 @@ static char const *const OPTIONS_HELP[] = {
 ////////// local variables ////////////////////////////////////////////////////
 
 static bool is_opt_set[ 128 ];          ///< Table of options that were set.
-
-////////// extern variables ///////////////////////////////////////////////////
-
-/// @cond DOXYGEN_IGNORE
-/// Otherwise Doxygen generates two entries.
-
-bool        tidy_source_is_cxx;
-char const *tidy_source_path;
-
-/// @endcond
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -1091,7 +1082,7 @@ static void print_version( bool verbose ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void cli_options_init( int *pargc, char const **pargv[] ) {
+tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
   assert(  pargc != NULL );
   assert( *pargc > 0 );
   assert(  pargv != NULL );
@@ -1119,10 +1110,10 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   //   uses and insert `-isystem` options for them since libclang doesn't start
   //   out with any include paths.
 
-  tidy_source_path = get_source_path( *pargc, *pargv );
+  char const *const source_path = get_source_path( *pargc, *pargv );
   char const *const compiler_path = get_compiler_path( *pargc, *pargv );
   char const *const source_ext =
-    tidy_source_path != NULL ? path_ext( tidy_source_path ) : NULL;
+    source_path != NULL ? path_ext( source_path ) : NULL;
   char const *source_lang = get_x_language( *pargc, *pargv );
   if ( source_lang == NULL && source_ext != NULL ) {
     tidy_file_ext const *const file_ext = file_ext_find( source_ext );
@@ -1279,7 +1270,7 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
 
   if ( IS_VERBOSE( SRC_FILE_ALWAYS ) ) {
     verbose_section_begin( /*printed_header=*/NULL );
-    verbose_printf( "source file = \"%s\"\n", tidy_source_path );
+    verbose_printf( "source file = \"%s\"\n", source_path );
   }
 
   // Keep a copy of *pargc as it is now for --help and --version below before
@@ -1314,12 +1305,12 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
     exit( EX_OK );
     // LCOV_EXCL_STOP
   }
-  if ( tidy_argc != 1 || tidy_source_path == NULL )
+  if ( tidy_argc != 1 || source_path == NULL )
     print_usage( EX_USAGE );
 
   if ( source_lang == NULL ) {
-    if ( tidy_source_path != NULL )
-      strbuf_printf( &err_buf, "\"%s\": ", tidy_source_path );
+    if ( source_path != NULL )
+      strbuf_printf( &err_buf, "\"%s\": ", source_path );
     if ( source_ext == NULL )
       strbuf_puts( &err_buf, "missing" );
     else
@@ -1341,12 +1332,10 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
       fatal_error( EX_IOERR, "\"%s\": %s\n", opt_directory, STRERROR() );
   }
 
-  tidy_source_is_cxx = strcmp( source_lang, "c++" ) == 0;
-
   // tmp_include_paths is needed because we have to defer calling ipath_add()
   // until after chdir() (if called).
   strbuf_t dir_buf = STRBUF_INIT();
-  path_dirname( tidy_source_path, &dir_buf );
+  path_dirname( source_path, &dir_buf );
   ipath_add( dir_buf.str );
   strbuf_cleanup( &dir_buf );
   for ( size_t i = 0; i < tmp_include_paths.len; ++i ) {
@@ -1356,8 +1345,13 @@ void cli_options_init( int *pargc, char const **pargv[] ) {
   array_cleanup( &tmp_include_paths, /*free_fn=*/NULL );
 
   // argv[argc-1] is the source file, but we've already copied it into
-  // tidy_source_path, so just NULL it out.
+  // source_path, so just NULL it out.
   (*pargv)[ --*pargc ] = NULL;
+
+  return (tidy_source){
+    .path = source_path,
+    .is_cxx = strcmp( source_lang, "c++" ) == 0
+  };
 }
 
 bool option_is_set( int short_opt ) {

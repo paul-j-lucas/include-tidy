@@ -29,6 +29,7 @@
 // local
 #include "pjl_config.h"
 #include "include.h"
+#include "source.h"
 
 // standard
 #include <stdbool.h>
@@ -44,9 +45,11 @@
 /**
  * Initializes the implicit include proxies for the translation unit.
  *
+ * @param source The source file being tidied.
+ *
  * @sa includes_init()
  */
-void implicit_proxies_init( void );
+void implicit_proxies_init( tidy_source const *source );
 
 /**
  * Checks whether adding a proxy from \a from_include to \a to_include would

@@ -26,12 +26,12 @@
 // local
 #include "pjl_config.h"
 #include "proxies.h"
-#include "cli_options.h"
 #include "config_file.h"
 #include "include.h"
 #include "options.h"
 #include "path_util.h"
 #include "red_black.h"
+#include "source.h"
 #include "strbuf.h"
 #include "trans_unit.h"
 #include "util.h"
@@ -89,15 +89,13 @@ static char const* get_cxx_header( char const *c_name, strbuf_t *rv_path_buf ) {
  *
  * @param cursor The cursor for the symbol in the AST being visited.
  * @param parent Not used.
- * @param data Not used.
+ * @param data A pointer to the tidy_source being tidied.
  * @return Always returns `CXChildVisit_Continue`.
  */
 static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
                                                          CXCursor parent,
                                                          CXClientData data ) {
   (void)parent;
-  (void)data;
-
   if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
     goto skip;
 
@@ -118,6 +116,9 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   if ( includer->is_local )             // only non-local can be a proxy
     goto skip;
 
+  assert( data != NULL );
+  tidy_source const *const source = data;
+
   tidy_include *proxy = NULL;
 
   if (// This handles a case like:
@@ -129,7 +130,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       // isn't a standard header.  The standard header should be a proxy for
       // the implementation header.
       //
-      !config_is_standard_include( included->rel_path ) ||
+      !config_is_standard_include( included->rel_path, source->is_cxx ) ||
 
       // This handles a case like:
       //
@@ -147,7 +148,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   }
 
   // Remaining cases are valid only for C++.
-  if ( !tidy_source_is_cxx )
+  if ( !source->is_cxx )
     goto skip;
 
   // Remaining cases are valid only for paths that are just filenames.
@@ -237,11 +238,14 @@ static void include_proxies_dump( bool want_explicit ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void implicit_proxies_init( void ) {
+void implicit_proxies_init( tidy_source const *source ) {
+  assert( source != NULL );
   ASSERT_RUN_ONCE();
 
   CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
-  clang_visitChildren( cursor, &implicit_proxies_visitor, /*data=*/NULL );
+  clang_visitChildren(
+    cursor, &implicit_proxies_visitor, CONST_CAST( CXClientData, source )
+  );
 
   if ( IS_VERBOSE( PROXIES_EXPLICIT ) )
     include_proxies_dump( /*want_explicit=*/true );

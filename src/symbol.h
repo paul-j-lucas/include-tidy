@@ -29,6 +29,7 @@
 // local
 #include "pjl_config.h"
 #include "hash_table.h"
+#include "source.h"
 
 /**
  * @defgroup tidy-symbols-group Symbols
@@ -69,8 +70,10 @@ struct tidy_symbol {
 
 /**
  * Initializes the internal set of all symbols in the translation unit.
+ *
+ * @param source The source file being tidied.
  */
-void symbols_init( void );
+void symbols_init( tidy_source const *source );
 
 /**
  * Compares two \ref tidy_symbol objects.

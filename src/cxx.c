@@ -28,7 +28,6 @@
 #include "pjl_config.h"
 #include "cxx.h"
 #include "clang_util.h"
-#include "cli_options.h"
 #include "include.h"
 #include "util.h"
 
@@ -64,8 +63,6 @@
  */
 NODISCARD
 static bool is_cxx_mbr_fn_iwyu_exc( CXCursor call_csr, CXCursor fn_csr ) {
-  assert( tidy_source_is_cxx );
-
   CXCursor const callee_csr = tidy_Cursor_getFirstExposedChild( call_csr );
   // Ensure the callee is a member function, e.g., obj.f() or ptr->f().
   if ( clang_getCursorKind( callee_csr ) != CXCursor_MemberRefExpr )
@@ -117,8 +114,6 @@ static bool is_cxx_mbr_fn_iwyu_exc( CXCursor call_csr, CXCursor fn_csr ) {
 ////////// extern functions ///////////////////////////////////////////////////
 
 bool is_cxx_arrow_iwyu_exc( CXCursor call_csr, CXCursor mbr_cls_csr ) {
-  assert( tidy_source_is_cxx );
-
   enum CXCursorKind const kind = clang_getCursorKind( call_csr );
   if ( kind != CXCursor_CallExpr )
     return false;
@@ -148,8 +143,6 @@ bool is_cxx_arrow_iwyu_exc( CXCursor call_csr, CXCursor mbr_cls_csr ) {
 }
 
 bool is_cxx_fn_iwyu_exc( CXCursor call_csr, CXCursor fn_csr ) {
-  assert( tidy_source_is_cxx );
-
   enum CXCursorKind const fn_kind = clang_getCursorKind( fn_csr );
   switch ( fn_kind ) {
     case CXCursor_ConversionFunction:
@@ -279,8 +272,6 @@ bool is_cxx_fn_iwyu_exc( CXCursor call_csr, CXCursor fn_csr ) {
 }
 
 bool is_cxx_mbr_or_base_iwyu_exc( CXCursor dec_csr, CXCursor scope_csr ) {
-  assert( tidy_source_is_cxx );
-
   if ( !tidy_Cursor_isClassDecl( scope_csr ) )
     return false;
 
@@ -346,8 +337,6 @@ bool is_cxx_mbr_or_base_iwyu_exc( CXCursor dec_csr, CXCursor scope_csr ) {
 }
 
 bool is_cxx_mbr_ref_iwyu_exc( CXCursor obj_csr ) {
-  assert( tidy_source_is_cxx );
-
   if ( tidy_Cursor_isInvalid( obj_csr ) )
     return false;                       // LCOV_EXCL_LINE
 
@@ -417,8 +406,6 @@ bool is_cxx_mbr_ref_iwyu_exc( CXCursor obj_csr ) {
 
 bool is_cxx_proxy_qual_ref_iwyu_exc( CXCursor cursor, CXCursor parent,
                                      CXCursor scope_csr ) {
-  assert( tidy_source_is_cxx );
-
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   if ( clang_isDeclaration( kind ) )    // not a reference
     return false;

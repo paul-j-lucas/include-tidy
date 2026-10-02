@@ -52,23 +52,25 @@
  * that's the stringification of \a CURSOR.
  *
  * @param CURSOR The cursor to print.
+ * @param LANG The language of the source file being tidied.
  *
  * @sa #verbose_print_cursor()
  * @sa verbose_print_cursor_impl()
  */
-#define VERBOSE_DEBUG_CURSOR(CURSOR) \
-  verbose_print_cursor_impl( #CURSOR, (CURSOR) )
+#define VERBOSE_DEBUG_CURSOR(CURSOR, LANG) \
+  verbose_print_cursor_impl( #CURSOR, (CURSOR), (LANG) )
 
 /**
  * Prints a cursor's "spelling", kind, and source location.
  *
  * @param CURSOR The cursor to print.
+ * @param LANG The language of the source file being tidied.
  *
  * @sa #VERBOSE_DEBUG_CURSOR()
  * @sa verbose_print_cursor_impl()
  */
-#define verbose_print_cursor(CURSOR) \
-  verbose_print_cursor_impl( "", (CURSOR) )
+#define verbose_print_cursor(CURSOR, LANG) \
+  verbose_print_cursor_impl( "", (CURSOR), (LANG) )
 
 ////////// extern functions ///////////////////////////////////////////////////
 
@@ -94,11 +96,13 @@ void verbose_print_argv( char const *label, int argc,
  * @param label A label to print before the cursor.  May be either NULL or the
  * empty string for none.  If neither, prints a space after the label.
  * @param cursor The cursor to print.
+ * @param lang The language of the source file being tidied.
  *
  * @sa #VERBOSE_DEBUG_CURSOR()
  * @sa #verbose_print_cursor()
  */
-void verbose_print_cursor_impl( char const *label, CXCursor cursor );
+void verbose_print_cursor_impl( char const *label, CXCursor cursor,
+                                enum CXLanguageKind lang );
 
 #ifndef NDEBUG
 /**

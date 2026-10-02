@@ -26,7 +26,6 @@
 // local
 #include "pjl_config.h"
 #include "trans_unit.h"
-#include "cli_options.h"
 #include "include-tidy.h"
 #include "print.h"
 #include "util.h"
@@ -132,8 +131,10 @@ void trans_unit_check_for_errors( void ) {
   }
 }
 
-void trans_unit_init( int argc, char const *const argv[] ) {
+void trans_unit_init( char const *source_path,
+                      int argc, char const *const argv[] ) {
   ASSERT_RUN_ONCE();
+  assert( source_path != NULL );
   assert( argc > 0 );
   assert( argv != NULL );
 
@@ -150,7 +151,7 @@ void trans_unit_init( int argc, char const *const argv[] ) {
 
   enum CXErrorCode const error_code = clang_parseTranslationUnit2(
     tidy_index,
-    tidy_source_path,
+    source_path,
     argv + 1, argc - 1,                 // skip argv[0] (program name)
     /*unsaved_files=*/NULL, 
     /*num_unsaved_files=*/0,
@@ -161,10 +162,10 @@ void trans_unit_init( int argc, char const *const argv[] ) {
   switch ( error_code ) {
     // LCOV_EXCL_START
     case CXError_ASTReadError:
-      print_file_error( tidy_source_path, 0, 0, "libclang AST error\n" );
+      print_file_error( source_path, 0, 0, "libclang AST error\n" );
       exit( EX_UNAVAILABLE );
     case CXError_Crashed:
-      print_file_error( tidy_source_path, 0, 0, "libclang crashed\n" );
+      print_file_error( source_path, 0, 0, "libclang crashed\n" );
       exit( EX_UNAVAILABLE );
     case CXError_InvalidArguments:
       print_error( "invalid arguments given to libclang\n" );
@@ -178,12 +179,12 @@ void trans_unit_init( int argc, char const *const argv[] ) {
       // Yes, this is TOCTAU (well, TAUTOC since we're checking after the
       // fact), but it's better than nothing.
       //
-      if ( access( tidy_source_path, R_OK ) == -1 ) {
-        print_file_error( tidy_source_path, 0, 0, "%s\n", STRERROR() );
+      if ( access( source_path, R_OK ) == -1 ) {
+        print_file_error( source_path, 0, 0, "%s\n", STRERROR() );
         exit( EX_NOINPUT );
       }
       // LCOV_EXCL_START
-      print_file_error( tidy_source_path, 0, 0, "libclang failed\n" );
+      print_file_error( source_path, 0, 0, "libclang failed\n" );
       exit( EX_DATAERR );
       // LCOV_EXCL_STOP
     case CXError_Success:

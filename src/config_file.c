@@ -32,13 +32,14 @@
 #include "cli_options.h"
 #include "fnv1a.h"
 #include "hash_table.h"
-#include "include.h"
 #include "include-tidy.h"
+#include "include.h"
 #include "options.h"
 #include "path_util.h"
 #include "print.h"
 #include "proxies.h"
 #include "red_black.h"
+#include "source.h"
 #include "str_util.h"
 #include "strbuf.h"
 #include "toml_lite.h"
@@ -129,6 +130,7 @@ struct config_key {
  * Arguments to a config_parse_fn.
  */
 struct config_parse_fn_args {
+  tidy_source      *source;             ///< Source file being tidied.
   char const       *config_path;        ///< Configuration file path.
   toml_table const *table;              ///< Current table.
   toml_key const   *key;                ///< Current key.
@@ -265,8 +267,7 @@ static char const *const TABLE_KINDS[] = {
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-char const       *tidy_config_assoc_header_rel_path;
-bool              tidy_config_is_source_path_ignored;
+char const *tidy_config_assoc_header_rel_path;
 
 /// @endcond
 
@@ -425,6 +426,7 @@ void toml_string_or_string_array_parse( config_parse_fn_args const *config,
           continue;
         }
         config_parse_fn_args const a_value_config = {
+          .source = config->source,
           .config_path = config->config_path,
           .table = config->table,
           .key = config->key,
@@ -556,7 +558,7 @@ static void associated_header_parse( config_parse_fn_args const *config ) {
   char const *string_value;
   if ( !toml_string_parse( config, &string_value ) )
     return;
-  if ( strcmp( config->table->key.name, tidy_source_path ) == 0 )
+  if ( strcmp( config->table->key.name, config->source->path ) == 0 )
     tidy_config_assoc_header_rel_path = strdup_or_exit( string_value );
 }
 
@@ -634,7 +636,7 @@ static void comment_symbols_parse( config_parse_fn_args const *config ) {
 static void elide_includes_parse( config_parse_fn_args const *config ) {
   assert( config != NULL );
 
-  if ( strcmp( config->table->key.name, tidy_source_path ) == 0 )
+  if ( strcmp( config->table->key.name, config->source->path ) == 0 )
     toml_string_or_string_array_parse( config, &elide_include_parse_string );
 }
 
@@ -707,8 +709,8 @@ static void ignore_as_argument_parse( config_parse_fn_args const *config ) {
   bool ignore;
   if ( !toml_bool_parse( config, &ignore ) || !ignore )
     return;
-  if ( strcmp( config->table->key.name, tidy_source_path ) == 0 )
-    tidy_config_is_source_path_ignored = true;
+  if ( strcmp( config->table->key.name, config->source->path ) == 0 )
+    config->source->is_ignored = true;
 };
 
 /**
@@ -736,7 +738,7 @@ static void ignore_parse( config_parse_fn_args const *config ) {
 static void ignore_symbols_parse( config_parse_fn_args const *config ) {
   assert( config != NULL );
 
-  if ( strcmp( config->table->key.name, tidy_source_path ) == 0 )
+  if ( strcmp( config->table->key.name, config->source->path ) == 0 )
     toml_string_or_string_array_parse( config, &ignore_symbols_parse_string );
 }
 
@@ -803,7 +805,7 @@ static void includes_parse_string( config_parse_fn_args const *config ) {
 static void keep_includes_parse( config_parse_fn_args const *config ) {
   assert( config != NULL );
 
-  if ( strcmp( config->table->key.name, tidy_source_path ) == 0 )
+  if ( strcmp( config->table->key.name, config->source->path ) == 0 )
     toml_string_or_string_array_parse( config, &keep_includes_parse_string );
 }
 
@@ -991,9 +993,9 @@ static void config_cleanup( void ) {
  *
  *  1. The path given as the value for either the `--config` or `-c` command-
  *     line option.  (If specified, this path _must_ exist.)
- *  2. <tt>dirname(</tt> \ref tidy_source_path <tt>)/include-tidy.toml</tt>.
+ *  2. <tt>dirname(</tt> \a source_path <tt>)/include-tidy.toml</tt>.
  *  3. `$PWD/include-tidy.toml`, but only if `$PWD` is not the same as the
- *     directory of \ref tidy_source_path.
+ *     directory of \a source_path.
  *  4. `$XDG_CONFIG_HOME/include-tidy/config.toml`.  If `XDG_CONFIG_HOME` is
  *     unset or empty, it defaults to `~/.config`.
  *  5. For each _path_ in a colon separated list of paths in `XDG_CONFIG_DIRS`,
@@ -1002,6 +1004,7 @@ static void config_cleanup( void ) {
  *     `/etc/xdg`.
  * @endparblock
  *
+ * @param source_path The source path being tidied.
  * @param config_path The configuration file path.  May be NULL.
  * @param rv_path_buf A path to receive the path of the configuration file that
  * was found, if any.
@@ -1009,8 +1012,9 @@ static void config_cleanup( void ) {
  * not.
  */
 NODISCARD
-static FILE* config_file_find( char const *config_path,
+static FILE* config_file_find( char const *source_path, char const *config_path,
                                strbuf_t *rv_path_buf ) {
+  assert( source_path != NULL );
   assert( rv_path_buf != NULL );
 
   // This must be incremented in every case below and not just once initally
@@ -1032,10 +1036,10 @@ static FILE* config_file_find( char const *config_path,
       FALLTHROUGH;
 
     case 2:
-      // Try dirname(tidy_source_path)/include-tidy.toml.
+      // Try dirname(source_path)/include-tidy.toml.
       ++case_num;
       static strbuf_t source_dir_buf = STRBUF_INIT();
-      path_dirname( tidy_source_path, &source_dir_buf );
+      path_dirname( source_path, &source_dir_buf );
       strbuf_reset( &path_buf );
       strbuf_putsn( &path_buf, source_dir_buf.str, source_dir_buf.len );
       strbuf_paths( &path_buf, PACKAGE ".toml" );
@@ -1190,10 +1194,12 @@ static FILE* config_open( char const *config_path, config_opts opts ) {
 /**
  * Parses a configuration file.
  *
+ * @param source The source file being tidied.
  * @param config_path The configurarion file path.
  * @param config_file The `FILE*` corresponding to \a config_path.
  */
-static void config_parse( char const *config_path, FILE *config_file ) {
+static void config_parse( tidy_source *source, char const *config_path,
+                          FILE *config_file ) {
   assert( config_path != NULL );
   assert( config_file != NULL );
 
@@ -1259,6 +1265,7 @@ static void config_parse( char const *config_path, FILE *config_file ) {
       }
 
       config_parse_fn_args const config = {
+        .source = source,
         .config_path = config_path,
         .table = &table,
         .key = &kv->key,
@@ -1562,7 +1569,8 @@ static void toml_value_print( toml_value const *value, FILE *fout ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void config_init( void ) {
+void config_init( tidy_source *source ) {
+  assert( source != NULL );
   ASSERT_RUN_ONCE();
 
   ht_table_init(
@@ -1579,10 +1587,11 @@ void config_init( void ) {
   bool found_at_least_1 = false;
   strbuf_t path_buf = STRBUF_INIT();
   do {
-    FILE *const config_file = config_file_find( opt_config_path, &path_buf );
+    FILE *const config_file =
+      config_file_find( source->path, opt_config_path, &path_buf );
     if ( config_file == NULL )
       break;
-    config_parse( path_buf.str, config_file );
+    config_parse( source, path_buf.str, config_file );
     fclose( config_file );
     found_at_least_1 = true;
     strbuf_reset( &path_buf );
@@ -1599,12 +1608,11 @@ void config_init( void ) {
     symbol_includes_dump();             // LCOV_EXCL_LINE
 }
 
-bool config_is_standard_include( char const *rel_path ) {
+bool config_is_standard_include( char const *rel_path, bool is_cxx ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
-  return  (tidy_source_is_cxx &&
-            is_standard_include( rel_path, &std_cxx_includes )) ||
+  return  (is_cxx && is_standard_include( rel_path, &std_cxx_includes )) ||
           is_standard_include( rel_path, &std_c_includes );
 }
 

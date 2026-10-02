@@ -28,9 +28,10 @@
 
 // local
 #include "pjl_config.h"
+#include "array.h"
 #include "hash_table.h"
 #include "red_black.h"
-#include "array.h"
+#include "source.h"
 #include "symbol.h"
 #include "util.h"
 
@@ -213,28 +214,32 @@ inline tidy_include* nonconst_include_get_proxy( tidy_include *include ) {
 /**
  * Initializes the set of files included in the given translation unit.
  *
+ * @param source The source file being tidied.
+ *
  * @sa implicit_proxies_init()
  */
-void includes_init( void );
+void includes_init( tidy_source const *source );
 
 /**
  * Prints include files.
+ *
+ * @param source The source file being tidied.
  */
-void includes_print( void );
+void includes_print( tidy_source const *source );
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
  * Gets whether \a i_file includes \a j_file, and whether directly or
  * indirectly.
  *
- * @param i_file The first file.  If NULL, the file for \ref tidy_source_path
- * substitutes for it, i.e., gets whether \ref tidy_source_path includes \a
- * j_file.
+ * @param i_file The first file.  If NULL, the file for the source path being
+ * tidied substitutes for it, i.e., gets whether the source path includes
+ * \a j_file.
  * @param j_file The second file.
- * @return Returns a value &gt; 0 only if \a i_file (or, if NULL, \ref
- * tidy_source_path) includes \a j_file.  The value indicates the number of
- * includes between them, i.e., 1 means \a i_file includes \a j_filey, 2 means
- * \a i_file includes \e k_file that includes \a j_file, and so on.
+ * @return Returns a value &gt; 0 only if \a i_file (or, if NULL, the source
+ * path) includes \a j_file.  The value indicates the number of includes
+ * between them, i.e., 1 means \a i_file includes \a j_filey, 2 means \a i_file
+ * includes \e k_file that includes \a j_file, and so on.
  */
 NODISCARD
 unsigned tidy_File_includes( CXFile ref_file, CXFile def_file );
