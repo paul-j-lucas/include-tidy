@@ -461,6 +461,16 @@ NODISCARD
 CXCursor tidy_Cursor_skipUnexposedDown( CXCursor cursor );
 
 /**
+ * Calls `clang_getCString()`, duplicates the result, and returns it.
+ *
+ * @param cxs The `CXString` to get and duplicate.  It is disposed of.
+ * @return Returns a copy of the C string for \a cxs or NULL if \a cxs is NULL
+ * or empty.
+ */
+NODISCARD
+char* tidy_dupCString( CXString cxs );
+
+/**
  * Compares two CXFileUniqueID objects.
  *
  * @param i_id The first CXFileUniqueID.

@@ -47,10 +47,8 @@ typedef struct tidy_symbol tidy_symbol;
  */
 struct tidy_symbol {
   /**
-   * The symbol name with signature (for functions or operators, e.g.,
-   * `sqrt(double)`) or template parameters (for templates, e.g.,
-   * `std::set<T>`) used as a unique key since C++ allows overloaded functions
-   * and specialized templates.
+   * The Unified Symbol Resolution (USR) string of the symbol used as a unique
+   * key since C++ allows overloaded functions and specialized templates.
    */
   char const *key;
 

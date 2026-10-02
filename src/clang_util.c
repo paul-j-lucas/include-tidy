@@ -780,6 +780,13 @@ CXCursor tidy_Cursor_skipUnexposedDown( CXCursor cursor ) {
   return cursor;
 }
 
+char* tidy_dupCString( CXString cxs ) {
+  char const *const cs = clang_getCString( cxs );
+  char *const rv_cs = cs != NULL && cs[0] != '\0' ? strdup_or_exit( cs ) : NULL;
+  clang_disposeString( cxs );
+  return rv_cs;
+}
+
 CXString tidy_File_getRealPathName( CXFile file ) {
   assert( file != NULL );
 

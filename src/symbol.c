@@ -283,7 +283,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     goto done;
 
   tidy_symbol new_sym = {
-    .key = tidy_Cursor_getScopedDisplayName( name_csr ),
+    .key = tidy_dupCString( clang_getCursorUSR( name_csr ) ),
     .name = sym_name
   };
   sym_name = NULL;                      // new_sym owns this now
