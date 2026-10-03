@@ -26,7 +26,6 @@
 // local
 #include "pjl_config.h"
 #include "trans_unit.h"
-#include "include-tidy.h"
 #include "print.h"
 #include "source.h"
 #include "util.h"
@@ -65,62 +64,6 @@ static void trans_unit_cleanup( void ) {
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
-
-void trans_unit_check_for_errors( tidy_source const *source ) {
-  assert( source != NULL );
-  assert( source->tu != NULL );
-
-  unsigned const diag_count = clang_getNumDiagnostics( source->tu );
-  if ( diag_count == 0 )
-    return;
-
-  unsigned error_count = 0;
-
-  for ( unsigned i = 0; i < diag_count; ++i ) {
-    CXDiagnostic const diag = clang_getDiagnostic( source->tu, i );
-    enum CXDiagnosticSeverity const sev = clang_getDiagnosticSeverity( diag );
-    switch ( sev ) {
-      case CXDiagnostic_Error:
-      case CXDiagnostic_Fatal:
-        ++error_count;
-        CXSourceLocation const diag_loc = clang_getDiagnosticLocation( diag );
-        CXFile diag_file;
-        unsigned diag_line, diag_col, diag_offset;
-        clang_getSpellingLocation(
-          diag_loc, &diag_file, &diag_line, &diag_col, &diag_offset
-        );
-        CXString const    diag_file_cxs = clang_getFileName( diag_file );
-        char const *const diag_file_cs = clang_getCString( diag_file_cxs );
-        CXString const    diag_msg_cxs = clang_getDiagnosticSpelling( diag );
-        char const *const diag_msg_cs = clang_getCString( diag_msg_cxs );
-
-        if ( diag_file_cs != NULL ) {
-          print_file_error(
-            diag_file_cs, diag_line, diag_col, "%s\n", diag_msg_cs
-          );
-          print_source_line( diag_file_cs, diag_line, diag_col, diag_offset );
-        }
-        else {
-          print_error_from( "libclang", "%s\n", diag_msg_cs );
-        }
-
-        clang_disposeString( diag_msg_cxs );
-        clang_disposeString( diag_file_cxs );
-        break;
-      default:
-        /* suppress warning */;
-    } // switch
-    clang_disposeDiagnostic( diag );
-  } // for
-
-  if ( error_count > 0 ) {
-    EPRINTF(
-      "%s: %u error%s generated\n",
-      prog_name, error_count, plural_s( error_count )
-    );
-    exit( EX_DATAERR );
-  }
-}
 
 void trans_unit_init( tidy_source *source,
                       int argc, char const *const argv[] ) {

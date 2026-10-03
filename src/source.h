@@ -68,6 +68,15 @@ struct tidy_source {
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * Checks the source's translation unit for errors and prints them, if any.
+ *
+ * @note If there are errors, this function does not return.
+ *
+ * @param source The source file being tidied.
+ */
+void source_check_for_errors( tidy_source const *source );
+
+/**
  * Cleans-up all memory associated with \a source but does _not_ free \a source
  * itself.
  *

@@ -120,7 +120,7 @@ int main( int argc, char const *argv[] ) {
   config_init( &source );
 
   if ( !source.is_ignored ) {
-    trans_unit_check_for_errors( &source );
+    source_check_for_errors( &source );
     implicit_proxies_init( &source );
     symbols_init( &source );
     includes_print( &source );

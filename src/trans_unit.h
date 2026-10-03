@@ -42,15 +42,6 @@
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Checks for translation unit errors and prints them, if any.
- *
- * @note If there are errors, this function does not return.
- *
- * @param source The source file being tidied.
- */
-void trans_unit_check_for_errors( tidy_source const *source );
-
-/**
  * Initializes \ref tidy_source::tu "tu" and \ref tidy_source::file "file" by
  * parsing \a source.
  *
