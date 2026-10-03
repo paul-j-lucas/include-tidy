@@ -781,7 +781,8 @@ static void includes_parse_string( config_parse_fn_args const *config ) {
   assert( config != NULL );
   assert( config->value->type == TOML_STRING );
 
-  tidy_include *const to_include = include_find_by_rel_path( config->value->s );
+  tidy_include *const to_include =
+    include_find_by_rel_path( config->source, config->value->s );
   if ( to_include != NULL )
     symbol_include_add( config->table->key.name, to_include );
 }
@@ -870,7 +871,7 @@ static void proxy_parse_string( config_parse_fn_args const *config ) {
   assert( config != NULL );
 
   tidy_include *const to_include =
-    include_find_by_rel_path( config->table->key.name );
+    include_find_by_rel_path( config->source, config->table->key.name );
   if ( unlikely( to_include == NULL ) )
     return;                             // LCOV_EXCL_LINE
 
@@ -954,7 +955,7 @@ static void symbols_parse_string( config_parse_fn_args const *config ) {
   assert( config->value->type == TOML_STRING );
 
   tidy_include *const to_include =
-    include_find_by_rel_path( config->table->key.name );
+    include_find_by_rel_path( config->source, config->table->key.name );
   if ( to_include != NULL )
     symbol_include_add( config->value->s, to_include );
 }

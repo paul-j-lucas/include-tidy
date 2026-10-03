@@ -28,8 +28,8 @@
 
 /// @cond DOXYGEN_IGNORE
 
-// libclang
-#include <clang-c/Index.h>
+// local
+#include "source.h"
 
 /// @endcond
 
@@ -39,28 +39,26 @@
  * @{
  */
 
-////////// extern variables ///////////////////////////////////////////////////
-
-extern CXTranslationUnit  tidy_tu;      ///< Translation unit.
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
  * Checks for translation unit errors and prints them, if any.
  *
  * @note If there are errors, this function does not return.
+ *
+ * @param source The source file being tidied.
  */
-void trans_unit_check_for_errors( void );
+void trans_unit_check_for_errors( tidy_source const *source );
 
 /**
- * Initializes \ref tidy_tu by parsing \a source_path.
+ * Initializes \ref tidy_source::tu "tu" and \ref tidy_source::file "file" by
+ * parsing \a source.
  *
- * @param source_path The path of the source file being tidied.
+ * @param source The source file being tidied.
  * @param argc The command-line argument count.
  * @param argv The command-line argument values.
  */
-void trans_unit_init( char const *source_path,
-                      int argc, char const *const argv[] );
+void trans_unit_init( tidy_source *source, int argc, char const *const argv[] );
 
 ///////////////////////////////////////////////////////////////////////////////
 

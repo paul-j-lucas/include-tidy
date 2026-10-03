@@ -28,6 +28,7 @@
 #include "trans_unit.h"
 #include "include-tidy.h"
 #include "print.h"
+#include "source.h"
 #include "util.h"
 
 /// @cond DOXYGEN_IGNORE
@@ -51,16 +52,7 @@
 
 ////////// local variables ////////////////////////////////////////////////////
 
-static CXIndex            tidy_index;   ///< Current libclang index.
-
-////////// extern variables ///////////////////////////////////////////////////
-
-/// @cond DOXYGEN_IGNORE
-/// Otherwise Doxygen generates two entries.
-
-CXTranslationUnit         tidy_tu;
-
-/// @endcond
+static CXIndex  tidy_index;             ///< Current libclang index.
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -68,25 +60,24 @@ CXTranslationUnit         tidy_tu;
  * Cleans-up the translation unit.
  */
 static void trans_unit_cleanup( void ) {
-  if ( tidy_tu != NULL )
-    clang_disposeTranslationUnit( tidy_tu );
   if ( tidy_index != NULL )
     clang_disposeIndex( tidy_index );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void trans_unit_check_for_errors( void ) {
-  assert( tidy_tu != NULL );
+void trans_unit_check_for_errors( tidy_source const *source ) {
+  assert( source != NULL );
+  assert( source->tu != NULL );
 
-  unsigned const diag_count = clang_getNumDiagnostics( tidy_tu );
+  unsigned const diag_count = clang_getNumDiagnostics( source->tu );
   if ( diag_count == 0 )
     return;
 
   unsigned error_count = 0;
 
   for ( unsigned i = 0; i < diag_count; ++i ) {
-    CXDiagnostic const diag = clang_getDiagnostic( tidy_tu, i );
+    CXDiagnostic const diag = clang_getDiagnostic( source->tu, i );
     enum CXDiagnosticSeverity const sev = clang_getDiagnosticSeverity( diag );
     switch ( sev ) {
       case CXDiagnostic_Error:
@@ -131,10 +122,10 @@ void trans_unit_check_for_errors( void ) {
   }
 }
 
-void trans_unit_init( char const *source_path,
+void trans_unit_init( tidy_source *source,
                       int argc, char const *const argv[] ) {
   ASSERT_RUN_ONCE();
-  assert( source_path != NULL );
+  assert( source != NULL );
   assert( argc > 0 );
   assert( argv != NULL );
 
@@ -151,21 +142,21 @@ void trans_unit_init( char const *source_path,
 
   enum CXErrorCode const error_code = clang_parseTranslationUnit2(
     tidy_index,
-    source_path,
+    source->path,
     argv + 1, argc - 1,                 // skip argv[0] (program name)
     /*unsaved_files=*/NULL, 
     /*num_unsaved_files=*/0,
     CXTranslationUnit_DetailedPreprocessingRecord,
-    &tidy_tu
+    &source->tu
   );
 
   switch ( error_code ) {
     // LCOV_EXCL_START
     case CXError_ASTReadError:
-      print_file_error( source_path, 0, 0, "libclang AST error\n" );
+      print_file_error( source->path, 0, 0, "libclang AST error\n" );
       exit( EX_UNAVAILABLE );
     case CXError_Crashed:
-      print_file_error( source_path, 0, 0, "libclang crashed\n" );
+      print_file_error( source->path, 0, 0, "libclang crashed\n" );
       exit( EX_UNAVAILABLE );
     case CXError_InvalidArguments:
       print_error( "invalid arguments given to libclang\n" );
@@ -179,12 +170,12 @@ void trans_unit_init( char const *source_path,
       // Yes, this is TOCTAU (well, TAUTOC since we're checking after the
       // fact), but it's better than nothing.
       //
-      if ( access( source_path, R_OK ) == -1 ) {
-        print_file_error( source_path, 0, 0, "%s\n", STRERROR() );
+      if ( access( source->path, R_OK ) == -1 ) {
+        print_file_error( source->path, 0, 0, "%s\n", STRERROR() );
         exit( EX_NOINPUT );
       }
       // LCOV_EXCL_START
-      print_file_error( source_path, 0, 0, "libclang failed\n" );
+      print_file_error( source->path, 0, 0, "libclang failed\n" );
       exit( EX_DATAERR );
       // LCOV_EXCL_STOP
     case CXError_Success:
@@ -199,6 +190,8 @@ void trans_unit_init( char const *source_path,
       //
       break;
   } // switch
+
+  source->file = clang_getFile( source->tu, source->path );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

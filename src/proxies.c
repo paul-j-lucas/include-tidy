@@ -33,7 +33,6 @@
 #include "red_black.h"
 #include "source.h"
 #include "strbuf.h"
-#include "trans_unit.h"
 #include "util.h"
 #include "verbose.h"
 
@@ -174,7 +173,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       // This handles a case similar to the above except check to see if the
       // standard C++ wrapper has been included at all.
       //
-      proxy = include_find_by_rel_path( cxx_path_buf.str );
+      proxy = include_find_by_rel_path( source, cxx_path_buf.str );
     }
   }
   strbuf_cleanup( &cxx_path_buf );
@@ -242,7 +241,7 @@ void implicit_proxies_init( tidy_source const *source ) {
   assert( source != NULL );
   ASSERT_RUN_ONCE();
 
-  CXCursor const cursor = clang_getTranslationUnitCursor( tidy_tu );
+  CXCursor const cursor = clang_getTranslationUnitCursor( source->tu );
   clang_visitChildren(
     cursor, &implicit_proxies_visitor, CONST_CAST( CXClientData, source )
   );

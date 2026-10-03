@@ -115,12 +115,12 @@ int main( int argc, char const *argv[] ) {
   test_init( "INCLUDE_TIDY_TEST" );
   tidy_source source = cli_options_init( &argc, &argv );
   colors_init();
-  trans_unit_init( source.path, argc, argv );
+  trans_unit_init( &source, argc, argv );
   includes_init( &source );
   config_init( &source );
 
   if ( !source.is_ignored ) {
-    trans_unit_check_for_errors();
+    trans_unit_check_for_errors( &source );
     implicit_proxies_init( &source );
     symbols_init( &source );
     includes_print( &source );

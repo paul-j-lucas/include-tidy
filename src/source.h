@@ -26,6 +26,9 @@
  * Declares a structure and functions for a source file being tidied.
  */
 
+// libclang
+#include <clang-c/Index.h>
+
 // standard
 #include <stdbool.h>
 
@@ -45,7 +48,9 @@ typedef struct tidy_source tidy_source;
  * A source file being tidied.
  */
 struct tidy_source {
-  char const *path;                     ///< Source file path.
+  char const       *path;               ///< Source file path.
+  CXTranslationUnit tu;                 ///< Translation unit for \ref path.
+  CXFile            file;               ///< File for \ref path.
 
   /**
    * The associated header for \ref path only if set explicitly via the
@@ -53,11 +58,11 @@ struct tidy_source {
    */
   char const *assoc_header_rel_path;
 
-  bool        is_cxx;                   ///< Is \ref path C++?
-  bool        is_ignored;               ///< Is \ref path ignored?
+  bool            is_cxx;               ///< Is \ref path C++?
+  bool            is_ignored;           ///< Is \ref path ignored?
 
-  unsigned    includes_missing;         ///< Number of missing includes.
-  unsigned    includes_unnecessary;     ///< Number of unnecessry includes.
+  unsigned        includes_missing;     ///< Number of missing includes.
+  unsigned        includes_unnecessary; ///< Number of unnecessry includes.
 };
 
 ////////// extern functions ///////////////////////////////////////////////////

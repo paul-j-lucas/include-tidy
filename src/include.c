@@ -42,7 +42,6 @@
 #include "str_util.h"
 #include "strbuf.h"
 #include "symbol.h"
-#include "trans_unit.h"
 #include "util.h"
 #include "verbose.h"
 
@@ -226,12 +225,13 @@ static tidy_include* get_associated_header( tidy_source const *source ) {
 /**
  * Initializes the \ref ii_matrix.
  *
+ * @param source The source file being tidied.
  * @param N The size of the matrix, i.e., <code>[</code>\e N<code>][</code>\e
  * N<code>]</code>.
  *
  * @sa [Floyd-Warshall algorithm](https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm)
  */
-static void ii_matrix_init( char const *source_path, unsigned N ) {
+static void ii_matrix_init( tidy_source const *source, unsigned N ) {
   ii_matrix = POINTER_CAST( ii_matrix_t**,
     matrix2d_new( sizeof(ii_matrix_t), alignof(ii_matrix_t), N, N )
   );
@@ -240,8 +240,7 @@ static void ii_matrix_init( char const *source_path, unsigned N ) {
       ii_matrix[i][j] = 0;
   } // for
 
-  CXFile const source_file = clang_getFile( tidy_tu, source_path );
-  clang_getInclusions( tidy_tu, &ii_matrix_visitor, source_file );
+  clang_getInclusions( source->tu, &ii_matrix_visitor, source->file );
 
   for ( unsigned k = 0; k < N; ++k ) {
     for ( unsigned i = 0; i < N; ++i ) {
@@ -1063,7 +1062,9 @@ tidy_include* include_find_by_File( CXFile file ) {
   return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
 }
 
-tidy_include* include_find_by_rel_path( char const *rel_path ) {
+tidy_include* include_find_by_rel_path( tidy_source const *source,
+                                        char const *rel_path ) {
+  assert( source != NULL );
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
@@ -1071,7 +1072,7 @@ tidy_include* include_find_by_rel_path( char const *rel_path ) {
   tidy_include *include = NULL;
 
   if ( ipath_find( rel_path, &abs_path_buf ) ) {
-    CXFile const file = clang_getFile( tidy_tu, abs_path_buf.str );
+    CXFile const file = clang_getFile( source->tu, abs_path_buf.str );
     if ( file != NULL )
       include = include_find_by_File( file );
   }
@@ -1098,11 +1099,11 @@ void includes_init( tidy_source const *source ) {
   );
   ATEXIT( &includes_cleanup );
 
-  CXCursor cursor = clang_getTranslationUnitCursor( tidy_tu );
+  CXCursor cursor = clang_getTranslationUnitCursor( source->tu );
   includes_init_data iid = { 0 };
   clang_visitChildren( cursor, &includes_init_visitor, &iid );
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-  ii_matrix_init( source->path, tidy_include_set.size + 1 );
+  ii_matrix_init( source, tidy_include_set.size + 1 );
 #endif /* NEED_II_MATRIX */
 }
 

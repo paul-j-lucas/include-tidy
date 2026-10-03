@@ -156,13 +156,15 @@ tidy_include* include_find_by_File( CXFile file );
  * \ref tidy_include_set instead.
  * @endparblock
  *
+ * @param source The source file being tidied.
  * @param rel_path The relative path of the include file to find.
  * @return Returns its corresponding tidy_include or NULL if not found.
  *
  * @sa include_find_by_File()
  */
 NODISCARD
-tidy_include* include_find_by_rel_path( char const *rel_path );
+tidy_include* include_find_by_rel_path( tidy_source const *source,
+                                        char const *rel_path );
 
 /**
  * Gets the `#include` delimiters for \a include, either local or system, to
