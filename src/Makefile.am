@@ -81,7 +81,6 @@ include_tidy_SOURCES =	array.c array.h \
 			strbuf.c strbuf.h \
 			symbol.c symbol.h \
 			toml_lite.c toml_lite.h \
-			trans_unit.c trans_unit.h \
 			type_traits.h \
 			typedef.c typedef.h \
 			unicode.c unicode.h \

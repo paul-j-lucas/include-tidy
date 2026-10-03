@@ -35,14 +35,30 @@
 
 // standard
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>                     /* for exit(3) */
 #include <sysexits.h>
+#include <unistd.h>                     /* for access(2) */
 
 /**
  * @addtogroup tidy-source-group
  * @{
  */
+
+////////// local variables ////////////////////////////////////////////////////
+
+static CXIndex  tidy_index;             ///< Current libclang index.
+
+////////// local functions ////////////////////////////////////////////////////
+
+/**
+ * Cleans-up libclang.
+ */
+static void libclang_cleanup( void ) {
+  if ( tidy_index != NULL )
+    clang_disposeIndex( tidy_index );
+}
 
 ////////// extern functions ///////////////////////////////////////////////////
 
@@ -110,6 +126,76 @@ void source_cleanup( tidy_source *source ) {
       clang_disposeTranslationUnit( source->tu );
   }
 };
+
+void source_init( tidy_source *source, int argc, char const *const argv[] ) {
+  assert( source != NULL );
+  assert( argc > 0 );
+  assert( argv != NULL );
+
+  RUN_ONCE ATEXIT( &libclang_cleanup );
+
+  tidy_index = clang_createIndex(
+    /*excludeDeclarationsFromPCH=*/false,
+    //
+    // We only want errors printed and not warnings, so set this to false and
+    // print errors ourselves.
+    //
+    /*displayDiagnostics=*/false
+  );
+
+  enum CXErrorCode const error_code = clang_parseTranslationUnit2(
+    tidy_index,
+    source->path,
+    argv + 1, argc - 1,                 // skip argv[0] (program name)
+    /*unsaved_files=*/NULL,
+    /*num_unsaved_files=*/0,
+    CXTranslationUnit_DetailedPreprocessingRecord,
+    &source->tu
+  );
+
+  switch ( error_code ) {
+    // LCOV_EXCL_START
+    case CXError_ASTReadError:
+      print_file_error( source->path, 0, 0, "libclang AST error\n" );
+      exit( EX_UNAVAILABLE );
+    case CXError_Crashed:
+      print_file_error( source->path, 0, 0, "libclang crashed\n" );
+      exit( EX_UNAVAILABLE );
+    case CXError_InvalidArguments:
+      print_error( "invalid arguments given to libclang\n" );
+      exit( EX_SOFTWARE );
+    // LCOV_EXCL_STOP
+    case CXError_Failure:
+      //
+      // Libclang isn't specific about the cause of a failure, so see if the
+      // reason is because the source file doesn't exist or isn't readable.
+      //
+      // Yes, this is TOCTAU (well, TAUTOC since we're checking after the
+      // fact), but it's better than nothing.
+      //
+      if ( access( source->path, R_OK ) == -1 ) {
+        print_file_error( source->path, 0, 0, "%s\n", STRERROR() );
+        exit( EX_NOINPUT );
+      }
+      // LCOV_EXCL_START
+      print_file_error( source->path, 0, 0, "libclang failed\n" );
+      exit( EX_DATAERR );
+      // LCOV_EXCL_STOP
+    case CXError_Success:
+      //
+      // All a CXError_Success means is that libclang's parser didn't crash; it
+      // doesn't mean the code is valid, so we have to check for errors later
+      // via trans_unit_check_for_errors().
+      //
+      // We don't just check now because we have yet to parse the config file
+      // to see if ignore-as-argument is true: if so, we must ignore the file
+      // completely and not print any errors for it.
+      //
+      break;
+  } // switch
+
+  source->file = clang_getFile( source->tu, source->path );
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

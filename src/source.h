@@ -84,6 +84,15 @@ void source_check_for_errors( tidy_source const *source );
  */
 void source_cleanup( tidy_source *source );
 
+/**
+ * Further initializes \a source.
+ *
+ * @param source The source to initialize.
+ * @param argc The command-line argument count.
+ * @param argv The command-line argument values.
+ */
+void source_init( tidy_source *source, int argc, char const *const argv[] );
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */

@@ -36,7 +36,6 @@
 #include "source.h"
 #include "str_util.h"
 #include "symbol.h"
-#include "trans_unit.h"
 #include "util.h"
 
 // system
@@ -115,7 +114,7 @@ int main( int argc, char const *argv[] ) {
   test_init( "INCLUDE_TIDY_TEST" );
   tidy_source source = cli_options_init( &argc, &argv );
   colors_init();
-  trans_unit_init( &source, argc, argv );
+  source_init( &source, argc, argv );
   includes_init( &source );
   config_init( &source );
 
