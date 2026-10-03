@@ -73,7 +73,7 @@ struct tidy_source {
  *
  * @param source the tidy_source to clean up.  If NULL, does nothing.
  */
-void tidy_source_cleanup( tidy_source *source );
+void source_cleanup( tidy_source *source );
 
 ///////////////////////////////////////////////////////////////////////////////
 

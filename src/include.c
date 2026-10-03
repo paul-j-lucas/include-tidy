@@ -132,16 +132,12 @@ static char const*  path_no_ext_if( char const*, char, strbuf_t* );
 static void         print_statistics( void );
 
 NODISCARD
-static char*        tidy_File_getRelativePath( CXFile );
-
-static void         tidy_include_cleanup( tidy_include* );
+static int          symbol_ptr_cmp_by_name( void const*, void const* ),
+                    symbol_ptr_cmp_by_name_length( void const*, void const* ),
+                    symbol_ptr_cmp_by_ref_count( void const*, void const* );
 
 NODISCARD
-static int          tidy_symbol_ptr_cmp_by_name( void const*, void const* ),
-                    tidy_symbol_ptr_cmp_by_name_length( void const*,
-                                                        void const* ),
-                    tidy_symbol_ptr_cmp_by_ref_count( void const*,
-                                                      void const* );
+static char*        tidy_File_getRelativePath( CXFile );
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -299,6 +295,67 @@ static void ii_matrix_visitor( CXFile included_file,
 #endif /* NEED_II_MATRIX */
 
 /**
+ * Cleans-up all memory associated with \a include but does _not_ free \a
+ * include itself.
+ *
+ * @param include The tidy_include to clean up.  If NULL, does nothing.
+ */
+static void include_cleanup( tidy_include *include ) {
+  if ( include != NULL ) {
+    FREE( include->abs_path );
+    // include->basename points to within rel_path so it doesn't need freeing
+    FREE( include->rel_path );
+    array_cleanup( &include->lines, /*free_fn=*/NULL );
+
+    // Because the nodes point to existing tidy_symbol objects, use NULL.
+    ht_table_cleanup( &include->symbol_set, /*free_fn=*/NULL );
+  }
+}
+
+/**
+ * Compares two \ref tidy_include objects by their unique file ID.
+ *
+ * @param i_include The first tidy_include.
+ * @param j_include The second tidy_include.
+ * @return Returns a number less than 0, 0, or greater than 0 if the file ID of
+ * \a i_include is less than, equal to, or greater than the file ID of \a
+ * j_include, respectively.
+ */
+NODISCARD
+static int include_cmp_by_id( tidy_include const *i_include,
+                              tidy_include const *j_include ) {
+  assert( i_include != NULL );
+  assert( j_include != NULL );
+  return tidy_FileUniqueID_compare( &i_include->file_id, &j_include->file_id );
+}
+
+/**
+ * Compares two \ref tidy_include objects by their relative paths for printing.
+ *
+ * @param i_pp A pointer to the the first tidy_include pointer.
+ * @param j_pp A pointer to the second tidy_include pointer.
+ * @return Returns a number less than 0, 0, or greater than 0 if the relative
+ * path of \a *i_pp is less than, equal to, or greater than the relative path
+ * of \a *j_pp, respectively.
+ */
+NODISCARD
+static int include_cmp_for_print( void const *i_pp, void const *j_pp ) {
+  assert( i_pp != NULL );
+  assert( j_pp != NULL );
+
+  tidy_include const *const i_include =
+    *POINTER_CAST( tidy_include const**, i_pp );
+  tidy_include const *const j_include =
+    *POINTER_CAST( tidy_include const**, j_pp );
+
+  if ( i_include->sort_rank < j_include->sort_rank )
+    return -1;
+  if ( i_include->sort_rank > j_include->sort_rank )
+    return 1;
+  return strcmp( i_include->rel_path, j_include->rel_path );
+}
+
+/**
  * Cleans-up set of included files.
  */
 static void includes_cleanup( void ) {
@@ -307,7 +364,7 @@ static void includes_cleanup( void ) {
   free( ii_matrix );
 #endif /* NEED_II_MATRIX */
   rb_tree_cleanup(
-    &tidy_include_set, POINTER_CAST( rb_free_fn_t, &tidy_include_cleanup )
+    &tidy_include_set, POINTER_CAST( rb_free_fn_t, &include_cleanup )
   );
 }
 
@@ -407,8 +464,8 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
       // symbol_set in symbol.c.
       &included->symbol_set, HT_DPTR, 2.0, 64,
-      POINTER_CAST( ht_cmp_fn_t, &tidy_symbol_cmp ),
-      POINTER_CAST( ht_hash_fn_t, &tidy_symbol_hash )
+      POINTER_CAST( ht_cmp_fn_t, &symbol_cmp ),
+      POINTER_CAST( ht_hash_fn_t, &symbol_hash )
     );
   }
   else if ( is_direct ) {
@@ -613,15 +670,15 @@ static char* make_symbols_comment( tidy_source const *source,
 
   switch ( opt_comment_symbols ) {
     case TIDY_COMMENT_SYM_ALPHA:
-      array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_name );
+      array_qsort( &symbols_array, &symbol_ptr_cmp_by_name );
       break;
     case TIDY_COMMENT_SYM_LENGTH:
-      array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_name_length );
+      array_qsort( &symbols_array, &symbol_ptr_cmp_by_name_length );
       break;
     case TIDY_COMMENT_SYM_MOST_REF:
       unreachable();
     case TIDY_COMMENT_SYM_REF_COUNT:
-      array_qsort( &symbols_array, &tidy_symbol_ptr_cmp_by_ref_count );
+      array_qsort( &symbols_array, &symbol_ptr_cmp_by_ref_count );
       break;
   } // switch
 
@@ -630,9 +687,7 @@ static char* make_symbols_comment( tidy_source const *source,
     // Since C++ allows function, operator, and template overloading, there can
     // be multiple entries with the same name, so remove duplicates.
     //
-    array_unique(
-      &symbols_array, &tidy_symbol_ptr_cmp_by_name, /*free_fn=*/NULL
-    );
+    array_unique( &symbols_array, &symbol_ptr_cmp_by_name, /*free_fn=*/NULL );
   }
 
   bool          comma = false;
@@ -864,6 +919,86 @@ static bool should_print_include( tidy_include const *include ) {
 }
 
 /**
+ * Compares two \ref tidy_symbol objects by their name.
+ *
+ * @param i_pp The first pointer to a `tidy_symbol*`.
+ * @param j_pp The second pointer to a `tidy_symbol*`.
+ * @return Returns a number less than 0, 0, or greater than 0 if the first
+ * symbol's name is less than, equal to, or greater than the second symbol's
+ * name, respectively.
+ *
+ * @sa symbol_ptr_cmp_by_name_length()
+ * @sa symbol_ptr_cmp_by_ref_count()
+ */
+NODISCARD
+static int symbol_ptr_cmp_by_name( void const *i_pp, void const *j_pp ) {
+  assert( i_pp != NULL );
+  assert( j_pp != NULL );
+
+  tidy_symbol const *const i_sym = *POINTER_CAST( tidy_symbol const**, i_pp );
+  tidy_symbol const *const j_sym = *POINTER_CAST( tidy_symbol const**, j_pp );
+
+  return strcmp( i_sym->name, j_sym->name );
+}
+
+/**
+ * Compares two \ref tidy_symbol objects by their name length.
+ *
+ * @param i_pp The first pointer to a `tidy_symbol*`.
+ * @param j_pp The second pointer to a `tidy_symbol*`.
+ * @return Returns a number less than 0, 0, or greater than 0 if the length of
+ * the first symbol's name is less than, equal to, or greater than the length
+ * of the second symbol's name, respectively.
+ *
+ * @sa symbol_ptr_cmp_by_name()
+ * @sa symbol_ptr_cmp_by_ref_count()
+ */
+NODISCARD
+static int symbol_ptr_cmp_by_name_length( void const *i_pp,
+                                               void const *j_pp ) {
+  assert( i_pp != NULL );
+  assert( j_pp != NULL );
+
+  tidy_symbol const *const i_sym = *POINTER_CAST( tidy_symbol const**, i_pp );
+  tidy_symbol const *const j_sym = *POINTER_CAST( tidy_symbol const**, j_pp );
+
+  int const cmp =
+    STATIC_CAST( int, strlen( i_sym->name ) ) -
+    STATIC_CAST( int, strlen( j_sym->name ) );
+
+  return cmp != 0 ? cmp : strcmp( i_sym->name, j_sym->name );
+}
+
+/**
+ * Compares two \ref tidy_symbol objects by their \ref tidy_symbol::ref_count
+ * "reference count", descending.
+ *
+ * @param i_pp The first pointer to a `tidy_symbol*`.
+ * @param j_pp The second pointer to a `tidy_symbol*`.
+ * @return Returns a number less than 0, 0, or greater than 0 if the reference
+ * count of the second symbol is less than, equal to, or greater than the
+ * reference count of the first symbol, respectively.
+ *
+ * @sa symbol_ptr_cmp_by_name()
+ * @sa symbol_ptr_cmp_by_name_length()
+ */
+NODISCARD
+static int symbol_ptr_cmp_by_ref_count( void const *i_pp,
+                                             void const *j_pp ) {
+  assert( i_pp != NULL );
+  assert( j_pp != NULL );
+
+  tidy_symbol const *const i_sym = *POINTER_CAST( tidy_symbol const**, i_pp );
+  tidy_symbol const *const j_sym = *POINTER_CAST( tidy_symbol const**, j_pp );
+
+  int const cmp =                       // descending, so j_sym is first
+    STATIC_CAST( int, j_sym->ref_count ) -
+    STATIC_CAST( int, i_sym->ref_count );
+
+  return cmp != 0 ? cmp : strcmp( i_sym->name, j_sym->name );
+}
+
+/**
  * Given a file having either an absolute or relative path, gets its normalized
  * relative path.
  *
@@ -894,147 +1029,6 @@ static char* tidy_File_getRelativePath( CXFile file ) {
   char *const rel_path = strdup_or_exit( ipath_relativize( path ) );
   free( path );
   return rel_path;
-}
-
-/**
- * Cleans-up all memory associated with \a include but does _not_ free \a
- * include itself.
- *
- * @param include The tidy_include to clean up.  If NULL, does nothing.
- */
-static void tidy_include_cleanup( tidy_include *include ) {
-  if ( include != NULL ) {
-    FREE( include->abs_path );
-    // include->basename points to within rel_path so it doesn't need freeing
-    FREE( include->rel_path );
-    array_cleanup( &include->lines, /*free_fn=*/NULL );
-
-    // Because the nodes point to existing tidy_symbol objects, use NULL.
-    ht_table_cleanup( &include->symbol_set, /*free_fn=*/NULL );
-  }
-}
-
-/**
- * Compares two \ref tidy_include objects by their unique file ID.
- *
- * @param i_include The first tidy_include.
- * @param j_include The second tidy_include.
- * @return Returns a number less than 0, 0, or greater than 0 if the file ID of
- * \a i_include is less than, equal to, or greater than the file ID of \a
- * j_include, respectively.
- */
-NODISCARD
-static int tidy_include_cmp_by_id( tidy_include const *i_include,
-                                   tidy_include const *j_include ) {
-  assert( i_include != NULL );
-  assert( j_include != NULL );
-  return tidy_FileUniqueID_compare( &i_include->file_id, &j_include->file_id );
-}
-
-/**
- * Compares two \ref tidy_include objects by their relative paths for printing.
- *
- * @param i_pp A pointer to the the first tidy_include pointer.
- * @param j_pp A pointer to the second tidy_include pointer.
- * @return Returns a number less than 0, 0, or greater than 0 if the relative
- * path of \a *i_pp is less than, equal to, or greater than the relative path
- * of \a *j_pp, respectively.
- */
-NODISCARD
-static int tidy_include_cmp_for_print( void const *i_pp, void const *j_pp ) {
-  assert( i_pp != NULL );
-  assert( j_pp != NULL );
-
-  tidy_include const *const i_include =
-    *POINTER_CAST( tidy_include const**, i_pp );
-  tidy_include const *const j_include =
-    *POINTER_CAST( tidy_include const**, j_pp );
-
-  if ( i_include->sort_rank < j_include->sort_rank )
-    return -1;
-  if ( i_include->sort_rank > j_include->sort_rank )
-    return 1;
-  return strcmp( i_include->rel_path, j_include->rel_path );
-}
-
-/**
- * Compares two \ref tidy_symbol objects by their name.
- *
- * @param i_pp The first pointer to a `tidy_symbol*`.
- * @param j_pp The second pointer to a `tidy_symbol*`.
- * @return Returns a number less than 0, 0, or greater than 0 if the first
- * symbol's name is less than, equal to, or greater than the second symbol's
- * name, respectively.
- *
- * @sa tidy_symbol_ptr_cmp_by_name_length()
- * @sa tidy_symbol_ptr_cmp_by_ref_count()
- */
-NODISCARD
-static int tidy_symbol_ptr_cmp_by_name( void const *i_pp, void const *j_pp ) {
-  assert( i_pp != NULL );
-  assert( j_pp != NULL );
-
-  tidy_symbol const *const i_sym = *POINTER_CAST( tidy_symbol const**, i_pp );
-  tidy_symbol const *const j_sym = *POINTER_CAST( tidy_symbol const**, j_pp );
-
-  return strcmp( i_sym->name, j_sym->name );
-}
-
-/**
- * Compares two \ref tidy_symbol objects by their name length.
- *
- * @param i_pp The first pointer to a `tidy_symbol*`.
- * @param j_pp The second pointer to a `tidy_symbol*`.
- * @return Returns a number less than 0, 0, or greater than 0 if the length of
- * the first symbol's name is less than, equal to, or greater than the length
- * of the second symbol's name, respectively.
- *
- * @sa tidy_symbol_ptr_cmp_by_name()
- * @sa tidy_symbol_ptr_cmp_by_ref_count()
- */
-NODISCARD
-static int tidy_symbol_ptr_cmp_by_name_length( void const *i_pp,
-                                               void const *j_pp ) {
-  assert( i_pp != NULL );
-  assert( j_pp != NULL );
-
-  tidy_symbol const *const i_sym = *POINTER_CAST( tidy_symbol const**, i_pp );
-  tidy_symbol const *const j_sym = *POINTER_CAST( tidy_symbol const**, j_pp );
-
-  int const cmp =
-    STATIC_CAST( int, strlen( i_sym->name ) ) -
-    STATIC_CAST( int, strlen( j_sym->name ) );
-
-  return cmp != 0 ? cmp : strcmp( i_sym->name, j_sym->name );
-}
-
-/**
- * Compares two \ref tidy_symbol objects by their \ref tidy_symbol::ref_count
- * "reference count", descending.
- *
- * @param i_pp The first pointer to a `tidy_symbol*`.
- * @param j_pp The second pointer to a `tidy_symbol*`.
- * @return Returns a number less than 0, 0, or greater than 0 if the reference
- * count of the second symbol is less than, equal to, or greater than the
- * reference count of the first symbol, respectively.
- *
- * @sa tidy_symbol_ptr_cmp_by_name()
- * @sa tidy_symbol_ptr_cmp_by_name_length()
- */
-NODISCARD
-static int tidy_symbol_ptr_cmp_by_ref_count( void const *i_pp,
-                                             void const *j_pp ) {
-  assert( i_pp != NULL );
-  assert( j_pp != NULL );
-
-  tidy_symbol const *const i_sym = *POINTER_CAST( tidy_symbol const**, i_pp );
-  tidy_symbol const *const j_sym = *POINTER_CAST( tidy_symbol const**, j_pp );
-
-  int const cmp =                       // descending, so j_sym is first
-    STATIC_CAST( int, j_sym->ref_count ) -
-    STATIC_CAST( int, i_sym->ref_count );
-
-  return cmp != 0 ? cmp : strcmp( i_sym->name, j_sym->name );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -1094,8 +1088,7 @@ void includes_init( tidy_source const *source ) {
 
   ASSERT_RUN_ONCE();
   rb_tree_init(
-    &tidy_include_set, RB_DINT,
-    POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_id )
+    &tidy_include_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &include_cmp_by_id )
   );
   ATEXIT( &includes_cleanup );
 
@@ -1138,7 +1131,7 @@ void includes_print( tidy_source *source ) {
     }
   } // for
 
-  array_qsort( &include_array, &tidy_include_cmp_for_print );
+  array_qsort( &include_array, &include_cmp_for_print );
 
   // Print local includes.
   maybe_print_include_args args = { .source = source };

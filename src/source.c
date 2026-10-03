@@ -41,7 +41,7 @@
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void tidy_source_cleanup( tidy_source *source ) {
+void source_cleanup( tidy_source *source ) {
   if ( source != NULL ) {
     FREE( source->assoc_header_rel_path );
     // source->path points to an argv so it doesn't need freeing

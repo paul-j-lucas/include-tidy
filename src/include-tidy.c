@@ -127,7 +127,7 @@ int main( int argc, char const *argv[] ) {
   }
 
   int const status = tidy_status( &source );
-  tidy_source_cleanup( &source );
+  source_cleanup( &source );
   return status;
 }
 

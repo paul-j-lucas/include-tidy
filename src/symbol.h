@@ -69,13 +69,6 @@ struct tidy_symbol {
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Initializes the internal set of all symbols in the translation unit.
- *
- * @param source The source file being tidied.
- */
-void symbols_init( tidy_source const *source );
-
-/**
  * Compares two \ref tidy_symbol objects.
  *
  * @param i_sym The first symbol.
@@ -85,7 +78,7 @@ void symbols_init( tidy_source const *source );
  * respectively.
  */
 NODISCARD
-int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym );
+int symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym );
 
 /**
  * Calculates the hash of \a sym.
@@ -94,7 +87,14 @@ int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym );
  * @return Returns said hash.
  */
 NODISCARD
-ht_hash_val_t tidy_symbol_hash( tidy_symbol const *sym );
+ht_hash_val_t symbol_hash( tidy_symbol const *sym );
+
+/**
+ * Initializes the internal set of all symbols in the translation unit.
+ *
+ * @param source The source file being tidied.
+ */
+void symbols_init( tidy_source const *source );
 
 ///////////////////////////////////////////////////////////////////////////////
 

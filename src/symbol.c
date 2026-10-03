@@ -248,10 +248,10 @@ struct symbols_init_data {
 
 ////////// local functions ////////////////////////////////////////////////////
 
+static void     symbol_cleanup( tidy_symbol* );
+
 NODISCARD
 static bool     symbol_is_excluded( CXCursor, symbols_init_data const* );
-
-static void     tidy_symbol_cleanup( tidy_symbol* );
 
 NODISCARD
 static bool     visit_CallExpr( CXCursor, CXCursor, symbols_init_data* );
@@ -310,7 +310,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     include_add_symbol( include_file, sym );
 
   if ( !hti.inserted ) {
-    tidy_symbol_cleanup( &new_sym );
+    symbol_cleanup( &new_sym );
     goto done;
   }
   if ( to_include == NULL )
@@ -708,6 +708,18 @@ static CXCursor sid_cxx_scope( symbols_init_data const *sid,
 }
 
 /**
+ * Cleans-up a tidy_symbol.
+ *
+ * @param sym The tidy_symbol to clean up.  If NULL, does nothing.
+ */
+static void symbol_cleanup( tidy_symbol *sym ) {
+  if ( sym != NULL ) {
+    FREE( sym->key );
+    FREE( sym->name );
+  }
+}
+
+/**
  * Gets whether \a sym_csr should be excluded from the global set.
  *
  * @param sym_csr The symbol's cursor to check.
@@ -799,7 +811,7 @@ static bool symbol_is_excluded( CXCursor sym_csr,
 static void symbols_cleanup( void ) {
   print_statistics();
   ht_table_cleanup(
-    &symbol_set, POINTER_CAST( ht_free_fn_t, &tidy_symbol_cleanup )
+    &symbol_set, POINTER_CAST( ht_free_fn_t, &symbol_cleanup )
   );
 }
 
@@ -936,18 +948,6 @@ skip_children:
   if ( is_new_statement )
     sid->cxx_statement_cls_csr = prev_cxx_statement_cls_csr;
   return CXChildVisit_Continue;
-}
-
-/**
- * Cleans-up a tidy_symbol.
- *
- * @param sym The tidy_symbol to clean up.  If NULL, does nothing.
- */
-static void tidy_symbol_cleanup( tidy_symbol *sym ) {
-  if ( sym != NULL ) {
-    FREE( sym->key );
-    FREE( sym->name );
-  }
 }
 
 /**
@@ -1339,14 +1339,24 @@ static void visit_OverloadedDeclRef( CXCursor overloaded_csr, CXCursor parent,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
+int symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
+  assert( i_sym != NULL );
+  assert( j_sym != NULL );
+  return strcmp( i_sym->key, j_sym->key );
+}
+
+ht_hash_val_t symbol_hash( tidy_symbol const *sym ) {
+  return fnv1a_s( sym->key );
+}
+
 void symbols_init( tidy_source const *source ) {
   assert( source != NULL );
   ASSERT_RUN_ONCE();
 
   ht_table_init(
     &symbol_set, HT_DINT, 2.0, 128,
-    POINTER_CAST( ht_cmp_fn_t, &tidy_symbol_cmp ),
-    POINTER_CAST( ht_hash_fn_t, &tidy_symbol_hash )
+    POINTER_CAST( ht_cmp_fn_t, &symbol_cmp ),
+    POINTER_CAST( ht_hash_fn_t, &symbol_hash )
   );
   ATEXIT( &symbols_cleanup );
   typedefs_init();
@@ -1360,16 +1370,6 @@ void symbols_init( tidy_source const *source ) {
     .cxx_statement_cls_csr = clang_getNullCursor()
   };
   clang_visitChildren( cursor, &symbols_init_visitor, &sid );
-}
-
-int tidy_symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
-  assert( i_sym != NULL );
-  assert( j_sym != NULL );
-  return strcmp( i_sym->key, j_sym->key );
-}
-
-ht_hash_val_t tidy_symbol_hash( tidy_symbol const *sym ) {
-  return fnv1a_s( sym->key );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

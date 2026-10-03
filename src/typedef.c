@@ -76,7 +76,7 @@ static void print_statistics( void ) {
  *
  * @param tdef The tidy_typedef to clean up.  If NULL, does nothing.
  */
-static void tidy_typedef_cleanup( tidy_typedef *tdef ) {
+static void typedef_cleanup( tidy_typedef *tdef ) {
   if ( tdef != NULL )
     FREE( tdef->alias_name );
 }
@@ -87,7 +87,7 @@ static void tidy_typedef_cleanup( tidy_typedef *tdef ) {
 static void typedefs_cleanup( void ) {
   print_statistics();
   ht_table_cleanup(
-    &typedef_map, POINTER_CAST( ht_free_fn_t, &tidy_typedef_cleanup )
+    &typedef_map, POINTER_CAST( ht_free_fn_t, &typedef_cleanup )
   );
 }
 

@@ -214,10 +214,6 @@ static void         symbol_includes_cleanup( symbol_includes* );
 static void         symbols_parse( config_parse_fn_args const* );
 static void         symbols_parse_string( config_parse_fn_args const* );
 
-NODISCARD
-static int          tidy_include_cmp_by_rel_path( tidy_include const*,
-                                                  tidy_include const* );
-
 static void         toml_value_print( toml_value const*, FILE* );
 
 ////////// local constants ////////////////////////////////////////////////////
@@ -1321,6 +1317,23 @@ static char const* home_dir( void ) {
 }
 
 /**
+ * Compares two \ref tidy_include objects by their relative paths.
+ *
+ * @param i_include The first tidy_include.
+ * @param j_include The second tidy_include.
+ * @return Returns a number less than 0, 0, or greater than 0 if the relative
+ * path of \a i_include is less than, equal to, or greater than the relative
+ * path of \a j_include, respectively.
+ */
+NODISCARD
+static int include_cmp_by_rel_path( tidy_include const *i_include,
+                                    tidy_include const *j_include ) {
+  assert( i_include != NULL );
+  assert( j_include != NULL );
+  return strcmp( i_include->rel_path, j_include->rel_path );
+}
+
+/**
  * Sets the \ref tidy_include::handling "handling" field of the include file(s)
  * having \a rel_path to \a handling.
  *
@@ -1474,7 +1487,7 @@ static void symbol_include_add( char const *from_sym_name,
     si->from_sym_name = strdup_or_exit( from_sym_name );
     rb_tree_init(
       &si->to_include_set, RB_DPTR,
-      POINTER_CAST( rb_cmp_fn_t, &tidy_include_cmp_by_rel_path )
+      POINTER_CAST( rb_cmp_fn_t, &include_cmp_by_rel_path )
     );
   }
   PJL_DISCARD_RV( rb_tree_insert( &si->to_include_set, to_include, 0 ) );
@@ -1515,23 +1528,6 @@ static void symbol_includes_dump( void ) {
   }
 }
 // LCOV_EXCL_STOP
-
-/**
- * Compares two \ref tidy_include objects by their relative paths.
- *
- * @param i_include The first tidy_include.
- * @param j_include The second tidy_include.
- * @return Returns a number less than 0, 0, or greater than 0 if the relative
- * path of \a i_include is less than, equal to, or greater than the relative
- * path of \a j_include, respectively.
- */
-NODISCARD
-static int tidy_include_cmp_by_rel_path( tidy_include const *i_include,
-                                         tidy_include const *j_include ) {
-  assert( i_include != NULL );
-  assert( j_include != NULL );
-  return strcmp( i_include->rel_path, j_include->rel_path );
-}
 
 /**
  * Prints a TOML value.
