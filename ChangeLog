@@ -1,4 +1,9 @@
-2026-10-02  Paul J. Lucas <paul@lucasmail.org>
+2026-10-03  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * src/Makefile.am, config_file.c, config_file.h, include-tidy.c, include.c,
+     source.c, source.h: Eliminated tidy_config_assoc_header_rel_path global.
+
+2026-10-02  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * src/Makefile.am, cli_options.c, cli_options.h, config_file.c,
      config_file.h, cxx.c, include-tidy.c, include.c, include.h, proxies.c,
@@ -7,7 +12,7 @@
    * config_file.c, include.c, include.h, proxies.c, symbol.c:
      include_get_delims() now returns the delimiters.
 
-2026-10-01  Paul J. Lucas <paul@lucasmail.org>
+2026-10-01  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * include.c: Now using tidy_dupCString().
    * clang_util.c, clang_util.h, symbol.c, symbol.h: Now using
@@ -16,7 +21,7 @@
    * config_file.c, include-tidy.c, include-tidy.h, include.c, options.c,
      options.h, proxies.c, symbol.c: Moved test code.
 
-2026-09-30  Paul J. Lucas <paul@lucasmail.org>
+2026-09-30  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c, include-tidy.c, str_util.h, util.h: Moved functions.
    * str_util.c, str_util.h: Removed strnrchr() -- not used.
@@ -27,7 +32,7 @@
    * src/Makefile.am, cli_options.c, str_util.c, str_util.h, str_util_test.c,
      util.c, util.h, util_test.c, verbose.c: Split off str_util.[hc].
 
-2026-09-29  Paul J. Lucas <paul@lucasmail.org>
+2026-09-29  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * fnv1a.c, fnv1a.h: Added FNV1A_C().
    * src/Makefile.am, cli_options.c, config_file.c, include.c, print.c,
@@ -39,7 +44,7 @@
    * include-tidy.h, print.h, typedef.c: Moved TIDY_STAT_LF_FMT.
    * util.c, util.h: Removed strncpy_0() --- not used.
 
-2026-09-28  Paul J. Lucas <paul@lucasmail.org>
+2026-09-28  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * toml_test.c: More Unicode escape tests.
    * toml_lite.c: Fixed: correct error location for invalid Unicode escape.
@@ -61,23 +66,23 @@
    * toml_lite.c, toml_test.c, config-bad-toml.out: Fixed: now support TOML
      keys better.
 
-2026-09-27  Paul J. Lucas <paul@lucasmail.org>
+2026-09-27  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac, src/Makefile.am, toml_lite.c, toml_lite.h, toml_test.c,
      unicode.c, unicode.h: Added: Support for TOML Unicode escape sequences.
 
-2026-09-26  Paul J. Lucas <paul@lucasmail.org>
+2026-09-26  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * hash_table.c: Now possibly growing table last -- makes code cleaner.
 
-2026-09-25  Paul J. Lucas <paul@lucasmail.org>
+2026-09-25  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c: No longer checking type for class.
    * clang_util.c: Removed unnecessary call of tidy_Cursor_skipUnexposedDown().
    * array.c: Now using REALLOC.
    * toml_lite.h: Now using ht_table_empty.
 
-2026-09-24  Paul J. Lucas <paul@lucasmail.org>
+2026-09-24  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * Doxyfile: Removed HAVE_UNSIGNED_INT128 -- no longer needed.
    * path_util.h: Added NODISCARD.
@@ -89,28 +94,28 @@
    * symbol.c: Moved call to tidy_Cursor_isReservedName() inside
      symbol_is_excluded().
 
-2026-09-23  Paul J. Lucas <paul@lucasmail.org>
+2026-09-23  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * array.c: More efficient array_unique.
    * cxx.c: Added const.
 
-2026-09-21  Paul J. Lucas <paul@lucasmail.org>
+2026-09-21  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.c, hash_table.h, hash_table_test.c, include.c, symbol.c:
      ht_table_insert is no longe NODISCARD.
 
-2026-09-19  Paul J. Lucas <paul@lucasmail.org>
+2026-09-19  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * array.c, array.h: Added restrict.
    * src/Makefile.am: Removed: if ENABLE_COVERAGE.
 
-2026-09-18  Paul J. Lucas <paul@lucasmail.org>
+2026-09-18  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * Makefile.am: Added lcovrc to EXTRA_DIST.
    * man/man1/include-tidy.1: Added "(The order doesn't matter.)".
    * Makefile.am: Override am__tar to preserve symlinks in dist tar file.
 
-2026-09-17  Paul J. Lucas <paul@lucasmail.org>
+2026-09-17  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c, cli-options.out: Now consistent in verbose ouput where key
      = value and heading:
@@ -155,13 +160,13 @@
    * print.c, util.c, util.h: Added token printing for cursors that don't have
      a simple name.
 
-2026-09-16  Paul J. Lucas <paul@lucasmail.org>
+2026-09-16  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * util.c, util.h, util_test.c: s/fputs_quoted/fputs_escaped/
    * Base-1.hpp, Derived-1.hpp: Test renaming.
    * test/Makefile.am: Test renaming.
 
-2026-09-15  Paul J. Lucas <paul@lucasmail.org>
+2026-09-15  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * test/Makefile.am, token.hpp, token_hpp.out, token_hpp.test: Another test
      for is_cxx_mbr_ref_iwyu_exception().
@@ -183,7 +188,7 @@
    * clang_util.c: Code coverage exclusion comments.
    * clang_util.c: Rework.
 
-2026-09-14  Paul J. Lucas <paul@lucasmail.org>
+2026-09-14  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c: Code coverage exclusion comments.
    * clang_util.c, test/Makefile.am, file_info.hpp, file_info_hpp.out,
@@ -227,7 +232,7 @@
    * include.c: Factored out common code into path_no_ext_if().
    * src/Makefile.am: Added distclean-local.
 
-2026-09-13  Paul J. Lucas <paul@lucasmail.org>
+2026-09-13  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * test/Makefile.am, keep.c, keep.toml, config-keep.out, config-keep.test:
      Added "keep" test.
@@ -252,7 +257,7 @@
    * include.c, config-elide-includes.out, config-elide-includes.test:
      `elide-includes` now elides only if the include is needed.
 
-2026-09-12  Paul J. Lucas <paul@lucasmail.org>
+2026-09-12  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.c: Eliminated unncessary strbuf_reset().
    * config.toml: Added line-length test.
@@ -310,7 +315,7 @@
    * print.c: Code coverage exclusion comments.
    * lcovrc: Added }$.
 
-2026-09-11  Paul J. Lucas <paul@lucasmail.org>
+2026-09-11  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * ipaths.out, ipaths.test: Added ipath !S_ISDIR( st.st_mode ) test.
    * cli-options.out, cli-options.test: Added --line-length test.
@@ -332,7 +337,7 @@
    * test/Makefile.am, no-include-end-cc.sh, cli-compiler-no-include-end.out,
      cli-compiler-no-include-end.test: Test of no "End of search list."
 
-2026-09-10  Paul J. Lucas <paul@lucasmail.org>
+2026-09-10  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * options.c: Code coverage exclusion comments.
    * ipath.c: ipath_add: no longer calling access(); now returning if
@@ -357,7 +362,7 @@
      toml_peekc() simpler.
    * toml_lite.c: Now passing first character parsed for bool and int.
 
-2026-09-09  Paul J. Lucas <paul@lucasmail.org>
+2026-09-09  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * macro.hpp: Better macro test.
    * test/Makefile.am, macro.out, macro.test: Made test be C++.
@@ -385,7 +390,7 @@
    * toml_lite.c: Added better TOML error recovery.
    * toml_lite.c: s/return false/unreachable()/
 
-2026-09-08  Paul J. Lucas <paul@lucasmail.org>
+2026-09-08  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * types.out, types.test: Added statistics test.
    * test/Makefile.am, include-enoent.c, include-enoent.out,
@@ -400,7 +405,7 @@
    * symbol.c, test/Makefile.am, hash.hpp, hash.out, hash.test: Added test for
      CXCursor_OverloadedDeclRef.
 
-2026-09-07  Paul J. Lucas <paul@lucasmail.org>
+2026-09-07  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cxx.c: Code coverage exclusion comments.
    * cli_options.c, cli-usage.out, unknown_extension.out: Added source_path to
@@ -463,7 +468,7 @@
    * update_test.sh: Updated INCLUDE_TIDY_TEST.
    * man/man1/include-tidy.1: Added a missing '!' from the Makefile example.
 
-2026-09-06  Paul J. Lucas <paul@lucasmail.org>
+2026-09-06  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * man/man1/include-tidy.1, config_file.c, include-tidy.c, include-tidy.h,
      run_test.sh, home.test, xdg_config_dirs.test, update_test.sh: Added "x" to
@@ -492,7 +497,7 @@
    * test/Makefile.am, bad-semantics-1.toml, bad-semantics-1.out: Folded in
      test.
 
-2026-09-05  Paul J. Lucas <paul@lucasmail.org>
+2026-09-05  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.c, test/Makefile.am, xdg_config_dirs.out,
      xdg_config_dirs.test: XDG_CONFIG_DIRS test.
@@ -515,7 +520,7 @@
    * config_file.c, bad-semantics-1.out, bad-semantics-2.out: Now including
      offending value in config. file error messages.
 
-2026-09-04  Paul J. Lucas <paul@lucasmail.org>
+2026-09-04  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * toml_lite.c, toml_lite.h: Added toml_type_name.
    * test/Makefile.am, bad-semantics-2.toml, bad-semantics-2.out,
@@ -533,7 +538,7 @@
      Now allowing more than one error in configuration file; printing warning
      and error count.
 
-2026-09-03  Paul J. Lucas <paul@lucasmail.org>
+2026-09-03  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * util.h: Code coverage exclusion comments.
    * util.c, util.h: Eliminated strchr_nul() -- not used.
@@ -563,7 +568,7 @@
    * hash_table_test.c, path_util.c, path_util_test.c, strbuf_test.c: Code
      coverage improvements.
 
-2026-09-02  Paul J. Lucas <paul@lucasmail.org>
+2026-09-02  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * lcovrc, array.c, array.h, array_test.c, config_file.c, include.c, ipath.c,
      path_util.c, proxies.c, strbuf.c, symbol.c, toml_lite.c, toml_test.c,
@@ -578,7 +583,7 @@
    * Makefile.am, configure.ac, lcovrc, src/Makefile.am, cli_options.c: Added
      code coverage.
 
-2026-09-01  Paul J. Lucas <paul@lucasmail.org>
+2026-09-01  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * src/Makefile.am: Replaces spaces with tabs.
    * cli_options.c, cli_options.h, options.c, options.h, trans_unit.c: Moved
@@ -586,7 +591,7 @@
    * cli_options.c: Eliminated call to insert_argv(); fixed verbose printing of
      arguments.
 
-2026-08-30  Paul J. Lucas <paul@lucasmail.org>
+2026-08-30  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.c: Fixed $XDG_CONFIG_HOME / $HOME case config file handling.
    * config_file.c: Revert "Simplified case_num handling."
@@ -596,7 +601,7 @@
    * toml_lite.c, toml_lite.h: Eliminated TOML_ERR_INT_OUT_OF_RANGE.
    * toml_lite.c, toml_test.c: Fixed duplicate key error location.
 
-2026-08-29  Paul J. Lucas <paul@lucasmail.org>
+2026-08-29  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * toml_lite.c: toml_string_parse() now takes a strbuf_t*.
    * config_file.c, toml_lite.c, toml_lite.h, toml_test.c: Now using toml_key
@@ -611,7 +616,7 @@
      have an associated-header.
    * print.c: Removed wrong assert().
 
-2026-08-28  Paul J. Lucas <paul@lucasmail.org>
+2026-08-28  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * file_ext.c, file_ext.h: Don't need is_header member after all.
    * src/Makefile.am, cli_options.c, include.c, util.h:
@@ -624,7 +629,7 @@
    * options.h: Changed OPT_LINE_LENGTH_MAX to 512.
    * config_file.c: Added "const".
 
-2026-08-27  Paul J. Lucas <paul@lucasmail.org>
+2026-08-27  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * hash_table_test.c, include.c: #include fixes.
    * color.c, include.c, print.c, util.c, util.h: Eliminated several print
@@ -636,7 +641,7 @@
    * src/Makefile.am, config_file.c, cxx.c, include-tidy.c, proxies.c,
      proxies.h, symbols.c: File renaming.
 
-2026-08-26  Paul J. Lucas <paul@lucasmail.org>
+2026-08-26  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac, src/Makefile.am, cli_options.c: Added sanitizer options.
    * hash_table_test.c: Major clean-up.
@@ -645,14 +650,14 @@
    * hash_table.h: Added NODISCARD.
    * config_file.c, symbols.c: s/PJL_DISCARD/PJL_DISCARD_RV/
 
-2026-08-25  Paul J. Lucas <paul@lucasmail.org>
+2026-08-25  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * man/man1/include-tidy.1, cli_options.c, cli_options.h, cli-help.out,
      cli-options-error.out, cli-options-error.test: Officially supporting gcc.
    * options.c: Now using strcasecmp() for "none".
    * cli_options.c, options.c, options.h: Partially reverted opt_compiler_path.
 
-2026-08-24  Paul J. Lucas <paul@lucasmail.org>
+2026-08-24  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac: Bumped version to 2.2.
    * print.c, print.h, trans_unit.c: Now marking messages from libclang.
@@ -662,19 +667,19 @@
      file-specific.
    * cli_options.c, options.c, options.h: Made opt_compiler_path global.
 
-2026-08-23  Paul J. Lucas <paul@lucasmail.org>
+2026-08-23  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * src/Makefile.am, clang_util.c, config_file.c, fnv1a.c, fnv1a.h,
      hash_table_test.c, symbols.c, toml_lite.c, typedefs.c, util.c, util.h:
      Split out fnv1a.[ch].
    * util.c, util.h: Moved round_up_pow_2() out of header.
 
-2026-08-22  Paul J. Lucas <paul@lucasmail.org>
+2026-08-22  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * SECURITY.md: Fix URL.
    * SECURITY.md: Placate pedantic repository-scanning-and-reporting tools.
 
-2026-08-21  Paul J. Lucas <paul@lucasmail.org>
+2026-08-21  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * hash_table_test.c: Fixed "not used" warning.
    * hash_table_test.c: Fixed shadows warning.
@@ -682,7 +687,7 @@
    * cli_options.c, config_file.c, includes.c, options.h, print.c, proxies.c,
      symbols.c: added IS_VERBOSE().
 
-2026-08-20  Paul J. Lucas <paul@lucasmail.org>
+2026-08-20  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c, include-tidy.c: cli_options_init() now calls ipaths_init().
    * array.h, cli_options.c, config_file.c, includes.c, ipaths.c, path_util.c:
@@ -700,7 +705,7 @@
    * symbols.c: Now passing scope_csr to is_cxx_iwyu_exception.
    * includes.c, includes.h, symbols.c: s/include_includes/tidy_File_includes/
 
-2026-08-19  Paul J. Lucas <paul@lucasmail.org>
+2026-08-19  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * array.c: Now checking for integer overflow.
    * array.c, array.h, includes.c: Added free_fn parameter to array_dedup().
@@ -713,19 +718,19 @@
      c_ast_util.test, elements_cpp.test, timespec_t.test: Now handling C++'s
      overloaded operator-> correctly and class/struct member references better.
 
-2026-08-18  Paul J. Lucas <paul@lucasmail.org>
+2026-08-18  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: s/unsigned char/unsigned short/
    * includes.c: Floyd-Warshall algorithm.
 
-2026-08-17  Paul J. Lucas <paul@lucasmail.org>
+2026-08-17  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbols.c: Addedinclude_find_by_cursor().
    * test/Makefile.am, entities.hpp, less.hpp, entities_hpp.out,
      entities_hpp.test: Updated tests.
    * configure.ac: Updated version.
 
-2026-08-16  Paul J. Lucas <paul@lucasmail.org>
+2026-08-16  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * c_typedef.h, show.c: Updated test.
    * symbols.c: Fixed struct/union/class member references.
@@ -743,7 +748,7 @@
    * array.c, array.h, clang_util.c, includes.c, symbols.c, symbols.h: Now
      keeping both a symbol's name and display name (with signature).
 
-2026-08-15  Paul J. Lucas <paul@lucasmail.org>
+2026-08-15  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * array.h: Added array_cmp_fn_t.
    * cli_options.c, print.c, print.h: Factored out verbose_print_argv().
@@ -755,7 +760,7 @@
    * cli_options.c, include-tidy.c: Now printign source file earlier.
    * symbols.c: Eliminated add_cxx_member_fn_rv.
 
-2026-08-14  Paul J. Lucas <paul@lucasmail.org>
+2026-08-14  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * include-tidy.c: Now printing source file in quotes.
    * config_file.c: Hoisted strbuf outside of loop.
@@ -773,7 +778,7 @@
    * clang_util.c: Eliminated clang_Cursor_isNull().
    * options.c: Fixed #include.
 
-2026-08-13  Paul J. Lucas <paul@lucasmail.org>
+2026-08-13  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * etc/config.toml: Added std::exchange.
    * man/man1/include-tidy.1, include-tidy.c, includes.c, options.c, options.h,
@@ -789,7 +794,7 @@
    * symbols.c: Factored out is_definition_needed().
    * symbols.c: Now handling C23/C++11 fixed-type enums.
 
-2026-08-12  Paul J. Lucas <paul@lucasmail.org>
+2026-08-12  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbols.c: Now excluding template and parameter cursors.
    * symbols.c: Split maybe_add_symbol() up.
@@ -802,7 +807,7 @@
    * includes.c: Using tidy_getFileLocation_File().
    * symbols.c: tidy_Token_getScopedNameCursor fixes.
 
-2026-08-11  Paul J. Lucas <paul@lucasmail.org>
+2026-08-11  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbols.c: Now excluding field name.
    * clang_util.c, clang_util.h, symbols.c: Added
@@ -825,7 +830,7 @@
      util.c, util.h: Now using a hash table instead of a red-black tree in most
      places.
 
-2026-08-10  Paul J. Lucas <paul@lucasmail.org>
+2026-08-10  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c, clang_util.h: Made some functions inline.
    * clang_util.c, clang_util.h, includes.c: Eliminated
@@ -837,24 +842,24 @@
      exist.
    * ipaths.c, ipaths.h: Added abs_path_len.
 
-2026-08-09  Paul J. Lucas <paul@lucasmail.org>
+2026-08-09  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac, clang_util.c, util.c, util.h: Removed __int128 -- not really
      needed.
 
-2026-08-08  Paul J. Lucas <paul@lucasmail.org>
+2026-08-08  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbols.c: Eliminated "not added" case.
    * toml_lite.c: Eliminated pointless toml->col_prev = toml->loc.col
    * toml_lite.c: Improved performance by eliminating ungetc().
 
-2026-08-07  Paul J. Lucas <paul@lucasmail.org>
+2026-08-07  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * toml_lite.c: Now checking for consecutive __.
    * toml_lite.c: Now checking for missing comma between array elements.
    * util.h: Added NODISCARD.
 
-2026-08-06  Paul J. Lucas <paul@lucasmail.org>
+2026-08-06  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac: Updated version to 2.0.
    * clang_util.c, test/Makefile.am, Base-02.hpp, Derived-02.cpp,
@@ -876,7 +881,7 @@
    * clang_util.c, clang_util.h, symbols.c:
      s/get_next_token_index/tidy_Token_getNext/
 
-2026-08-05  Paul J. Lucas <paul@lucasmail.org>
+2026-08-05  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * etc/config.toml: Added utility.
    * symbols.c: Now checking clang_tokenize().
@@ -894,7 +899,7 @@
    * print.c, util.c, util.h: verbose_print_cursor() now prints string literals
      with quotes escaped.
 
-2026-08-04  Paul J. Lucas <paul@lucasmail.org>
+2026-08-04  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c: Added tidy_getCursorReferenced; reworked
      tidy_Cursor_isTypeAliasOf().
@@ -903,7 +908,7 @@
      recursively.
    * symbols.c: Now ignoring CXCursor_CXXMethod again.
 
-2026-08-03  Paul J. Lucas <paul@lucasmail.org>
+2026-08-03  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c, clang_util.h, symbols.c, test/Makefile.am, conf_var.hpp,
      conf_var_init.cpp, conf_var_init.out, conf_var_init.test: Now handling C++
@@ -922,7 +927,7 @@
      conf_var.hpp, conf_string.out, conf_string.test: Fixes the
      conf<std::string>::conf( char const *name ) : conf_var{ name } case.
 
-2026-08-02  Paul J. Lucas <paul@lucasmail.org>
+2026-08-02  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbols.c, derived_set.cpp, derived_set.hpp: Now handle unqualified,
      inherited types.
@@ -932,7 +937,7 @@
    * symbols.c: Removed now-useless code.
    * clang_util.c: Now checking that alias_csr really is a type alias.
 
-2026-08-01  Paul J. Lucas <paul@lucasmail.org>
+2026-08-01  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * slist.out, slist.test: Fixed (?) slist.test.
    * cxx.out, run_test.sh, cxx.test, derived_set.test, using_set.test:
@@ -950,12 +955,12 @@
      str_str_map.hpp, str_str_map.out, str_str_map.test: Even better handling
      of CallExpr for free functions/operators.
 
-2026-07-31  Paul J. Lucas <paul@lucasmail.org>
+2026-07-31  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c: tidy_Cursor_getOutermostClass(cursor) now returns cursor if
      it's already the outermost class.
 
-2026-07-30  Paul J. Lucas <paul@lucasmail.org>
+2026-07-30  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * test/Makefile.am, Base.hpp, Derived.hpp, exit_codes.hpp, test.cpp,
      util.hpp, cxx.out, cxx.test: Added C++ test.
@@ -964,13 +969,13 @@
      deferring whether to add the symbol for the function.
    * etc/config.toml: Mostly C++ additions.
 
-2026-07-29  Paul J. Lucas <paul@lucasmail.org>
+2026-07-29  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * src/Makefile.am, config_file.c, include-tidy.c, includes.c, includes.h,
      proxies.c, proxies.h: Split implicit proxy functions into proxies.c.
    * includes.c, includes.h: Moved get_associated_header().
 
-2026-07-28  Paul J. Lucas <paul@lucasmail.org>
+2026-07-28  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c, path_util.c, path_util.h: Added path_is_file().
    * src/Makefile.am, symbols.c, typedefs.c, typedefs.h: Split out typedef
@@ -982,7 +987,7 @@
    * print.c, print.h, symbols.c: Added optional label parameter to
      verbose_print_cursor.
 
-2026-07-27  Paul J. Lucas <paul@lucasmail.org>
+2026-07-27  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c: tidy_Cursor_getFirstChild() now skips
      CXCursor_UnexposedExpr.
@@ -991,29 +996,29 @@
    * symbols.c: Moved clang_equalCursors() check earlier.
    * symbols.c: Now mostly ignoring C++ namespaces.
 
-2026-07-26  Paul J. Lucas <paul@lucasmail.org>
+2026-07-26  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbols.c: Now handling global scope C++ inheritance.
 
-2026-07-25  Paul J. Lucas <paul@lucasmail.org>
+2026-07-25  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * print.c: Now printing null cursors.
 
-2026-07-24  Paul J. Lucas <paul@lucasmail.org>
+2026-07-24  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c: Added type aliases to tidy_Cursor_isInheritable().
    * clang_util.c, clang_util.h, print.c, symbols.c: Now (re)using a cursor's
      spelling name for the typedef_map key.
    * symbols.c: Now using original cursor in typedef_add().
 
-2026-07-23  Paul J. Lucas <paul@lucasmail.org>
+2026-07-23  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c: Now removing "<>" from scoped names.
    * clang_util.c: Added tidy_Cursor_isInheritable().
    * clang_util.c, clang_util.h, symbols.c: Now filtering out inherited C++
      members.
 
-2026-07-22  Paul J. Lucas <paul@lucasmail.org>
+2026-07-22  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * print.c: Handling NULL name.
    * clang_util.c, clang_util.h: Added tidy_Cursor_isScopeDecl();
@@ -1030,7 +1035,7 @@
    * cli_options.c: Fixed fix of inserting "-I.".
    * cli_options.c: Fixed inserting of "-I.".
 
-2026-07-21  Paul J. Lucas <paul@lucasmail.org>
+2026-07-21  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c, options.c, options.h: Much better implementation of
      include_find_by_rel_path().
@@ -1038,18 +1043,18 @@
    * clang_util.c, clang_util.h, symbols.c: Now keeping track of type alias
      declarations.
 
-2026-07-20  Paul J. Lucas <paul@lucasmail.org>
+2026-07-20  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbols.c: Now also filtering out CXCursor_CXXMethod.
    * symbols.c: Now skipping constructors and destructors.
    * symbols.c: Added tidy_Cursor_isInvalid().
    * symbols.c: Removed CXCursor_Constructor & CXCursor_Destructor.
 
-2026-07-19  Paul J. Lucas <paul@lucasmail.org>
+2026-07-19  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbols.c: Added additional tidy_Cursor_isInvalid().
 
-2026-07-17  Paul J. Lucas <paul@lucasmail.org>
+2026-07-17  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.c, includes.c, red_black.c, red_black.h, red_black_test.c,
      toml_lite.h: Swapped rb_iterator_init() parameter order.
@@ -1058,14 +1063,14 @@
      tidy_Cursor_getUnderlying() -- not needed.
    * clang_util.h: Added NODISCARD.
 
-2026-07-16  Paul J. Lucas <paul@lucasmail.org>
+2026-07-16  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbols.c: No longer calling clang_getCanonicalCursor() -- makes things
      better.
    * includes.c, includes.h: Added distinct is_needed member -- no longer using
      symbol_set.size.
 
-2026-07-15  Paul J. Lucas <paul@lucasmail.org>
+2026-07-15  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c: Now skipping either anonymous or unnamed names when
      fully-scoping names.
@@ -1073,7 +1078,7 @@
    * clang_util.c, clang_util.h, symbols.c: Now visiting CallExpr and
      MemberRefExpr separately.
 
-2026-07-14  Paul J. Lucas <paul@lucasmail.org>
+2026-07-14  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Now checking to see if the C++ wrapper has been included at
      all.
@@ -1087,7 +1092,7 @@
    * symbols.c: Fixed scope look-up in tidy_Token_getScopedNameCursor().
    * symbols.c: Added "static 2".
 
-2026-07-13  Paul J. Lucas <paul@lucasmail.org>
+2026-07-13  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c, clang_util.h, symbols.c: Now handling CXCursor_FieldDecl
      more like CXCursor_MacroDefinition to get scoped names right.
@@ -1110,13 +1115,13 @@
      corresponding C header, e.g., cstring and string.h.
    * config_file.c: Removed #include "trans_unit.h".
 
-2026-07-12  Paul J. Lucas <paul@lucasmail.org>
+2026-07-12  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c, cli_options.h, config_file.c, trans_unit.c, trans_unit.h:
      s/tidy_lang/tidy_is_cpp/
    * clang_util.c: Now checking for an empty string.
 
-2026-07-08  Paul J. Lucas <paul@lucasmail.org>
+2026-07-08  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * pjl_unsigned_int128.m4, clang_util.c, util.c, util.h: No longer defines
      any macro in failure case.
@@ -1124,11 +1129,11 @@
    * pjl_compile.m4: PJL_COMPILE now accepts 1st arg with whitespace (that's
      converted to _); no longer defines any macro in failure case.
 
-2026-07-03  Paul J. Lucas <paul@lucasmail.org>
+2026-07-03  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * etc/config.toml: Added termcap.h, bzlib.h, and zlib.h.
 
-2026-07-01  Paul J. Lucas <paul@lucasmail.org>
+2026-07-01  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * toml_lite.c: Added NODISCARD.
    * toml_lite.c: Eliminated temporary variable; made fpeekc() inline.
@@ -1138,16 +1143,16 @@
    * config_file.c, toml_lite.c, toml_lite.h: Swapped toml_iterator_init()
      parameter order.
 
-2026-06-30  Paul J. Lucas <paul@lucasmail.org>
+2026-06-30  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * toml_lite.c: Force hoist of array-> out of loop.
    * toml_lite.c, toml_lite.h: Added "const".
 
-2026-06-29  Paul J. Lucas <paul@lucasmail.org>
+2026-06-29  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Added print_group.
 
-2026-06-27  Paul J. Lucas <paul@lucasmail.org>
+2026-06-27  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Removed "const".
    * includes.c: Eliminated goto.
@@ -1159,7 +1164,7 @@
    * cli_options.c: Added clang_long_opt.
    * cli_options.c: s/char/int/
 
-2026-06-26  Paul J. Lucas <paul@lucasmail.org>
+2026-06-26  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac, cli_options.c: Added support for --include-directory-after,
      -idirafter.
@@ -1168,11 +1173,11 @@
    * cli_options.c, cli-help.out, cli-options-error.out: Added missing -h and
      -v to --help output.
 
-2026-06-25  Paul J. Lucas <paul@lucasmail.org>
+2026-06-25  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c, cli-options-error.out: Added "or -h".
 
-2026-06-24  Paul J. Lucas <paul@lucasmail.org>
+2026-06-24  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c, clang_util.h: Removed tidy_getCursorSpelling() -- not used.
    * print.c: Added unlikely().
@@ -1183,7 +1188,7 @@
      cursor_in_file in symbols.c.
    * cli_options.c: Now using tmp_include_paths.
 
-2026-06-23  Paul J. Lucas <paul@lucasmail.org>
+2026-06-23  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c: Set opterr = 0.
    * cli_options.c: Now changing directory earlier.
@@ -1193,7 +1198,7 @@
    * clang_util.c, clang_util.h: Now returning an invalid cursor for not found.
    * includes.c, print.c: Moved path_no_dot_slash() into fl_print_impl().
 
-2026-06-22  Paul J. Lucas <paul@lucasmail.org>
+2026-06-22  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * options.c: Now using static array in opt_error_parse().
    * cli_options.c: Both `-h` and `-v` are now correctly recognized as synonyms
@@ -1201,29 +1206,29 @@
    * man/man1/include-tidy.1, cli_options.c: Now printing configure feature
      options with --version --version.
 
-2026-06-19  Paul J. Lucas <paul@lucasmail.org>
+2026-06-19  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * color.c: Now using switch.
    * color.c, color.h: Moved SGR_ macros.
    * man/man1/include-tidy.1: Reworded --error explanation.
 
-2026-06-18  Paul J. Lucas <paul@lucasmail.org>
+2026-06-18  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * array.c, array.h: Added restrict.
    * array.c: Caching elements.
 
-2026-06-16  Paul J. Lucas <paul@lucasmail.org>
+2026-06-16  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * array.c: Eliminated "i".
    * array.c: Caching esize and len.
    * util.c: Removed old p != NULL.
 
-2026-06-14  Paul J. Lucas <paul@lucasmail.org>
+2026-06-14  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac: Added check for _Generic.
    * configure.ac: Removed AC_TYPE_PID_T; added AC_TYPE_UINT64_T.
 
-2026-06-12  Paul J. Lucas <paul@lucasmail.org>
+2026-06-12  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * man/man1/include-tidy.1: Now using source-file more.
    * man/man1/include-tidy.1: s/BR/BI/ for option arguments.
@@ -1237,17 +1242,17 @@
    * cli_options.c: Folded grow_argv into insert_argv.
    * cli_options.c: Eliminated is_argv_on_heap.
 
-2026-06-11  Paul J. Lucas <paul@lucasmail.org>
+2026-06-11  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c: Removed redundant "if".
 
-2026-06-10  Paul J. Lucas <paul@lucasmail.org>
+2026-06-10  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac, man/man1/include-tidy.1, config_file.c: Made "error"
      settable via configurationf file.
    * cli_options.c: Folded move_tidy_long_option() back in.
 
-2026-06-09  Paul J. Lucas <paul@lucasmail.org>
+2026-06-09  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c: Added support for -isystem-after, -iquote, and -cxx-isystem
      options.
@@ -1255,18 +1260,18 @@
    * cli_options.c: Now also handling --include-directory and -isystem with =.
    * cli_options.c: Moved calls to fatal_error.
 
-2026-06-07  Paul J. Lucas <paul@lucasmail.org>
+2026-06-07  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * print.c: Eliminated goto.
 
-2026-06-06  Paul J. Lucas <paul@lucasmail.org>
+2026-06-06  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac: Fixed cast and dereference bug.
    * config_file.c: Added missing *(char const**).
    * print.h: Added missing #include.
    * cli_options.c: Clearer required_argument handling.
 
-2026-06-05  Paul J. Lucas <paul@lucasmail.org>
+2026-06-05  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * man/man1/include-tidy.1: Made "choices" wording consistent.
    * man/man1/include-tidy.1, cli_options.c, cli_options.h, config_file.c,
@@ -1275,20 +1280,20 @@
      cli-options-error.out, cli-comment-symbols.test, cli-options-error.test:
      Added --comment-symbols option.
 
-2026-06-04  Paul J. Lucas <paul@lucasmail.org>
+2026-06-04  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Added NODISCARD.
    * cli_options.c, options.c, options.h: Fixed "must be one of [...]" for
      --verbose.
    * cli_options.c: Removed unnecessary call to opt_mark_set().
 
-2026-06-03  Paul J. Lucas <paul@lucasmail.org>
+2026-06-03  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c: Now setting argv[argc] = NULL in grow_argv().
    * cli_options.c: Removed duplicate "clang".
    * cli_options.c: Removed unnecessary grow_argv() forward declaration.
 
-2026-06-02  Paul J. Lucas <paul@lucasmail.org>
+2026-06-02  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.c, includes.c, print.h, trans_unit.c: Added
      print_file_error().
@@ -1297,13 +1302,13 @@
    * symbols.c: Using tidy_symbol_cleanup() for ignore case as well.
    * includes.c: s/sizeof *sym/0/
 
-2026-05-31  Paul J. Lucas <paul@lucasmail.org>
+2026-05-31  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac, print.c, print.h, trans_unit.c: Now printing offending line
      if there's an error in the source file.
    * strbuf.c: Now growing by 1.5x.
 
-2026-05-30  Paul J. Lucas <paul@lucasmail.org>
+2026-05-30  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * toml_lite.c: Added "const".
    * toml_lite.c: Added TOML_ARRAY_CAP_MIN and set it to 4.
@@ -1312,22 +1317,22 @@
    * array.c, array.h: Added restrict to array_push_array_back(); added
      assert().
 
-2026-05-29  Paul J. Lucas <paul@lucasmail.org>
+2026-05-29  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * array.c: Added ARRAY_CAP_MIN set to 4.
 
-2026-05-28  Paul J. Lucas <paul@lucasmail.org>
+2026-05-28  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * array.c: Now growing array by 1.5x.
    * man/man1/include-tidy.1: Man page fixes.
 
-2026-05-27  Paul J. Lucas <paul@lucasmail.org>
+2026-05-27  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.c: Eliminated pointless "if".
    * config_file.c: Now treating other non-zero return value from fnmatch() the
      same as FNM_NOMATCH.
 
-2026-05-26  Paul J. Lucas <paul@lucasmail.org>
+2026-05-26  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * man/man1/include-tidy.1, src/Makefile.am: Better way to invoke
      include-tidy from a Makefile.
@@ -1339,7 +1344,7 @@
    * path_util_test.c: Added test_path_no_dot_slash().
    * array.h: Added #ifndefs for NODISCARD and PJL_DISCARD.
 
-2026-05-25  Paul J. Lucas <paul@lucasmail.org>
+2026-05-25  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * include-tidy.c, includes.c, includes.h, symbols.c, symbols.h,
      trans_unit.c, trans_unit.h: Now using tidy_tu global.
@@ -1352,14 +1357,14 @@
    * strbuf.c, util.c, util.h: Using path_is_absolute() more.
    * util.c, util.h: Removed str_is_affirmative().
 
-2026-05-24  Paul J. Lucas <paul@lucasmail.org>
+2026-05-24  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c: Now using insert_argv() in add_clang_include_paths().
    * cli_options.c: Added argi parameter to insert_argv().
    * cli_options.c: Now using memcpy().
    * cli_options.c: Now using path_is_relative().
 
-2026-05-22  Paul J. Lucas <paul@lucasmail.org>
+2026-05-22  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * options.c: Removed unnecessary forward declarations.
    * cli_options.c, cli-help.out, cli-options-error.out: Added default="//" to
@@ -1369,12 +1374,12 @@
      keep with handling, an enumeration.
    * includes.c, includes.h: Eliminated tidy_include::is_needed.
 
-2026-05-21  Paul J. Lucas <paul@lucasmail.org>
+2026-05-21  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * trans_unit.c: Removed #include <stdio.h>.
    * trans_unit.c: Now using access() instead of fopen().
 
-2026-05-20  Paul J. Lucas <paul@lucasmail.org>
+2026-05-20  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * man/man1/include-tidy.1, config_file.c: Added add-cpp-includes.
    * config_file.c, config_file.h, include-tidy.c: Replaced ignore_rel_path_set
@@ -1387,7 +1392,7 @@
    * config_file.c: include_add_explicit_proxy() now iterates over all
      from-includes.
 
-2026-05-19  Paul J. Lucas <paul@lucasmail.org>
+2026-05-19  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Factored out should_print_include().
    * array.c, array.h: Fixed bugs; made array_push_back() inline.
@@ -1398,7 +1403,7 @@
      for align-columns default.
    * etc/config.toml: Added wchar_t and wint_t.
 
-2026-05-18  Paul J. Lucas <paul@lucasmail.org>
+2026-05-18  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * etc/config.toml: Added intptr_t, uint*_t.
    * includes.c, util.c, util.h: Added path_is_local().
@@ -1415,7 +1420,7 @@
    * man/man1/include-tidy.1, options.c: Swapped 'p' and 'P' for verbose.
    * Makefile.am: Added include-tidy.css.
 
-2026-05-17  Paul J. Lucas <paul@lucasmail.org>
+2026-05-17  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac: Set version to 1.0.
    * includes.c: Now following proxy in include_find_by_rel_path().
@@ -1428,7 +1433,7 @@
    * etc/config.toml: Removed apparently no-longer-needed getopt symbols.
    * config_file.c: Removed unecessary #include.
 
-2026-05-16  Paul J. Lucas <paul@lucasmail.org>
+2026-05-16  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbols.c: Put symbol names in quotes.
    * etc/config.toml: Added stdint.h.
@@ -1447,7 +1452,7 @@
    * config_file.c, includes.c, includes.h: keep-includes now keeps _all_
      includes having the same rel_path.
 
-2026-05-15  Paul J. Lucas <paul@lucasmail.org>
+2026-05-15  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c, util.c, util.h: Factored out path_ends_with().
    * config_file.c: Removed unused code.
@@ -1472,7 +1477,7 @@
    * clang_util.c, clang_util.h, print.c, print.h, symbols.c: Now handling
      alignas().
 
-2026-05-14  Paul J. Lucas <paul@lucasmail.org>
+2026-05-14  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * print.c: Removed "token: ".
    * print.c, print.h: Added verbose_print_token().
@@ -1481,7 +1486,7 @@
      util.c, util.h: Now additionally adding the symbol for a definition in
      addition to its declaration, if necessary.
 
-2026-05-13  Paul J. Lucas <paul@lucasmail.org>
+2026-05-13  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbols.c: Added visit_AlignedAttr().
    * trans_unit.c: Now using correct file in trans_unit_check_for_errors().
@@ -1489,12 +1494,12 @@
    * includes.c, includes.h, print.c, print.h, symbols.c: Now always enclosing
      include paths in delimeters.
 
-2026-05-12  Paul J. Lucas <paul@lucasmail.org>
+2026-05-12  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * print.c: Made verbose_print_cursor() more robust.
    * config_file.c: Added "static".
 
-2026-05-11  Paul J. Lucas <paul@lucasmail.org>
+2026-05-11  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * include-tidy.c, trans_unit.c, trans_unit.h: Split out
      trans_unit_check_for_errors().
@@ -1506,7 +1511,7 @@
    * print.c: Removed check for opt_verbose == TIDY_VERBOSE_NONE.
    * cli_options.c: s/opt/option/
 
-2026-05-10  Paul J. Lucas <paul@lucasmail.org>
+2026-05-10  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * man/man1/include-tidy.1, config_file.c, config_file.h, include-tidy.c,
      include-tidy.toml: Added ignore-as-argument.
@@ -1517,7 +1522,7 @@
    * clang_util.c, clang_util.h, symbols.c: Iterates through macro definition
      tokens looking for symbols.
 
-2026-05-09  Paul J. Lucas <paul@lucasmail.org>
+2026-05-09  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c, clang_util.h, symbols.c:
      s/tidy_isCursorInFile/tidy_Cursor_isInFile/
@@ -1528,7 +1533,7 @@
    * clang_util.c, clang_util.h, util.c: Eliminated tidy_CXFileUniqueID_fput().
    * clang_util.c, util.c, util.h: Moved fnv1a_s() to util.[ch].
 
-2026-05-08  Paul J. Lucas <paul@lucasmail.org>
+2026-05-08  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * array.c, array.h, includes.c, red_black.c, red_black.h: Now using array_t
      for sorted includes.
@@ -1544,18 +1549,18 @@
    * clang_util.c, clang_util.h, symbols.c:
      s/get_symbol_file/tidy_getCursorLocation_File/
 
-2026-05-07  Paul J. Lucas <paul@lucasmail.org>
+2026-05-07  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * man/man1/include-tidy.1: s/This variable specifies/Specifies/
    * man/man1/include-tidy.1: Inserted "a".
    * man/man1/include-tidy.1: s/40/41/
 
-2026-04-27  Paul J. Lucas <paul@lucasmail.org>
+2026-04-27  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbols.c: Added get_symbol_file().
    * symbols.c: No longer care about underlying type.
 
-2026-04-26  Paul J. Lucas <paul@lucasmail.org>
+2026-04-26  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Now attempting to find associated header only if source file
      is a .c/.cpp file.
@@ -1565,7 +1570,7 @@
    * include-tidy.c, includes.c, includes.h: Split code out into
      associated_header_init().
 
-2026-04-25  Paul J. Lucas <paul@lucasmail.org>
+2026-04-25  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Now counting duplicate includes as unnecessary even if keep is
      true.
@@ -1576,7 +1581,7 @@
    * util.h: Eliminiated test/modify same variable in same expression.
    * array.c: s/<=/</
 
-2026-04-24  Paul J. Lucas <paul@lucasmail.org>
+2026-04-24  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * etc/config.toml, cli_options.c, options.c, util.c: Special case for
      strcasecmp().
@@ -1589,7 +1594,7 @@
    * configure.ac, ax_compare_version.m4, pjl_prog_llvm_config_version.m4: Now
      checking for minimum llvm-config version.
 
-2026-04-23  Paul J. Lucas <paul@lucasmail.org>
+2026-04-23  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c, util.c, util.h: Now relativize the original CXFile's path and
      not the real path to avoid different names via symlinks.
@@ -1600,7 +1605,7 @@
    * clang_util.c, clang_util.h, includes.c: Now handling "duplicate" includes
      that are symlinks.
 
-2026-04-22  Paul J. Lucas <paul@lucasmail.org>
+2026-04-22  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * options.c, util.c, util.h: Now using array_t for opt_include_paths.
    * config_file.c: Added "const".
@@ -1609,7 +1614,7 @@
      includes.h: Added associated-header.
    * options.c, options.h, print.c, print.h: Added verbose_print_cursor().
 
-2026-04-21  Paul J. Lucas <paul@lucasmail.org>
+2026-04-21  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.h: Added missing #include.
    * clang_util.h: Removed unnecessary #include.
@@ -1640,7 +1645,7 @@
    * test/Makefile.am, run_test.sh, update_test.sh: Made update_test.sh work
      again; made things more consistens.
 
-2026-04-20  Paul J. Lucas <paul@lucasmail.org>
+2026-04-20  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * util.c, cli_options-error.out: Added "error" to fatal_error().
    * cli_options-error.out, cli_options.out: Updated tests.
@@ -1658,13 +1663,13 @@
      test for duplicate includes.
    * hello.out, hello.test: Added --no-config-layers.
 
-2026-04-19  Paul J. Lucas <paul@lucasmail.org>
+2026-04-19  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c, includes.h: Eliminated seq_id and tidy_include_count.
    * includes.c, util.c, util.h: Eliminated include-include matrix by doing
      retroactive include->includer resetting.
 
-2026-04-18  Paul J. Lucas <paul@lucasmail.org>
+2026-04-18  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Moved check included->depth == 0 earlier.
    * etc/config.toml: Split C/POSIX.
@@ -1672,7 +1677,7 @@
    * config_file.c: Added "const".
    * config_file.c, util.c, util.h: Now using strbuf in config_file.c.
 
-2026-04-16  Paul J. Lucas <paul@lucasmail.org>
+2026-04-16  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c: Silence libclang unknown warnings.
    * configure.ac: Don't need host type.
@@ -1692,7 +1697,7 @@
      tidy_include* as value.
    * includes.c: Removed unnecessary typedef.
 
-2026-04-15  Paul J. Lucas <paul@lucasmail.org>
+2026-04-15  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Eliminated is_implicit_proxy().
    * includes.c, util.c, util.h: Added path_base_name_cmp().
@@ -1707,7 +1712,7 @@
      tidy_include it was actually added to.
    * man/man1/include-tidy.1: Finished __include_tidy__ documentation.
 
-2026-04-14  Paul J. Lucas <paul@lucasmail.org>
+2026-04-14  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c: Added -D__include_tidy__.
    * cli_options.c: Added grow_argv().
@@ -1727,7 +1732,7 @@
    * src/Makefile.am, toml_lite.c: TOML now uses strbuf.
    * toml_lite.c: Removed TOML_KEY_LEN_MAX.
 
-2026-04-13  Paul J. Lucas <paul@lucasmail.org>
+2026-04-13  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c, clang_util.h, symbols.c: Now falling back to
      clang_getFileLocation() if clang_getSpellingLocation() returns NULL for
@@ -1749,7 +1754,7 @@
    * clang_util.c, clang_util.h, includes.c, symbols.c, symbols.h: Now storing
      strdup'd name in tidy_symbol rather than CXString.
 
-2026-04-12  Paul J. Lucas <paul@lucasmail.org>
+2026-04-12  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.c, util.c, util.h: Moved path_append().
    * man/man1/include-tidy.1, config_file.c: Now using
@@ -1764,7 +1769,7 @@
    * config_file.c, includes.c, util.c, util.h: Added path_is_relative().
    * cli_options.c: Better get_source_path().
 
-2026-04-11  Paul J. Lucas <paul@lucasmail.org>
+2026-04-11  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbols.c: Now getting underlying type only if it's incomplete.
    * includes.c: Now using strerror( ENOENT ).
@@ -1775,7 +1780,7 @@
    * color.c, color.h: Now doing color seperately for stdout and stderr.
    * symbols.c: Removed '!'.
 
-2026-04-10  Paul J. Lucas <paul@lucasmail.org>
+2026-04-10  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c, symbols.c, util.h: Added false_set().
    * include-tidy.c, includes.c: Now printing verbose file name only if
@@ -1796,7 +1801,7 @@
      cli_options.h, color.c, color.h, include-tidy.c, includes.c, options.c,
      options.h, print.c, print.h: Initial color output.
 
-2026-04-09  Paul J. Lucas <paul@lucasmail.org>
+2026-04-09  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * util.h: Added UNEXPECTED_INT_VALUE(), VA_OPT().
    * Makefile.am: Added src/include-tidy.toml to EXTRA_DIST.
@@ -1809,7 +1814,7 @@
    * man/man1/include-tidy.1, include-tidy.c, options.c, options.h: Added
      --verbose=f.
 
-2026-04-08  Paul J. Lucas <paul@lucasmail.org>
+2026-04-08  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * include-tidy.toml: Removed util.h.
    * toml_test.c: Fixed includes.
@@ -1835,7 +1840,7 @@
    * toml_lite.c: Added missing '+' and '-' to detect integer.
    * toml_lite.c: Added toml_col_inc().
 
-2026-04-07  Paul J. Lucas <paul@lucasmail.org>
+2026-04-07  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * src/Makefile.am, util_test.c: Added util_test.c.
    * util.c, util.h: Removed unused functions.
@@ -1851,7 +1856,7 @@
    * test/Makefile.am, cli_error.out, cli_error.test: Added test for --error.
    * run_test.sh: Removed LINENO.
 
-2026-04-06  Paul J. Lucas <paul@lucasmail.org>
+2026-04-06  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * hello.out, run_test.sh, cli_options-error.test, cli_options.test,
      hello.test, update_test.sh: More tests.
@@ -1866,7 +1871,7 @@
    * man/man1/include-tidy.1: More man page.
    * man/man1/include-tidy.1: s/Options/Option/
 
-2026-04-05  Paul J. Lucas <paul@lucasmail.org>
+2026-04-05  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * man/man1/include-tidy.1: Added add-c-concludes.
    * man/man1/include-tidy.1, cli_options.c, cli_options.h, config_file.c,
@@ -1884,7 +1889,7 @@
    * man/man1/include-tidy.1: More man page.
    * man/man5/include-tidy.5: Added std-c-includes and std-cpp-includes.
 
-2026-04-04  Paul J. Lucas <paul@lucasmail.org>
+2026-04-04  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.c: Added add-c-includes.
    * etc/include-tidy.toml: Added c-includes and cpp-includes.
@@ -1897,7 +1902,7 @@
      non-const.
    * config_file.h: Added NODISCARD.
 
-2026-04-03  Paul J. Lucas <paul@lucasmail.org>
+2026-04-03  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Now allow glob standard header matching; added linux/*.h
      headers.
@@ -1916,7 +1921,7 @@
    * ax_check_compile_flag.m4: Added missing m4 file.
    * man/man1/include-tidy.1, man/man5/include-tidy.5: More man pages.
 
-2026-04-02  Paul J. Lucas <paul@lucasmail.org>
+2026-04-02  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Added const.
    * include-tidy.c, includes.c, includes.h: Exit status now takes violations
@@ -1938,7 +1943,7 @@
    * util.h: Added NODISCARD.
    * util.c, util.h: Now calling base_name() in path_ext().
 
-2026-04-01  Paul J. Lucas <paul@lucasmail.org>
+2026-04-01  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.c: Added "keep" key.
    * symbols.c: Added missing CXCursor_FunctionDecl.
@@ -1962,7 +1967,7 @@
    * toml_lite.c, toml_lite.h: Added toml_table_empty().
    * config_file.c: No longer nulling-out path_buf.
 
-2026-03-31  Paul J. Lucas <paul@lucasmail.org>
+2026-03-31  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.c: Added int_value_parse().
    * config_file.c: Added align-column support in config.
@@ -1984,7 +1989,7 @@
    * man/man1/include-tidy.1, man/man5/include-tidy.5: Man page updates.
    * toml_lite.c: Added support \r.
 
-2026-03-30  Paul J. Lucas <paul@lucasmail.org>
+2026-03-30  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac, man/man5/Makefile.am: Added man5.
    * includes.c: Moved "goto skip" earlier.
@@ -1995,7 +2000,7 @@
      support.
    * config_file.c: Eliminated union and symbol_includes_resolve().
 
-2026-03-29  Paul J. Lucas <paul@lucasmail.org>
+2026-03-29  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * trans_unit.c: Added #include <stdbool.h>.
    * src/Makefile.am, include-tidy.c, includes.c, trans_unit.c, trans_unit.h,
@@ -2004,7 +2009,7 @@
    * config_file.c, config_file.h, include-tidy.c, includes.c, includes.h:
      Eliminated include_proxy_maps.
 
-2026-03-28  Paul J. Lucas <paul@lucasmail.org>
+2026-03-28  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.c, config_file.h, include-tidy.c: Eliminated
      config_resolve_includes().
@@ -2018,7 +2023,7 @@
    * toml_lite.c: s/toml_key_value_iterator_init/toml_iterator_init/
    * config_file.c, options.c, options.h: Added dumping of configuration file.
 
-2026-03-27  Paul J. Lucas <paul@lucasmail.org>
+2026-03-27  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * util.c, util.h: Eliminated check_atou().
    * trans_unit.c: Now printing only error and fatal severity diagnotics and
@@ -2034,7 +2039,7 @@
    * configure.ac, pjl_unsigned_int128.m4: Added pjl_unsigned_int128.m4.
    * includes.c: Eliminated includer.
 
-2026-03-26  Paul J. Lucas <paul@lucasmail.org>
+2026-03-26  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Replaced is_direct with includer.
    * includes.c: Eliminated setting of .file.
@@ -2048,7 +2053,7 @@
    * includes.c: Eliminated include_getFile_data.
    * includes.c: Eliminated includes_sort_by_name_visitor().
 
-2026-03-25  Paul J. Lucas <paul@lucasmail.org>
+2026-03-25  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c, clang_util.h, config_file.c, config_file.h, include-tidy.c,
      includes.c: Added proxy include support.
@@ -2057,7 +2062,7 @@
    * toml_lite.c, toml_lite.h: Replaced visitor with iterator.
    * red_black.c, red_black.h, red_black_test.c: Added rb_iterator.
 
-2026-03-24  Paul J. Lucas <paul@lucasmail.org>
+2026-03-24  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * toml_lite.c, toml_lite.h: Added toml_table_visit().
    * toml_lite.h: Set TOML_BOOL = 1 so "not set" would not match TOML_BOOL.
@@ -2066,7 +2071,7 @@
    * config_file.c, config_file.h, include-tidy.c: Removed config_path option
      from config_init().
 
-2026-03-23  Paul J. Lucas <paul@lucasmail.org>
+2026-03-23  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * include-tidy.c: Reordered initialization.
    * trans_unit.c: Moved checking of tidy_tu == NULL earlier.
@@ -2079,7 +2084,7 @@
    * config_file.c, toml_lite.c, toml_lite.h, toml_test.c:
      s/toml_close/toml_cleanup/
 
-2026-03-22  Paul J. Lucas <paul@lucasmail.org>
+2026-03-22  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * src/Makefile.am, cli_options.c, include-tidy.c: Removed cli_options.h.
    * cli_options.c, include-tidy.c, include-tidy.h, options.c, options.h,
@@ -2089,7 +2094,7 @@
    * src/Makefile.am, cli_options.c, cli_options.h, config_file.c,
      include-tidy.c, options.c, options.h: Split options into cli_options.
 
-2026-03-21  Paul J. Lucas <paul@lucasmail.org>
+2026-03-21  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * util.c, util.h: Added check_snprintf().
    * includes.c, options.c, options.h, symbols.c: Preliminary tidy_verbose
@@ -2099,18 +2104,18 @@
    * includes.c: Now using clang_visitChildren().
    * options.c: Added #include <errno.h>.
 
-2026-03-20  Paul J. Lucas <paul@lucasmail.org>
+2026-03-20  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: s/depth/is_direct/
 
-2026-03-19  Paul J. Lucas <paul@lucasmail.org>
+2026-03-19  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Added verbose output for includes.
    * symbols.c: Added verbose_printed.
    * includes.c: Proper opt_comment_style handling.
    * includes.c: Now printing blank line between local and system includes.
 
-2026-03-18  Paul J. Lucas <paul@lucasmail.org>
+2026-03-18  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Now truncating symbols with ...
    * includes.c: Now sorting includes.
@@ -2124,7 +2129,7 @@
    * toml_lite.c, toml_lite.h: Added key & value locations.
    * config_file.c, toml_lite.c, toml_lite.h, toml_test.c: Added toml_loc.
 
-2026-03-17  Paul J. Lucas <paul@lucasmail.org>
+2026-03-17  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * toml_lite.c: Fixed table name parsing.
    * config_file.c: Preliminary TOML config file parsing.
@@ -2133,17 +2138,17 @@
    * toml_lite.c: Added toml_comment_parse().
    * toml_lite.c, toml_test.c: Fixed array parsing.
 
-2026-03-16  Paul J. Lucas <paul@lucasmail.org>
+2026-03-16  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * toml_test.c: Added test_key_bool().
    * toml_lite.c: Fixed toml_table_find().
    * toml_test.c: Better toml_key_parse().
 
-2026-03-15  Paul J. Lucas <paul@lucasmail.org>
+2026-03-15  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * toml_lite.c, toml_lite.h: Added toml_error.
 
-2026-03-14  Paul J. Lucas <paul@lucasmail.org>
+2026-03-14  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * toml_lite.c, toml_lite.h: Added toml_getc() and toml_ungetc().
    * toml_lite.c: Implemented toml_integer_parse().
@@ -2155,7 +2160,7 @@
      TOML commit.
    * configure.ac, src/Makefile.am: No longer polluting CFLAGS, etc.
 
-2026-03-13  Paul J. Lucas <paul@lucasmail.org>
+2026-03-13  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac, src/Makefile.am: Now using -rpath.
    * configure.ac, src/Makefile.am: Now using llvm-config; removed
@@ -2164,7 +2169,7 @@
      unit_test.[ch] and red_black_test.c.
    * util.h: Added #include <assert.h>.
 
-2026-03-11  Paul J. Lucas <paul@lucasmail.org>
+2026-03-11  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * src/Makefile.am, config_file.c, include-tidy.c: Initial config file.
    * options.c, options.h: Added --config.
@@ -2178,7 +2183,7 @@
    * includes.c, options.c: opt_comment_style now uses empty strings.
    * includes.c: Now printing local includes before system includes.
 
-2026-03-10  Paul J. Lucas <paul@lucasmail.org>
+2026-03-10  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * includes.c: Refactored.
    * src/Makefile.am, includes.c: Removed unneeded files.
@@ -2190,7 +2195,7 @@
    * util.h: Added ARRAY_END(), FOREACH_ARRAY_ELEMENT().
    * options.c, options.h: Added --line-length.
 
-2026-03-09  Paul J. Lucas <paul@lucasmail.org>
+2026-03-09  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * options.c: Now using -isystem.
    * includes.c: Simplified.
@@ -2207,7 +2212,7 @@
      argument where the value is in the next argument.
    * options.c: Added get_clang_path().
 
-2026-03-08  Paul J. Lucas <paul@lucasmail.org>
+2026-03-08  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * options.c: Removed OPT_INCLUDE.
    * options.c: Better usage.
@@ -2220,7 +2225,7 @@
    * options.c: Put make_short_opts() back.
    * options.c: Added --verbose option.
 
-2026-03-07  Paul J. Lucas <paul@lucasmail.org>
+2026-03-07  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * options.c: Added NODISCARD.
    * options.c: Partial support for -x.
@@ -2230,13 +2235,13 @@
    * src/Makefile.am, includes.c, symbols.c, tidy_util.c, tidy_util.h: Now
      emitting correct #include delimiters.
 
-2026-03-06  Paul J. Lucas <paul@lucasmail.org>
+2026-03-06  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * src/Makefile.am, clang_util.c, clang_util.h, includes.c, includes.h,
      options.c, options.h, symbols.c: Now using real pathnames.
    * includes.h: Added missing #include <stdbool.h>.
 
-2026-03-05  Paul J. Lucas <paul@lucasmail.org>
+2026-03-05  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * include-tidy.c, includes.c, includes.h, symbols.c: Added
      includes_print_unneeded().
@@ -2246,7 +2251,7 @@
    * options.c: Fixed option processing.
    * src/Makefile.am, include-tidy.c, tu.c: Added tu.c.
 
-2026-03-04  Paul J. Lucas <paul@lucasmail.org>
+2026-03-04  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * include-tidy.c: Now passing remaining options to libclang.
    * include-tidy.c, options.c, options.h: Now splitting tidy options out.
@@ -2254,7 +2259,7 @@
    * symbols.c: Works!
    * includes.c, includes.h, symbols.c: Include/symbol integration.
 
-2026-03-03  Paul J. Lucas <paul@lucasmail.org>
+2026-03-03  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * src/Makefile.am, include-tidy.c, symbols.c, symbols.h: Split out
      symbols.h.
