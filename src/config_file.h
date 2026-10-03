@@ -50,14 +50,6 @@
  * @{
  */
 
-////////// extern variables ///////////////////////////////////////////////////
-
-/**
- * The associated header for the file being tidied, if any, and only if set
- * explicitly via the `associated-header` configuration key.
- */
-extern char const  *tidy_config_assoc_header_rel_path;
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**

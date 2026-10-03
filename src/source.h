@@ -23,7 +23,7 @@
 
 /**
  * @file
- * Declares a structure for a source file being tidied.
+ * Declares a structure and functions for a source file being tidied.
  */
 
 // standard
@@ -46,9 +46,26 @@ typedef struct tidy_source tidy_source;
  */
 struct tidy_source {
   char const *path;                     ///< Source file path.
+
+  /**
+   * The associated header for \ref path only if set explicitly via the
+   * `associated-header` configuration key.
+   */
+  char const *assoc_header_rel_path;
+
   bool        is_cxx;                   ///< Is \ref path C++?
   bool        is_ignored;               ///< Is \ref path ignored?
 };
+
+////////// extern functions ///////////////////////////////////////////////////
+
+/**
+ * Cleans-up all memory associated with \a source but does _not_ free \a source
+ * itself.
+ *
+ * @param source the tidy_source to clean up.  If NULL, does nothing.
+ */
+void tidy_source_cleanup( tidy_source *source );
 
 ///////////////////////////////////////////////////////////////////////////////
 

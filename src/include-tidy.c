@@ -123,6 +123,7 @@ int main( int argc, char const *argv[] ) {
     symbols_init( &source );
     includes_print( &source );
   }
+  tidy_source_cleanup( &source );
   return tidy_status();
 }
 

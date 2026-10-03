@@ -262,15 +262,6 @@ static char const *const TABLE_KINDS[] = {
   [ TABLE_SYMBOL ] = "symbol"
 };
 
-////////// extern variables ///////////////////////////////////////////////////
-
-/// @cond DOXYGEN_IGNORE
-/// Otherwise Doxygen generates two entries.
-
-char const *tidy_config_assoc_header_rel_path;
-
-/// @endcond
-
 ////////// local variables ////////////////////////////////////////////////////
 
 static unsigned     error_count;          ///< Configuration file error count.
@@ -559,7 +550,7 @@ static void associated_header_parse( config_parse_fn_args const *config ) {
   if ( !toml_string_parse( config, &string_value ) )
     return;
   if ( strcmp( config->table->key.name, config->source->path ) == 0 )
-    tidy_config_assoc_header_rel_path = strdup_or_exit( string_value );
+    config->source->assoc_header_rel_path = strdup_or_exit( string_value );
 }
 
 /**
@@ -974,7 +965,6 @@ static void symbols_parse_string( config_parse_fn_args const *config ) {
  * Cleans-up all configuration data.
  */
 static void config_cleanup( void ) {
-  FREE( tidy_config_assoc_header_rel_path );
   array_cleanup( &std_c_includes, &free_pptr );
   array_cleanup( &std_cxx_includes, &free_pptr );
   ht_table_cleanup( &ignore_symbol_set, /*free_fn=*/NULL );

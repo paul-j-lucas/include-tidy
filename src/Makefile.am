@@ -76,7 +76,7 @@ include_tidy_SOURCES =	array.c array.h \
 			print.c print.h \
 			proxies.c proxies.h \
 			red_black.c red_black.h \
-			source.h \
+			source.c source.h \
 			str_util.c str_util.h \
 			strbuf.c strbuf.h \
 			symbol.c symbol.h \

@@ -188,33 +188,39 @@ static ii_matrix_t **ii_matrix;
 /**
  * For the source file being tidied, gets its associated header, if any.
  *
- * @param source_path The source path being tidied.
+ * @param source The source file being tidied.
  * @return Returns the associated header or NULL for none.
  */
 NODISCARD
-static tidy_include* get_associated_header( char const *source_path ) {
-  static tidy_include *assoc_include;
+static tidy_include* get_associated_header( tidy_source const *source ) {
+  assert( source != NULL );
 
-  RUN_ONCE {
-    strbuf_t path_buf = STRBUF_INIT();
-    char const *const source_path_no_ext =
-      path_no_ext_if( source_path, 'c', &path_buf );
-    if ( source_path_no_ext != NULL ) {
-      rb_iterator_t iter;
-      rb_iterator_init( &iter, &tidy_include_set );
-      for ( tidy_include *include;
-            (include = rb_iterator_next( &iter )) != NULL; ) {
-        if ( !include->is_local )
-          continue;
-        if ( is_associated_header( include, source_path_no_ext ) ) {
+  tidy_include *assoc_include = NULL;
+  strbuf_t path_buf = STRBUF_INIT();
+  char const *const source_path_no_ext =
+    path_no_ext_if( source->path, 'c', &path_buf );
+
+  if ( source_path_no_ext != NULL ) {
+    rb_iterator_t iter;
+    rb_iterator_init( &iter, &tidy_include_set );
+    for ( tidy_include *include;
+          (include = rb_iterator_next( &iter )) != NULL; ) {
+      if ( !include->is_local )
+        continue;
+      if ( source->assoc_header_rel_path != NULL ) {
+        if ( strcmp( include->rel_path, source->assoc_header_rel_path ) == 0 ) {
           assoc_include = include;
           break;
         }
-      } // for
-    }
-    strbuf_cleanup( &path_buf );
+      }
+      else if ( is_associated_header( include, source_path_no_ext ) ) {
+        assoc_include = include;
+        break;
+      }
+    } // for
   }
 
+  strbuf_cleanup( &path_buf );
   return assoc_include;
 }
 
@@ -542,9 +548,6 @@ static bool is_associated_header( tidy_include const *include,
                                   char const *source_file_no_ext ) {
   assert( include != NULL );
   assert( source_file_no_ext != NULL );
-
-  if ( tidy_config_assoc_header_rel_path != NULL )
-    return strcmp( include->rel_path, tidy_config_assoc_header_rel_path ) == 0;
 
   strbuf_t path_buf = STRBUF_INIT();
   char const *const include_rel_path_no_ext =
@@ -1111,7 +1114,7 @@ void includes_print( tidy_source const *source ) {
   array_t include_array = ARRAY_INIT( sizeof(tidy_include*) );
   array_reserve( &include_array, tidy_include_set.size );
 
-  tidy_include *const assoc_include = get_associated_header( source->path );
+  tidy_include *const assoc_include = get_associated_header( source );
   if ( assoc_include != NULL ) {
     assoc_include->is_needed = true;
     assoc_include->sort_rank = TIDY_SORT_ASSOCIATED;
