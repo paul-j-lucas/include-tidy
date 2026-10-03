@@ -471,20 +471,6 @@ NODISCARD
 char* tidy_dupCString( CXString cxs );
 
 /**
- * Compares two CXFileUniqueID objects.
- *
- * @param i_id The first CXFileUniqueID.
- * @param j_id The second CXFileUniqueID.
- * @return Returns a number less than 0, 0, or greater than 0 if \a i_id is
- * less than, equal to, or greater than \a j_id, respectively.
- */
-NODISCARD
-inline int tidy_FileUniqueID_compare( CXFileUniqueID const *i_id,
-                                      CXFileUniqueID const *j_id ) {
-  return memcmp( i_id, j_id, sizeof *i_id );
-}
-
-/**
  * Gets the real path of \a file.
  *
  * @param file The file to get the real path of.
@@ -494,6 +480,20 @@ inline int tidy_FileUniqueID_compare( CXFileUniqueID const *i_id,
  */
 NODISCARD
 CXString tidy_File_getRealPathName( CXFile file );
+
+/**
+ * Compares two CXFileUniqueID objects.
+ *
+ * @param i_id The first CXFileUniqueID.
+ * @param j_id The second CXFileUniqueID.
+ * @return Returns a number less than 0, 0, or greater than 0 if \a i_id is
+ * less than, equal to, or greater than \a j_id, respectively.
+ */
+NODISCARD
+inline int tidy_FileUniqueID_cmp( CXFileUniqueID const *i_id,
+                                  CXFileUniqueID const *j_id ) {
+  return memcmp( i_id->data, j_id->data, sizeof( i_id->data ) );
+}
 
 /**
  * Attempts to get the cursor for the identifier having \a name within \a

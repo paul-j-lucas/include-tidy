@@ -52,6 +52,12 @@
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
+#ifdef HAVE_TYPEOF
+typedef typeof( ((CXFileUniqueID*)0)->data[0] ) CXFileUniqueID_data_t;
+#else
+typedef unsigned long long CXFileUniqueID_data_t;
+#endif /* HAVE_TYPEOF */
+
 typedef struct getCursorByName_data getCursorByName_data;
 typedef CXString                  (*getCursorName_fn)( CXCursor );
 typedef struct isBaseClass_data     isBaseClass_data;
@@ -897,12 +903,6 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
 
     clang_disposeString( abs_path_cxs );
 
-#ifdef HAVE_TYPEOF
-    typedef typeof( ((CXFileUniqueID*)0)->data[0] ) CXFileUniqueID_data_t;
-#else
-    typedef unsigned long long CXFileUniqueID_data_t;
-#endif /* HAVE_TYPEOF */
-
     id = (CXFileUniqueID){
       .data = { STATIC_CAST( CXFileUniqueID_data_t, hash ) }
     };
@@ -992,10 +992,11 @@ bool tidy_Token_isScopeQualifier( CXTranslationUnit tu, CXToken token ) {
 
 /// @cond DOXYGEN_IGNORE
 
+
 extern inline CXCursor tidy_Cursor_getCanonicalTypeDeclaration( CXCursor );
 extern inline bool tidy_Cursor_isInvalid( CXCursor );
-extern inline int tidy_FileUniqueID_compare( CXFileUniqueID const*,
-                                             CXFileUniqueID const* );
+extern inline int tidy_FileUniqueID_cmp( CXFileUniqueID const*,
+                                         CXFileUniqueID const* );
 extern inline CXFile tidy_getFileLocation_File( CXSourceLocation );
 extern inline CXFile tidy_getSpellingLocation_File( CXSourceLocation );
 extern inline unsigned tidy_getSpellingLocation_offset( CXSourceLocation );
