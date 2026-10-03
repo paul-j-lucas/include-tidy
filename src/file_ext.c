@@ -30,6 +30,9 @@
 
 /// @cond DOXYGEN_IGNORE
 
+// libclang
+#include <clang-c/Index.h>
+
 // standard
 #include <assert.h>
 #include <stddef.h>
@@ -44,25 +47,22 @@
 
 ////////// local constants ////////////////////////////////////////////////////
 
-static char const LANG_C[]    = "c";    ///< C.
-static char const LANG_CXX[]  = "c++";  ///< C++.
-
 /**
  * Array of all common C/C++ filename extensions.
  */
 static tidy_file_ext const FILE_EXT[] = {
-  { "c",   LANG_C   },
-  { "c++", LANG_CXX },
-  { "cc",  LANG_CXX },
-  { "cp",  LANG_CXX },
-  { "cpp", LANG_CXX },
-  { "cxx", LANG_CXX },
-  { "h",   LANG_C   },
-  { "h++", LANG_CXX },
-  { "hh",  LANG_CXX },
-  { "hp",  LANG_CXX },
-  { "hpp", LANG_CXX },
-  { "hxx", LANG_CXX },
+  { "c",   CXLanguage_C         },
+  { "c++", CXLanguage_CPlusPlus },
+  { "cc",  CXLanguage_CPlusPlus },
+  { "cp",  CXLanguage_CPlusPlus },
+  { "cpp", CXLanguage_CPlusPlus },
+  { "cxx", CXLanguage_CPlusPlus },
+  { "h",   CXLanguage_C         },
+  { "h++", CXLanguage_CPlusPlus },
+  { "hh",  CXLanguage_CPlusPlus },
+  { "hp",  CXLanguage_CPlusPlus },
+  { "hpp", CXLanguage_CPlusPlus },
+  { "hxx", CXLanguage_CPlusPlus },
 };
 
 ////////// extern functions ///////////////////////////////////////////////////

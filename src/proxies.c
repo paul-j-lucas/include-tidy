@@ -129,7 +129,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
       // isn't a standard header.  The standard header should be a proxy for
       // the implementation header.
       //
-      !config_is_standard_include( included->rel_path, source->is_cxx ) ||
+      !config_is_standard_include( included->rel_path, source->lang ) ||
 
       // This handles a case like:
       //
@@ -147,7 +147,7 @@ static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
   }
 
   // Remaining cases are valid only for C++.
-  if ( !source->is_cxx )
+  if ( source->lang != CXLanguage_CPlusPlus )
     goto skip;
 
   // Remaining cases are valid only for paths that are just filenames.

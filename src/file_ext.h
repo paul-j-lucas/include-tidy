@@ -29,6 +29,12 @@
 // local
 #include "pjl_config.h"                 /* must go first */
 
+// libclang
+#include <clang-c/Index.h>
+
+// standard
+#include <stddef.h>                     /* for NULL */
+
 /**
  * @defgroup tidy-file-ext-group File Extensions
  * A structure and functions for supported C/C++ filename extensions.
@@ -57,8 +63,8 @@ typedef struct tidy_file_ext tidy_file_ext;
  * A source file extension and the language it corresponds to.
  */
 struct tidy_file_ext {
-  char const *ext;                      ///< Extension (without the `'.'`).
-  char const *lang;                     ///< Language: either `"c"` or `"c++"`.
+  char const           *ext;            ///< Extension (without the `'.'`).
+  enum CXLanguageKind   lang;           ///< Language for \ref ext.
 };
 
 ////////// extern functions ///////////////////////////////////////////////////

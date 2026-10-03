@@ -1595,11 +1595,13 @@ void config_init( tidy_source *source ) {
     symbol_includes_dump();             // LCOV_EXCL_LINE
 }
 
-bool config_is_standard_include( char const *rel_path, bool is_cxx ) {
+bool config_is_standard_include( char const *rel_path,
+                                 enum CXLanguageKind lang ) {
   assert( rel_path != NULL );
   assert( path_is_relative( rel_path ) );
 
-  return  (is_cxx && is_standard_include( rel_path, &std_cxx_includes )) ||
+  return  (lang == CXLanguage_CPlusPlus &&
+           is_standard_include( rel_path, &std_cxx_includes )) ||
           is_standard_include( rel_path, &std_c_includes );
 }
 

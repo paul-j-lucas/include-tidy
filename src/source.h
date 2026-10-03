@@ -48,9 +48,11 @@ typedef struct tidy_source tidy_source;
  * A source file being tidied.
  */
 struct tidy_source {
-  char const       *path;               ///< Source file path.
-  CXTranslationUnit tu;                 ///< Translation unit for \ref path.
-  CXFile            file;               ///< File for \ref path.
+  char const         *path;             ///< Source file path.
+  CXTranslationUnit   tu;               ///< Translation unit for \ref path.
+  CXFile              file;             ///< File for \ref path.
+  bool                is_ignored;       ///< Is \ref path ignored?
+  enum CXLanguageKind lang;             ///< Language of \a ref path.
 
   /**
    * The associated header for \ref path only if set explicitly via the
@@ -58,8 +60,6 @@ struct tidy_source {
    */
   char const *assoc_header_rel_path;
 
-  bool            is_cxx;               ///< Is \ref path C++?
-  bool            is_ignored;           ///< Is \ref path ignored?
 
   unsigned        includes_missing;     ///< Number of missing includes.
   unsigned        includes_unnecessary; ///< Number of unnecessry includes.

@@ -67,12 +67,13 @@ void config_init( tidy_source *source );
  *
  * @param rel_path The relative path of an include file, e.g., `"stdio.h"` or
  * `"sys/wait.h"`.
- * @param is_cxx Is the source file being tidied C++?
+ * @param lang The language of the source file being tidied.
  * @return Returns `true` only if \a rel_path refers to a standard include
  * file.
  */
 NODISCARD
-bool config_is_standard_include( char const *rel_path, bool is_cxx );
+bool config_is_standard_include( char const *rel_path,
+                                 enum CXLanguageKind lang );
 
 /**
  * Gets the header file that \a sym_name maps to, if any.

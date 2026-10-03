@@ -33,6 +33,9 @@
 
 /// @cond DOXYGEN_IGNORE
 
+// libclang
+#include <clang-c/Index.h>
+
 // standard
 #include <assert.h>
 #include <errno.h>
@@ -54,18 +57,19 @@
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-unsigned      opt_align_column = OPT_ALIGN_COLUMN_DEFAULT;
-bool          opt_all_includes;
-color_when    opt_color_when = COLOR_NOT_FILE;
-char const   *opt_comment_style[2] = { "// ", "" };
-tidy_comment  opt_comment_symbols;
-bool          opt_config_layers = true;
-char const   *opt_config_path;
-bool          opt_debug;
-tidy_error    opt_error;
-unsigned      opt_line_length = OPT_LINE_LENGTH_DEFAULT;
-tidy_test     opt_test;
-tidy_verbose  opt_verbose;
+unsigned            opt_align_column = OPT_ALIGN_COLUMN_DEFAULT;
+bool                opt_all_includes;
+color_when          opt_color_when = COLOR_NOT_FILE;
+char const         *opt_comment_style[2] = { "// ", "" };
+tidy_comment        opt_comment_symbols;
+bool                opt_config_layers = true;
+char const         *opt_config_path;
+bool                opt_debug;
+tidy_error          opt_error;
+enum CXLanguageKind opt_lang;
+unsigned            opt_line_length = OPT_LINE_LENGTH_DEFAULT;
+tidy_test           opt_test;
+tidy_verbose        opt_verbose;
 
 /// @endcond
 

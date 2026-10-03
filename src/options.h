@@ -31,6 +31,9 @@
 #include "pjl_config.h"                 /* must go first */
 #include "color.h"
 
+// libclang
+#include <clang-c/Index.h>
+
 // standard
 #include <stdbool.h>
 
@@ -135,6 +138,7 @@ extern bool         opt_config_layers;    ///< Do configuration file layering?
 extern char const  *opt_config_path;      ///< Configuration file path.
 extern bool         opt_debug;            ///< Print debugging output?
 extern tidy_error   opt_error;            ///< When to exit with non-zero.
+extern enum CXLanguageKind opt_lang;      ///< Language specified via `-x`.
 extern unsigned     opt_line_length;      ///< Line length.
 extern tidy_test    opt_test;             ///< Is **include-tidy** under test?
 extern tidy_verbose opt_verbose;          ///< Print verbose output?

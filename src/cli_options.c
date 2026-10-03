@@ -41,6 +41,9 @@
 
 /// @cond DOXYGEN_IGNORE
 
+// libclang
+#include <clang-c/Index.h>
+
 // standard
 #include <assert.h>
 #include <ctype.h>                      /* for isalnum(), isprint() */
@@ -182,17 +185,17 @@ static bool         is_Xtidy_opt( int, char const *const[], int* );
  * @param pargv A pointer to the argument values from `main()`.  An argument of
  * the form <tt>-isystem</tt><i>path</i> is inserted for each search path.
  * @param compiler_path The path of the C or C++ compiler to use.
- * @param source_lang The language to use, either `"c"` or `"c++"`.
+ * @param lang The language to use.
  */
 static void add_compiler_include_paths( int *pargc, char const **pargv[],
                                         char const *compiler_path,
-                                        char const *source_lang ) {
+                                        enum CXLanguageKind lang ) {
   assert(  pargc != NULL );
   assert( *pargc > 0 );
   assert(  pargv != NULL );
   assert( *pargv != NULL );
   assert(  compiler_path != NULL );
-  assert(  source_lang != NULL );
+  assert(  lang != CXLanguage_Invalid );
   ASSERT_RUN_ONCE();
 
   static char const COMMAND[] =
@@ -205,7 +208,10 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
     " 2>&1";      // redirect stderr to stdout
 
   char *command = NULL;
-  asprintf_or_exit( &command, COMMAND, compiler_path, source_lang );
+  asprintf_or_exit(
+    &command, COMMAND, compiler_path,
+    lang == CXLanguage_CPlusPlus ? "c++" : "c"
+  );
 
   FILE *const fcompiler = popen( command, "r" );
   free( command );
@@ -578,11 +584,12 @@ static char const* get_source_path( int argc, char const *argv[] ) {
  *
  * @param argc The command-line argument count from `main()`.
  * @param argv The command-line argument values from `main()`.
- * @return Returns the language of the compiler's `-x` option, either `"c"` or
- * `"c++"`, or NULL if not given.
+ * @return Returns the language of the compiler's `-x` option or
+ * `CXLanguage_Invalid` if not given.
  */
 NODISCARD
-static char const* get_x_language( int argc, char const *const argv[] ) {
+static enum CXLanguageKind get_x_language( int argc,
+                                           char const *const argv[] ) {
   assert( argc > 0 );
   assert( argv != NULL );
 
@@ -591,15 +598,15 @@ static char const* get_x_language( int argc, char const *const argv[] ) {
     if ( lang == NULL )
       continue;
     if ( strcmp( lang, "c" ) == 0 )
-      return "c";
+      return CXLanguage_C;
     if ( strcmp( lang, "c++" ) == 0 )
-      return "c++";
+      return CXLanguage_CPlusPlus;
     fatal_error( EX_USAGE,
       "\"%s\": invalid value for -x; must be either \"c\" or \"c++\"\n", lang
     );
   } // for
 
-  return NULL;
+  return CXLanguage_Invalid;
 }
 
 /**
@@ -1120,13 +1127,13 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
   char const *const compiler_path = get_compiler_path( *pargc, *pargv );
   char const *const source_ext =
     source_path != NULL ? path_ext( source_path ) : NULL;
-  char const *source_lang = get_x_language( *pargc, *pargv );
-  if ( source_lang == NULL && source_ext != NULL ) {
+  enum CXLanguageKind source_lang = get_x_language( *pargc, *pargv );
+  if ( source_lang == CXLanguage_Invalid && source_ext != NULL ) {
     tidy_file_ext const *const file_ext = file_ext_find( source_ext );
     if ( file_ext != NULL )
       source_lang = file_ext->lang;
   }
-  if ( compiler_path != NULL && source_lang != NULL )
+  if ( compiler_path != NULL && source_lang != CXLanguage_Invalid )
     add_compiler_include_paths( pargc, pargv, compiler_path, source_lang );
 
   strbuf_t          err_buf = STRBUF_INIT();
@@ -1314,7 +1321,7 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
   if ( tidy_argc != 1 || source_path == NULL )
     print_usage( EX_USAGE );
 
-  if ( source_lang == NULL ) {
+  if ( source_lang == CXLanguage_Invalid ) {
     if ( source_path != NULL )
       strbuf_printf( &err_buf, "\"%s\": ", source_path );
     if ( source_ext == NULL )
@@ -1356,7 +1363,7 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
 
   return (tidy_source){
     .path = source_path,
-    .is_cxx = strcmp( source_lang, "c++" ) == 0
+    .lang = source_lang
   };
 }
 

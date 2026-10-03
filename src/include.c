@@ -682,7 +682,7 @@ static char* make_symbols_comment( tidy_source const *source,
       break;
   } // switch
 
-  if ( source->is_cxx ) {
+  if ( source->lang == CXLanguage_CPlusPlus ) {
     //
     // Since C++ allows function, operator, and template overloading, there can
     // be multiple entries with the same name, so remove duplicates.
@@ -744,7 +744,7 @@ static void maybe_print_include( tidy_include const *include,
   if ( include->is_local )
     group = PRINT_LOCAL;
   else if ( config_is_standard_include( include->rel_path,
-                                        args->source->is_cxx ) )
+                                        args->source->lang ) )
     group = PRINT_STANDARD;
   else
     group = PRINT_3RD_PARTY;
