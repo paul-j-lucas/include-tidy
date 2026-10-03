@@ -34,7 +34,6 @@
 
 // standard
 #include <assert.h>
-#include <stddef.h>
 #include <stdint.h>
 
 /// @endcond
@@ -43,17 +42,6 @@
  * @addtogroup fnv1a-group
  * @{
  */
-
-////////// local constants ////////////////////////////////////////////////////
-
-/**
- * Prime value for Fowler-Noll-Vo hash function.
- *
- * @sa #FNV1A_INIT
- * @sa fnv1a_mem()
- * @sa fnv1a_s()
- */
-static fnv1a_t const FNV1A_PRIME = FNV1A_C(1099511628211);
 
 ////////// extern functions ///////////////////////////////////////////////////
 

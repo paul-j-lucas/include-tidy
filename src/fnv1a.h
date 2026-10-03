@@ -61,8 +61,19 @@
  * Initialization value for Fowler-Noll-Vo hash function.
  *
  * @sa fnv1a_mem()
+ * @sa #FNV1A_PRIME
+ * @sa fnv1a_s()
  */
 #define FNV1A_INIT                FNV1A_C(14695981039346656037)
+
+/**
+ * Prime value for Fowler-Noll-Vo hash function.
+ *
+ * @sa #FNV1A_INIT
+ * @sa fnv1a_mem()
+ * @sa fnv1a_s()
+ */
+#define FNV1A_PRIME               FNV1A_C(1099511628211)
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
