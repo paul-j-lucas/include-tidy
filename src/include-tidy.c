@@ -85,12 +85,13 @@ void test_init( char const *env_var ) {
 /**
  * Gets the status **include-tidy** should exit with.
  *
+ * @param source The source file being tidied.
  * @return Returns said exit status.
  */
 NODISCARD
-static int tidy_status( void ) {
+static int tidy_status( tidy_source const *source ) {
   if ( opt_error != TIDY_ERROR_NEVER ) {
-    if ( tidy_includes_missing > 0 || tidy_includes_unnecessary > 0 )
+    if ( source->includes_missing > 0 || source->includes_unnecessary > 0 )
       return TIDY_EX_VIOLATIONS;
     if ( opt_error == TIDY_ERROR_ALWAYS )
       return TIDY_EX_NO_VIOLATIONS_ERROR;
@@ -117,14 +118,17 @@ int main( int argc, char const *argv[] ) {
   trans_unit_init( source.path, argc, argv );
   includes_init( &source );
   config_init( &source );
+
   if ( !source.is_ignored ) {
     trans_unit_check_for_errors();
     implicit_proxies_init( &source );
     symbols_init( &source );
     includes_print( &source );
   }
+
+  int const status = tidy_status( &source );
   tidy_source_cleanup( &source );
-  return tidy_status();
+  return status;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

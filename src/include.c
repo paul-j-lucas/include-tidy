@@ -150,8 +150,6 @@ static int          tidy_symbol_ptr_cmp_by_name( void const*, void const* ),
 /// Otherwise Doxygen generates two entries.
 
 rb_tree_t tidy_include_set;
-unsigned  tidy_includes_missing;
-unsigned  tidy_includes_unnecessary;
 
 /// @endcond
 
@@ -1108,7 +1106,7 @@ void includes_init( tidy_source const *source ) {
 #endif /* NEED_II_MATRIX */
 }
 
-void includes_print( tidy_source const *source ) {
+void includes_print( tidy_source *source ) {
   assert( source != NULL );
 
   array_t include_array = ARRAY_INIT( sizeof(tidy_include*) );
@@ -1128,12 +1126,12 @@ void includes_print( tidy_source const *source ) {
       *(tidy_include const**)array_push_back( &include_array ) = include;
       if ( include->handling != TIDY_HANDLE_KEEP ) {
         if ( !include->is_needed )
-          ++tidy_includes_unnecessary;
+          ++source->includes_unnecessary;
         else if ( include->depth > 0 )
-          ++tidy_includes_missing;
+          ++source->includes_missing;
       }
       if ( include->lines.len > 1 ) {
-        tidy_includes_unnecessary +=
+        source->includes_unnecessary +=
           STATIC_CAST( unsigned, include->lines.len ) - 1;
       }
     }

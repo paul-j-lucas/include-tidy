@@ -55,6 +55,9 @@ struct tidy_source {
 
   bool        is_cxx;                   ///< Is \ref path C++?
   bool        is_ignored;               ///< Is \ref path ignored?
+
+  unsigned    includes_missing;         ///< Number of missing includes.
+  unsigned    includes_unnecessary;     ///< Number of unnecessry includes.
 };
 
 ////////// extern functions ///////////////////////////////////////////////////

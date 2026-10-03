@@ -118,20 +118,6 @@ struct tidy_include {
  */
 extern rb_tree_t tidy_include_set;
 
-/**
- * Number of missing include files.
- *
- * @sa tidy_includes_unnecessary
- */
-extern unsigned tidy_includes_missing;
-
-/**
- * Number of unnecessary include files.
- *
- * @sa tidy_includes_missing
- */
-extern unsigned tidy_includes_unnecessary;
-
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
@@ -223,9 +209,12 @@ void includes_init( tidy_source const *source );
 /**
  * Prints include files.
  *
+ * @remarks Upon return, \ref tidy_source::includes_missing "includes_missing"
+ * and \ref tidy_source::includes_unnecessary "includes_unnecessary" are set.
+ *
  * @param source The source file being tidied.
  */
-void includes_print( tidy_source const *source );
+void includes_print( tidy_source *source );
 
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
 /**
