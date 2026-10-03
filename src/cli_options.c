@@ -363,6 +363,7 @@ static void check_options( void ) {
  * @param argv The command-line argument values from `main()`.
  * @return Returns the path to the compiler or NULL if it's `"none"`.
  */
+NODISCARD
 static char const* get_compiler_path( int argc, char const *const argv[] ) {
   assert( argc > 0 );
   assert( argv != NULL );
@@ -399,6 +400,7 @@ static char const* get_compiler_path( int argc, char const *const argv[] ) {
  *
  * @sa get_short_opt_value()
  */
+NODISCARD
 static char const* get_long_opt_value( int argc, char const *const argv[],
                                        char const *long_opt, int *pargi ) {
   assert(     argc > 0 );
@@ -527,6 +529,7 @@ static struct option const* get_option_short( int short_opt ) {
  *
  * @sa get_long_opt_value()
  */
+NODISCARD
 static char const* get_short_opt_value( int argc, char const *const argv[],
                                         int short_opt, int *pargi ) {
   assert(   argc > 0 );
@@ -555,6 +558,7 @@ static char const* get_short_opt_value( int argc, char const *const argv[],
  * @param argv The argument values from `main()`.
  * @return Returns the source path or NULL if none.
  */
+NODISCARD
 static char const* get_source_path( int argc, char const *argv[] ) {
   assert( argc > 0 );
   assert( argv != NULL );
@@ -577,6 +581,7 @@ static char const* get_source_path( int argc, char const *argv[] ) {
  * @return Returns the language of the compiler's `-x` option, either `"c"` or
  * `"c++"`, or NULL if not given.
  */
+NODISCARD
 static char const* get_x_language( int argc, char const *const argv[] ) {
   assert( argc > 0 );
   assert( argv != NULL );
@@ -657,6 +662,7 @@ static void insert_argv( int *pargc, char const **pargv[], size_t argi,
  * @return Returns `true` only if `argv[*pargi]` is `-Xtidy` and is followed by
  * a subsequent option.
  */
+NODISCARD
 static bool is_Xtidy_opt( int argc, char const *const argv[], int *pargi ) {
   assert(   argc > 0 );
   assert(   argv != NULL );
