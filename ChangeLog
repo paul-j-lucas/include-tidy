@@ -1,5 +1,7 @@
 2026-10-03  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
+   * config_file.c, include-tidy.c, include.c, include.h, proxies.c, source.c,
+     source.h, symbol.c, trans_unit.c, trans_unit.h: Eliminated tidy_tu global.
    * include-tidy.c, include.c, include.h, source.h: Eliminated
      tidy_includes_missing and tidy_includes_unnecessary globals.
    * src/Makefile.am, config_file.c, config_file.h, include-tidy.c, include.c,
