@@ -392,7 +392,7 @@ static bool tidy_Cursor_isInheritable( CXCursor cursor ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-int tidy_Cursor_compare( CXCursor i_csr, CXCursor j_csr ) {
+int tidy_Cursor_cmp( CXCursor i_csr, CXCursor j_csr ) {
   if ( i_csr.kind < j_csr.kind )
     return -1;
   if ( i_csr.kind > j_csr.kind )

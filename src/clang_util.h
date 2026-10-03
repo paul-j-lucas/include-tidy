@@ -61,7 +61,7 @@
  * less than, equal to, or greater than \a j_csr, respectively.
  */
 NODISCARD
-int tidy_Cursor_compare( CXCursor i_csr, CXCursor j_csr );
+int tidy_Cursor_cmp( CXCursor i_csr, CXCursor j_csr );
 
 /**
  * Gets the cursor for the type declaration of the canonical type of \a cursor.
