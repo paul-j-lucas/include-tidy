@@ -1,5 +1,9 @@
 2026-10-03  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
+   * cli_options.c, config_file.c, config_file.h, file_ext.c, file_ext.h,
+     include.c, options.c, options.h, proxies.c, source.h, symbol.c: Replaced
+     is_cxx by lang.
+   * cli_options.c: Added NODISCARD.
    * src/Makefile.am, include-tidy.c, source.c, source.h:
      s/trans_unit_init/source_init/
    * include-tidy.c, source.c, source.h, trans_unit.c, trans_unit.h:
