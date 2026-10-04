@@ -218,7 +218,7 @@ static void         proxy_parse( config_parse_fn_args const* );
 static void         proxy_parse_string( config_parse_fn_args const* );
 static void         std_c_includes_parse( config_parse_fn_args const* );
 static void         std_cxx_includes_parse( config_parse_fn_args const* );
-static void         symbol_include_add( char const*, tidy_include* );
+static void         symbol_include_add( char const*, tidy_include const* );
 static void         symbol_includes_cleanup( symbol_includes* );
 static void         symbols_parse( config_parse_fn_args const* );
 static void         symbols_parse_string( config_parse_fn_args const* );
@@ -786,7 +786,7 @@ static void includes_parse_string( config_parse_fn_args const *config ) {
   assert( config != NULL );
   assert( config->value->type == TOML_STRING );
 
-  tidy_include *const to_include =
+  tidy_include const *const to_include =
     include_find_by_rel_path( config->source, config->value->s );
   if ( to_include != NULL )
     symbol_include_add( config->table->key.name, to_include );
@@ -959,7 +959,7 @@ static void symbols_parse_string( config_parse_fn_args const *config ) {
   assert( config != NULL );
   assert( config->value->type == TOML_STRING );
 
-  tidy_include *const to_include =
+  tidy_include const *const to_include =
     include_find_by_rel_path( config->source, config->table->key.name );
   if ( to_include != NULL )
     symbol_include_add( config->value->s, to_include );
@@ -1485,7 +1485,7 @@ static int symbol_includes_cmp( symbol_includes const *i_si,
  * @param to_include The include file that supposedly declares it.
  */
 static void symbol_include_add( char const *from_sym_name,
-                                tidy_include *to_include ) {
+                                tidy_include const *to_include ) {
   assert( from_sym_name != NULL );
   assert( to_include != NULL );
 
@@ -1502,8 +1502,9 @@ static void symbol_include_add( char const *from_sym_name,
     );
     array_init( &si->to_include_array, sizeof( tidy_include* ) );
   }
-  ht_insert_rv_t const hti =
-    ht_table_insert( &si->to_include_set, to_include, 0 );
+  ht_insert_rv_t const hti = ht_table_insert(
+    &si->to_include_set, CONST_CAST( tidy_include*, to_include ), 0
+  );
   if ( hti.inserted )
     *(tidy_include const**)array_push_back(&si->to_include_array) = to_include;
 }
