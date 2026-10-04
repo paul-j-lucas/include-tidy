@@ -1,5 +1,11 @@
+2026-10-04  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * clang_util.c, cxx.c, symbol.c: Added "unlikely".
+
 2026-10-03  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
+   * config_file.c: Added "const".
+   * types_h.out: Updated test expected result.
    * config_file.c, include.c, include.h, proxies.c: Now using hash table for
      tidy_include_set.
    * str_util_test.c: #include fix.
