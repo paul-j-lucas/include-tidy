@@ -7,6 +7,10 @@ See the end of the file for license conditions.
 
 * Changes in Include-tidy 3.1
 
+** `includes` priority order
+For a symbol table in a configuration file, the order of the includes is now
+preserved and represents a priority order.
+
 ** TOML literal strings
 TOML literal strings (`'...'`) are now supported.
 
