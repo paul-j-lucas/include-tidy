@@ -27,10 +27,10 @@
 #include "pjl_config.h"
 #include "proxies.h"
 #include "config_file.h"
+#include "hash_table.h"
 #include "include.h"
 #include "options.h"
 #include "path_util.h"
-#include "red_black.h"
 #include "source.h"
 #include "strbuf.h"
 #include "util.h"
@@ -196,12 +196,12 @@ skip:
  * implicit proxies only.
  */
 static void include_proxies_dump( bool want_explicit ) {
-  rb_iterator_t iter;
-  rb_iterator_init( &iter, &tidy_include_set );
+  ht_iterator_t iter;
+  ht_iterator_init( &iter, &tidy_include_set );
   bool printed_proxies_header = false;
 
   for ( tidy_include const *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
+        (include = ht_iterator_next( &iter )) != NULL; ) {
     if ( include->proxy == NULL )
       continue;
     if ( include->is_proxy_explicit != want_explicit )

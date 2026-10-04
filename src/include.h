@@ -31,7 +31,6 @@
 #include "array.h"
 #include "fnv1a.h"
 #include "hash_table.h"
-#include "red_black.h"
 #include "source.h"
 #include "symbol.h"
 #include "util.h"
@@ -111,13 +110,7 @@ struct tidy_include {
 
 ////////// extern variables ///////////////////////////////////////////////////
 
-/**
- * The set of included files.
- *
- * @remarks This is a red-black tree and not a hash table because, when we
- * iterate over it, we want it to be in sorted order.
- */
-extern rb_tree_t tidy_include_set;
+extern hash_table_t tidy_include_set;   ///< The set of includes files.
 
 ////////// extern functions ///////////////////////////////////////////////////
 

@@ -38,7 +38,6 @@
 #include "options.h"
 #include "path_util.h"
 #include "print.h"
-#include "red_black.h"
 #include "source.h"
 #include "str_util.h"
 #include "strbuf.h"
@@ -145,7 +144,7 @@ static char*        tidy_File_getRelativePath( CXFile );
 /// @cond DOXYGEN_IGNORE
 /// Otherwise Doxygen generates two entries.
 
-rb_tree_t tidy_include_set;
+hash_table_t tidy_include_set;
 
 /// @endcond
 
@@ -195,10 +194,10 @@ static tidy_include* get_associated_header( tidy_source const *source ) {
     path_no_ext_if( source->path, 'c', &path_buf );
 
   if ( source_path_no_ext != NULL ) {
-    rb_iterator_t iter;
-    rb_iterator_init( &iter, &tidy_include_set );
+    ht_iterator_t iter;
+    ht_iterator_init( &iter, &tidy_include_set );
     for ( tidy_include *include;
-          (include = rb_iterator_next( &iter )) != NULL; ) {
+          (include = ht_iterator_next( &iter )) != NULL; ) {
       if ( !include->is_local )
         continue;
       if ( source->assoc_header_rel_path != NULL ) {
@@ -364,8 +363,8 @@ static void includes_cleanup( void ) {
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
   free( ii_matrix );
 #endif /* NEED_II_MATRIX */
-  rb_tree_cleanup(
-    &tidy_include_set, POINTER_CAST( rb_free_fn_t, &include_cleanup )
+  ht_table_cleanup(
+    &tidy_include_set, POINTER_CAST( ht_free_fn_t, &include_cleanup )
   );
 }
 
@@ -420,9 +419,9 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   tidy_include new_include = {
     .file_id = tidy_getFileUniqueID( included_file )
   };
-  rb_insert_rv_t const rbi =
-    rb_tree_insert( &tidy_include_set, &new_include, sizeof new_include );
-  tidy_include *const included = RB_DINT( rbi.node );
+  ht_insert_rv_t const rbi =
+    ht_table_insert( &tidy_include_set, &new_include, sizeof new_include );
+  tidy_include *const included = HT_DINT( rbi.entry );
 
   if ( rbi.inserted ) {
     CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
@@ -858,16 +857,20 @@ static void print_statistics( void ) {
     return;
 
   verbose_printf( "  include set:\n" );
+  verbose_printf(
+    "    is-load-factor = " TIDY_STAT_LF_FMT "\n",
+    ht_table_load_factor( &tidy_include_set )
+  );
   verbose_printf( "    is-size = %u\n", tidy_include_set.size );
 
   tidy_include const *max_include = NULL;
   double max_lf = -1.0;
 
   // Find the include file having the symbol set with the largest load factor.
-  rb_iterator_t iter;
-  rb_iterator_init( &iter, &tidy_include_set );
+  ht_iterator_t iter;
+  ht_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include const *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
+        (include = ht_iterator_next( &iter )) != NULL; ) {
     double const lf = ht_table_load_factor( &include->symbol_set );
     if ( lf > max_lf ) {
       max_include = include;
@@ -1052,9 +1055,9 @@ tidy_include* include_find_by_File( CXFile file ) {
   assert( file != NULL );
 
   tidy_include find_include = { .file_id = tidy_getFileUniqueID( file ) };
-  rb_node_t const *const found_rb =
-    rb_tree_find( &tidy_include_set, &find_include );
-  return found_rb != NULL ? RB_DINT( found_rb ) : NULL;
+  ht_entry_t const *const found_ht =
+    ht_table_find( &tidy_include_set, &find_include );
+  return found_ht != NULL ? HT_DINT( found_ht ) : NULL;
 }
 
 tidy_include* include_find_by_rel_path( tidy_source const *source,
@@ -1092,8 +1095,10 @@ void includes_init( tidy_source const *source ) {
   assert( source != NULL );
 
   ASSERT_RUN_ONCE();
-  rb_tree_init(
-    &tidy_include_set, RB_DINT, POINTER_CAST( rb_cmp_fn_t, &include_cmp_by_id )
+  ht_table_init(
+    &tidy_include_set, HT_DINT, 2.0, 1024,
+    POINTER_CAST( ht_cmp_fn_t, &include_cmp_by_id ),
+    POINTER_CAST( ht_hash_fn_t, &include_hash )
   );
   ATEXIT( &includes_cleanup );
 
@@ -1117,10 +1122,10 @@ void includes_print( tidy_source *source ) {
     assoc_include->sort_rank = TIDY_SORT_ASSOCIATED;
   }
 
-  rb_iterator_t iter;
-  rb_iterator_init( &iter, &tidy_include_set );
+  ht_iterator_t iter;
+  ht_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include const *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
+        (include = ht_iterator_next( &iter )) != NULL; ) {
     if ( should_print_include( include ) ) {
       *(tidy_include const**)array_push_back( &include_array ) = include;
       if ( include->handling != TIDY_HANDLE_KEEP ) {

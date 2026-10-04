@@ -683,12 +683,12 @@ static void first_parse( config_parse_fn_args const *config ) {
   if ( !toml_bool_parse( config, &first ) || !first )
     return;
 
-  rb_iterator_t iter;
+  ht_iterator_t iter;
   size_t const  rel_path_len = strlen( config->table->key.name );
 
-  rb_iterator_init( &iter, &tidy_include_set );
+  ht_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
+        (include = ht_iterator_next( &iter )) != NULL; ) {
     if ( path_ends_with( include->abs_path, strlen( include->abs_path ),
                          config->table->key.name, rel_path_len ) ) {
       include->sort_rank = TIDY_SORT_FIRST;
@@ -880,12 +880,12 @@ static void proxy_parse_string( config_parse_fn_args const *config ) {
   if ( unlikely( to_include == NULL ) )
     return;                             // LCOV_EXCL_LINE
 
-  rb_iterator_t iter;
+  ht_iterator_t iter;
   size_t const  rel_path_len = strlen( config->value->s );
 
-  rb_iterator_init( &iter, &tidy_include_set );
+  ht_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *from_include;
-        (from_include = rb_iterator_next( &iter )) != NULL; ) {
+        (from_include = ht_iterator_next( &iter )) != NULL; ) {
     if ( !path_ends_with( from_include->abs_path,
                           strlen( from_include->abs_path ),
                           config->value->s, rel_path_len ) ) {
@@ -1361,12 +1361,12 @@ static void include_handle( char const *config_path, char const *key_name,
   assert( loc != NULL );
   assert( handling != TIDY_HANDLE_DEFAULT );
 
-  rb_iterator_t iter;
+  ht_iterator_t iter;
   size_t const  rel_path_len = strlen( rel_path );
 
-  rb_iterator_init( &iter, &tidy_include_set );
+  ht_iterator_init( &iter, &tidy_include_set );
   for ( tidy_include *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
+        (include = ht_iterator_next( &iter )) != NULL; ) {
     if ( path_ends_with( include->abs_path, strlen( include->abs_path ),
                          rel_path, rel_path_len ) ) {
       if ( include->handling == TIDY_HANDLE_DEFAULT ) {
