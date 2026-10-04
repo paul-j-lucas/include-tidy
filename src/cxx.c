@@ -163,7 +163,7 @@ bool is_cxx_fn_iwyu_exc( CXCursor call_csr, CXCursor fn_csr ) {
     return false;
 
   CXFile const fn_file = tidy_getCursorLocation_File( fn_csr );
-  if ( fn_file == NULL )
+  if ( unlikely( fn_file == NULL ) )
     return false;                       // LCOV_EXCL_LINE
   tidy_include const *fn_include = include_find_by_File( fn_file );
   if ( fn_include == NULL )
@@ -192,10 +192,10 @@ bool is_cxx_fn_iwyu_exc( CXCursor call_csr, CXCursor fn_csr ) {
     // pararameter doesn't trigger an IWYU exception.
     //
     CXFile const par_file = tidy_getCursorLocation_File( par_ocls_csr );
-    if ( par_file == NULL )
+    if ( unlikely( par_file == NULL ) )
       continue;                         // LCOV_EXCL_LINE
     tidy_include const *par_include = include_find_by_File( par_file );
-    if ( par_include == NULL )
+    if ( unlikely( par_include == NULL ) )
       continue;                         // LCOV_EXCL_LINE
     par_include = include_get_proxy( par_include );
     if ( fn_include != par_include )
@@ -337,13 +337,13 @@ bool is_cxx_mbr_or_base_iwyu_exc( CXCursor dec_csr, CXCursor scope_csr ) {
 }
 
 bool is_cxx_mbr_ref_iwyu_exc( CXCursor obj_csr ) {
-  if ( tidy_Cursor_isInvalid( obj_csr ) )
+  if ( unlikely( tidy_Cursor_isInvalid( obj_csr ) ) )
     return false;                       // LCOV_EXCL_LINE
 
   // Fully unwrap address-of, dereferences, parens, casts, and variable
   // initializers.
   CXCursor const init_csr = tidy_Cursor_getVarInitNoUnaryOps( obj_csr );
-  if ( tidy_Cursor_isInvalid( init_csr ) )
+  if ( unlikely( tidy_Cursor_isInvalid( init_csr ) ) )
     return false;                       // LCOV_EXCL_LINE
 
   //
@@ -365,10 +365,10 @@ bool is_cxx_mbr_ref_iwyu_exc( CXCursor obj_csr ) {
   // Get what initialized the object.
   //
   CXCursor child_csr = tidy_Cursor_skipUnexposedDown( init_csr );
-  if ( tidy_Cursor_isInvalid( child_csr ) )
+  if ( unlikely( tidy_Cursor_isInvalid( child_csr ) ) )
     return false;                       // LCOV_EXCL_LINE
   CXCursor const ref_csr = clang_getCursorReferenced( child_csr );
-  if ( tidy_Cursor_isInvalid( ref_csr ) )
+  if ( unlikely( tidy_Cursor_isInvalid( ref_csr ) ) )
     return false;                       // LCOV_EXCL_LINE
 
   enum CXCursorKind const kind = clang_getCursorKind( ref_csr );
@@ -412,7 +412,7 @@ bool is_cxx_proxy_qual_ref_iwyu_exc( CXCursor cursor, CXCursor parent,
 
   CXSourceLocation const cursor_loc = clang_getCursorLocation( cursor );
   unsigned const cursor_offset = tidy_getSpellingLocation_offset( cursor_loc );
-  if ( cursor_offset == 0 )
+  if ( unlikely( cursor_offset == 0 ) )
     return false;                       // LCOV_EXCL_LINE
 
   CXSourceRange range = clang_getCursorExtent( parent );

@@ -1190,7 +1190,7 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
 
   // Gets the cursor for the declaration of the symbol.
   CXCursor const dec_csr = clang_getCursorReferenced( cursor );
-  if ( tidy_Cursor_isInvalid( dec_csr ) )
+  if ( unlikely( tidy_Cursor_isInvalid( dec_csr ) ) )
     return;                             // LCOV_EXCL_LINE
 
   //
@@ -1234,7 +1234,7 @@ static void visit_MemberRefExpr( CXCursor mbr_ref_csr, CXCursor parent,
   assert( sid != NULL );
 
   CXCursor const mbr_csr = clang_getCursorReferenced( mbr_ref_csr );
-  if ( tidy_Cursor_isInvalid( mbr_csr ) )
+  if ( unlikely( tidy_Cursor_isInvalid( mbr_csr ) ) )
     return;                             // LCOV_EXCL_LINE
 
   CXCursor const mbr_cls_csr = clang_getCursorSemanticParent( mbr_csr );

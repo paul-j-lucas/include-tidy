@@ -766,7 +766,7 @@ bool tidy_Cursor_isTypeAliasOf( CXCursor alias_csr, CXCursor underlying_csr ) {
     return true;
 
   alias_csr = clang_getTypeDeclaration( alias_type );
-  if ( tidy_Cursor_isInvalid( alias_csr ) )
+  if ( unlikely( tidy_Cursor_isInvalid( alias_csr ) ) )
     return false;                       // LCOV_EXCL_LINE
 
   CXCursor spec_csr = clang_getSpecializedCursorTemplate( alias_csr );
@@ -869,7 +869,7 @@ CXSourceRange tidy_getCursorExtent( CXCursor cursor ) {
     end_loc, &end_file, /*line=*/NULL, /*column=*/NULL, &end_offset
   );
 
-  if ( start_file == NULL || start_file != end_file )
+  if ( unlikely( start_file == NULL || start_file != end_file ) )
     return range;                       // LCOV_EXCL_LINE
 
   CXTranslationUnit const tu = clang_Cursor_getTranslationUnit( cursor );
