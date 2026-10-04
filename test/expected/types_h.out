@@ -7,6 +7,7 @@ $ include-tidy -Xtidy --directory=data -Xtidy --no-config-layers -Xtidy --config
 // tidy |     ss-load-factor = 0.01
 // tidy |     ss-size = 1
 // tidy |   include set:
+// tidy |     is-load-factor = 0.01
 // tidy |     is-size = 9
 // tidy |     is-max-load-factor:
 // tidy |       is-path = "slist.h"
