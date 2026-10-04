@@ -1,5 +1,13 @@
 2026-10-03  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
+   * str_util_test.c: #include fix.
+   * etc/config.toml, man/man1/include-tidy.1, clang_util.c, clang_util.h,
+     config_file.c, include.c, include.h: The order of include files for the
+     "symbols" configuration key is now preserved.
+   * clang_util.c, clang_util.h, include.c: tidy_FileUniqueID_cmp() now
+     compares only data and not padding (if any).
+   * fnv1a.c: #include fix.
+   * fnv1a.c, fnv1a.h: Moved FNV1A_PRIME to .h file.
    * cli_options.c, config_file.c, config_file.h, file_ext.c, file_ext.h,
      include.c, options.c, options.h, proxies.c, source.h, symbol.c: Replaced
      is_cxx by lang.
