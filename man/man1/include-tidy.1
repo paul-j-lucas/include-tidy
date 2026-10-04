@@ -35,7 +35,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "September 18, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "October 3, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -1088,18 +1088,19 @@ Specifies that the symbol
 given for the table name
 is to be considered declared
 in one or more
-of the include files listed.
+of the include files listed
+in priority order.
 For example,
 this:
 .RS 5
 .cS
 [NULL]
 includes = [
-    "locale.h",
     "stddef.h",
-    "stdio.h",
     "stdlib.h",
+    "stdio.h",
     "string.h",
+    "locale.h",
     "time.h",
     "wchar.h",
 ]

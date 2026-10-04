@@ -29,6 +29,7 @@
 #include "config_file.h"
 #include "array.h"
 #include "bit_util.h"
+#include "clang_util.h"
 #include "cli_options.h"
 #include "fnv1a.h"
 #include "hash_table.h"
@@ -140,18 +141,24 @@ struct config_parse_fn_args {
 /**
  * Mapping from a symbol name to a set of include CXFiles that declare it.
  *
- * @remarks A set of include files is needed since some symbols are declared in
- * multiple include files, e.g., `NULL` and `size_t`.
+ * @remarks
+ * @parblock
+ * A set of include files is needed since some symbols are declared in multiple
+ * include files, e.g., `NULL` and `size_t`.
+ *
+ * An array of include files is needed to preserve the order in which the
+ * include files were listed.
+ * @endparblock
  *
  * @par Example
  *  ```
  *  [NULL]
  *  includes = [
- *      "locale.h",
  *      "stddef.h",
- *      "stdio.h",
  *      "stdlib.h",
+ *      "stdio.h",
  *      "string.h",
+ *      "locale.h",
  *      "time.h",
  *      "wchar.h",
  *  ]
@@ -161,12 +168,14 @@ struct symbol_includes {
   char const *from_sym_name;            ///< Symbol name.
 
   /**
-   * The set of include file(s) that declare \ref from_sym_name.
-   *
-   * @remarks This is a red-black tree and not a hash table because, when we
-   * iterate over it, we want it to be in sorted order.
+   * A set of include file(s) that declare \ref from_sym_name.
    */
-  rb_tree_t   to_include_set;
+  hash_table_t  to_include_set;
+
+  /**
+   * An array of include file(s) that declare \ref from_sym_name.
+   */
+  array_t       to_include_array;
 };
 
 ////////// local functions ////////////////////////////////////////////////////
@@ -1326,11 +1335,11 @@ static char const* home_dir( void ) {
  * path of \a j_include, respectively.
  */
 NODISCARD
-static int include_cmp_by_rel_path( tidy_include const *i_include,
-                                    tidy_include const *j_include ) {
+static int include_cmp_by_file_id( tidy_include const *i_include,
+                                   tidy_include const *j_include ) {
   assert( i_include != NULL );
   assert( j_include != NULL );
-  return strcmp( i_include->rel_path, j_include->rel_path );
+  return tidy_FileUniqueID_cmp( &i_include->file_id, &j_include->file_id );
 }
 
 /**
@@ -1446,7 +1455,8 @@ static void print_invalid_value( config_parse_fn_args const *config,
 static void symbol_includes_cleanup( symbol_includes *si ) {
   if ( si != NULL ) {
     FREE( si->from_sym_name );
-    rb_tree_cleanup( &si->to_include_set, /*free_fn=*/NULL );
+    ht_table_cleanup( &si->to_include_set, /*free_fn=*/NULL );
+    array_cleanup( &si->to_include_array, /*free_fn=*/NULL );
   }
 }
 
@@ -1485,12 +1495,17 @@ static void symbol_include_add( char const *from_sym_name,
   symbol_includes *const si = RB_DINT( rbi.node );
   if ( rbi.inserted ) {
     si->from_sym_name = strdup_or_exit( from_sym_name );
-    rb_tree_init(
-      &si->to_include_set, RB_DPTR,
-      POINTER_CAST( rb_cmp_fn_t, &include_cmp_by_rel_path )
+    ht_table_init(
+      &si->to_include_set, HT_DPTR, 2.0, 10,
+      POINTER_CAST( ht_cmp_fn_t, &include_cmp_by_file_id ),
+      POINTER_CAST( ht_hash_fn_t, &include_hash )
     );
+    array_init( &si->to_include_array, sizeof( tidy_include* ) );
   }
-  PJL_DISCARD_RV( rb_tree_insert( &si->to_include_set, to_include, 0 ) );
+  ht_insert_rv_t const hti =
+    ht_table_insert( &si->to_include_set, to_include, 0 );
+  if ( hti.inserted )
+    *(tidy_include const**)array_push_back(&si->to_include_array) = to_include;
 }
 
 // LCOV_EXCL_START: even though a symbol specifies a fixed set of headers it's
@@ -1511,10 +1526,9 @@ static void symbol_includes_dump( void ) {
     verbose_printf( "  \"%s\" -> [ ", si->from_sym_name );
 
     bool comma = false;
-    rb_iterator_t ti_iter;
-    rb_iterator_init( &ti_iter, &si->to_include_set );
-    for ( tidy_include const *to_include;
-          (to_include = rb_iterator_next( &ti_iter )) != NULL; ) {
+    for ( size_t i = 0; i < si->to_include_array.len; ++i ) {
+      tidy_include const *const to_include =
+        *(tidy_include const**)array_at_nc( &si->to_include_array, i );
       char const *const delims = include_get_delims( to_include );
       char const *const to_include_path = opt_test != TIDY_TEST_NONE ?
         to_include->rel_path : to_include->abs_path;
@@ -1614,19 +1628,19 @@ CXFile config_symbol_get_include( char const *sym_name ) {
   if ( found_rb == NULL )
     return NULL;
   symbol_includes const *const found_si = RB_DINT( found_rb );
-  assert( !rb_tree_empty( &found_si->to_include_set ) );
+  assert( found_si->to_include_array.len > 0 );
 
-  rb_iterator_t iter;
-  rb_iterator_init( &iter, &found_si->to_include_set );
+  tidy_include const *best_include =
+    *(tidy_include const**)array_front_nc( &found_si->to_include_array );
+  best_include = include_get_proxy( best_include );
 
-  tidy_include const *best_include = NULL;
-  for ( tidy_include const *include;
-        (include = rb_iterator_next( &iter )) != NULL; ) {
+  for ( size_t i = 1;
+        best_include->depth > 0 && i < found_si->to_include_array.len; ++i ) {
+    tidy_include const *include =
+      *(tidy_include const**)array_at_nc( &found_si->to_include_array, i );
     include = include_get_proxy( include );
-    if ( best_include == NULL || include->depth < best_include->depth )
+    if ( include->depth < best_include->depth )
       best_include = include;
-    if ( best_include->depth == 0 )
-      break;
   } // for
 
   return best_include != NULL ? best_include->file : NULL;

@@ -28,6 +28,7 @@
 
 // local
 #include "pjl_config.h"
+#include "fnv1a.h"
 
 /// @cond DOXYGEN_IGNORE
 
@@ -494,6 +495,15 @@ inline int tidy_FileUniqueID_cmp( CXFileUniqueID const *i_id,
                                   CXFileUniqueID const *j_id ) {
   return memcmp( i_id->data, j_id->data, sizeof( i_id->data ) );
 }
+
+/**
+ * Calculates tha hash of \a id.
+ *
+ * @param id The CXFileUniqueID to hash.
+ * @return Returns said hash.
+ */
+NODISCARD
+fnv1a_t tidy_FileUniqueID_hash( CXFileUniqueID const *id );
 
 /**
  * Attempts to get the cursor for the identifier having \a name within \a

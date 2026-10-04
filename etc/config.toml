@@ -252,8 +252,8 @@ symbols = [
 [errno_t]
 includes = [
   "stddef.h",
-  "stdio.h",
   "stdlib.h",
+  "stdio.h",
   "string.h",
   "time.h",
   "wchar.h"
@@ -268,11 +268,11 @@ includes = [
 # NULL is declared in all of these, so any one is sufficient.
 [NULL]
 includes = [
-  "locale.h",
   "stddef.h",
-  "stdio.h",
   "stdlib.h",
+  "stdio.h",
   "string.h",
+  "locale.h",
   "time.h",
   "wchar.h"
 ]
@@ -281,8 +281,8 @@ includes = [
 [size_t]
 includes = [
   "stddef.h",
-  "stdio.h",
   "stdlib.h",
+  "stdio.h",
   "string.h",
   "time.h",
   "uchar.h",
@@ -293,8 +293,8 @@ includes = [
 [ssize_t]
 includes = [
   "stddef.h",
-  "stdio.h",
   "stdlib.h",
+  "stdio.h",
   "string.h",
   "time.h",
   "uchar.h",

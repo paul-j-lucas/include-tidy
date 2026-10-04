@@ -31,6 +31,7 @@
 #include "color.h"
 #include "config_file.h"
 #include "file_ext.h"
+#include "fnv1a.h"
 #include "hash_table.h"
 #include "include-tidy.h"
 #include "ipath.h"
@@ -1081,6 +1082,10 @@ tidy_include const* (include_get_proxy)( tidy_include const *include ) {
   while ( include->proxy != NULL )
     include = include->proxy;
   return include;
+}
+
+fnv1a_t include_hash( tidy_include const *include ) {
+  return tidy_FileUniqueID_hash( &include->file_id );
 }
 
 void includes_init( tidy_source const *source ) {

@@ -809,6 +809,13 @@ CXString tidy_File_getRealPathName( CXFile file ) {
   return abs_path_cxs;
 }
 
+fnv1a_t tidy_FileUniqueID_hash( CXFileUniqueID const *id ) {
+  fnv1a_t hash = FNV1A_INIT;
+  for ( unsigned i = 0; i < ARRAY_SIZE( ((CXFileUniqueID*)0)->data ); ++i )
+    hash = FNV1A_PRIME * (hash ^ id->data[i]);
+  return hash;
+}
+
 CXCursor tidy_getCursorByName( char const *name, CXCursor scope_csr ) {
   assert( name != NULL );
 

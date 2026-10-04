@@ -29,6 +29,7 @@
 // local
 #include "pjl_config.h"
 #include "array.h"
+#include "fnv1a.h"
 #include "hash_table.h"
 #include "red_black.h"
 #include "source.h"
@@ -198,6 +199,15 @@ inline tidy_include* nonconst_include_get_proxy( tidy_include *include ) {
 #define include_get_proxy(INCLUDE) \
   NONCONST_OVERLOAD( include_get_proxy, (INCLUDE) )
 /// @endcond
+
+/**
+ * Calculates the hash of \a include.
+ *
+ * @param include The tidy_include to calculate the hash of.
+ * @return Returns said hash.
+ */
+NODISCARD
+fnv1a_t include_hash( tidy_include const *include );
 
 /**
  * Initializes the set of files included in the given translation unit.
