@@ -209,10 +209,11 @@ ht_insert_rv_t ht_table_insert( hash_table_t *table, void *data,
   ht_hash_val_t const hash = (*table->hash_fn)( data );
   ht_hash_val_t const b = hash % HT_PRIME[ table->prime_idx ];
   ht_entry_t *const head = &table->buckets[b], *entry;
+  bool inserted = false;
 
   for ( entry = head->next; entry != NULL; entry = entry->next ) {
     if ( (*table->cmp_fn)( data, ht_entry_data( table, entry ) ) == 0 )
-      return (ht_insert_rv_t){ entry, .inserted = false };
+      goto done;
   } // for
 
   if ( table->dloc == HT_DINT ) {
@@ -233,8 +234,14 @@ ht_insert_rv_t ht_table_insert( hash_table_t *table, void *data,
   double const lf = ht_table_load_factor( table );
   if ( lf >= table->max_lf )
     ht_table_grow( table );
+  inserted = true;
 
-  return (ht_insert_rv_t){ entry, .inserted = true };
+done:
+  return (ht_insert_rv_t){
+    .data = ht_entry_data( table, entry ),
+    .entry = entry,
+    .inserted = inserted
+  };
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -1369,7 +1369,7 @@ bool toml_table_next( toml_file *toml, toml_table *table ) {
       toml_key_value_cleanup( &new_kv );
       break;
     }
-    toml_key_value *const kv = HT_DINT( hti.entry );
+    toml_key_value *const kv = hti.data;
     *(toml_key_value**)array_push_back( &table->ordered_kv_ptrs ) = kv;
   } // while
 

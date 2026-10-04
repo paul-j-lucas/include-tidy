@@ -295,7 +295,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
   sym_name = NULL;                      // new_sym owns this now
   ht_insert_rv_t const hti =
     ht_table_insert( &symbol_set, &new_sym, sizeof new_sym );
-  tidy_symbol *const sym = HT_DINT( hti.entry );
+  tidy_symbol *const sym = hti.data;
   ++sym->ref_count;
 
   CXFile include_file = config_symbol_get_include( sym->name );

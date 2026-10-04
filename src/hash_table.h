@@ -337,13 +337,22 @@ struct ht_entry {
  */
 struct ht_insert_rv {
   /**
+   * The data of \ref entry.
+   *
+   * @warning Even though this is a pointer to a non-`const`, it _must not_ be
+   * modified if that would change its entry's hash value according to the
+   * table's \ref rb_tree::cmp_fn "cmp_fn".
+   */
+  void *data;
+
+  /**
    * The \ref ht_entry "entry" either found or inserted.  Use \ref inserted to
    * know which.
    *
-   * @warning Even though this is a pointer to a non-`const` \ref ht_entry, the
-   * entry's \ref ht_entry::data "data" _must not_ be modified if that would
-   * change the entry's hash value according to the table's \ref
-   * hash_table::hash_fn "hash_fn".
+   * @warning Even though this is a pointer to a non-`const` \ref ht_entry, its
+   * \ref ht_entry::data "data" _must not_ be modified if that would change the
+   * entry's hash value according to the table's \ref hash_table::hash_fn
+   * "hash_fn".
    */
   ht_entry_t *entry;
 
@@ -498,10 +507,20 @@ void ht_table_init( hash_table_t *table, ht_dloc_t dloc, double max_lf,
  *  + #HT_DPTR: Not used.  If an entry is inserted, then the pointer value of
  *    \a data itself is copied into the new entry's \ref ht_entry::data "data".
  *
- * @return Returns an \ref ht_insert_rv where its \ref ht_insert_rv::entry
- * "entry" points to either the newly inserted entry or the existing entry
- * having the same \ref ht_entry::data "data" and \ref ht_insert_rv::inserted
- * "inserted" is `true` only if \ref ht_entry::data "data" was inserted.
+ * @return Returns an \ref ht_insert_rv where:
+ *  + \ref ht_insert_rv::entry "entry" points to either the newly inserted
+ *    entry or the existing entry having the same \ref ht_entry::data "data".
+ *  + \ref ht_insert_rv::data "data" points to the data of the entry.
+ *  + \ref ht_insert_rv::inserted "inserted" is `true` only if \a data was
+ *    inserted.
+ *
+ * @warning Even though this function returns an \ref ht_insert_rv containing
+ * pointers to non-`const` \ref ht_insert_rv::entry "entry" and \ref
+ * ht_insert_rv::data "data", the data _must not_ be modified if that would
+ * change the entry's hash value according the table's \ref hash_table::cmp_fn
+ * "cmp_fn".
+ *
+ * @sa ht_table_delete()
  */
 PJL_DISCARD
 ht_insert_rv_t ht_table_insert( hash_table_t *table, void *data,
