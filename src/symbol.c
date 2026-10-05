@@ -309,7 +309,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     goto done;
   }
   if ( to_include == NULL )
-    goto done;
+    goto done;                          // LCOV_EXCL_LINE
 
   if ( IS_VERBOSE( SYMBOLS ) ) {
     if ( verbose_section_begin( &sid->printed_symbols_header  ) )
@@ -461,11 +461,11 @@ static bool is_symbol_definition_needed( CXCursor cursor, CXCursor parent,
       type = clang_getEnumDeclIntegerType( type_csr );
       if ( type.kind != CXType_Invalid )
         return false;
-      break;
+      break;                          // LCOV_EXCL_LINE
     case CXType_Record:               // class, struct, or union
       break;
     default:
-      return false;
+      return false;                   // LCOV_EXCL_LINE
   } // switch
 
   CXCursor const def_csr = clang_getCursorDefinition( type_csr );
@@ -1238,8 +1238,8 @@ static void visit_MemberRefExpr( CXCursor mbr_ref_csr, CXCursor parent,
     return;                             // LCOV_EXCL_LINE
 
   CXCursor const mbr_cls_csr = clang_getCursorSemanticParent( mbr_csr );
-  if ( !tidy_Cursor_isClassDecl( mbr_cls_csr ) )
-    goto skip;
+  if ( unlikely( !tidy_Cursor_isClassDecl( mbr_cls_csr ) ) )
+    goto skip;                          // LCOV_EXCL_LINE
 
   // For a MemberRefExpr, the first child is the class/struct/union object that
   // we're referencing the member of.
