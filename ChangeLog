@@ -1,5 +1,11 @@
+2026-10-05  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * config_file.c, path_util.c, path_util.h, path_util_test.c: Fixed:
+     `$PWD/include-tidy.toml` is now read at most once.
+
 2026-10-04  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
+   * pjl_config.h: Fixed HAVE___BUILTIN_EXPECT.
    * hash_table.c, hash_table.h, hash_table_test.c, include.c, symbol.c,
      toml_lite.c, typedef.c: ht_insert_rv now also contains data.
    * config_file.c, red_black.c, red_black.h: rb_insert_rv now also contains
