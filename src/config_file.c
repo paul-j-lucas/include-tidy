@@ -1049,7 +1049,7 @@ static FILE* config_file_find( char const *source_path, char const *config_path,
       ++case_num;
       size_t cwd_path_len;
       char const *const cwd_path = path_cwd( &cwd_path_len );
-      if ( strcmp( cwd_path, source_dir_buf.str ) != 0 ) {
+      if ( path_equal( cwd_path, source_dir_buf.str ) ) {
         strbuf_reset( &path_buf );
         strbuf_putsn( &path_buf, cwd_path, cwd_path_len );
         strbuf_paths( &path_buf, PACKAGE ".toml" );

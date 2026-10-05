@@ -164,6 +164,11 @@ static bool test_path_normalize( void ) {
     free( path );
   }
 
+  if ( TEST( (path = path_normalize( "a/../c" )) != NULL ) ) {
+    TEST( strcmp( path, "c" ) == 0 );
+    free( path );
+  }
+
   TEST_FUNC_END();
 }
 
