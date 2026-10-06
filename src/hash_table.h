@@ -329,7 +329,23 @@ struct ht_entry {
   ht_entry_t   *next;                   ///< Next entry, if any.
   ht_entry_t   *prev;                   ///< Previous entry, if any.
   ht_hash_val_t hash;                   ///< Entry hash.
-  alignas(max_align_t) char data[];     ///< Entry data.
+
+  /**
+   * User data.
+   *
+   * @warning The data _must not_ be modified if that would change the entry's
+   * hash value according to the hash table's \ref hash_table::hash_fn
+   * "hash_fn".  For example, if `data` is a `struct` like:
+   *
+   *      struct word_count {
+   *        char     *word;
+   *        unsigned  count;
+   *      };
+   *
+   * then, assuming the \ref hash_table::hash_fn "hash_fn" hashes only `word`,
+   * client code may then only safely modify `count`.
+   */
+  alignas(max_align_t) char data[];
 };
 
 /**

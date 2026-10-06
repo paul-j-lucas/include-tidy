@@ -345,12 +345,12 @@ struct rb_node {
    * "cmp_fn".  For example, if `data` is a `struct` like:
    *
    *      struct word_count {
-   *          char     *word;
-   *          unsigned  count;
+   *        char     *word;
+   *        unsigned  count;
    *      };
    *
-   * then, assuming the tree's \ref rb_tree::cmp_fn "cmp_fn" compares only
-   * `word`, client code may then only safely modify `count`.
+   * then, assuming \ref rb_tree::cmp_fn "cmp_fn" compares only `word`, client
+   * code may then only safely modify `count`.
    */
   alignas( max_align_t ) char data[];
 };
