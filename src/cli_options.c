@@ -703,8 +703,8 @@ error:
  * @note The caller is responsible for freeing the returned string.
  */
 NODISCARD
-static char const* make_short_opts( struct option const options[static const 2],
-                                    char const *extra_opts ) {
+static char* make_short_opts( struct option const options[static const 2],
+                              char const *extra_opts ) {
   extra_opts = empty_if_null( extra_opts );
   size_t const extra_opts_len = strlen( extra_opts );
 
@@ -1137,15 +1137,15 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
   if ( compiler_path != NULL && source_lang != CXLanguage_Invalid )
     add_compiler_include_paths( pargc, pargv, compiler_path, source_lang );
 
-  strbuf_t          err_buf = STRBUF_INIT();
-  char const       *opt_directory = NULL;
-  bool              opt_help = false;
-  unsigned          opt_version = 0;
-  int               short_opt;
-  char const *const short_opts = make_short_opts( OPTIONS, SOPT(INCLUDE) ":" );
-  int               tidy_argc;
-  char const      **tidy_argv;
-  array_t           tmp_include_paths = ARRAY_INIT( sizeof(char*) );
+  strbuf_t      err_buf = STRBUF_INIT();
+  char const   *opt_directory = NULL;
+  bool          opt_help = false;
+  unsigned      opt_version = 0;
+  int           short_opt;
+  char   *const short_opts = make_short_opts( OPTIONS, SOPT(INCLUDE) ":" );
+  int           tidy_argc;
+  char const  **tidy_argv;
+  array_t       tmp_include_paths = ARRAY_INIT( sizeof(char*) );
 
   move_tidy_args( pargc, *pargv, &tidy_argc, &tidy_argv );
 
@@ -1279,7 +1279,7 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
     option_mark_set( short_opt );
   } // for
 
-  FREE( short_opts );
+  free( short_opts );
   check_options();
 
   if ( IS_VERBOSE( SRC_FILE_ALWAYS ) ) {
