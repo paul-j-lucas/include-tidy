@@ -1499,7 +1499,7 @@ static void symbol_include_add( char const *from_sym_name,
   symbol_includes new_si = { .from_sym_name = from_sym_name };
   rb_insert_rv_t const rbi =
     rb_tree_insert( &symbol_includes_map, &new_si, sizeof new_si );
-  symbol_includes *const si = rbi.data;
+  symbol_includes *const si = RB_DINT( rbi.node );
   if ( rbi.inserted ) {
     si->from_sym_name = strdup_or_exit( from_sym_name );
     ht_table_init(
