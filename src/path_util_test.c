@@ -142,39 +142,41 @@ static bool test_path_normalize( void ) {
 
   char *path;
 
-  if ( TEST( (path = path_normalize( "/a" )) != NULL ) ) {
-    TEST( strcmp( path, "/a" ) == 0 );
-    free( path );
-  }
-  if ( TEST( (path = path_normalize( "/a/./b" )) != NULL ) ) {
-    TEST( strcmp( path, "/a/b" ) == 0 );
-    free( path );
-  }
-  if ( TEST( (path = path_normalize( "/a/b/." )) != NULL ) ) {
-    TEST( strcmp( path, "/a/b" ) == 0 );
-    free( path );
-  }
-  if ( TEST( (path = path_normalize( "/a/../b" )) != NULL ) ) {
-    TEST( strcmp( path, "/b" ) == 0 );
-    free( path );
-  }
-  if ( TEST( (path = path_normalize( "/a/.././b" )) != NULL ) ) {
-    TEST( strcmp( path, "/b" ) == 0 );
-    free( path );
-  }
-  if ( TEST( (path = path_normalize( "/a/b/../../c" )) != NULL ) ) {
-    TEST( strcmp( path, "/c" ) == 0 );
-    free( path );
-  }
-  if ( TEST( (path = path_normalize( "/a/b/.././../c" )) != NULL ) ) {
-    TEST( strcmp( path, "/c" ) == 0 );
-    free( path );
-  }
+  // absolute paths
 
-  if ( TEST( (path = path_normalize( "a/../c" )) != NULL ) ) {
+  TEST( (path = path_normalize( "/a" )) != NULL ) &&
+    TEST( strcmp( path, "/a" ) == 0 );
+  free( path );
+
+  TEST( (path = path_normalize( "/a/./b" )) != NULL ) &&
+    TEST( strcmp( path, "/a/b" ) == 0 );
+  free( path );
+
+  TEST( (path = path_normalize( "/a/b/." )) != NULL ) &&
+    TEST( strcmp( path, "/a/b" ) == 0 );
+  free( path );
+
+  TEST( (path = path_normalize( "/a/../b" )) != NULL ) &&
+    TEST( strcmp( path, "/b" ) == 0 );
+  free( path );
+
+  TEST( (path = path_normalize( "/a/.././b" )) != NULL ) &&
+    TEST( strcmp( path, "/b" ) == 0 );
+  free( path );
+
+  TEST( (path = path_normalize( "/a/b/../../c" )) != NULL ) &&
+    TEST( strcmp( path, "/c" ) == 0 );
+  free( path );
+
+  TEST( (path = path_normalize( "/a/b/.././../c" )) != NULL ) &&
+    TEST( strcmp( path, "/c" ) == 0 );
+  free( path );
+
+  // relative paths
+
+  TEST( (path = path_normalize( "a/../c" )) != NULL ) &&
     TEST( strcmp( path, "c" ) == 0 );
-    free( path );
-  }
+  free( path );
 
   TEST_FUNC_END();
 }
