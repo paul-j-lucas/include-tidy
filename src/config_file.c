@@ -1034,10 +1034,10 @@ static FILE* config_file_find( char const *source_path, char const *config_path,
     case 2:
       // Try dirname(source_path)/include-tidy.toml.
       ++case_num;
-      static strbuf_t source_dir_buf = STRBUF_INIT();
-      path_dirname( source_path, &source_dir_buf );
+      static char *source_dirname;
+      source_dirname = path_dirname( source_path );
       strbuf_reset( &path_buf );
-      strbuf_putsn( &path_buf, source_dir_buf.str, source_dir_buf.len );
+      strbuf_puts( &path_buf, source_dirname );
       strbuf_paths( &path_buf, PACKAGE ".toml" );
       config_file = config_open( path_buf.str, CONFIG_OPT_IGNORE_ENOENT );
       if ( config_file != NULL )
@@ -1049,7 +1049,14 @@ static FILE* config_file_find( char const *source_path, char const *config_path,
       ++case_num;
       size_t cwd_path_len;
       char const *const cwd_path = path_cwd( &cwd_path_len );
-      if ( path_equal( cwd_path, source_dir_buf.str ) ) {
+
+      char *norm_source_dirname = path_normalize( source_dirname );
+      free( source_dirname );
+      bool const path_is_equal = path_equal( cwd_path, norm_source_dirname );
+      free( norm_source_dirname );
+      source_dirname = norm_source_dirname = NULL;
+
+      if ( !path_is_equal ) {
         strbuf_reset( &path_buf );
         strbuf_putsn( &path_buf, cwd_path, cwd_path_len );
         strbuf_paths( &path_buf, PACKAGE ".toml" );

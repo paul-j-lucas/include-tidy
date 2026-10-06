@@ -1347,10 +1347,9 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
 
   // tmp_include_paths is needed because we have to defer calling ipath_add()
   // until after chdir() (if called).
-  strbuf_t dir_buf = STRBUF_INIT();
-  path_dirname( source_path, &dir_buf );
-  ipath_add( dir_buf.str );
-  strbuf_cleanup( &dir_buf );
+  char *const dirname = path_dirname( source_path );
+  ipath_add( dirname );
+  free( dirname );
   for ( size_t i = 0; i < tmp_include_paths.len; ++i ) {
     char const *const *const ppath = array_at_nc( &tmp_include_paths, i );
     ipath_add( *ppath );

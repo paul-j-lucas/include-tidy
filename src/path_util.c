@@ -82,24 +82,18 @@ char const* path_cwd( size_t *rv_len ) {
   return cwd_path_buf;
 }
 
-char* path_dirname( char const *path, strbuf_t *rv_dir_buf ) {
+char* path_dirname( char const *path ) {
   assert( path != NULL );
-  assert( rv_dir_buf != NULL );
-
-  strbuf_reset( rv_dir_buf );
 
   char const *const slash = strrchr( path, '/' );
-  if ( slash == NULL ) {
-    strbuf_putc( rv_dir_buf, '.' );
-  }
-  else {
-    size_t dir_len = STATIC_CAST( size_t, slash - path );
-    if ( dir_len == 0 )                 // "/"
-      dir_len = 1;
-    strbuf_putsn( rv_dir_buf, path, dir_len );
-  }
+  if ( slash == NULL )
+    return strdup( "." );
 
-  return rv_dir_buf->str;
+  size_t const dir_len = STATIC_CAST( size_t, slash - path );
+  if ( dir_len == 0 )
+    return strdup( "/" );
+
+  return strndup( path, dir_len );
 }
 
 bool path_ends_with( char const *path, size_t path_len, char const *end_path,

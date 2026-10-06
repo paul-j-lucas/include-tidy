@@ -43,26 +43,34 @@
 static bool test_path_dirname( void ) {
   TEST_FUNC_BEGIN();
 
-  strbuf_t sbuf = STRBUF_INIT();
+  char *path;
 
   // Standard multi-level paths
-  TEST( strcmp( path_dirname( "/usr/local/bin", &sbuf ), "/usr/local" ) == 0 );
-  TEST( strcmp( path_dirname( "foo/bar/baz.txt", &sbuf ), "foo/bar" ) == 0 );
-  TEST( strcmp( path_dirname( "foo/bar", &sbuf ), "foo" ) == 0 );
+  TEST( strcmp( path = path_dirname( "/usr/local/bin" ), "/usr/local" ) == 0 );
+  free( path );
+  TEST( strcmp( path = path_dirname( "foo/bar/baz.txt" ), "foo/bar" ) == 0 );
+  free( path );
+  TEST( strcmp( path = path_dirname( "foo/bar" ), "foo" ) == 0 );
+  free( path );
 
   // Paths with no directory component
-  TEST( strcmp( path_dirname( "file.txt", &sbuf ), "." ) == 0 );
-  TEST( strcmp( path_dirname( "", &sbuf ), "." ) == 0 );
+  TEST( strcmp( path = path_dirname( "file.txt" ), "." ) == 0 );
+  free( path );
+  TEST( strcmp( path = path_dirname( "" ), "." ) == 0 );
+  free( path );
 
   // Root and single-level absolute paths
-  TEST( strcmp( path_dirname( "/", &sbuf ), "/" ) == 0 );
-  TEST( strcmp( path_dirname( "/etc", &sbuf ), "/" ) == 0 );
+  TEST( strcmp( path = path_dirname( "/" ), "/" ) == 0 );
+  free( path );
+  TEST( strcmp( path = path_dirname( "/etc" ), "/" ) == 0 );
+  free( path );
 
   // Paths ending with a slash
-  TEST( strcmp( path_dirname( "dir/", &sbuf ), "dir" ) == 0 );
-  TEST( strcmp( path_dirname( "/var/log/", &sbuf ), "/var/log" ) == 0 );
+  TEST( strcmp( path = path_dirname( "dir/" ), "dir" ) == 0 );
+  free( path );
+  TEST( strcmp( path = path_dirname( "/var/log/" ), "/var/log" ) == 0 );
+  free( path );
 
-  strbuf_cleanup( &sbuf );
   TEST_FUNC_END();
 }
 

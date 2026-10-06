@@ -81,14 +81,13 @@ char const* path_cwd( size_t *rv_len );
  * Extracts the directory portion of \a path.
  *
  * @param path The path to extract the directory portion of.
- * @param rv_dir_buf Receives the directory portion of \a path.  It will not
- * end with <tt>'/'</tt> (unless \a path is exactly <tt>'/'</tt>).
- * @return Returns the directory portion of path.
+ * @return Returns the directory portion of path.  It will not end with
+ * <tt>'/'</tt> (unless \a path is exactly <tt>'/'</tt>).
  *
  * @sa path_basename()
  */
-PJL_DISCARD
-char* path_dirname( char const *path, strbuf_t *rv_dir_buf );
+NODISCARD
+char* path_dirname( char const *path );
 
 /**
  * Gets whether \a path ends with \a end_path.
