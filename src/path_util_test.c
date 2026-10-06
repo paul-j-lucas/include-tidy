@@ -21,6 +21,7 @@
 // local
 #include "pjl_config.h"
 #include "path_util.h"
+#include "strbuf.h"
 #include "unit_test.h"
 #include "util.h"
 
@@ -65,9 +66,9 @@ static bool test_path_dirname( void ) {
   free( path );
 
   // Paths ending with a slash
-  TEST( strcmp( path = path_dirname( "dir/" ), "dir" ) == 0 );
+  TEST( strcmp( path = path_dirname( "dir/" ), "." ) == 0 );
   free( path );
-  TEST( strcmp( path = path_dirname( "/var/log/" ), "/var/log" ) == 0 );
+  TEST( strcmp( path = path_dirname( "/var/log/" ), "/var" ) == 0 );
   free( path );
 
   TEST_FUNC_END();
@@ -174,8 +175,21 @@ static bool test_path_normalize( void ) {
 
   // relative paths
 
-  TEST( (path = path_normalize( "a/../c" )) != NULL ) &&
-    TEST( strcmp( path, "c" ) == 0 );
+  char const *const cwd = path_cwd( /*len=*/NULL );
+  char *const cwd_dir = path_dirname( cwd );
+
+  TEST( (path = path_normalize( "a/../b" )) != NULL ) &&
+    TEST( strcmp( path, "b" ) == 0 );
+  free( path );
+
+  if ( TEST( (path = path_normalize( "a/../../b" )) != NULL ) ) {
+    strbuf_t exp_dir_buf = STRBUF_INIT();
+    strbuf_puts( &exp_dir_buf, cwd_dir );
+    strbuf_paths( &exp_dir_buf, "b" );
+    TEST( strcmp( path, exp_dir_buf.str ) == 0 );
+    strbuf_cleanup( &exp_dir_buf );
+  }
+  free( cwd_dir );
   free( path );
 
   TEST_FUNC_END();

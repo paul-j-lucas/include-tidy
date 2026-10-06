@@ -85,11 +85,22 @@ char const* path_cwd( size_t *rv_len ) {
 char* path_dirname( char const *path ) {
   assert( path != NULL );
 
-  char const *const slash = strrchr( path, '/' );
+  size_t path_len = strlen( path );
+  if ( path_len == 0 )
+    return strdup( "." );
+
+  while ( path_len > 0 && path[ path_len - 1 ] == '/' )
+    --path_len;
+  if ( path_len == 0 )
+    return strdup( "/" );
+
+  char const *const slash = strnrchr( path, path_len, '/' );
   if ( slash == NULL )
     return strdup( "." );
 
-  size_t const dir_len = STATIC_CAST( size_t, slash - path );
+  size_t dir_len = STATIC_CAST( size_t, slash - path );
+  while ( dir_len > 0 && path[ dir_len - 1 ] == '/' )
+    --dir_len;
   if ( dir_len == 0 )
     return strdup( "/" );
 

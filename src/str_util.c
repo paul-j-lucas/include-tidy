@@ -66,6 +66,18 @@ bool str_is_any( char const *s, char const *const strings[static 1] ) {
   } // for
 }
 
+// See comment for NONCONST_OVERLOAD regarding ().
+char const* (strnrchr)( char const *s, size_t s_len, int c ) {
+  assert( s != NULL );
+
+  while ( s_len-- > 0 ) {
+    if ( s[ s_len ] == c )
+      return s + s_len;
+  } // while
+
+  return NULL;
+}
+
 char* str_trim( char *s, size_t n ) {
   assert( s != NULL );
 
@@ -92,6 +104,7 @@ char* str_trim( char *s, size_t n ) {
 extern inline char const* (empty_if_null)( char const* );
 extern inline char* (nonconst_null_if_empty)( char* );
 extern inline char* (nonconst_empty_if_null)( char* );
+extern inline char* (nonconst_strnrchr)( char*, size_t, int );
 extern inline char const* (null_if_empty)( char const* );
 
 extern inline bool str_ends_with( char const*, char const*, size_t );

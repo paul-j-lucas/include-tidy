@@ -58,7 +58,7 @@
  *
  * @param path The path to extract the base portion of.
  * @return Returns a pointer to the last component of \a path.  If \a path
- * consists entirely of '/' characters, a pointer to the string "/" is
+ * consists entirely of `/` characters, a pointer to the string `"/"` is
  * returned.
  *
  * @sa path_dirname()
@@ -80,8 +80,11 @@ char const* path_cwd( size_t *rv_len );
  * Extracts the directory portion of \a path.
  *
  * @param path The path to extract the directory portion of.
- * @return Returns the directory portion of path.  It will not end with
- * <tt>'/'</tt> (unless \a path is exactly <tt>'/'</tt>).
+ * @return Returns the directory portion of path.  It will not end with `/`
+ * (unless \a path entirely consists of `"/"`).  If \a path is empty or
+ * contains no `/`, returns `"."`.
+ *
+ * @note The caller is responsible for freeing the returned string.
  *
  * @sa path_basename()
  */
@@ -221,8 +224,10 @@ char const* path_no_dot_slash( char const *path );
  * Gets the pathname of \a path without its filename extension, if any.
  *
  * @param path The path.
- * @return Returns a copy of \a path without its extension (and the caller is
- * responsible for freeing it) or NULL if \a path has no extension.
+ * @return Returns a copy of \a path without its extension or NULL if \a path
+ * has no extension.
+ *
+ * @note The caller is responsible for freeing the returned string.
  *
  * @sa path_ext()
  */
@@ -242,9 +247,9 @@ char* path_no_ext( char const *path );
  *  + If \a path is `.`, returns the current working directory.
  *  + Otherwise, returns \a path with all occurrences of `./`, `../`, and `/..`
  *    eliminated.
- *
- * The caller is responsible for freeing the returned path.
  * @endparblock
+ *
+ * @note The caller is responsible for freeing the returned string.
  *
  * @sa path_cwd()
  */

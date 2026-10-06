@@ -145,6 +145,30 @@ bool str_is_any( char const *s, char const *const strings[static 1] );
                                (void*)0 } )
 
 /**
+ * Line **strrchr**(3) except takes \a s_len, the length of \a s.
+ *
+ * @param s The string to search.
+ * @param s_len The length of \a s.
+ * @param c The character to search for.
+ * @return Returns a pointer to the last \a c in \a s (relative to \a s_len) or
+ * NULL if \a s does not contain \a c (before \a s_len).
+ */
+NODISCARD
+char const* strnrchr( char const *s, size_t s_len, int c );
+
+/// @cond DOXYGEN_IGNORE
+// LCOV_EXCL_START
+NODISCARD
+inline char* nonconst_strnrchr( char *s, size_t s_len, int c ) {
+  return CONST_CAST( char*, strnrchr( s, s_len, c ) );
+}
+// LCOV_EXCL_STOP
+
+#define strnrchr(S, S_LEN , C) \
+  NONCONST_OVERLOAD( strnrchr, (S), (S_LEN), (C) )
+/// @endcond
+
+/**
  * Trims both leading and trailing whitespace from a string.
  *
  * @param s The string to trim whitespace from.
