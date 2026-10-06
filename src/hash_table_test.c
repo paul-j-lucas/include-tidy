@@ -131,14 +131,14 @@ static bool test_insert_delete() {
   ht_insert_rv_t hti =
     ht_table_insert( &table, &TEST_LIT( "A", 0 ), sizeof(test_data) );
   if ( TEST( !ht_table_empty( &table ) ) && TEST( hti.inserted ) ) {
-    test_data *t = hti.data;
+    test_data *t = HT_DINT( hti.entry );
     TEST( strcmp( t->key, "A" ) == 0 );
     TEST( t->val == 0 );
 
     hti = ht_table_insert( &table, &TEST_LIT( "A", 1 ), sizeof(test_data) );
     TEST( !hti.inserted );
 
-    t = hti.data;
+    t = HT_DINT( hti.entry );
     TEST( strcmp( t->key, "A" ) == 0 );
     TEST( t->val == 0 );
 

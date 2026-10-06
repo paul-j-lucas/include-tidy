@@ -153,7 +153,7 @@ void typedef_add( CXCursor cursor ) {
   ht_insert_rv_t const hti =
     ht_table_insert( &typedef_map, &new_tdef, sizeof new_tdef );
   if ( hti.inserted ) {
-    tidy_typedef *const tdef = hti.data;
+    tidy_typedef *const tdef = HT_DINT( hti.entry );
     tdef->alias_name = tidy_Cursor_getScopedSpelling( cursor );
   }
 }

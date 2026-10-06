@@ -417,11 +417,11 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   tidy_include new_include = {
     .file_id = tidy_getFileUniqueID( included_file )
   };
-  ht_insert_rv_t const hti =
+  ht_insert_rv_t const rbi =
     ht_table_insert( &tidy_include_set, &new_include, sizeof new_include );
-  tidy_include *const included = hti.data;
+  tidy_include *const included = HT_DINT( rbi.entry );
 
-  if ( hti.inserted ) {
+  if ( rbi.inserted ) {
     CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
     included->abs_path = tidy_dupCString( abs_path_cxs );
     included->file     = included_file;
@@ -552,7 +552,7 @@ done:
   //
   // Note: in libclang, it's OK to compare CXFile pointers directly.
   //
-  if ( !hti.inserted && included_file != included->file ) {
+  if ( !rbi.inserted && included_file != included->file ) {
     //
     // However, if the file wasn't inserted (because it's a duplicate by file
     // ID), but its original name is NOT the same, it means it was either a
