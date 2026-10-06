@@ -150,12 +150,13 @@ char const* path_no_dot_slash( char const *path ) {
   return path;
 }
 
-char const* path_no_ext( char const *path, strbuf_t *rv_path_buf ) {
+char* path_no_ext( char const *path ) {
   assert( path != NULL );
 
   ssize_t last_dot = -1, last_slash = -1;
+  ssize_t i;
 
-  for ( ssize_t i = 0; path[i] != '\0'; ++i ) {
+  for ( i = 0; path[i] != '\0'; ++i ) {
     switch ( path[i] ) {
       case '.':
         last_dot = i;
@@ -164,17 +165,17 @@ char const* path_no_ext( char const *path, strbuf_t *rv_path_buf ) {
         last_slash = i;
         break;
     } // switch
-  }
+  } // for
 
   if ( last_dot == -1 ||                // "foo"
+       last_dot == i - 1 ||             // "foo."
        last_dot < last_slash ||         // "fo.o/bar"
        last_dot == last_slash + 1 ) {   // ".foo" or "foo/.bar"
-    return path;
+    return NULL;
   }
 
-  size_t const len = STATIC_CAST( size_t, last_dot );
-  strbuf_reset( rv_path_buf );
-  return strbuf_putsn( rv_path_buf, path, len );
+  size_t const no_ext_len = STATIC_CAST( size_t, last_dot );
+  return strndup( path, no_ext_len );
 }
 
 char* path_normalize( char const *path ) {

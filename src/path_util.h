@@ -28,7 +28,6 @@
 
 // local
 #include "pjl_config.h"
-#include "strbuf.h"
 
 /// @cond DOXYGEN_IGNORE
 
@@ -222,15 +221,13 @@ char const* path_no_dot_slash( char const *path );
  * Gets the pathname of \a path without its filename extension, if any.
  *
  * @param path The path.
- * @param rv_path_buf Receives \a path without its extension, but only if \a
- * path has an extension.
- * @return If \a path has no extension, returns \a path as-is; otherwise
- * returns \a path without its extension in \a rv_path_buf.
+ * @return Returns a copy of \a path without its extension (and the caller is
+ * responsible for freeing it) or NULL if \a path has no extension.
  *
  * @sa path_ext()
  */
 NODISCARD
-char const* path_no_ext( char const *path, strbuf_t *rv_path_buf );
+char* path_no_ext( char const *path );
 
 /**
  * Normalizes a path.

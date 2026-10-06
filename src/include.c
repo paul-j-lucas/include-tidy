@@ -127,7 +127,7 @@ NODISCARD
 static bool         is_associated_header( tidy_include const*, char const* );
 
 NODISCARD
-static char const*  path_no_ext_if( char const*, char, strbuf_t* );
+static char*        path_no_ext_if( char const*, char );
 
 static void         print_statistics( void );
 
@@ -189,9 +189,7 @@ static tidy_include* get_associated_header( tidy_source const *source ) {
   assert( source != NULL );
 
   tidy_include *assoc_include = NULL;
-  strbuf_t path_buf = STRBUF_INIT();
-  char const *const source_path_no_ext =
-    path_no_ext_if( source->path, 'c', &path_buf );
+  char *const source_path_no_ext = path_no_ext_if( source->path, 'c' );
 
   if ( source_path_no_ext != NULL ) {
     ht_iterator_t iter;
@@ -211,9 +209,9 @@ static tidy_include* get_associated_header( tidy_source const *source ) {
         break;
       }
     } // for
+    free( source_path_no_ext );
   }
 
-  strbuf_cleanup( &path_buf );
   return assoc_include;
 }
 
@@ -603,12 +601,10 @@ static bool is_associated_header( tidy_include const *include,
   assert( include != NULL );
   assert( source_file_no_ext != NULL );
 
-  strbuf_t path_buf = STRBUF_INIT();
-  char const *const include_rel_path_no_ext =
-    path_no_ext_if( include->rel_path, 'h', &path_buf );
+  char *const include_path_no_ext = path_no_ext_if( include->rel_path, 'h' );
   bool is_match = false;
 
-  if ( include_rel_path_no_ext != NULL ) {
+  if ( include_path_no_ext != NULL ) {
     //
     // If this include file's name matches the source file's (without
     // extension), it's the .h associated with the .c, so sort this include
@@ -619,10 +615,10 @@ static bool is_associated_header( tidy_include const *include,
     //      #include "a.h"
     //      #include "b.h"
     //
-    is_match = strcmp( include_rel_path_no_ext, source_file_no_ext ) == 0;
+    is_match = strcmp( include_path_no_ext, source_file_no_ext ) == 0;
   }
 
-  strbuf_cleanup( &path_buf );
+  free( include_path_no_ext );
   return is_match;
 }
 
@@ -830,23 +826,19 @@ static void maybe_print_include( tidy_include const *include,
  * @param path The path.
  * @param if_ext_0 The character that the first character of the filename
  * extension of \a path must match ignoring case.
- * @param rv_path_buf Receives \a path without the its extension, but only if
- * \a path has an extension and its first character matches \a if_ext_0.
  * @return Returns \a path without its extension, but only if the first
  * character of its extension matches \a if_ext_0 ignoring case; NULL
  * otherwise.
  */
 NODISCARD
-static char const* path_no_ext_if( char const *path, char if_ext_0,
-                                   strbuf_t *rv_path_buf ) {
+static char* path_no_ext_if( char const *path, char if_ext_0 ) {
   assert( path != NULL );
-  assert( rv_path_buf != NULL );
 
   char const *const ext = path_ext( path );
   if ( ext == NULL || tolower( ext[0] ) != if_ext_0 )
     return NULL;
   tidy_file_ext const *const file_ext = file_ext_find( ext );
-  return file_ext != NULL ? path_no_ext( path, rv_path_buf ) : NULL;
+  return file_ext != NULL ? path_no_ext( path ) : NULL;
 }
 
 /**

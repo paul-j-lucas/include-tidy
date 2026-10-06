@@ -21,7 +21,6 @@
 // local
 #include "pjl_config.h"
 #include "path_util.h"
-#include "strbuf.h"
 #include "unit_test.h"
 #include "util.h"
 
@@ -118,23 +117,23 @@ static bool test_path_no_dot_slash( void ) {
 static bool test_path_no_ext( void ) {
   TEST_FUNC_BEGIN();
 
-  char const *path;
-  strbuf_t path_buf = STRBUF_INIT();
+  char *path;
 
-  TEST( (path = path_no_ext( "a", &path_buf )) != NULL )
-    && TEST( strcmp( path, "a" ) == 0 );
-  TEST( (path = path_no_ext( "a.", &path_buf )) != NULL )
-    && TEST( strcmp( path, "a" ) == 0 );
-  TEST( (path = path_no_ext( "a.b", &path_buf )) != NULL )
-    && TEST( strcmp( path, "a" ) == 0 );
-  TEST( (path = path_no_ext( "a.b/c", &path_buf )) != NULL )
-    && TEST( strcmp( path, "a.b/c" ) == 0 );
-  TEST( (path = path_no_ext( ".a", &path_buf )) != NULL )
-    && TEST( strcmp( path, ".a" ) == 0 );
-  TEST( (path = path_no_ext( "a/.b", &path_buf )) != NULL )
-    && TEST( strcmp( path, "a/.b" ) == 0 );
+  TEST( path_no_ext( "a" ) == NULL );
+  TEST( path_no_ext( "a." ) == NULL );
 
-  strbuf_cleanup( &path_buf );
+  TEST( (path = path_no_ext( "a.b" )) != NULL )
+    && TEST( strcmp( path, "a" ) == 0 );
+  free( path );
+
+  TEST( (path = path_no_ext( "a/b.c" )) != NULL )
+    && TEST( strcmp( path, "a/b" ) == 0 );
+  free( path );
+
+  TEST( path_no_ext( "a.b/c" ) == NULL );
+  TEST( path_no_ext( ".a" ) == NULL );
+  TEST( path_no_ext( "a/.b" ) == NULL );
+
   TEST_FUNC_END();
 }
 
