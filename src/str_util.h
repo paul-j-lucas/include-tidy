@@ -93,8 +93,7 @@ inline char* nonconst_null_if_empty( char *s ) {
 }
 // LCOV_EXCL_STOP
 
-#define nonconst_null_if_empty(S) \
-  NONCONST_OVERLOAD( nonconst_null_if_empty, (S) )
+#define null_if_empty(S)          NONCONST_OVERLOAD( null_if_empty, (S) )
 /// @endcond
 
 /**
