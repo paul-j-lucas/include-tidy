@@ -169,8 +169,9 @@ CXCursor tidy_Cursor_getOutermostClass( CXCursor cursor );
  * "display" name that includes template parameters (if any).
  *
  * @param cursor The cursor for a symbol.
- * @return Returns the fully scoped name.  The caller is responsible for
- * freeing it.
+ * @return Returns the fully scoped name.
+ *
+ * @note The caller is responsible for freeing the returned string.
  *
  * @sa tidy_Cursor_getScopedSpelling()
  */
@@ -183,8 +184,9 @@ char* tidy_Cursor_getScopedDisplayName( CXCursor cursor );
  * "spelling" name that does _not_ include template parameters (if any).
  *
  * @param cursor The cursor for a symbol.
- * @return Returns the fully scoped name.  The caller is responsible for
- * freeing it.
+ * @return Returns the fully scoped name.
+ *
+ * @note The caller is responsible for freeing the returned string.
  *
  * @sa tidy_Cursor_getScopedDisplayName()
  */

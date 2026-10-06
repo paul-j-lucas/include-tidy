@@ -176,8 +176,9 @@ static void colors_cleanup( void ) {
  * example \a capabilities is: `caret=42;1:error=41;1:warning=43;1`.  If NULL,
  * does nothing.
  * @return Returns a pointer to the parsed color capabilities string only if at
- * least one capability was parsed successfully.  The caller is responsible for
- * freeing it.  Otherwise returns NULL.
+ * least one capability was parsed successfully; otherwise returns NULL.
+ *
+ * @note The caller is responsible for freeing the returned string.
  *
  * @warning If this function returns non-NULL, it must never be called again.
  */

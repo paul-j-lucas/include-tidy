@@ -90,8 +90,9 @@ bool ipath_find( char const *rel_path, strbuf_t *rv_abs_path_buf );
  *
  * @param abs_path The absolute path of a file being included.
  * @return Returns the shortened path of \a abs_path relative to one of the
- * gloval list of include (`-I`) absolute paths.  The caller is responsible for
- * freeing it.
+ * gloval list of include (`-I`) absolute paths.
+ *
+ * @note The caller is responsible for freeing the returned string.
  */
 NODISCARD
 char* ipath_relativize( char const *abs_path );

@@ -245,8 +245,9 @@ done:
  *
  * @param cursor The cursor at a symbol.
  * @param name_fn The libclang function to use to get the name of \a cursor.
- * @return Returns the fully scoped name.  The caller is responsible for
- * freeing it.
+ * @return Returns the fully scoped name.
+ *
+ * @note The caller is responsible for freeing the returned string.
  */
 static char* getScopedName_thunk( CXCursor cursor, getCursorName_fn name_fn ) {
   assert( name_fn != NULL );

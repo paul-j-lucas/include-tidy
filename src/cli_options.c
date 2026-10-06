@@ -699,7 +699,8 @@ error:
  * Its last element must be all zeros.
  * @param extra_opts Extra options to add.  May be NULL.
  * @return Returns the `optstring` for the third argument of `getopt_long()`.
- * The caller is responsible for freeing it.
+ *
+ * @note The caller is responsible for freeing the returned string.
  */
 NODISCARD
 static char const* make_short_opts( struct option const options[static const 2],

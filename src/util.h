@@ -757,10 +757,11 @@ extern char const WS_CHARS[];
 /**
  * Calls **asprintf**(3) and checks for failure.
  *
- * @param rv_s A pointer to the string to receive the printed result.  The
- * caller is responsible for freeing it.
+ * @param rv_s A pointer to the string to receive the printed result.
  * @param format The `printf()` style format string.
  * @return Returns the number of characters printed.
+ *
+ * @note The caller is responsible for freeing \a rv_s.
  */
 PJL_DISCARD
 PJL_PRINTF_LIKE_FUNC(2)
@@ -825,8 +826,10 @@ void free_pptr( void *pptr );
  * @param idim The number of elements in the _i_ dimension.
  * @param jdim The number of elements in the _j_ dimension.
  * @return Returns a pointer to a new two-dimensional matrix that may be cast
- * to `T**` where `T` is the type of element.  The caller is responsible for
- * freeing it via **free**(3).
+ * to `T**` where `T` is the type of element.
+ *
+ * @note The caller is responsible for freeing the returned matrix via
+ * **free**(3).
  */
 NODISCARD
 void** matrix2d_new( size_t esize, size_t ealign, size_t idim, size_t jdim );

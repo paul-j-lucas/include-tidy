@@ -208,7 +208,6 @@ bool array_reserve( array_t *restrict array, size_t res_len );
  *
  * @warning \a index is _not_ checked to ensure it's &lt; the array's length.
  * A value &ge; the array's length results in undefined behavior.
- *
  * @note If the element type is a pointer, then this returns a _pointer to that
  * pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
@@ -279,7 +278,6 @@ inline void* nonconst_array_at( array_t *array, size_t index ) {
  * \a array is empty.
  *
  * @warning \a array is _not_ checked to ensure it's not empty.
- *
  * @note If the element type is a pointer, then this returns a _pointer to that
  * pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
@@ -446,13 +444,13 @@ inline void array_init( array_t *array, size_t esize ) {
  * Pops an element from the back of \a array.
  *
  * @param array The pointer to the \ref array.
- * @return Returns a pointer to the element at the back of \a array.  The
- * caller is responsible for freeing it if necessary.
+ * @return Returns a pointer to the element at the back of \a array.
  *
  * @warning \a array is _not_ checked to ensure it's not empty.
+ * @warning While the caller is responsible for cleaning up the element, it
+ * _must not_ be freed.
  * @warning The pointer to the element returned is ephemeral and should be
  * dealt with before either array_cleanup() or array_push_back() is called.
- *
  * @note If the element type is a pointer, then this returns a _pointer to that
  * pointer_, i.e., `T**`.
  * @note This is an O(1) operation.
@@ -473,8 +471,10 @@ inline void* array_pop_back_nc( array_t *array ) {
  *
  * @param array The pointer to the \ref array.
  * @return Returns a pointer to the element at the back of \a array or NULL if
- * the array is empty.  The caller is responsible for freeing it if necessary.
+ * the array is empty.
  *
+ * @warning While the caller is responsible for cleaning up the element, it
+ * _must not_ be freed.
  * @warning The pointer to the element returned is ephemeral and should be
  * dealt with before either array_cleanup() or array_push_back() is called.
  *

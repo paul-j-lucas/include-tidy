@@ -628,7 +628,9 @@ static bool is_associated_header( tidy_include const *include,
  *
  * @param source The source file being tidied.
  * @param include The tidy_include to make the comment for.
- * @return Returns said comment.  The caller is responsible for freeing it.
+ * @return Returns said comment.
+ *
+ * @note The caller is responsible for freeing the returned string.
  */
 NODISCARD
 static char* make_symbols_comment( tidy_source const *source,
@@ -999,8 +1001,9 @@ static int symbol_ptr_cmp_by_ref_count( void const *i_pp,
  * relative path.
  *
  * @param file The file to get the relative path for.
- * @return Returns the normalized, relative path of \a file.  The caller is
- * responsible for freeing it.
+ * @return Returns the normalized, relative path of \a file.
+ *
+ * @note The caller is responsible for freeing the returned string.
  */
 NODISCARD
 static char* tidy_File_getRelativePath( CXFile file ) {
