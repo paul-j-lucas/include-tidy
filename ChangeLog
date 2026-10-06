@@ -1,5 +1,12 @@
+2026-10-06  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * path_util.c, path_util.h, path_util_test.c, str_util.c, str_util.h:
+     path_dirname() now ignores trailing slashes.
+   * str_util.h: Fixed null_if_empty macro.
+
 2026-10-05  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
+   * path_util.c: Code coverage exclusion comments.
    * include.c, path_util.c, path_util.h, path_util_test.c: Eliminated strbuf
      from path_util API.
    * cli_options.c, config_file.c, path_util.c, path_util.h, path_util_test.c:
