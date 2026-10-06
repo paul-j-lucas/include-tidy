@@ -113,7 +113,7 @@ bool path_equal( char const *i_path, char const *j_path ) {
   assert( j_path != NULL );
 
   if ( i_path == j_path )
-    return true;
+    return true;                        // LCOV_EXCL_LINE
 
   size_t i_len = strlen( i_path );
   while ( i_len > 1 && i_path[ i_len - 1 ] == '/' )
@@ -198,7 +198,7 @@ char* path_normalize( char const *path ) {
         array_pop_back( &comp_stack );
       }
       else if ( !is_absolute ) {
-        // Path has escaped its relative root: anchor to CWD
+        // Path escaped its relative root: anchor to CWD.
         cwd_copy = strdup_or_exit( path_cwd( /*len=*/NULL ) );
         is_absolute = true;
 
@@ -208,7 +208,7 @@ char* path_normalize( char const *path ) {
           *(char const**)array_push_back( &comp_stack ) = cwd_comp;
         }
 
-        // Pop one directory level for the '..' that triggered the escape
+        // Pop one directory level for the ".." that triggered the escape.
         array_pop_back( &comp_stack );
       }
     }
