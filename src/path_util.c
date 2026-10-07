@@ -104,7 +104,7 @@ char* path_dirname( char const *path ) {
   if ( dir_len == 0 )
     return strdup( "/" );
 
-  return strndup( path, dir_len );
+  return strndup_or_exit( path, dir_len );
 }
 
 bool path_ends_with( char const *path, size_t path_len, char const *end_path,
@@ -186,7 +186,7 @@ char* path_no_ext( char const *path ) {
   }
 
   size_t const no_ext_len = STATIC_CAST( size_t, last_dot );
-  return strndup( path, no_ext_len );
+  return strndup_or_exit( path, no_ext_len );
 }
 
 char* path_normalize( char const *path ) {

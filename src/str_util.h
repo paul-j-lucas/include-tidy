@@ -103,6 +103,8 @@ inline char* nonconst_null_if_empty( char *s ) {
  *
  * @param s The null-terminated string to duplicate.
  * @return Returns a copy of \a s.
+ *
+ * @sa strndup_or_exit()
  */
 NODISCARD
 char* strdup_or_exit( char const *s );
@@ -143,6 +145,20 @@ bool str_is_any( char const *s, char const *const strings[static 1] );
   str_is_any( (S),                                                    \
               (char const*[]){ __VA_ARGS__ VA_OPT( (,), __VA_ARGS__ ) \
                                (void*)0 } )
+
+/**
+ * Calls **strndup**(3) and checks for failure.
+ *
+ * @remarks If memory allocation fails, prints an error message and exits.
+ *
+ * @param s The string to duplicate.
+ * @param n The number of bytes of \a s to duplicate.
+ * @return Returns a copy of \a s.
+ *
+ * @sa strdup_or_exit()
+ */
+NODISCARD
+char* strndup_or_exit( char const *s, size_t n );
 
 /**
  * Line **strrchr**(3) except takes \a s_len, the length of \a s.

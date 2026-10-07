@@ -66,6 +66,13 @@ bool str_is_any( char const *s, char const *const strings[static 1] ) {
   } // for
 }
 
+char* strndup_or_exit( char const *s, size_t n ) {
+  assert( s != NULL );
+  char *const dup = strndup( s, n );
+  PERROR_EXIT_IF( dup == NULL, EX_OSERR );
+  return dup;
+}
+
 // See comment for NONCONST_OVERLOAD regarding ().
 char const* (strnrchr)( char const *s, size_t s_len, int c ) {
   assert( s != NULL );
