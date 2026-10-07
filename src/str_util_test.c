@@ -32,7 +32,7 @@
 
 static bool trim_equal( char const *before, char const *after ) {
   char *const dup = strdup_or_exit( before );
-  bool const is_equal = strcmp( str_trim( dup, strlen( dup ) ), after ) == 0;
+  bool const is_equal = strcmp( strn_trim( dup, strlen( dup ) ), after ) == 0;
   free( dup );
   return is_equal;
 }
@@ -60,7 +60,7 @@ static bool test_str_is_any( void ) {
   TEST_FUNC_END();
 }
 
-static bool test_str_trim( void ) {
+static bool test_strn_trim( void ) {
   TEST_FUNC_BEGIN();
 
   TEST( trim_equal( "x", "x" ) );
@@ -90,7 +90,7 @@ int main( int argc, char const *const argv[] ) {
   test_prog_init( argc, argv );
 
   test_str_is_any();
-  test_str_trim();
+  test_strn_trim();
 
   return test_exit_status;
 }

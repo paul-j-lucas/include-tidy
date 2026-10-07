@@ -198,7 +198,7 @@ inline char* nonconst_strnrchr( char *s, size_t s_len, int c ) {
  * --- must be freed.
  */
 NODISCARD
-char* str_trim( char *s, size_t n );
+char* strn_trim( char *s, size_t n );
 
 ///////////////////////////////////////////////////////////////////////////////
 

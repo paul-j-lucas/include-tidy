@@ -260,7 +260,7 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
 #endif /* __APPLE__ */
 
     char const *const include_path =
-      str_trim( line_buf, STATIC_CAST( size_t, line_len ) );
+      strn_trim( line_buf, STATIC_CAST( size_t, line_len ) );
     if ( unlikely( path_is_relative( include_path ) ) )
       continue;                         // LCOV_EXCL_LINE
 

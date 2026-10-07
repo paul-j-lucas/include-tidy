@@ -85,7 +85,7 @@ char const* (strnrchr)( char const *s, size_t s_len, int c ) {
   return NULL;
 }
 
-char* str_trim( char *s, size_t n ) {
+char* strn_trim( char *s, size_t n ) {
   assert( s != NULL );
 
   size_t left = 0;
