@@ -129,6 +129,8 @@ inline bool str_ends_with( char const *s, char const *end, size_t end_len ) {
  * @param s The string to look for.
  * @param strings The NULL terminated array of strings to look at.
  * @return Returns `true` only if \a s is among \a strings.
+ *
+ * @sa str_is_any_list()
  */
 NODISCARD
 bool str_is_any( char const *s, char const *const strings[static 1] );
