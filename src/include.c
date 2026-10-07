@@ -1195,7 +1195,7 @@ unsigned tidy_File_includes( CXFile ref_file, CXFile def_file ) {
 
 /// @cond DOXYGEN_IGNORE
 
-extern char const* include_get_delims( tidy_include const* );
+extern inline char const* include_get_delims( tidy_include const* );
 extern inline tidy_include* nonconst_include_get_proxy( tidy_include* );
 
 /// @endcond
