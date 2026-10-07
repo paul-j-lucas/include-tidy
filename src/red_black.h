@@ -336,8 +336,8 @@ struct rb_iterator {
  * modified, so pointers to them remain valid until either deleted or the tree
  * is cleaned up.
  *
- * @warning Only \ref data may be accessed by client code.  All other fields
- * are for internal use only.
+ * @warning Only \ref data may be accessed by user code.  All other fields are
+ * for internal use only.
  */
 struct rb_node {
   rb_node_t  *child[2];                 ///< Left/right (internal use only).
@@ -356,7 +356,7 @@ struct rb_node {
    *        unsigned  count;
    *      };
    *
-   * then, assuming \ref rb_tree::cmp_fn "cmp_fn" compares only `word`, client
+   * then, assuming \ref rb_tree::cmp_fn "cmp_fn" compares only `word`, user
    * code may then only safely modify `count`.
    */
   alignas( max_align_t ) char data[];
