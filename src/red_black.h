@@ -329,6 +329,10 @@ struct rb_iterator {
 /**
  * A red-black tree node.
  *
+ * @remarks Once created, `rb_node` objects don't move even if the tree is
+ * modified, so pointers to them remain valid until either deleted or the tree
+ * is cleaned up.
+ *
  * @warning Only \ref data may be accessed by client code.  All other fields
  * are for internal use only.
  */

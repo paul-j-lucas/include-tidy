@@ -324,6 +324,9 @@ struct hash_table {
  * @remarks Once created, `ht_entry` objects don't move even if the hash table
  * grows, so pointers to them remain valid until either deleted or the hash
  * table is cleaned up.
+ *
+ * @warning Only \ref data may be accessed by client code.  All other fields
+ * are for internal use only.
  */
 struct ht_entry {
   ht_entry_t   *next;                   ///< Next entry, if any.
