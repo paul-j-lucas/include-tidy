@@ -158,7 +158,7 @@ static bool test_insert1_find_delete( rb_dloc_t dloc ) {
 
 end_test:
   rb_tree_cleanup( &tree, /*free_fn=*/NULL );
-  TEST( rb_tree_empty( &tree ) );
+  TEST( tree.size == 0 );
   TEST_FUNC_END();
 }
 
@@ -187,7 +187,7 @@ static bool test_insert2_find_delete( rb_dloc_t dloc ) {
 
 end_test:
   rb_tree_cleanup( &tree, /*free_fn=*/NULL );
-  TEST( rb_tree_empty( &tree ) );
+  TEST( tree.size == 0 );
   TEST_FUNC_END();
 }
 
@@ -219,7 +219,7 @@ static bool test_script( rb_dloc_t dloc ) {
 
 end_test:
   rb_tree_cleanup( &tree, /*free_fn=*/NULL );
-  TEST( rb_tree_empty( &tree ) );
+  TEST( tree.size == 0 );
   TEST_FUNC_END();
 }
 
@@ -280,7 +280,7 @@ static bool test_various( rb_dloc_t dloc ) {
 
 end_test:
   rb_tree_cleanup( &tree, /*free_fn=*/NULL );
-  TEST( rb_tree_empty( &tree ) );
+  TEST( tree.size == 0 );
   TEST_FUNC_END();
 }
 

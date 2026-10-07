@@ -130,7 +130,7 @@ static bool test_insert_delete() {
 
   ht_insert_rv_t hti =
     ht_table_insert( &table, &TEST_LIT( "A", 0 ), sizeof(test_data) );
-  if ( TEST( !ht_table_empty( &table ) ) && TEST( hti.inserted ) ) {
+  if ( TEST( table.size > 0 ) && TEST( hti.inserted ) ) {
     test_data *t = HT_DINT( hti.entry );
     TEST( strcmp( t->key, "A" ) == 0 );
     TEST( t->val == 0 );
@@ -143,7 +143,7 @@ static bool test_insert_delete() {
     TEST( t->val == 0 );
 
     ht_table_delete( &table, hti.entry );
-    TEST( ht_table_empty( &table ) );
+    TEST( table.size == 0 );
   }
 
   ht_table_cleanup( &table, /*free_fn=*/NULL );

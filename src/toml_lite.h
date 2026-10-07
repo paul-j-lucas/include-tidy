@@ -303,7 +303,7 @@ void toml_table_cleanup( toml_table *table );
  */
 NODISCARD
 inline bool toml_table_empty( toml_table const *table ) {
-  return ht_table_empty( &table->keys_values );
+  return table->keys_values.size == 0;
 }
 
 /**

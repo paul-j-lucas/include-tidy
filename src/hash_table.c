@@ -244,7 +244,6 @@ ht_insert_rv_t ht_table_insert( hash_table_t *table, void *data,
 /// @cond DOXYGEN_IGNORE
 
 extern inline void* ht_entry_data( hash_table_t const*, ht_entry_t const* );
-extern inline bool ht_table_empty( hash_table_t const* );
 extern inline double ht_table_load_factor( hash_table_t const* );
 
 /// @endcond

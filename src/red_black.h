@@ -162,7 +162,7 @@
 ///   always the size of a pointer) and so can be 0.
 ///
 /// + Now an entire `word_count` structure has to be `malloc`'d and assigned
-///   via the #RB_DPTR macro.  Note that `count` must now also be initialized
+///   via the #RB_DPTR() macro.  Note that `count` must now also be initialized
 ///   since it's not copied from `ins_wc`.
 /// @endparblock
 ///
@@ -501,17 +501,6 @@ void rb_tree_cleanup( rb_tree_t *tree, rb_free_fn_t free_fn );
  * @sa rb_tree_insert()
  */
 void rb_tree_delete( rb_tree_t *tree, rb_node_t *node );
-
-/**
- * Gets whether \a tree is empty.
- *
- * @param tree A pointer to the rb_tree to check.
- * @return Returns `true` only if \a tree is empty.
- */
-NODISCARD
-inline bool rb_tree_empty( rb_tree_t const *tree ) {
-  return tree->root == &tree->nil;
-}
 
 /**
  * Attempts to find \a data in \a tree.

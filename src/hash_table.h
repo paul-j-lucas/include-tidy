@@ -470,17 +470,6 @@ void ht_table_cleanup( hash_table_t *table, ht_free_fn_t free_fn );
 void ht_table_delete( hash_table_t *table, ht_entry_t *entry );
 
 /**
- * Gets whether a hash table is empty.
- *
- * @param table The hash table to check.
- * @return Returns `true` only if \a table is empty.
- */
-NODISCARD
-inline bool ht_table_empty( hash_table_t const *table ) {
-  return table->size == 0;
-}
-
-/**
  * Attempts to find \a data within a hash table.
  *
  * @param table The hash table to search.

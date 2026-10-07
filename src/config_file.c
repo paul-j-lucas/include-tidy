@@ -1523,7 +1523,7 @@ static void symbol_include_add( char const *from_sym_name,
  * Dumps all symbol includes.
  */
 static void symbol_includes_dump( void ) {
-  if ( rb_tree_empty( &symbol_includes_map ) )
+  if ( symbol_includes_map.size == 0 )
     return;
   verbose_section_begin( /*printed_header=*/NULL );
   verbose_printf( "configuration symbols:\n" );
