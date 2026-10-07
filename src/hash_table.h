@@ -325,8 +325,8 @@ struct hash_table {
  * grows, so pointers to them remain valid until either deleted or the hash
  * table is cleaned up.
  *
- * @warning Only \ref data may be accessed by client code.  All other fields
- * are for internal use only.
+ * @warning Only \ref data may be accessed by user code.  All other fields are
+ * for internal use only.
  */
 struct ht_entry {
   ht_entry_t   *next;                   ///< Next entry, if any.
@@ -335,6 +335,9 @@ struct ht_entry {
 
   /**
    * User data.
+   *
+   * @remarks This field should _not_ be accessed directly.  Instead, use
+   * either the #HT_DINT() or #HT_DPTR() macro.
    *
    * @warning The data _must not_ be modified if that would change the entry's
    * hash value according to the hash table's \ref hash_table::hash_fn
@@ -346,7 +349,7 @@ struct ht_entry {
    *      };
    *
    * then, assuming the \ref hash_table::hash_fn "hash_fn" hashes only `word`,
-   * client code may then only safely modify `count`.
+   * user code may then only safely modify `count`.
    */
   alignas(max_align_t) char data[];
 };
