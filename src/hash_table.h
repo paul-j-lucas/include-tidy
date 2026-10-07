@@ -376,6 +376,11 @@ struct ht_insert_rv {
 
 /**
  * An iterator for a hash_table.
+ *
+ * @warning The hash table _must not_ have entries either added or removed
+ * while being iterated over.
+ *
+ * @sa ht_iterator_init()
  */
 struct ht_iterator {
   hash_table_t const *table;            ///< Hash table being iterated over.

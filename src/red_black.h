@@ -317,6 +317,9 @@ typedef bool (*rb_visit_fn_t)( void *node_data, void *visit_data );
 /**
  * A red-black tree iterator.
  *
+ * @warning The red-black tree _must not_ have nodes either added or removed
+ * while being iterated over.
+ *
  * @sa rb_iterator_init()
  */
 struct rb_iterator {
