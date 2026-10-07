@@ -178,7 +178,7 @@
 ///   always the size of a pointer) and so can be 0.
 ///
 /// + Now an entire `word_count` structure has to be `malloc`'d and assigned
-///   via the #HT_DPTR macro.  Note that `count` must now also be initialized
+///   via the #HT_DPTR() macro.  Note that `count` must now also be initialized
 ///   since it's not copied from `ins_wc`.
 /// @endparblock
 ///
@@ -398,12 +398,12 @@ struct ht_iterator {
  * @param entry The ht_entry to get the data of.
  * @return Returns said data.
  *
- * @note Normally, either #HT_DINT or #HT_DPTR is used to get a pointer to an
- * entry's data.  This function would only be used in code that should work
+ * @note Normally, either #HT_DINT() or #HT_DPTR() is used to get a pointer to
+ * an entry's data.  This function would only be used in code that should work
  * with a table using either data location.
  *
- * @sa #HT_DINT
- * @sa #HT_DPTR
+ * @sa #HT_DINT()
+ * @sa #HT_DPTR()
  */
 NODISCARD
 inline void* ht_entry_data( hash_table_t const *table,
@@ -451,7 +451,7 @@ void ht_table_cleanup( hash_table_t *table, ht_free_fn_t free_fn );
  * @parblock
  * This function deletes _only_ the entry from \a table.  If \ref
  * ht_entry::data "data" also needs to be deleted because \ref hash_table::dloc
- * "dloc" is \ref ht_dloc::HT_DPTR "RB_DPTR", the caller must delete it
+ * "dloc" is \ref ht_dloc::HT_DPTR "HT_DPTR", the caller must delete it
  * explicitly.  For example, for some type `T` that is an entry's \ref
  * ht_entry::data "data":
  *
@@ -516,11 +516,12 @@ void ht_table_init( hash_table_t *table, ht_dloc_t dloc, double max_lf,
  * @param table The hash table to insert into.
  * @param data The data to insert.
  * @param data_size If \a table's \ref hash_table::dloc "dloc" is:
- *  + #HT_DINT: The size of \a data.  If an entry is inserted, then this number
- *    of bytes are copied from \a data into the new entry's \ref ht_entry::data
- *    "data".
- *  + #HT_DPTR: Not used.  If an entry is inserted, then the pointer value of
- *    \a data itself is copied into the new entry's \ref ht_entry::data "data".
+ *  + \ref ht_dloc::HT_DINT "HT_DINT": The size of \a data.  If an entry is
+ *    inserted, then this number of bytes are copied from \a data into the new
+ *    entry's \ref ht_entry::data "data".
+ *  + \ref ht_dloc::HT_DPTR "HT_DPTR": Not used.  If an entry is inserted, then
+ *    the pointer value of \a data itself is copied into the new entry's \ref
+ *    ht_entry::data "data".
  *
  * @return Returns an \ref ht_insert_rv where its \ref ht_insert_rv::entry
  * "entry" points to either the newly inserted entry or the existing entry

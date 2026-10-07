@@ -467,9 +467,9 @@ void* rb_iterator_next( rb_iterator_t *iter );
  * @param node The rb_node to get the data of.
  * @return Returns said data.
  *
- * @note Normally, either #RB_DINT or #RB_DPTR is used to get a pointer to a
- * node's data.  This function would only be used in code that should work with
- * a tree using either data location.
+ * @note Normally, either #RB_DINT() or #RB_DPTR() is used to get a pointer to
+ * a node's data.  This function would only be used in code that should work
+ * with a tree using either data location.
  *
  * @sa #RB_DINT
  * @sa #RB_DPTR
@@ -546,11 +546,12 @@ void rb_tree_init( rb_tree_t *tree, rb_dloc_t dloc, rb_cmp_fn_t cmp_fn );
  * @param tree A pointer to the rb_tree to insert into.
  * @param data A pointer to the data to insert.
  * @param data_size If \a tree's \ref rb_tree::dloc "dloc" is:
- *  + #RB_DINT: The size of \a data.  If a node is inserted, then this number
- *    of bytes are copied from \a data into the new node's \ref rb_node::data
- *    "data".
- *  + #RB_DPTR: Not used.  If a node is inserted, then the pointer value of \a
- *    data itself is copied into the new node's \ref rb_node::data "data".
+ *  + \ref rb_dloc::RB_DINT "RB_DINT": The size of \a data.  If a node is
+ *    inserted, then this number of bytes are copied from \a data into the new
+ *    node's \ref rb_node::data "data".
+ *  + \ref rb_dloc::RB_DPTR "RB_DPTR": Not used.  If a node is inserted, then
+ *    the pointer value of \a data itself is copied into the new node's \ref
+ *    rb_node::data "data".
  *
  * @return Returns an \ref rb_insert_rv where its \ref rb_insert_rv::node
  * "node" points to either the newly inserted node or the existing node having
