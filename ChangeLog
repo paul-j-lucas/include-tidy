@@ -1,5 +1,8 @@
 2026-10-06  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
+   * config_file.c, hash_table.c, hash_table.h, hash_table_test.c, red_black.c,
+     red_black.h, red_black_test.c, toml_lite.h: Eliminated ht_table_size() and
+     rb_tree_size().
    * hash_table.c, hash_table.h, hash_table_test.c, include.c, symbol.c,
      toml_lite.c, typedef.c: Revert "ht_insert_rv now also contains data."
    * config_file.c, red_black.c, red_black.h: Revert "rb_insert_rv now also
