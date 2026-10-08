@@ -90,18 +90,21 @@
 ///
 ///       void add_word( red_black_t *tree, char const *word ) {
 ///         struct word_count ins_wc = { .word = word, .count = 1 };
-///         rb_insert_rv_t rbi =
+///         rb_insert_rv_t const rbi =
 ///           rb_tree_insert( tree, &ins_wc, sizeof *ins_wc );
+///         struct word_count *const wc = RB_DINT( rbi.node );
 ///         if ( rbi.inserted ) {
-///           struct word_count *const new_wc = RB_DINT( rbi.node );
-///           new_wc->word = strdup( word );
-///         }
+///           wc->word = strdup( word );
+///         else
+///           ++wc->count;
 ///       }
 ///
 ///       int main() {
 ///         red_black_t tree;
 ///         rb_tree_init( &tree, RB_DINT, &word_count_cmp );
+///
 ///         add_word( &tree, "hello" );
+///
 ///         rb_cleanup( &tree, &word_count_cleanup );
 ///       }
 ///
@@ -109,7 +112,7 @@
 ///
 /// + Since this red-black tree stores data internally (\ref rb_dloc::RB_DINT
 ///   "RB_DINT"), this clean-up function frees only `word` and _not_ the
-///   `word_count` structure itself.
+///   `word_count` object itself.
 ///
 /// + For `ins_wc` (the `word_count` potentially being inserted), its `word` is
 ///   not duplicated before insertion since the duplication will be pointless
@@ -131,39 +134,39 @@
 ///         }
 ///       }
 ///
-///       void add_word( rb_tree_t *tree, char const *word ) {
-///         struct word_count ins_wc = { .word = word };
-///         rb_insert_rv_t rbi = rb_tree_insert( tree, &ins_wc, 0 );
-///         if ( rbi.inserted ) {
-///           struct word_count *const new_wc = malloc( sizeof *new_wc );
-///           new_wc->word = strdup( word );
-///           new_wc->count = 1;
-///           RB_DPTR( rbi.node ) = new_wc;
+///       void add_word_count( rb_tree_t *tree, struct word_count *wc ) {
+///         rb_insert_rv_t const rbi = rb_tree_insert( tree, wc, 0 );
+///         if ( !rbi.inserted ) {
+///           wc = RB_DPTR( rbi.node );
+///           ++wc->count;
 ///         }
 ///       }
 ///
 ///       int main() {
 ///         rb_tree_t tree;
-///         rb_tree_init( &tree, &word_count_cmp );
-///         add_word( &tree, "hello" );
-///         rb_tree_cleanup( &tree, &word_count_free );
+///         rb_tree_init( &tree, RB_DPTR, &word_count_cmp );
+///
+///         struct word_count *const wc = malloc( sizeof *wc );
+///         *wc = (struct word_count){ .word = strdup( "hello" ), .count = 1 };
+///
+///         add_word_count( &tree, wc );
+///
+///         rb_tree_cleanup( &tree, /*free_fn=*/NULL );
+///
+///         word_count_free( wc );
 ///       }
 ///
 /// **Notes**:
 ///
-/// + Now that the red-black tree stores a pointer to the data (\ref
-///   rb_dloc::RB_DPTR "RB_DPTR"), this free function frees both `word` _and_
-///   the `word_count` structure itself.
+/// + Now, `word_count_free` frees both `word` _and_ the `word_count` object
+///   itself.
 ///
-/// + Now `.count` of `ins_wc` no longer needs to be set explicitly to 1 since
-///   this object will not be copied, but instead `malloc`'d (see below).
+/// + Now, `add_word_count` adds a pointer to an existing `word_count` so the
+///   argument of the `data_size` parameter doesn't matter (since it's always
+///   the size of a pointer) and so can be 0.
 ///
-/// + Now the value of the `data_size` argument doesn't matter (since it's
-///   always the size of a pointer) and so can be 0.
-///
-/// + Now an entire `word_count` structure has to be `malloc`'d and assigned
-///   via the #RB_DPTR() macro.  Note that `count` must now also be initialized
-///   since it's not copied from `ins_wc`.
+/// + Now, `NULL` is passed to \ref rb_tree_cleanup since `word_count` objects
+///   are being managed outside the tree.
 /// @endparblock
 ///
 /// @sa [Red-Black Tree](https://en.wikipedia.org/wiki/Red-black_tree)

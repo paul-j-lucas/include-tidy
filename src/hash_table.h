@@ -99,7 +99,7 @@
 ///
 ///       void add_word( hash_table_t *table, char const *word ) {
 ///         struct word_count ins_wc = { .word = word, .count = 1 };
-///         ht_insert_rv_t hti =
+///         ht_insert_rv_t const hti =
 ///           ht_table_insert( table, &ins_wc, sizeof *ins_wc );
 ///         if ( hti.inserted ) {
 ///           struct word_count *const new_wc = HT_DINT( hti.entry );
@@ -146,14 +146,11 @@
 ///         }
 ///       }
 ///
-///       void add_word( hash_table_t *table, char const *word ) {
-///         struct word_count ins_wc = { .word = word };
-///         ht_insert_rv_t hti = ht_table_insert( table, &ins_wc, 0 );
-///         if ( hti.inserted ) {
-///           struct word_count *const new_wc = malloc( sizeof *new_wc );
-///           new_wc->word = strdup( word );
-///           new_wc->count = 1;
-///           HT_DPTR( hti.entry ) = new_wc;
+///       void add_word_count( hash_table_t *table, struct word_count *wc ) {
+///         ht_insert_rv_t const hti = ht_table_insert( table, wc, 0 );
+///         if ( !hti.inserted ) {
+///           wc = HT_DPTR( hti.entry );
+///           ++wc->count;
 ///         }
 ///       }
 ///
@@ -161,25 +158,28 @@
 ///         hash_table_t table;
 ///         ht_table_init( &table, HT_DPTR, 2.0, 10,
 ///                        &word_count_cmp, &word_count_hash );
-///         add_word( &table, "hello" );
+///
+///         struct word_count *const wc = malloc( sizeof *wc );
+///         *wc = (struct word_count){ .word = strdup( "hello" ), .count = 1 };
+///
+///         add_word_count( &table, "hello" );
+///
 ///         ht_table_cleanup( &table, &word_count_free );
+///
+///         word_count_free( wc );
 ///       }
 ///
 /// **Notes**:
 ///
-/// + Now that the hash table stores a pointer to the data (\ref
-///   ht_dloc::HT_DPTR "HT_DPTR"), this free function frees both `word` _and_
-///   the `word_count` structure itself.
+/// + Now, `word_count_free` frees both `word` _and_ the `word_count` object
+///   itself.
 ///
-/// + Now `.count` of `ins_wc` no longer needs to be set explicitly to 1 since
-///   this object will not be copied, but instead `malloc`'d (see below).
+/// + Now, `add_word_count` adds a pointer to an existing `word_count` so the
+///   argument of the `data_size` parameter doesn't matter (since it's always
+///   the size of a pointer) and so can be 0.
 ///
-/// + Now the value of the `data_size` argument doesn't matter (since it's
-///   always the size of a pointer) and so can be 0.
-///
-/// + Now an entire `word_count` structure has to be `malloc`'d and assigned
-///   via the #HT_DPTR() macro.  Note that `count` must now also be initialized
-///   since it's not copied from `ins_wc`.
+/// + Now, `NULL` is passed to \ref ht_table_cleanup since `word_count` objects
+///   are being managed outside the tree.
 /// @endparblock
 ///
 /// @sa [Hash Table](https://en.wikipedia.org/wiki/Hash_table)
