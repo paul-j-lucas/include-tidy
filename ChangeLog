@@ -1,3 +1,7 @@
+2026-10-08  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * array.c: array_unique now coalesces memmoves.
+
 2026-10-07  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * include.c: Fixed extern inline.
