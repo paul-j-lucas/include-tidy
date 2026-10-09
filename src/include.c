@@ -952,8 +952,7 @@ static int symbol_ptr_cmp_by_name( void const *i_pp, void const *j_pp ) {
  * @sa symbol_ptr_cmp_by_ref_count()
  */
 NODISCARD
-static int symbol_ptr_cmp_by_name_length( void const *i_pp,
-                                               void const *j_pp ) {
+static int symbol_ptr_cmp_by_name_length( void const *i_pp, void const *j_pp ) {
   assert( i_pp != NULL );
   assert( j_pp != NULL );
 
@@ -981,8 +980,7 @@ static int symbol_ptr_cmp_by_name_length( void const *i_pp,
  * @sa symbol_ptr_cmp_by_name_length()
  */
 NODISCARD
-static int symbol_ptr_cmp_by_ref_count( void const *i_pp,
-                                             void const *j_pp ) {
+static int symbol_ptr_cmp_by_ref_count( void const *i_pp, void const *j_pp ) {
   assert( i_pp != NULL );
   assert( j_pp != NULL );
 
