@@ -140,11 +140,11 @@ void array_unique( array_t *restrict array, array_cmp_fn_t cmp_fn,
   void const       *batch_src = NULL;
   size_t            batch_len = 0;
   char             *dst = array_at_nc( array, 1 );
-  char const *const end = array_at_nc( array, array->len );
+  void const *const end = array_at_nc( array, array->len );
   size_t const      esize = array->esize;
   void const       *unique_last = array_front_nc( array );
 
-  for ( char *src = array_at_nc( array, 1 ); src < end; src += esize ) {
+  for ( char *src = dst; src < end; src += esize ) {
     if ( (*cmp_fn)( unique_last, src ) != 0 ) {
       unique_last = src;                // keep current element
 
