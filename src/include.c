@@ -642,13 +642,13 @@ static char* make_symbols_comment( tidy_source const *source,
   assert( source != NULL );
   assert( include != NULL );
 
-  array_t symbols_array = ARRAY_INIT( sizeof(tidy_symbol) );
-  array_reserve( &symbols_array, include->symbol_set.size );
+  array_t symbol_array = ARRAY_INIT( sizeof(tidy_symbol) );
+  array_reserve( &symbol_array, include->symbol_set.size );
 
   ht_iterator_t iter;
   ht_iterator_init( &iter, &include->symbol_set );
   for ( tidy_symbol const *sym; (sym = ht_iterator_next( &iter )) != NULL; )
-    *(tidy_symbol*)array_push_back( &symbols_array ) = *sym;
+    *(tidy_symbol*)array_push_back( &symbol_array ) = *sym;
 
   if ( source->lang == CXLanguage_CPlusPlus ) {
     //
@@ -657,11 +657,11 @@ static char* make_symbols_comment( tidy_source const *source,
     // reference counts.
     //
     array_qsort(
-      &symbols_array,
+      &symbol_array,
       POINTER_CAST( array_cmp_fn_t, &symbol_cmp_by_name )
     );
     array_merge(
-      &symbols_array,
+      &symbol_array,
       POINTER_CAST( array_merge_fn_t, &symbol_merge_by_name ),
       /*free_fn=*/NULL
     );
@@ -673,9 +673,9 @@ static char* make_symbols_comment( tidy_source const *source,
     // below, then use only the last element, but sorting is O(n log n),
     // whereas just iterating through the entire array is O(n).
     //
-    tidy_symbol const *most_ref_sym = array_front_nc( &symbols_array );
-    for ( size_t i = 1; i < symbols_array.len; ++i ) {
-      tidy_symbol const *const sym = array_at_nc( &symbols_array, i );
+    tidy_symbol const *most_ref_sym = array_front_nc( &symbol_array );
+    for ( size_t i = 1; i < symbol_array.len; ++i ) {
+      tidy_symbol const *const sym = array_at_nc( &symbol_array, i );
       if ( sym->ref_count > most_ref_sym->ref_count )
         most_ref_sym = sym;
     } // for
@@ -686,14 +686,14 @@ static char* make_symbols_comment( tidy_source const *source,
     case TIDY_COMMENT_SYM_ALPHA:
       if ( source->lang != CXLanguage_CPlusPlus ) {
         array_qsort(
-          &symbols_array,
+          &symbol_array,
           POINTER_CAST( array_cmp_fn_t, &symbol_cmp_by_name )
         );
       }
       break;
     case TIDY_COMMENT_SYM_LENGTH:
       array_qsort(
-        &symbols_array,
+        &symbol_array,
         POINTER_CAST( array_cmp_fn_t, &symbol_cmp_by_name_length )
       );
       break;
@@ -701,7 +701,7 @@ static char* make_symbols_comment( tidy_source const *source,
       unreachable();
     case TIDY_COMMENT_SYM_REF_COUNT:
       array_qsort(
-        &symbols_array,
+        &symbol_array,
         POINTER_CAST( array_cmp_fn_t, &symbol_cmp_by_ref_count )
       );
       break;
@@ -714,9 +714,9 @@ static char* make_symbols_comment( tidy_source const *source,
   bool          is_done = false;
   strbuf_t      symbols_buf = STRBUF_INIT();
 
-  for ( size_t i = 0; !is_done && i < symbols_array.len; ++i ) {
+  for ( size_t i = 0; !is_done && i < symbol_array.len; ++i ) {
     tidy_symbol const *const sym =
-      (tidy_symbol const*)array_at_nc( &symbols_array, i );
+      (tidy_symbol const*)array_at_nc( &symbol_array, i );
     char const   *sym_name = sym->name;
     size_t const  sym_name_len = strlen( sym_name );
     size_t        add_len = (comma ? STRLITLEN( ", " ) : 0) + sym_name_len;
@@ -737,7 +737,7 @@ static char* make_symbols_comment( tidy_source const *source,
     );
   } // for
 
-  array_cleanup( &symbols_array, /*free_fn=*/NULL );
+  array_cleanup( &symbol_array, /*free_fn=*/NULL );
   return strbuf_take( &symbols_buf );
 }
 
