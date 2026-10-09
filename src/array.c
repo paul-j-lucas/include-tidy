@@ -140,11 +140,11 @@ void array_unique( array_t *restrict array, array_cmp_fn_t cmp_fn,
   void             *dst = array_front_nc( array );
   char const *const end = array_at_nc( array, array->len );
   size_t const      esize = array->esize;
-  size_t            new_len = 1;
+  size_t            unique_len = 1;
 
   for ( char *src = array_at_nc( array, 1 ); src < end; src += esize ) {
     if ( (*cmp_fn)( dst, src ) != 0 ) {
-      dst = array_at_nc( array, new_len++ );
+      dst = array_at_nc( array, unique_len++ );
       if ( dst != src )
         memcpy( dst, src, esize );
     }
@@ -153,7 +153,7 @@ void array_unique( array_t *restrict array, array_cmp_fn_t cmp_fn,
     }
   } // for
 
-  array->len = new_len;
+  array->len = unique_len;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
