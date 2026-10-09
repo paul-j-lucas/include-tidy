@@ -1,3 +1,13 @@
+2026-10-09  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * array.c, array.h, include.c, symbol.c, symbol.h, test/Makefile.am,
+     merge_ref_count.cpp, merge_ref_count.hpp, merge_ref_count.out,
+     merge_ref_count.test: C++ overloaded functions now have duplicates removed
+     and reference counts coalesced.
+   * include.c, symbol.c, symbol.h: Now using an array of tidy_symbol instead
+     of tidy_symbol* as a prerequisite for a forthcoming fix for sorting
+     symbols by ref_count.
+
 2026-10-08  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * array.c: array_unique now coalesces memmoves.
