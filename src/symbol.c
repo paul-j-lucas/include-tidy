@@ -1335,7 +1335,7 @@ static void visit_OverloadedDeclRef( CXCursor overloaded_csr, CXCursor parent,
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-int symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
+int symbol_cmp_by_name( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
   assert( i_sym != NULL );
   assert( j_sym != NULL );
   return strcmp( i_sym->key, j_sym->key );
@@ -1351,7 +1351,7 @@ void symbols_init( tidy_source const *source ) {
 
   ht_table_init(
     &symbol_set, HT_DINT, 2.0, 128,
-    POINTER_CAST( ht_cmp_fn_t, &symbol_cmp ),
+    POINTER_CAST( ht_cmp_fn_t, &symbol_cmp_by_name ),
     POINTER_CAST( ht_hash_fn_t, &symbol_hash )
   );
   ATEXIT( &symbols_cleanup );

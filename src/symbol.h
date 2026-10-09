@@ -78,7 +78,7 @@ struct tidy_symbol {
  * respectively.
  */
 NODISCARD
-int symbol_cmp( tidy_symbol const *i_sym, tidy_symbol const *j_sym );
+int symbol_cmp_by_name( tidy_symbol const *i_sym, tidy_symbol const *j_sym );
 
 /**
  * Calculates the hash of \a sym.

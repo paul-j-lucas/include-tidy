@@ -132,9 +132,10 @@ static char*        path_no_ext_if( char const*, char );
 static void         print_statistics( void );
 
 NODISCARD
-static int          symbol_ptr_cmp_by_name( void const*, void const* ),
-                    symbol_ptr_cmp_by_name_length( void const*, void const* ),
-                    symbol_ptr_cmp_by_ref_count( void const*, void const* );
+static int          symbol_cmp_by_name_length( tidy_symbol const*,
+                                               tidy_symbol const* ),
+                    symbol_cmp_by_ref_count( tidy_symbol const*,
+                                             tidy_symbol const* );
 
 NODISCARD
 static char*        tidy_File_getRelativePath( CXFile );
@@ -462,7 +463,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
       // symbol_set in symbol.c.
       &included->symbol_set, HT_DPTR, 2.0, 64,
-      POINTER_CAST( ht_cmp_fn_t, &symbol_cmp ),
+      POINTER_CAST( ht_cmp_fn_t, &symbol_cmp_by_name ),
       POINTER_CAST( ht_hash_fn_t, &symbol_hash )
     );
   }
@@ -657,26 +658,34 @@ static char* make_symbols_comment( tidy_source const *source,
   }
 
   //
-  // For all other cases, we need to copy pointers to the symbols into an array
-  // and sort it.
+  // For other cases, we need to copy the symbols into an array and sort it.
   //
-  array_t symbols_array = ARRAY_INIT( sizeof(tidy_symbol*) );
+  array_t symbols_array = ARRAY_INIT( sizeof(tidy_symbol) );
   array_reserve( &symbols_array, include->symbol_set.size );
 
   for ( tidy_symbol const *sym; (sym = ht_iterator_next( &iter )) != NULL; )
-    *(tidy_symbol const**)array_push_back( &symbols_array ) = sym;
+    *(tidy_symbol*)array_push_back( &symbols_array ) = *sym;
 
   switch ( opt_comment_symbols ) {
     case TIDY_COMMENT_SYM_ALPHA:
-      array_qsort( &symbols_array, &symbol_ptr_cmp_by_name );
+      array_qsort(
+        &symbols_array,
+        POINTER_CAST( array_cmp_fn_t, &symbol_cmp_by_name )
+      );
       break;
     case TIDY_COMMENT_SYM_LENGTH:
-      array_qsort( &symbols_array, &symbol_ptr_cmp_by_name_length );
+      array_qsort(
+        &symbols_array,
+        POINTER_CAST( array_cmp_fn_t, &symbol_cmp_by_name_length )
+      );
       break;
     case TIDY_COMMENT_SYM_MOST_REF:
       unreachable();
     case TIDY_COMMENT_SYM_REF_COUNT:
-      array_qsort( &symbols_array, &symbol_ptr_cmp_by_ref_count );
+      array_qsort(
+        &symbols_array,
+        POINTER_CAST( array_cmp_fn_t, &symbol_cmp_by_ref_count )
+      );
       break;
   } // switch
 
@@ -685,7 +694,10 @@ static char* make_symbols_comment( tidy_source const *source,
     // Since C++ allows function, operator, and template overloading, there can
     // be multiple entries with the same name, so remove duplicates.
     //
-    array_unique( &symbols_array, &symbol_ptr_cmp_by_name, /*free_fn=*/NULL );
+    array_unique(
+      &symbols_array, POINTER_CAST( array_cmp_fn_t, &symbol_cmp_by_name ),
+      /*free_fn=*/NULL
+    );
   }
 
   bool          comma = false;
@@ -697,7 +709,7 @@ static char* make_symbols_comment( tidy_source const *source,
 
   for ( size_t i = 0; !is_done && i < symbols_array.len; ++i ) {
     tidy_symbol const *const sym =
-      *(tidy_symbol const**)array_at_nc( &symbols_array, i );
+      (tidy_symbol const*)array_at_nc( &symbols_array, i );
     char const   *sym_name = sym->name;
     size_t const  sym_name_len = strlen( sym_name );
     size_t        add_len = (comma ? STRLITLEN( ", " ) : 0) + sym_name_len;
@@ -917,47 +929,22 @@ static bool should_print_include( tidy_include const *include ) {
 }
 
 /**
- * Compares two \ref tidy_symbol objects by their name.
- *
- * @param i_pp The first pointer to a `tidy_symbol*`.
- * @param j_pp The second pointer to a `tidy_symbol*`.
- * @return Returns a number less than 0, 0, or greater than 0 if the first
- * symbol's name is less than, equal to, or greater than the second symbol's
- * name, respectively.
- *
- * @sa symbol_ptr_cmp_by_name_length()
- * @sa symbol_ptr_cmp_by_ref_count()
- */
-NODISCARD
-static int symbol_ptr_cmp_by_name( void const *i_pp, void const *j_pp ) {
-  assert( i_pp != NULL );
-  assert( j_pp != NULL );
-
-  tidy_symbol const *const i_sym = *POINTER_CAST( tidy_symbol const**, i_pp );
-  tidy_symbol const *const j_sym = *POINTER_CAST( tidy_symbol const**, j_pp );
-
-  return strcmp( i_sym->name, j_sym->name );
-}
-
-/**
  * Compares two \ref tidy_symbol objects by their name length.
  *
- * @param i_pp The first pointer to a `tidy_symbol*`.
- * @param j_pp The second pointer to a `tidy_symbol*`.
+ * @param i_sym The first symbol.
+ * @param j_sym The second symbol.
  * @return Returns a number less than 0, 0, or greater than 0 if the length of
  * the first symbol's name is less than, equal to, or greater than the length
  * of the second symbol's name, respectively.
  *
- * @sa symbol_ptr_cmp_by_name()
- * @sa symbol_ptr_cmp_by_ref_count()
+ * @sa symbol_cmp_by_name()
+ * @sa symbol_cmp_by_ref_count()
  */
 NODISCARD
-static int symbol_ptr_cmp_by_name_length( void const *i_pp, void const *j_pp ) {
-  assert( i_pp != NULL );
-  assert( j_pp != NULL );
-
-  tidy_symbol const *const i_sym = *POINTER_CAST( tidy_symbol const**, i_pp );
-  tidy_symbol const *const j_sym = *POINTER_CAST( tidy_symbol const**, j_pp );
+static int symbol_cmp_by_name_length( tidy_symbol const *i_sym,
+                                      tidy_symbol const *j_sym ) {
+  assert( i_sym != NULL );
+  assert( j_sym != NULL );
 
   int const cmp =
     STATIC_CAST( int, strlen( i_sym->name ) ) -
@@ -970,22 +957,20 @@ static int symbol_ptr_cmp_by_name_length( void const *i_pp, void const *j_pp ) {
  * Compares two \ref tidy_symbol objects by their \ref tidy_symbol::ref_count
  * "reference count", descending.
  *
- * @param i_pp The first pointer to a `tidy_symbol*`.
- * @param j_pp The second pointer to a `tidy_symbol*`.
+ * @param i_sym The first symbol.
+ * @param j_sym The second symbol.
  * @return Returns a number less than 0, 0, or greater than 0 if the reference
  * count of the second symbol is less than, equal to, or greater than the
  * reference count of the first symbol, respectively.
  *
- * @sa symbol_ptr_cmp_by_name()
- * @sa symbol_ptr_cmp_by_name_length()
+ * @sa symbol_cmp_by_name()
+ * @sa symbol_cmp_by_name_length()
  */
 NODISCARD
-static int symbol_ptr_cmp_by_ref_count( void const *i_pp, void const *j_pp ) {
-  assert( i_pp != NULL );
-  assert( j_pp != NULL );
-
-  tidy_symbol const *const i_sym = *POINTER_CAST( tidy_symbol const**, i_pp );
-  tidy_symbol const *const j_sym = *POINTER_CAST( tidy_symbol const**, j_pp );
+static int symbol_cmp_by_ref_count( tidy_symbol const *i_sym,
+                                    tidy_symbol const *j_sym ) {
+  assert( i_sym != NULL );
+  assert( j_sym != NULL );
 
   int const cmp =                       // descending, so j_sym is first
     STATIC_CAST( int, j_sym->ref_count ) -
