@@ -642,11 +642,10 @@ static char* make_symbols_comment( tidy_source const *source,
   assert( source != NULL );
   assert( include != NULL );
 
-  ht_iterator_t iter;
-
   array_t symbols_array = ARRAY_INIT( sizeof(tidy_symbol) );
   array_reserve( &symbols_array, include->symbol_set.size );
 
+  ht_iterator_t iter;
   ht_iterator_init( &iter, &include->symbol_set );
   for ( tidy_symbol const *sym; (sym = ht_iterator_next( &iter )) != NULL; )
     *(tidy_symbol*)array_push_back( &symbols_array ) = *sym;
