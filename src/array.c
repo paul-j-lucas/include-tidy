@@ -137,23 +137,49 @@ void array_unique( array_t *restrict array, array_cmp_fn_t cmp_fn,
   if ( array->len < 2 )
     return;
 
-  void             *dst = array_front_nc( array );
+  void const       *batch_src = NULL;
+  size_t            batch_len = 0;
+  char             *dst = array_at_nc( array, 1 );
   char const *const end = array_at_nc( array, array->len );
   size_t const      esize = array->esize;
-  size_t            unique_len = 1;
+  void const       *unique_last = array_front_nc( array );
 
   for ( char *src = array_at_nc( array, 1 ); src < end; src += esize ) {
-    if ( (*cmp_fn)( dst, src ) != 0 ) {
-      dst = array_at_nc( array, unique_len++ );
-      if ( dst != src )
-        memcpy( dst, src, esize );
+    if ( (*cmp_fn)( unique_last, src ) != 0 ) {
+      unique_last = src;                // keep current element
+
+      if ( batch_src != NULL ) {        // expand current batch
+        ++batch_len;
+      }
+      else if ( dst != src ) {          // start a new batch
+        batch_src = src;
+        batch_len = 1;
+      }
+      else {                            // no duplicates found yet
+        dst += esize;
+      }
     }
-    else if ( free_fn != NULL ) {
-      (*free_fn)( src );
+    else {                              // found a duplicate
+      if ( free_fn != NULL )
+        (*free_fn)( src );
+
+      if ( batch_src != NULL ) {        // move non-dup(s) over dup(s)
+        size_t const batch_size = batch_len * esize;
+        memmove( dst, batch_src, batch_size );
+        dst += batch_size;
+        batch_src = NULL;
+        batch_len = 0;
+      }
     }
   } // for
 
-  array->len = unique_len;
+  if ( batch_src != NULL ) {            // flush last batch
+    size_t const batch_size = batch_len * esize;
+    memmove( dst, batch_src, batch_size );
+    dst += batch_size;
+  }
+
+  array->len = (size_t)(dst - (char*)array_front_nc( array )) / esize;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
