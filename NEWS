@@ -7,6 +7,9 @@ See the end of the file for license conditions.
 
 * Changes in Include-tidy 3.1
 
+** C++ overloaded functions
+Overloaded functions in C++ now have duplicates eliminated from comments.
+
 ** Duplicate reading of `$PWD/include-tidy.toml`
 `$PWD/include-tidy.toml` is now read at most once.
 

@@ -69,16 +69,16 @@ struct tidy_symbol {
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
- * Compares two \ref tidy_symbol objects.
+ * Compares two \ref tidy_symbol objects by \ref tidy_symbol::key "key".
  *
  * @param i_sym The first symbol.
  * @param j_sym The second symbol.
- * @return Returns a number less than 0, 0, or greater than 0 if the name of \a
- * i_sym is less than, equal to, or greater than the name of \a j_sym,
+ * @return Returns a number less than 0, 0, or greater than 0 if the key of \a
+ * i_sym is less than, equal to, or greater than the key of \a j_sym,
  * respectively.
  */
 NODISCARD
-int symbol_cmp_by_name( tidy_symbol const *i_sym, tidy_symbol const *j_sym );
+int symbol_cmp_by_key( tidy_symbol const *i_sym, tidy_symbol const *j_sym );
 
 /**
  * Calculates the hash of \a sym.

@@ -132,10 +132,13 @@ static char*        path_no_ext_if( char const*, char );
 static void         print_statistics( void );
 
 NODISCARD
-static int          symbol_cmp_by_name_length( tidy_symbol const*,
+static int          symbol_cmp_by_name( tidy_symbol const*,
+                                        tidy_symbol const* ),
+                    symbol_cmp_by_name_length( tidy_symbol const*,
                                                tidy_symbol const* ),
                     symbol_cmp_by_ref_count( tidy_symbol const*,
-                                             tidy_symbol const* );
+                                             tidy_symbol const* ),
+                    symbol_merge_by_name( tidy_symbol*, tidy_symbol const* );
 
 NODISCARD
 static char*        tidy_File_getRelativePath( CXFile );
@@ -463,7 +466,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
       // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
       // symbol_set in symbol.c.
       &included->symbol_set, HT_DPTR, 2.0, 64,
-      POINTER_CAST( ht_cmp_fn_t, &symbol_cmp_by_name ),
+      POINTER_CAST( ht_cmp_fn_t, &symbol_cmp_by_key ),
       POINTER_CAST( ht_hash_fn_t, &symbol_hash )
     );
   }
@@ -640,38 +643,54 @@ static char* make_symbols_comment( tidy_source const *source,
   assert( include != NULL );
 
   ht_iterator_t iter;
+
+  array_t symbols_array = ARRAY_INIT( sizeof(tidy_symbol) );
+  array_reserve( &symbols_array, include->symbol_set.size );
+
   ht_iterator_init( &iter, &include->symbol_set );
+  for ( tidy_symbol const *sym; (sym = ht_iterator_next( &iter )) != NULL; )
+    *(tidy_symbol*)array_push_back( &symbols_array ) = *sym;
+
+  if ( source->lang == CXLanguage_CPlusPlus ) {
+    //
+    // Since C++ allows function, operator, and template overloading, there can
+    // be multiple entries with the same name, so sort then merge duplicates'
+    // reference counts.
+    //
+    array_qsort(
+      &symbols_array,
+      POINTER_CAST( array_cmp_fn_t, &symbol_cmp_by_name )
+    );
+    array_merge(
+      &symbols_array,
+      POINTER_CAST( array_merge_fn_t, &symbol_merge_by_name ),
+      /*free_fn=*/NULL
+    );
+  }
 
   if ( opt_comment_symbols == TIDY_COMMENT_SYM_MOST_REF ) {
     //
     // We could sort by ref_count as in the TIDY_COMMENT_SYM_REF_COUNT case
     // below, then use only the last element, but sorting is O(n log n),
-    // whereas just iterating through the entire hash table is O(n).
+    // whereas just iterating through the entire array is O(n).
     //
-    tidy_symbol const *most_ref_sym = ht_iterator_next( &iter );
-    for ( tidy_symbol const *sym; (sym = ht_iterator_next( &iter )) != NULL; ) {
+    tidy_symbol const *most_ref_sym = array_front_nc( &symbols_array );
+    for ( size_t i = 1; i < symbols_array.len; ++i ) {
+      tidy_symbol const *const sym = array_at_nc( &symbols_array, i );
       if ( sym->ref_count > most_ref_sym->ref_count )
         most_ref_sym = sym;
     } // for
-
     return strdup_or_exit( most_ref_sym->name );
   }
 
-  //
-  // For other cases, we need to copy the symbols into an array and sort it.
-  //
-  array_t symbols_array = ARRAY_INIT( sizeof(tidy_symbol) );
-  array_reserve( &symbols_array, include->symbol_set.size );
-
-  for ( tidy_symbol const *sym; (sym = ht_iterator_next( &iter )) != NULL; )
-    *(tidy_symbol*)array_push_back( &symbols_array ) = *sym;
-
   switch ( opt_comment_symbols ) {
     case TIDY_COMMENT_SYM_ALPHA:
-      array_qsort(
-        &symbols_array,
-        POINTER_CAST( array_cmp_fn_t, &symbol_cmp_by_name )
-      );
+      if ( source->lang != CXLanguage_CPlusPlus ) {
+        array_qsort(
+          &symbols_array,
+          POINTER_CAST( array_cmp_fn_t, &symbol_cmp_by_name )
+        );
+      }
       break;
     case TIDY_COMMENT_SYM_LENGTH:
       array_qsort(
@@ -688,17 +707,6 @@ static char* make_symbols_comment( tidy_source const *source,
       );
       break;
   } // switch
-
-  if ( source->lang == CXLanguage_CPlusPlus ) {
-    //
-    // Since C++ allows function, operator, and template overloading, there can
-    // be multiple entries with the same name, so remove duplicates.
-    //
-    array_unique(
-      &symbols_array, POINTER_CAST( array_cmp_fn_t, &symbol_cmp_by_name ),
-      /*free_fn=*/NULL
-    );
-  }
 
   bool          comma = false;
   size_t const  fixed_len = opt_align_column +
@@ -937,6 +945,27 @@ static bool should_print_include( tidy_include const *include ) {
  * the first symbol's name is less than, equal to, or greater than the length
  * of the second symbol's name, respectively.
  *
+ * @sa symbol_cmp_by_name_length()
+ * @sa symbol_cmp_by_ref_count()
+ */
+NODISCARD
+static int symbol_cmp_by_name( tidy_symbol const *i_sym,
+                               tidy_symbol const *j_sym ) {
+  assert( i_sym != NULL );
+  assert( j_sym != NULL );
+
+  return strcmp( i_sym->name, j_sym->name );
+}
+
+/**
+ * Compares two \ref tidy_symbol objects by their name length.
+ *
+ * @param i_sym The first symbol.
+ * @param j_sym The second symbol.
+ * @return Returns a number less than 0, 0, or greater than 0 if the length of
+ * the first symbol's name is less than, equal to, or greater than the length
+ * of the second symbol's name, respectively.
+ *
  * @sa symbol_cmp_by_name()
  * @sa symbol_cmp_by_ref_count()
  */
@@ -977,6 +1006,24 @@ static int symbol_cmp_by_ref_count( tidy_symbol const *i_sym,
     STATIC_CAST( int, i_sym->ref_count );
 
   return cmp != 0 ? cmp : strcmp( i_sym->name, j_sym->name );
+}
+
+/**
+ * Compares two \ref tidy_symbol objects by \ref tidy_symbol::name "name" and
+ * possibly merges their \ref tidy_symbol::ref_count "reference counts".
+ *
+ * @param i_dst The first symbol.
+ * @param j_src The second symbol.
+ * @return Returns zero only if the symbols' names are equal; non-zero
+ * otherwise.
+ */
+NODISCARD
+static int symbol_merge_by_name( tidy_symbol *i_dst,
+                                 tidy_symbol const *j_src ) {
+  int const cmp = symbol_cmp_by_name( i_dst, j_src );
+  if ( cmp == 0 )
+    i_dst->ref_count += j_src->ref_count;
+  return cmp;
 }
 
 /**

@@ -122,16 +122,38 @@ typedef struct array array_t;
  * @param j_element A pointer to the second element.
  * @return Returns a number less than 0, 0, or greater than 0 if \a i_element
  * is less than, equal to, or greater than \a j_element, respectively.
+ *
+ * @sa array_bsearch()
+ * @sa array_merge_fn_t
+ * @sa array_qsort()
+ * @sa array_unique()
  */
 typedef int (*array_cmp_fn_t)( void const *i_element, void const *j_element );
 
 /**
- * The signature for a function passed to either array_cleanup() or
- * array_unique() used to free an element (if necessary).
+ * The signature for a function used to free an element (if necessary).
  *
  * @param element A pointer to the element to free.
+ *
+ * @sa array_cleanup()
+ * @sa array_merge()
+ * @sa array_unique()
  */
 typedef void (*array_free_fn_t)( void *element );
+
+/**
+ * The signature for a function that compares two elements and, if equal,
+ * merges \a j_src into \a i_dst.
+ *
+ * @param i_dst A pointer to the element to merge to.
+ * @param j_src A pointer to the element to merge from.
+ * @return Returns zero only if \a i_dst is equal to \a j_src; non-zero
+ * otherwise.
+ *
+ * @sa array_cmp_fn_t
+ * @sa array_merge()
+ */
+typedef int (*array_merge_fn_t)( void *i_dst, void const *j_src );
 
 ////////// structs ////////////////////////////////////////////////////////////
 
@@ -441,6 +463,23 @@ inline void array_init( array_t *array, size_t esize ) {
 }
 
 /**
+ * Merges consecutive duplicate elements of a sorted array by merging elements
+ * _a[i+1]_, _a[i+2]_, ..., into element _a[i]_ where they compare equal.
+ *
+ * @param array The sorted array to merge elements of.
+ * @param merge_fn The merge function to use.
+ * @param free_fn A pointer to a function used to free duplicate elements or
+ * NULL if unnecessary.
+ *
+ * @note This is an O(N) operation.
+ *
+ * @sa array_qsort()
+ * @sa array_unique()
+ */
+void array_merge( array_t *restrict array, array_merge_fn_t merge_fn,
+                  array_free_fn_t free_fn );
+
+/**
  * Pops an element from the back of \a array.
  *
  * @param array The pointer to the \ref array.
@@ -521,18 +560,24 @@ inline void array_qsort( array_t *array, array_cmp_fn_t cmp_fn ) {
 
 /**
  * Removes consecutive duplicate elements from a sorted array by overwriting
- * element _i_ with element _i_ + { 1 ... _n_-1 } where the elements compare
- * equal.
+ * elements _a[i+1]_, _a[i+2]_, ..., where they compare equal to _a[i]_.
  *
  * @param array The sorted array to remove duplicate elements from.
  * @param cmp_fn The comparison function to use.
  * @param free_fn A pointer to a function used to free duplicate elements or
  * NULL if unnecessary.
  *
+ * @note There is no significance to a particular non-zero value returned by \a
+ * cmp_fn when elements are not equal.
  * @note This is an O(N) operation.
+ *
+ * @sa array_merge()
+ * @sa array_qsort()
  */
-void array_unique( array_t *restrict array, array_cmp_fn_t cmp_fn,
-                   array_free_fn_t free_fn );
+inline void array_unique( array_t *restrict array, array_cmp_fn_t cmp_fn,
+                          array_free_fn_t free_fn ) {
+  array_merge( array, POINTER_CAST( array_merge_fn_t, cmp_fn ), free_fn );
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
