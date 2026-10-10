@@ -102,7 +102,7 @@ void array_merge( array_t *restrict array, array_merge_fn_t merge_fn,
       if ( free_fn != NULL )
         (*free_fn)( src );
 
-      if ( batch_src != NULL ) {        // move non-dup(s) over dup(s)
+      if ( batch_src != NULL ) {        // move unique(s) over duplicate(s)
         size_t const batch_size = batch_len * esize;
         memmove( dst, batch_src, batch_size );
         batch_src = NULL;
