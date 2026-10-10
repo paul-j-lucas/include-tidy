@@ -113,7 +113,7 @@ void array_merge( array_t *restrict array, array_merge_fn_t merge_fn,
     }
   } // for
 
-  if ( batch_src != NULL ) {            // flush last batch
+  if ( batch_src != NULL ) {            // move last batch
     size_t const batch_size = batch_len * esize;
     memmove( dst, batch_src, batch_size );
     dst += batch_size;
