@@ -81,11 +81,11 @@ void array_merge( array_t *restrict array, array_merge_fn_t merge_fn,
   char             *dst = array_at_nc( array, 1 );
   char const *const end = array_at_nc( array, array->len );
   size_t const      esize = array->esize;
-  void             *unique_last = array_front_nc( array );
+  void             *last_unique = array_front_nc( array );
 
   for ( char *src = dst; src < end; src += esize ) {
-    if ( (*merge_fn)( unique_last, src ) != 0 ) {
-      unique_last = src;                // keep current element
+    if ( (*merge_fn)( last_unique, src ) != 0 ) {
+      last_unique = src;                // keep current element
 
       if ( batch_src != NULL ) {        // expand current batch
         ++batch_len;
@@ -108,7 +108,7 @@ void array_merge( array_t *restrict array, array_merge_fn_t merge_fn,
         batch_src = NULL;
         batch_len = 0;
         dst += batch_size;
-        unique_last = dst - esize;
+        last_unique = dst - esize;
       }
     }
   } // for
