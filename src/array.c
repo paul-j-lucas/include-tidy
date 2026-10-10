@@ -94,7 +94,7 @@ void array_merge( array_t *restrict array, array_merge_fn_t merge_fn,
         batch_src = src;
         batch_len = 1;
       }
-      else {                            // no duplicates found yet
+      else {                            // no duplicate found yet
         dst += esize;
       }
     }
