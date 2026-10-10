@@ -55,11 +55,11 @@ struct tidy_symbol {
 
   /**
    * The symbol name without signature (for functions or operators, e.g.,
-   * `sqrt`) or template parameters (for templates, e.g., `std::set`) used in
-   * `#include` comments.
+   * `sqrt`) or template parameters (e.g., `std::set`) used in `#include`
+   * comments.
    *
    * @note In C++, this is not guaranteed to be unique due to overloaded
-   * functions and specialized templates.
+   * functions and specialized templates; hence the need for \ref key.
    */
   char const *name;
 
