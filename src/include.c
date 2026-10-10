@@ -1011,17 +1011,19 @@ static int symbol_cmp_by_ref_count( tidy_symbol const *i_sym,
  * Compares two \ref tidy_symbol objects by \ref tidy_symbol::name "name" and
  * possibly merges their \ref tidy_symbol::ref_count "reference counts".
  *
- * @param i_dst The first symbol.
- * @param j_src The second symbol.
+ * @param unique_sym The symbol to compare and possibly merge the \a
+ * maybe_dup_sym's \ref tidy_symbol::ref_count "ref_count" to.
+ * @param maybe_dup_sym The symbol to compare against and possible merge its
+ * \ref tidy_symbol::ref_count "ref_count" from.
  * @return Returns zero only if the symbols' names are equal; non-zero
  * otherwise.
  */
 NODISCARD
-static int symbol_merge_by_name( tidy_symbol *i_dst,
-                                 tidy_symbol const *j_src ) {
-  int const cmp = symbol_cmp_by_name( i_dst, j_src );
+static int symbol_merge_by_name( tidy_symbol *unique_sym,
+                                 tidy_symbol const *maybe_dup_sym ) {
+  int const cmp = symbol_cmp_by_name( unique_sym, maybe_dup_sym );
   if ( cmp == 0 )
-    i_dst->ref_count += j_src->ref_count;
+    unique_sym->ref_count += maybe_dup_sym->ref_count;
   return cmp;
 }
 

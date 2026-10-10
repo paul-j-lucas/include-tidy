@@ -143,17 +143,18 @@ typedef void (*array_free_fn_t)( void *element );
 
 /**
  * The signature for a function that compares two elements and, if equal,
- * merges \a j_src into \a i_dst.
+ * merges \a maybe_dup into \a unique.
  *
- * @param i_dst A pointer to the element to merge to.
- * @param j_src A pointer to the element to merge from.
- * @return Returns zero only if \a i_dst is equal to \a j_src; non-zero
+ * @param unique A pointer to the element to compare and possibly merge into.
+ * @param maybe_dup A pointer to the element to compare against and possibly
+ * merge from.
+ * @return Returns zero only if \a unique is equal to \a maybe_dup; non-zero
  * otherwise.
  *
  * @sa array_cmp_fn_t
  * @sa array_merge()
  */
-typedef int (*array_merge_fn_t)( void *i_dst, void const *j_src );
+typedef int (*array_merge_fn_t)( void *unique, void const *maybe_dup );
 
 ////////// structs ////////////////////////////////////////////////////////////
 
