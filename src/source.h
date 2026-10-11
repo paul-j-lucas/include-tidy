@@ -60,7 +60,6 @@ struct tidy_source {
    */
   char const *assoc_header_rel_path;
 
-
   unsigned        includes_missing;     ///< Number of missing includes.
   unsigned        includes_unnecessary; ///< Number of unnecessry includes.
 };
