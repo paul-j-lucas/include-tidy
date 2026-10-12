@@ -1,5 +1,5 @@
 /*
-**      include-tidy -- #include tidier
+**      PJL Library
 **      src/str_util.h
 **
 **      Copyright (C) 2026  Paul J. Lucas

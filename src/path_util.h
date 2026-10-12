@@ -179,12 +179,12 @@ inline bool path_is_filename( char const *path ) {
  *
  * @par Example
  * @parblock
- * Assuming the current working directory is `/home/pjl/src/include-tidy/src`:
+ * Assuming the current working directory is `/home/pjl/src/cdecl/src`:
  *
- * `abs_path`                              | Local?
- * --------------------------------------- | ------
- * `/home/pjl/src/include-tidy/src/util.h` | true
- * `/usr/include/stdio.h`                  | false
+ * `abs_path`                       | Local?
+ * -------------------------------- | ------
+ * `/home/pjl/src/cdecl/src/util.h` | true
+ * `/usr/include/stdio.h`           | false
  * @endparblock
  *
  * @param abs_path The absolute path of a file.
