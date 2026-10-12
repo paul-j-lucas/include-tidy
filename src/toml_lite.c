@@ -68,8 +68,21 @@
 #define TOML_CHAR_INVALID         -2
 
 /**
- * Rather than use a separate `bool is_newline_pending` in toml_file, use a
- * special value in \ref toml_file::c_last "c_last".
+ * A special value for \ref toml_file::c_last "c_last" to indicate that a
+ * newline was recently read and so is "pending."
+ *
+ * @remarks
+ * @parblock
+ * If we read a newline, immediately call toml_newline(), and it turns out the
+ * newline is unexpected, the error location would be the first column of the
+ * next line --- which is wrong.
+ *
+ * To fix this, we want to defer calling toml_newline() until after we know
+ * it's not unexpected.  We use this special value for \ref toml_file::c_last
+ * "c_last" instead of a separate `is_newline_pending` flag.
+ * @endparblock
+ *
+ * @sa toml_getc()
  */
 #define TOML_CHAR_PENDING_NEWLINE -3
 
