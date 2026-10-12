@@ -60,33 +60,6 @@
 #define TOML_ARRAY_CAP_MIN        4
 
 /**
- * Map any invalid character to this.
- *
- * @sa toml_getc()
- * @sa toml_is_invalid_char()
- */
-#define TOML_CHAR_INVALID         -2
-
-/**
- * A special value for \ref toml_file::c_last "c_last" to indicate that a
- * newline was recently read and so is "pending."
- *
- * @remarks
- * @parblock
- * If we read a newline, immediately call toml_newline(), and it turns out the
- * newline is unexpected, the error location would be the first column of the
- * next line --- which is wrong.
- *
- * To fix this, we want to defer calling toml_newline() until after we know
- * it's not unexpected.  We use this special value for \ref toml_file::c_last
- * "c_last" instead of a separate `is_newline_pending` flag.
- * @endparblock
- *
- * @sa toml_getc()
- */
-#define TOML_CHAR_PENDING_NEWLINE -3
-
-/**
  * Maximum decimal digits.
  */
 #define TOML_INT_DIGITS_MAX       MAX_DEC_INT_DIGITS( long )
@@ -95,6 +68,56 @@
  * Maximum string length.
  */
 #define TOML_STRING_LEN_MAX       1024
+
+////////// enums //////////////////////////////////////////////////////////////
+
+/**
+ * Declares a small set of special "character" values.
+ *
+ * @remarks
+ * @parblock
+ * The integer values used must be distinct from every valid character (which
+ * means they must be negative) and also distinct from `EOF`.  However,
+ * according to the C11 standard 7.21.1-3:
+ *
+ * <blockquote>
+ * `EOF` which expands to an integer constant expression, with type `int` and
+ * a negative value ...
+ * </blockquote>
+ *
+ * all that's guaranteed about `EOF` is that it's negative and not its
+ * particular value.  While it _could_ be _any_ negative value, e.g., -42,
+ * `INT_MIN`, it's _very_ likely just -1, so values like -2, -3, etc., should
+ * be OK.
+ * @endparblock
+ *
+ * @sa toml_getc()
+ */
+enum toml_special_chars {
+  /**
+   * Any invalid TOML character is mapped to this.
+   *
+   * @sa toml_is_invalid_char()
+   */
+  TOML_CHAR_INVALID         = -2,
+
+  /**
+   * A special value for \ref toml_file::c_last "c_last" to indicate that a
+   * newline was recently read and so is "pending."
+   *
+   * @remarks
+   * @parblock
+   * If we read a newline, immediately called toml_newline(), and it turns out
+   * the newline is unexpected, the error location would be the first column of
+   * the next line --- which is wrong.
+   *
+   * To fix this, we want to defer calling toml_newline() until after we know
+   * it's not unexpected.  We use this special value for \ref toml_file::c_last
+   * "c_last" instead of a separate `is_newline_pending` flag to indicate this.
+   * @endparblock
+   */
+  TOML_CHAR_PENDING_NEWLINE = -3
+};
 
 ////////// local constants ////////////////////////////////////////////////////
 
