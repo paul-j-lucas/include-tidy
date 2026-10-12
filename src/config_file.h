@@ -29,11 +29,9 @@
 
 // local
 #include "pjl_config.h"
+#include "source.h"
 
 /// @cond DOXYGEN_IGNORE
-
-// local
-#include "source.h"
 
 // libclang
 #include <clang-c/Index.h>
