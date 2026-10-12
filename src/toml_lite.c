@@ -64,11 +64,6 @@
  */
 #define TOML_INT_DIGITS_MAX       MAX_DEC_INT_DIGITS( long )
 
-/**
- * Maximum string length.
- */
-#define TOML_STRING_LEN_MAX       1024
-
 ////////// enums //////////////////////////////////////////////////////////////
 
 /**
