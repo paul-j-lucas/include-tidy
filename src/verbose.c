@@ -156,12 +156,12 @@ static void tidy_Cursor_printAbridgedTokens( CXCursor cursor,
   array_t cursor_ranges = ARRAY_INIT( sizeof( CXSourceRange ) );
   clang_visitChildren( cursor, cursor_ranges_visitor, &cursor_ranges );
 
-  bool        eliding = false;          // eliding tokens?
+  bool        eliding_tokens = false;
   bool const  is_cxx = lang == CXLanguage_CPlusPlus;
   bool        prev_token_is_semicolon = false;
   bool        prev_token_is_space_after_keyword = false;
   CXTokenKind prev_token_kind = STATIC_CAST( CXTokenKind, -1 );
-  bool        printed = false;          // print anything yet?
+  bool        printed_anything = false;
 
   for ( unsigned i = 0; i < token_count; ++i ) {
     CXTokenKind const token_kind = clang_getTokenKind( tokens[i] );
@@ -170,14 +170,14 @@ static void tidy_Cursor_printAbridgedTokens( CXCursor cursor,
 
     CXSourceLocation const loc = clang_getTokenLocation( tu, tokens[i] );
     if ( is_loc_in_any_range( loc, &cursor_ranges ) ) {
-      eliding = true;
+      eliding_tokens = true;
       continue;
     }
 
-    if ( eliding ) {
-      if ( printed )
+    if ( eliding_tokens ) {
+      if ( printed_anything )
         PUTS( " ... " );
-      eliding = false;
+      eliding_tokens = false;
       prev_token_is_semicolon = false;
       prev_token_is_space_after_keyword = false;
       prev_token_kind = CXToken_Punctuation;
@@ -187,7 +187,7 @@ static void tidy_Cursor_printAbridgedTokens( CXCursor cursor,
     char const *const token_cs = clang_getCString( token_cxs );
 
     bool const print_space =
-      printed && (
+      printed_anything && (
         (prev_token_kind != CXToken_Punctuation &&
               token_kind != CXToken_Punctuation) ||
         prev_token_is_semicolon ||
@@ -197,7 +197,7 @@ static void tidy_Cursor_printAbridgedTokens( CXCursor cursor,
     if ( print_space )
       putchar( ' ' );
     fputs_escaped( token_cs, stdout );
-    printed = true;
+    printed_anything = true;
 
     prev_token_is_semicolon = strcmp( token_cs, ";" ) == 0;
     prev_token_kind = token_kind;
@@ -208,7 +208,7 @@ static void tidy_Cursor_printAbridgedTokens( CXCursor cursor,
     clang_disposeString( token_cxs );
   } // for
 
-  if ( printed && eliding )
+  if ( printed_anything && eliding_tokens )
     PUTS( " ..." );
 
   array_cleanup( &cursor_ranges, /*free_fn=*/NULL );
