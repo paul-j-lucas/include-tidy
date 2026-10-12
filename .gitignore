@@ -4,12 +4,12 @@
 *.in
 *.log
 *.o
-*.s[a-v][a-z]
-*.sw[a-p]
 *.trs
 *~
-.deps/
+.*.s[a-v][a-z]
+.*.sw[a-p]
 .DS_Store
+.deps/
 Makefile
 
 /aclocal.m4
