@@ -414,7 +414,7 @@ static CXFile get_symbol_file( CXCursor sym_csr,
  * @param parent The parent cursor of \a cursor.
  * @param dec_csr The declaration cursor of \a cursor.
  * @param sid The symbols_init_data to use.
- * @param rv_def_csr A pointer to receieve the definition cursor of \a cursor
+ * @param rv_def_csr A pointer to receive the definition cursor of \a cursor
  * only if the definition is needed.
  * @return Returns `true` only if the definition is needed.
  */
