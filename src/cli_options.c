@@ -1141,7 +1141,6 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
   char const   *opt_directory = NULL;
   bool          opt_help = false;
   unsigned      opt_version = 0;
-  int           short_opt;
   char   *const short_opts = make_short_opts( OPTIONS, SOPT(INCLUDE) ":" );
   int           tidy_argc;
   char const  **tidy_argv;
@@ -1151,7 +1150,7 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
 
   opterr = 0;                           // suppress default error message
   for (;;) {
-    short_opt = getopt_long(
+    int const short_opt = getopt_long(
       tidy_argc, CONST_CAST( char**, tidy_argv ), short_opts, OPTIONS,
       /*longindex=*/NULL
     );
