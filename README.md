@@ -7,7 +7,7 @@ that allows you to tidy-up the set of `#include` directives
 used in either a C or C++ source file,
 specifically:
 
-+ For every symbol (type, variable, function, or macro) that you reference
++ For every symbol (macro, type, variable, or function) that you reference
   in a source file, you should directly `#include` the header
   that declares that symbol.
 
