@@ -1292,7 +1292,7 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
   // arguments including these.
   int const argc = *pargc;
   static char const *const LIBCLANG_ARGS[] = {
-    "-D", TIDY_COMPILER_ID,
+    "-D" TIDY_COMPILER_ID,
     "-Qunused-arguments",
     "-Wno-unknown-warning-option",
   };
