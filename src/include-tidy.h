@@ -43,6 +43,11 @@
 #define TIDY_AUTHOR               "Paul J. Lucas"
 
 /**
+ * The macro **include-tidy** defines to identify itself.
+ */
+#define TIDY_COMPILER_ID          "__include_tidy__"
+
+/**
  * **include-tidy** latest copyright year.
  */
 #define TIDY_COPYRIGHT_YEAR       "2026"
