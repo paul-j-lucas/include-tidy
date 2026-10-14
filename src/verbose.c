@@ -274,9 +274,10 @@ void verbose_print_cursor_impl( char const *label, CXCursor cursor,
     //
     tidy_Cursor_printAbridgedTokens( cursor, lang );
   }
-  putchar( '"' );
-
-  printf( " (%s), \"%s\":%u,%u\n", kind_cs, abs_path, line, col );
+  printf( "\" (%s)", kind_cs );
+  if ( abs_path != NULL )
+    printf( ", \"%s\":%u,%u", abs_path, line, col );
+  putchar( '\n' );
 
   clang_disposeString( abs_path_cxs );
   clang_disposeString( kind_cxs );
