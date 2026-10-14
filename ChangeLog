@@ -1,5 +1,6 @@
 2026-10-13  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
+   * cli_options.c, include-tidy.h: Added TIDY_COMPILER_ID.
    * cli_options.c: Moved short_opt declaration.
 
 2026-10-12  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
