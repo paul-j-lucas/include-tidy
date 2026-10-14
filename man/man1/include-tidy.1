@@ -35,7 +35,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "October 3, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "October 14, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -111,8 +111,8 @@ i.e., files should compile successfully
 with a C or C++ compiler first.
 .PP
 .B include-tidy
-should be used on both header (\f(CW.h\fP)
-and source (\f(CW.c\fP or \f(CW.cpp)
+should be used on both header (\f(CW.h\fP, \f(CW.hpp\fP, etc.)
+and source (\f(CW.c\fP, \f(CW.cpp\fP, etc.)
 files
 since both should include what they use.
 (See the
@@ -156,8 +156,7 @@ then simply
 to analyze all your source files
 at once.
 (For C++,
-substitute
-\f(CW.cpp\fP for \f(CW.c\fP,
+substitute your preferred C++ filename extensions,
 .B CXXFLAGS
 for
 .BR CFLAGS ,
