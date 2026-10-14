@@ -243,20 +243,19 @@ struct symbols_init_data {
 
 ////////// local functions ////////////////////////////////////////////////////
 
-static void     symbol_cleanup( tidy_symbol* );
+static void symbol_cleanup( tidy_symbol* );
 
 NODISCARD
-static bool     symbol_is_excluded( CXCursor, symbols_init_data const* );
+static bool symbol_is_excluded( CXCursor, symbols_init_data const* );
 
 NODISCARD
-static bool     visit_CallExpr( CXCursor, CXCursor, symbols_init_data* );
+static bool visit_CallExpr( CXCursor, CXCursor, symbols_init_data* );
 
-static void     visit_FieldDecl( CXCursor, CXCursor, symbols_init_data* );
-static void     visit_MacroDefinition( CXCursor, CXCursor, symbols_init_data* );
-static void     visit_MemberRefExpr( CXCursor, CXCursor, symbols_init_data* );
-static void     visit_most_kinds( CXCursor, CXCursor, symbols_init_data* );
-static void     visit_OverloadedDeclRef( CXCursor, CXCursor,
-                                         symbols_init_data* );
+static void visit_FieldDecl( CXCursor, CXCursor, symbols_init_data* );
+static void visit_MacroDefinition( CXCursor, CXCursor, symbols_init_data* );
+static void visit_MemberRefExpr( CXCursor, CXCursor, symbols_init_data* );
+static void visit_most_kinds( CXCursor, CXCursor, symbols_init_data* );
+static void visit_OverloadedDeclRef( CXCursor, CXCursor, symbols_init_data* );
 
 ////////// local variables ////////////////////////////////////////////////////
 
