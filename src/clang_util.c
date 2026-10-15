@@ -519,7 +519,6 @@ CXCursor tidy_Cursor_getVarInitNoUnaryOps( CXCursor expr_csr ) {
   return expr_csr;                      // LCOV_EXCL_LINE
 }
 
-
 bool tidy_Cursor_isBeforeInTranslationUnit( CXCursor i_csr, CXCursor j_csr ) {
   if ( tidy_Cursor_isInvalid( i_csr ) || tidy_Cursor_isInvalid( j_csr ) )
     return false;
