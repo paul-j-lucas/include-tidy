@@ -1,3 +1,9 @@
+2026-10-15  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * config_file.c, include.c, include.h, types_h.out: Now synthesizing needed
+     tidy_include when not included.
+   * include.c, include.h: Added an include_init() function.
+
 2026-10-14  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * man/man1/include-tidy.1, src/Makefile.am: s/tidy/itidy/
