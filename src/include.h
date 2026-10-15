@@ -203,6 +203,16 @@ NODISCARD
 fnv1a_t include_hash( tidy_include const *include );
 
 /**
+ * Initializes a tidy_include.
+ *
+ * @param include The tidy_include to initialize.
+ * @param include_file The include's file.
+ * @param includer_file The include file including \a include_file, if any.
+ */
+void include_init( tidy_include *include, CXFile include_file,
+                   CXFile includer_file );
+
+/**
  * Initializes the set of files included in the given translation unit.
  *
  * @param source The source file being tidied.

@@ -426,49 +426,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
   tidy_include *const included = HT_DINT( hti.entry );
 
   if ( hti.inserted ) {
-    CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
-    included->abs_path = tidy_dupCString( abs_path_cxs );
-    included->file     = included_file;
-    included->is_local = path_is_local( included->abs_path );
-
-    //
-    // We don't call ipath_relativize( included->abs_path ) because that would
-    // relativize the real path with symlinks, if any, resolved.  That might be
-    // surprising to the user if the linked-to file has a different name.
-    //
-    // For example, on macOS, Readline is just a wrapper around Editline and
-    // has this:
-    //
-    //      /usr/include/readline/
-    //        readline.h -> ../editline/readline.h
-    //
-    // If the user includes it unnecessarily, it would print:
-    //
-    //      #include <editline/readline.h>  // DELETE LINE xx
-    //
-    // that the user didn't include with that name.  Therefore, relativize the
-    // original CXFile's path.
-    //
-    included->rel_path = tidy_File_getRelativePath( included_file );
-    included->basename = path_basename( included->rel_path );
-
-#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-    included->instance_id = tidy_include_set.size;
-#endif /* NEED_II_MATRIX */
-
-    if ( !is_direct ) {
-      included->includer = include_find_by_File( includer_file );
-      assert( included->includer != NULL );
-      included->depth = included->includer->depth + 1;
-    }
-    array_init( &included->lines, sizeof(unsigned) );
-    ht_table_init(
-      // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
-      // symbol_set in symbol.c.
-      &included->symbol_set, HT_DPTR, 2.0, 64,
-      POINTER_CAST( ht_cmp_fn_t, &symbol_cmp_by_key ),
-      POINTER_CAST( ht_hash_fn_t, &symbol_hash )
-    );
+    include_init( included, included_file, is_direct ? NULL : includer_file );
   }
   else if ( is_direct ) {
     //
@@ -1115,6 +1073,56 @@ tidy_include const* (include_get_proxy)( tidy_include const *include ) {
 
 fnv1a_t include_hash( tidy_include const *include ) {
   return tidy_FileUniqueID_hash( &include->file_id );
+}
+
+void include_init( tidy_include *include, CXFile include_file,
+                   CXFile includer_file ) {
+  assert( include != NULL );
+
+  CXString const abs_path_cxs = tidy_File_getRealPathName( include_file );
+  include->abs_path = tidy_dupCString( abs_path_cxs );
+  include->file     = include_file;
+  include->file_id  = tidy_getFileUniqueID( include_file );
+  include->is_local = path_is_local( include->abs_path );
+
+  //
+  // We don't call ipath_relativize( included->abs_path ) because that would
+  // relativize the real path with symlinks, if any, resolved.  That might be
+  // surprising to the user if the linked-to file has a different name.
+  //
+  // For example, on macOS, Readline is just a wrapper around Editline and has
+  // this:
+  //
+  //      /usr/include/readline/
+  //        readline.h -> ../editline/readline.h
+  //
+  // If the user includes it unnecessarily, it would print:
+  //
+  //      #include <editline/readline.h>  // DELETE LINE xx
+  //
+  // that the user didn't include with that name.  Therefore, relativize the
+  // original CXFile's path.
+  //
+  include->rel_path = tidy_File_getRelativePath( include_file );
+
+  include->basename = path_basename( include->rel_path );
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
+  include->instance_id = tidy_include_set.size;
+#endif /* NEED_II_MATRIX */
+  array_init( &include->lines, sizeof(unsigned) );
+  ht_table_init(
+    // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
+    // symbol_set in symbol.c.
+    &include->symbol_set, HT_DPTR, 2.0, 64,
+    POINTER_CAST( ht_cmp_fn_t, &symbol_cmp_by_key ),
+    POINTER_CAST( ht_hash_fn_t, &symbol_hash )
+  );
+
+  if ( includer_file != NULL ) {
+    include->includer = include_find_by_File( includer_file );
+    assert( include->includer != NULL );
+    include->depth = include->includer->depth + 1;
+  }
 }
 
 void includes_init( tidy_source const *source ) {
