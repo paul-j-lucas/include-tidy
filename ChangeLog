@@ -1,5 +1,6 @@
 2026-10-14  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
+   * man/man1/include-tidy.1, src/Makefile.am: s/tidy/itidy/
    * verbose.c: Now printing abs_path, line, and col only if abs_path != NULL.
 
 2026-10-13  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
