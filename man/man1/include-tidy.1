@@ -144,7 +144,7 @@ have:
 TIDY_FLAGS  = -Xtidy --verbose=f -Xtidy --error=never
 TIDY_CFLAGS = $(CFLAGS) $(AM_CFLAGS) $(CPPFLAGS) $(AM_CPPFLAGS)
 
-tidy:
+itidy:
         @for file in *.h *.c; do \\
           [ ! -f "$$file" ] || \\
             include-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) "$$file" || \\

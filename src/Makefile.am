@@ -126,7 +126,7 @@ toml_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 util_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 			util_test.c
 
-tidy: include-tidy
+itidy: include-tidy
 	@for file in *.h *.c; do \
 	  [ ! -f "$$file" ] || \
 	    include-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) "$$file" || exit $$?; \
