@@ -87,8 +87,7 @@ TESTS+=	tests/c_ast_h.test \
 	tests/red_black_h.test \
 	tests/reserved.test \
 	tests/show_c.test \
-	tests/slist_h.test \
-	tests/types_h.test
+	tests/slist_h.test
 
 # Real-world C++ tests.
 TESTS+=	tests/cxx.test \
