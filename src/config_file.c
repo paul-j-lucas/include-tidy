@@ -35,6 +35,7 @@
 #include "hash_table.h"
 #include "include-tidy.h"
 #include "include.h"
+#include "ipath.h"
 #include "options.h"
 #include "path_util.h"
 #include "print.h"
@@ -787,7 +788,7 @@ static void includes_parse_string( config_parse_fn_args const *config ) {
   assert( config->value->type == TOML_STRING );
 
   tidy_include const *const to_include =
-    include_find_by_rel_path( config->source, config->value->s );
+    include_find_or_add_by_rel_path( config->source, config->value->s );
   if ( to_include != NULL )
     symbol_include_add( config->table->key.name, to_include );
 }
@@ -960,7 +961,7 @@ static void symbols_parse_string( config_parse_fn_args const *config ) {
   assert( config->value->type == TOML_STRING );
 
   tidy_include const *const to_include =
-    include_find_by_rel_path( config->source, config->table->key.name );
+    include_find_or_add_by_rel_path( config->source, config->table->key.name );
   if ( to_include != NULL )
     symbol_include_add( config->value->s, to_include );
 }

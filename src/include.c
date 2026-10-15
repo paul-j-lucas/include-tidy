@@ -124,24 +124,25 @@ static void         ii_matrix_visitor( CXFile, CXSourceLocation*, unsigned,
 #endif /* NEED_II_MATRIX */
 
 NODISCARD
-static bool         is_associated_header( tidy_include const*, char const* );
+static bool   include_insert( CXFile included_file, CXFile includer_file,
+                               tidy_include **pinclude ),
+              is_associated_header( tidy_include const*, char const* );
 
 NODISCARD
-static char*        path_no_ext_if( char const*, char );
+static char*  path_no_ext_if( char const*, char );
 
-static void         print_statistics( void );
 
-NODISCARD
-static int          symbol_cmp_by_name( tidy_symbol const*,
-                                        tidy_symbol const* ),
-                    symbol_cmp_by_name_length( tidy_symbol const*,
-                                               tidy_symbol const* ),
-                    symbol_cmp_by_ref_count( tidy_symbol const*,
-                                             tidy_symbol const* ),
-                    symbol_merge_by_name( tidy_symbol*, tidy_symbol const* );
+static void   print_statistics( void );
 
 NODISCARD
-static char*        tidy_File_getRelativePath( CXFile );
+static int    symbol_cmp_by_name( tidy_symbol const*, tidy_symbol const* ),
+              symbol_cmp_by_name_length( tidy_symbol const*,
+                                         tidy_symbol const* ),
+              symbol_cmp_by_ref_count( tidy_symbol const*, tidy_symbol const* ),
+              symbol_merge_by_name( tidy_symbol*, tidy_symbol const* );
+
+NODISCARD
+static char*  tidy_File_getRelativePath( CXFile );
 
 ////////// extern variables ///////////////////////////////////////////////////
 
@@ -358,6 +359,128 @@ static int include_cmp_for_print( void const *i_pp, void const *j_pp ) {
 }
 
 /**
+ * Attempts to find a tidy_include by \a rel_path.
+ *
+ * @param source The source file being tidied.
+ * @param rel_path The relative path of the tidy_include to find.
+ * @param allow_insert If `true` and no tidy_include is found having \a
+ * rel_path, a new tidy_include is created.
+ * @return Returns `true` only if a new tidy_include was created.
+ */
+NODISCARD
+static tidy_include* include_find_by_rel_path_impl( tidy_source const *source,
+                                                    char const *rel_path,
+                                                    bool allow_insert ) {
+  assert( source != NULL );
+  assert( rel_path != NULL );
+  assert( path_is_relative( rel_path ) );
+
+  strbuf_t      abs_path_buf = STRBUF_INIT();
+  tidy_include *include = NULL;
+
+  if ( ipath_find( rel_path, &abs_path_buf ) ) {
+    CXFile const include_file = clang_getFile( source->tu, abs_path_buf.str );
+    if ( include_file != NULL ) {
+      if ( allow_insert ) {
+        if ( include_insert( include_file, NULL, &include ) ) {
+          //
+          // The fact that a tidy_include having rel_path was inserted means
+          // the user didn't #include it to declare a particular symbol ---
+          // which explains why it wasn't found and so inserted.
+          //
+          // We need to set its depth to non-zero since it doesn't appear in
+          // the file being tidied.
+          //
+          include->depth = 1;
+        }
+      }
+      else {
+        tidy_include find_include = {
+          .file_id = tidy_getFileUniqueID( include_file )
+        };
+        ht_entry_t const *const found_ht =
+          ht_table_find( &tidy_include_set, &find_include );
+        include = found_ht != NULL ? HT_DINT( found_ht ) : NULL;
+      }
+    }
+  }
+
+  strbuf_cleanup( &abs_path_buf );
+  return include;
+}
+
+/**
+ * Either inserts a new tidy_include for \a included_file or returns the
+ * existing one.
+ *
+ * @param included_file The include's file.
+ * @param includer_file The include file including \a include_file, if any.
+ * @param pinclude A pointer to receive the new or existing tidy_include.
+ * @return Returns `true` only if a new tidy_include was inserted.
+ */
+static bool include_insert( CXFile included_file, CXFile includer_file,
+                            tidy_include **pinclude ) {
+  assert( pinclude != NULL );
+
+  tidy_include new_include = {
+    .file_id = tidy_getFileUniqueID( included_file )
+  };
+  ht_insert_rv_t const hti =
+    ht_table_insert( &tidy_include_set, &new_include, sizeof new_include );
+  tidy_include *const include = HT_DINT( hti.entry );
+
+  if ( hti.inserted ) {
+    CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
+    include->abs_path = tidy_dupCString( abs_path_cxs );
+    include->file     = included_file;
+    include->file_id  = tidy_getFileUniqueID( included_file );
+    include->is_local = path_is_local( include->abs_path );
+
+    //
+    // We don't call ipath_relativize( included->abs_path ) because that would
+    // relativize the real path with symlinks, if any, resolved.  That might be
+    // surprising to the user if the linked-to file has a different name.
+    //
+    // For example, on macOS, Readline is just a wrapper around Editline and has
+    // this:
+    //
+    //      /usr/include/readline/
+    //        readline.h -> ../editline/readline.h
+    //
+    // If the user includes it unnecessarily, it would print:
+    //
+    //      #include <editline/readline.h>  // DELETE LINE xx
+    //
+    // that the user didn't include with that name.  Therefore, relativize the
+    // original CXFile's path.
+    //
+    include->rel_path = tidy_File_getRelativePath( included_file );
+
+    include->basename = path_basename( include->rel_path );
+#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
+    include->instance_id = tidy_include_set.size;
+#endif /* NEED_II_MATRIX */
+    array_init( &include->lines, sizeof(unsigned) );
+    ht_table_init(
+      // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
+      // symbol_set in symbol.c.
+      &include->symbol_set, HT_DPTR, 2.0, 64,
+      POINTER_CAST( ht_cmp_fn_t, &symbol_cmp_by_key ),
+      POINTER_CAST( ht_hash_fn_t, &symbol_hash )
+    );
+
+    if ( includer_file != NULL ) {
+      include->includer = include_find_by_File( includer_file );
+      assert( include->includer != NULL );
+      include->depth = include->includer->depth + 1;
+    }
+  }
+
+  *pinclude = include;
+  return hti.inserted;
+}
+
+/**
  * Cleans-up set of included files.
  */
 static void includes_cleanup( void ) {
@@ -418,62 +541,58 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
     exit( EX_DATAERR );
   }
 
-  tidy_include new_include = {
-    .file_id = tidy_getFileUniqueID( included_file )
-  };
-  ht_insert_rv_t const hti =
-    ht_table_insert( &tidy_include_set, &new_include, sizeof new_include );
-  tidy_include *const included = HT_DINT( hti.entry );
-
-  if ( hti.inserted ) {
-    include_init( included, included_file, is_direct ? NULL : includer_file );
-  }
-  else if ( is_direct ) {
-    //
-    // This handles a case like:
-    //
-    //      "util.h"
-    //        </usr/include/stdlib.h>
-    //      ...
-    //      </usr/include/stdlib.h>
-    //
-    // That is, a header was initially included indirectly, but then later
-    // included directly.
-    //
-    included->depth = 0;
-    included->includer = NULL;
-  }
-  else {
-    tidy_include *const old_includer = included->includer;
-    if ( old_includer != NULL ) {
+  tidy_include *included;
+  bool const inserted = include_insert(
+    included_file, is_direct ? NULL : includer_file, &included
+  );
+  if ( !inserted ) {
+    if ( is_direct ) {
       //
       // This handles a case like:
       //
-      //      </usr/include/sys/wait.h>
-      //        </usr/include/sys/signal.h> // #define SIGSTOP 17
+      //      "util.h"
+      //        </usr/include/stdlib.h>
       //      ...
-      //      </usr/include/signal.h>
-      //        </usr/include/sys/signal.h>
+      //      </usr/include/stdlib.h>
       //
-      // That is, a standard header (e.g., sys/wait.h) includes a non-standard
-      // header (e.g., sys/signal.h) so sys/signal.h's includer is set to
-      // sys/wait.h.
+      // That is, a header was initially included indirectly, but then later
+      // included directly.
       //
-      // Later, the standard header version of the non-standard header (e.g.,
-      // signal.h) is included that also includes the non-standard header
-      // (sys/signal.h), so sys/signal.h's includer should be reset to be
-      // signal.h because, later still, sys/signal's proxy will then be set to
-      // be signal.h, not sys/wait.h, so signal.h will be considered the header
-      // that defines SIGSTOP (which is correct) instead of sys/wait.h (which
-      // is incorrect).
-      //
-      tidy_include *const includer = include_find_by_File( includer_file );
-      if ( includer != old_includer &&
-           strcmp( included->basename, includer->basename ) == 0 ) {
-        included->includer = includer;
-      }
+      included->depth = 0;
+      included->includer = NULL;
     }
-    goto done;
+    else {
+      tidy_include *const old_includer = included->includer;
+      if ( old_includer != NULL ) {
+        //
+        // This handles a case like:
+        //
+        //      </usr/include/sys/wait.h>
+        //        </usr/include/sys/signal.h> // #define SIGSTOP 17
+        //      ...
+        //      </usr/include/signal.h>
+        //        </usr/include/sys/signal.h>
+        //
+        // That is, a standard header (e.g., sys/wait.h) includes a non-
+        // standard header (e.g., sys/signal.h) so sys/signal.h's includer is
+        // set to sys/wait.h.
+        //
+        // Later, the standard header version of the non-standard header (e.g.,
+        // signal.h) is included that also includes the non-standard header
+        // (sys/signal.h), so sys/signal.h's includer should be reset to be
+        // signal.h because, later still, sys/signal's proxy will then be set
+        // to be signal.h, not sys/wait.h, so signal.h will be considered the
+        // header that defines SIGSTOP (which is correct) instead of sys/wait.h
+        // (which is incorrect).
+        //
+        tidy_include *const includer = include_find_by_File( includer_file );
+        if ( includer != old_includer &&
+            strcmp( included->basename, includer->basename ) == 0 ) {
+          included->includer = includer;
+        }
+      }
+      goto done;
+    }
   }
 
   if ( IS_VERBOSE( INCLUDES_ALL ) ||
@@ -514,7 +633,7 @@ done:
   //
   // Note: in libclang, it's OK to compare CXFile pointers directly.
   //
-  if ( !hti.inserted && included_file != included->file ) {
+  if ( !inserted && included_file != included->file ) {
     //
     // However, if the file wasn't inserted (because it's a duplicate by file
     // ID), but its original name is NOT the same, it means it was either a
@@ -1046,21 +1165,16 @@ tidy_include* include_find_by_File( CXFile file ) {
 
 tidy_include* include_find_by_rel_path( tidy_source const *source,
                                         char const *rel_path ) {
-  assert( source != NULL );
-  assert( rel_path != NULL );
-  assert( path_is_relative( rel_path ) );
+  return include_find_by_rel_path_impl(
+    source, rel_path, /*allow_insert=*/false
+  );
+}
 
-  strbuf_t      abs_path_buf = STRBUF_INIT();
-  tidy_include *include = NULL;
-
-  if ( ipath_find( rel_path, &abs_path_buf ) ) {
-    CXFile const file = clang_getFile( source->tu, abs_path_buf.str );
-    if ( file != NULL )
-      include = include_find_by_File( file );
-  }
-
-  strbuf_cleanup( &abs_path_buf );
-  return include;
+tidy_include* include_find_or_add_by_rel_path( tidy_source const *source,
+                                               char const *rel_path ) {
+  return include_find_by_rel_path_impl(
+    source, rel_path, /*allow_insert=*/true
+  );
 }
 
 // See comment for NONCONST_OVERLOAD regarding ().
@@ -1073,56 +1187,6 @@ tidy_include const* (include_get_proxy)( tidy_include const *include ) {
 
 fnv1a_t include_hash( tidy_include const *include ) {
   return tidy_FileUniqueID_hash( &include->file_id );
-}
-
-void include_init( tidy_include *include, CXFile include_file,
-                   CXFile includer_file ) {
-  assert( include != NULL );
-
-  CXString const abs_path_cxs = tidy_File_getRealPathName( include_file );
-  include->abs_path = tidy_dupCString( abs_path_cxs );
-  include->file     = include_file;
-  include->file_id  = tidy_getFileUniqueID( include_file );
-  include->is_local = path_is_local( include->abs_path );
-
-  //
-  // We don't call ipath_relativize( included->abs_path ) because that would
-  // relativize the real path with symlinks, if any, resolved.  That might be
-  // surprising to the user if the linked-to file has a different name.
-  //
-  // For example, on macOS, Readline is just a wrapper around Editline and has
-  // this:
-  //
-  //      /usr/include/readline/
-  //        readline.h -> ../editline/readline.h
-  //
-  // If the user includes it unnecessarily, it would print:
-  //
-  //      #include <editline/readline.h>  // DELETE LINE xx
-  //
-  // that the user didn't include with that name.  Therefore, relativize the
-  // original CXFile's path.
-  //
-  include->rel_path = tidy_File_getRelativePath( include_file );
-
-  include->basename = path_basename( include->rel_path );
-#ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
-  include->instance_id = tidy_include_set.size;
-#endif /* NEED_II_MATRIX */
-  array_init( &include->lines, sizeof(unsigned) );
-  ht_table_init(
-    // Use RB_DPTR to make nodes point to existing tidy_symbol objects in
-    // symbol_set in symbol.c.
-    &include->symbol_set, HT_DPTR, 2.0, 64,
-    POINTER_CAST( ht_cmp_fn_t, &symbol_cmp_by_key ),
-    POINTER_CAST( ht_hash_fn_t, &symbol_hash )
-  );
-
-  if ( includer_file != NULL ) {
-    include->includer = include_find_by_File( includer_file );
-    assert( include->includer != NULL );
-    include->depth = include->includer->depth + 1;
-  }
 }
 
 void includes_init( tidy_source const *source ) {

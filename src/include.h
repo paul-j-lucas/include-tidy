@@ -134,12 +134,13 @@ tidy_include const* include_add_symbol( CXFile include_file,
  * @return Returns the corresponding tidy_include if found or NULL if not.
  *
  * @sa include_find_by_rel_path()
+ * @sa include_find_or_add_by_rel_path()
  */
 NODISCARD
 tidy_include* include_find_by_File( CXFile file );
 
 /**
- * Attempts to find an include file by \a rel_path.
+ * Attempts to find a tidy_include file by \a rel_path.
  *
  * @remarks
  * @parblock
@@ -152,13 +153,39 @@ tidy_include* include_find_by_File( CXFile file );
  *
  * @param source The source file being tidied.
  * @param rel_path The relative path of the include file to find.
- * @return Returns its corresponding tidy_include or NULL if not found.
+ * @return Returns the tidy_include corresponding to \a rel_path if found or
+ * NULL if not found.
  *
  * @sa include_find_by_File()
+ * @sa include_find_or_add_by_rel_path()
  */
 NODISCARD
 tidy_include* include_find_by_rel_path( tidy_source const *source,
                                         char const *rel_path );
+
+/**
+ * Attempts to find a tidy_include by \a rel_path; if none is found, a new
+ * tidy_include is added.
+ *
+ * @remarks
+ * @parblock
+ * Since multiple files can have the same relative path, ones _without_ a
+ * proxy, if any, are preferred.
+ *
+ * To find _all_ include files having \a rel_path, use an rb_iterator on \ref
+ * tidy_include_set instead.
+ * @endparblock
+ *
+ * @param source The source file being tidied.
+ * @param rel_path The relative path of the include file to find.
+ * @return Returns the tidy_include corresponding to \a rel_path.
+ *
+ * @sa include_find_by_File()
+ * @sa include_find_by_rel_path()
+ */
+NODISCARD
+tidy_include* include_find_or_add_by_rel_path( tidy_source const *source,
+                                               char const *rel_path );
 
 /**
  * Gets the `#include` delimiters for \a include, either local or system, to
@@ -201,16 +228,6 @@ inline tidy_include* nonconst_include_get_proxy( tidy_include *include ) {
  */
 NODISCARD
 fnv1a_t include_hash( tidy_include const *include );
-
-/**
- * Initializes a tidy_include.
- *
- * @param include The tidy_include to initialize.
- * @param include_file The include's file.
- * @param includer_file The include file including \a include_file, if any.
- */
-void include_init( tidy_include *include, CXFile include_file,
-                   CXFile includer_file );
 
 /**
  * Initializes the set of files included in the given translation unit.
