@@ -57,7 +57,7 @@ static hash_table_t typedef_map;        ///< Map of typedefs.
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * Prints statistics for `typedef`s if requested.
+ * Prints statistics if requested.
  */
 static void print_statistics( void ) {
   if ( !verbose_print_statistics() )

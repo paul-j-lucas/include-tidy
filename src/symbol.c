@@ -660,7 +660,7 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
 }
 
 /**
- * Prints statistics for symbols if requested.
+ * Prints statistics if requested.
  */
 static void print_statistics( void ) {
   if ( !verbose_print_statistics() )

@@ -1458,7 +1458,7 @@ static void print_invalid_value( config_parse_fn_args const *config,
 }
 
 /**
- * Prints statistics for symbols if requested.
+ * Prints statistics if requested.
  */
 static void print_statistics( void ) {
   if ( !verbose_print_statistics() )

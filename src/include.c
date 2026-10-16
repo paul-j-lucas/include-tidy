@@ -940,7 +940,7 @@ static char* path_no_ext_if( char const *path, char if_ext_0 ) {
 }
 
 /**
- * Prints statistics for included files if requested.
+ * Prints statistics if requested.
  */
 static void print_statistics( void ) {
   if ( !verbose_print_statistics() )
