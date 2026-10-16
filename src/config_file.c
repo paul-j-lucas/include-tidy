@@ -1464,12 +1464,16 @@ static void print_statistics( void ) {
   if ( !verbose_print_statistics() )
     return;
 
-  verbose_printf( "  ignore-symbol set:\n" );
+  verbose_printf(
+    "  ignore-symbol set:\n"
+  );
   verbose_printf(
     "    iss-load-factor = " TIDY_STAT_LF_FMT "\n",
-    ht_table_load_factor( &ignore_symbol_set )
+                           ht_table_load_factor( &ignore_symbol_set )
   );
-  verbose_printf( "    iss-size = %u\n", ignore_symbol_set.size );
+  verbose_printf(
+    "    iss-size = %u\n", ignore_symbol_set.size
+  );
 }
 
 /**

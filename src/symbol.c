@@ -666,12 +666,16 @@ static void print_statistics( void ) {
   if ( !verbose_print_statistics() )
     return;
 
-  verbose_printf( "  symbol set:\n" );
+  verbose_printf(
+    "  symbol set:\n"
+  );
   verbose_printf(
     "    ss-load-factor = " TIDY_STAT_LF_FMT "\n",
-    ht_table_load_factor( &symbol_set )
+                          ht_table_load_factor( &symbol_set )
   );
-  verbose_printf( "    ss-size = %u\n", symbol_set.size );
+  verbose_printf(
+    "    ss-size = %u\n", symbol_set.size
+  );
 }
 
 /**

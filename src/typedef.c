@@ -63,12 +63,16 @@ static void print_statistics( void ) {
   if ( !verbose_print_statistics() )
     return;
 
-  verbose_printf( "  typedef map:\n" );
+  verbose_printf(
+    "  typedef map:\n"
+  );
   verbose_printf(
     "    tm-load-factor = " TIDY_STAT_LF_FMT "\n",
-    ht_table_load_factor( &typedef_map )
+                          ht_table_load_factor( &typedef_map )
   );
-  verbose_printf( "    tm-size = %u\n", typedef_map.size );
+  verbose_printf(
+    "    tm-size = %u\n", typedef_map.size
+  );
 }
 
 /**
