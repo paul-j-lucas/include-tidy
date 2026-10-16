@@ -35,7 +35,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "October 14, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "October 15, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -1229,13 +1229,19 @@ The total number of files included.
 .B is-path
 The path of the include file having the most symbols from it referenced.
 .TP
-.B isss-load-factor
+.B isp-ss-load-factor
 The load factor for the symbol hash table for
 .BR is-path .
 .TP
-.B isss-size
+.B isp-ss-size
 The total number of relevant symbols referenced from
 .BR is-path .
+.TP
+.B iss-load-factor
+The load factor for the ignore-symbol hash table.
+.TP
+.B iss-size
+The total number of ignored symbols.
 .TP
 .B ss-load-factor
 The load factor for the symbol hash table.

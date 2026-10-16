@@ -978,9 +978,9 @@ static void print_statistics( void ) {
     );
     verbose_printf( "      symbol set:\n" );
     verbose_printf(
-      "        isss-load-factor = " TIDY_STAT_LF_FMT "\n", max_lf
+      "        isp-ss-load-factor = " TIDY_STAT_LF_FMT "\n", max_lf
     );
-    verbose_printf( "        isss-size = %u\n", max_include->symbol_set.size );
+    verbose_printf( "        isp-ss-size = %u\n", max_include->symbol_set.size );
   }
 }
 
