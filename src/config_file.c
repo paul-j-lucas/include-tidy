@@ -132,8 +132,8 @@ struct config_key {
  * Arguments to a config_parse_fn.
  */
 struct config_parse_fn_args {
-  tidy_source      *source;             ///< Source file being tidied.
   char const       *config_path;        ///< Configuration file path.
+  tidy_source      *source;             ///< Source file being tidied.
   toml_table const *table;              ///< Current table.
   toml_key const   *key;                ///< Current key.
   toml_value const *value;              ///< Value to parse.
