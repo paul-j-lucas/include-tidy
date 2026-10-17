@@ -1,3 +1,7 @@
+2026-10-17  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * config_file.c: Added TABLE_INCLUDE_TIDY_NAME.
+
 2026-10-16  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * man/man1/include-tidy.1, config_file.c, include.c: Added statistics for
