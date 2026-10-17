@@ -258,11 +258,16 @@ static config_key const CONFIG_KEYS[] = {
 };
 
 /**
+ * The name of the **include-tidy** table.
+ */
+static char const TABLE_INCLUDE_TIDY_NAME[] = "include-tidy";
+
+/**
  * Strings for table kinds.
  */
 static char const *const TABLE_KINDS[] = {
   [ TABLE_NONE ] = "none",
-  [ TABLE_INCLUDE_TIDY ] = "include-tidy",
+  [ TABLE_INCLUDE_TIDY ] = TABLE_INCLUDE_TIDY_NAME,
   [ TABLE_HEADER ] = "header",
   [ TABLE_HEADER_SOURCE ] = "source or header",
   [ TABLE_SOURCE ] = "source",
@@ -1234,7 +1239,7 @@ static void config_parse( tidy_source *source, char const *config_path,
     }
 
     config_table_kind table_kinds =
-      strcmp( table.key.name, "include-tidy" ) == 0 ?
+      strcmp( table.key.name, TABLE_INCLUDE_TIDY_NAME ) == 0 ?
         TABLE_INCLUDE_TIDY : TABLE_NONE;
 
     toml_iterator iter;
