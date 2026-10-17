@@ -124,7 +124,7 @@ typedef void (*config_parse_fn)( config_parse_fn_args const *config );
  */
 struct config_key {
   char const       *name;               ///< Key name.
-  config_table_kind table_kinds;        ///< Table kind(s) allowed in.
+  config_table_kind ok_table_kinds;     ///< Table kind(s) OK in.
   config_parse_fn   parse_fn;           ///< Value parsing function.
 };
 
@@ -1238,7 +1238,7 @@ static void config_parse( tidy_source *source, char const *config_path,
       continue;
     }
 
-    config_table_kind table_kinds =
+    config_table_kind ok_table_kinds =
       strcmp( table.key.name, TABLE_INCLUDE_TIDY_NAME ) == 0 ?
         TABLE_INCLUDE_TIDY : TABLE_NONE;
 
@@ -1256,20 +1256,21 @@ static void config_parse( tidy_source *source, char const *config_path,
         continue;
       }
 
-      if ( table_kinds == TABLE_NONE ||
-           is_0n_bit_only_in_set( found_key->table_kinds, table_kinds ) ) {
-        table_kinds = found_key->table_kinds;
+      if ( ok_table_kinds == TABLE_NONE ||
+           is_0n_bit_only_in_set( found_key->ok_table_kinds,
+                                  ok_table_kinds ) ) {
+        ok_table_kinds = found_key->ok_table_kinds;
       }
-      else if ( (found_key->table_kinds & table_kinds) == 0 ) {
-        assert( table_kinds < ARRAY_SIZE( TABLE_KINDS ) );
+      else if ( (found_key->ok_table_kinds & ok_table_kinds) == 0 ) {
+        assert( ok_table_kinds < ARRAY_SIZE( TABLE_KINDS ) );
         print_file_error(
           config_path, kv->key.loc.line, kv->key.loc.col,
           "\"%s\": key not allowed in %s table%s; allowed only in %s table%s\n",
           found_key->name,
-          TABLE_KINDS[ table_kinds ],
-          is_1_bit( table_kinds ) ? "" : "s",
-          TABLE_KINDS[ found_key->table_kinds ],
-          is_1_bit( found_key->table_kinds ) ? "" : "s"
+          TABLE_KINDS[ ok_table_kinds ],
+          is_1_bit( ok_table_kinds ) ? "" : "s",
+          TABLE_KINDS[ found_key->ok_table_kinds ],
+          is_1_bit( found_key->ok_table_kinds ) ? "" : "s"
         );
         ++error_count;
         continue;
