@@ -1110,7 +1110,7 @@ static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
       continue;
 
     CXCursor const sym_csr = tidy_Token_getScopedNameCursor(
-      sid->source->tu, tokens, token_count, &i, cls_csr, sid->source->lang
+      tu, tokens, token_count, &i, cls_csr, sid->source->lang
     );
     maybe_add_symbol( sym_csr, sym_csr, sid );
   } // for
@@ -1166,12 +1166,12 @@ static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
   );
 
   unsigned i = clang_Cursor_isMacroFunctionLike( macro_csr ) ?
-    macro_get_params( sid->source->tu, tokens, token_count, &param_set ) :
+    macro_get_params( tu, tokens, token_count, &param_set ) :
     1;                                  // tokens[0] = macro name; start at 1
 
   for ( ; i < token_count; ++i ) {
     CXCursor const sym_csr = macro_Token_getScopedNameCursor(
-      sid->source->tu, tokens, token_count, &i, &param_set, sid->source->lang
+      tu, tokens, token_count, &i, &param_set, sid->source->lang
     );
     maybe_add_symbol( sym_csr, sym_csr, sid );
   } // for
