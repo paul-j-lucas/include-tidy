@@ -687,6 +687,21 @@ bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
 /**
  * Gets whether the spelling of \a token equals any one of \a values.
  *
+ * @param TU The translation unit to use.
+ * @param TOKEN The token to compare.
+ * @param ... A comma separated list of values to compare against.  It is
+ * implicitly NULL terminated.
+ * @return Returns the index of the matched value or -1 for none.
+ *
+ * @sa tidy_Token_isEqualTo()
+ */
+#define tidy_Token_isEqualToAny(TU,TOKEN,...)   \
+  tidy_Token_isEqualToAny_impl( (TU), (TOKEN),  \
+                                (char const*[]){ __VA_ARGS__, NULL } )
+
+/**
+ * Gets whether the spelling of \a token equals any one of \a values.
+ *
  * @note This function isn't normally called directly; use the
  * #tidy_Token_isEqualToAny() macro instead.
  *
@@ -711,21 +726,6 @@ int tidy_Token_isEqualToAny_impl( CXTranslationUnit tu, CXToken token,
  */
 NODISCARD
 bool tidy_Token_isScopeQualifier( CXTranslationUnit tu, CXToken token );
-
-/**
- * Gets whether the spelling of \a token equals any one of \a values.
- *
- * @param TU The translation unit to use.
- * @param TOKEN The token to compare.
- * @param ... A comma separated list of values to compare against.  It is
- * implicitly NULL terminated.
- * @return Returns the index of the matched value or -1 for none.
- *
- * @sa tidy_Token_isEqualTo()
- */
-#define tidy_Token_isEqualToAny(TU,TOKEN,...)   \
-  tidy_Token_isEqualToAny_impl( (TU), (TOKEN),  \
-                                (char const*[]){ __VA_ARGS__, NULL } )
 
 ///////////////////////////////////////////////////////////////////////////////
 
