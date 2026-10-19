@@ -359,7 +359,7 @@ struct ht_entry {
  */
 struct ht_insert_rv {
   /**
-   * The \ref ht_entry "entry" either found or inserted.  Use \ref inserted to
+   * The \ref ht_entry "entry" either found or inserted: use \ref inserted to
    * know which.
    *
    * @warning Even though this is a pointer to a non-`const` \ref ht_entry, the
