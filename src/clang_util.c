@@ -218,13 +218,13 @@ static void getScopedName_impl( CXCursor cursor, getCursorName_fn name_fn,
   assert( name_fn != NULL );
   assert( sbuf != NULL );
 
-  CXCursor sem_parent = cursor;
+  CXCursor parent = cursor;
   do {
-    sem_parent = clang_getCursorSemanticParent( sem_parent );
-  } while ( clang_Cursor_isInlineNamespace( sem_parent ) );
+    parent = clang_getCursorSemanticParent( parent );
+  } while ( clang_Cursor_isInlineNamespace( parent ) );
 
-  if ( tidy_Cursor_isScopeDecl( sem_parent ) )
-    getScopedName_impl( sem_parent, name_fn, sbuf );
+  if ( tidy_Cursor_isScopeDecl( parent ) )
+    getScopedName_impl( parent, name_fn, sbuf );
 
   CXString const name_cxs = (*name_fn)( cursor );
   char const *const name = null_if_empty( clang_getCString( name_cxs ) );
@@ -587,14 +587,14 @@ bool tidy_Cursor_isInheritedFrom( CXCursor cursor, CXCursor base_csr ) {
         return true;
     }
 
-    CXCursor sem_parent = clang_getCursorSemanticParent( cursor );
-    if ( unlikely( tidy_Cursor_isInvalid( sem_parent ) ||
-                   clang_equalCursors( sem_parent, cursor ) ) ) {
+    CXCursor parent = clang_getCursorSemanticParent( cursor );
+    if ( unlikely( tidy_Cursor_isInvalid( parent ) ||
+                   clang_equalCursors( parent, cursor ) ) ) {
       // LCOV_EXCL_START
-      sem_parent = clang_getCursorLexicalParent( cursor );
+      parent = clang_getCursorLexicalParent( cursor );
       // LCOV_EXCL_STOP
     }
-    cursor = sem_parent;
+    cursor = parent;
   } // while
 
   return false;
@@ -686,8 +686,8 @@ bool tidy_Cursor_isReservedName( CXCursor cursor, enum CXLanguageKind lang ) {
             is_reserved = true;
           break;
         case CXLanguage_CPlusPlus:;
-          CXCursor const sem_parent = clang_getCursorSemanticParent( cursor );
-          enum CXCursorKind const kind = clang_getCursorKind( sem_parent );
+          CXCursor const parent = clang_getCursorSemanticParent( cursor );
+          enum CXCursorKind const kind = clang_getCursorKind( parent );
           if ( kind == CXCursor_TranslationUnit )
             is_reserved = true;
           break;
