@@ -1,3 +1,7 @@
+2026-10-19  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * str_util.h: Now using SKIP_WS.
+
 2026-10-17  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbol.c: Now just using "tu".
