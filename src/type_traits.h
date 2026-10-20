@@ -51,8 +51,6 @@
  * @return Returns 1 (true) only if \a A is an array; 0 (false) otherwise.
  *
  * @sa https://stackoverflow.com/a/77881417/99089
- *
- * @sa #IS_POINTER_EXPR()
  */
 #ifdef HAVE_TYPEOF
 # define IS_ARRAY_EXPR(A)     \
@@ -105,24 +103,6 @@
  * @sa #IS_UNSIGNED_TYPE()
  */
 #define IS_INTEGRAL_TYPE(TYPE)    IS_INTEGRAL_EXPR( (TYPE)0 )
-
-/**
- * Checks (at compile-time) whether \a P is a pointer.
- *
- * @param P The alleged pointer to check.
- * @return Returns 1 (true) only if \a P is a pointer; 0 (false) otherwise.
- *
- * @sa #IS_ARRAY_EXPR()
- */
-#ifdef HAVE_TYPEOF
-#define IS_POINTER_EXPR(P)        \
-  _Generic( &(typeof((P))){ 0 },  \
-    typeof(*(P)) ** : 1,          \
-    default         : 0           \
-  )
-#else
-# define IS_POINTER_EXPR(P)       1
-#endif /* HAVE_TYPEOF */
 
 /**
  * Checks (at compile-time) whether \a EXPR is a pointer to `const`.
