@@ -539,6 +539,9 @@ static unsigned macro_get_params( CXTranslationUnit tu,
                                   hash_table_t *param_set ) {
   assert( param_set != NULL );
 
+  if ( unlikely( token_count < 2 ) )
+    return 1;
+
   unsigned rv_idx = 1;
 
   // Start at index 2 since tokens[0] is the macro name, tokens[1] is the '('.
