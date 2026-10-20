@@ -601,6 +601,8 @@ static enum CXLanguageKind get_x_language( int argc,
       return CXLanguage_C;
     if ( strcmp( lang, "c++" ) == 0 )
       return CXLanguage_CPlusPlus;
+    if ( strcmp( lang, "none" ) == 0 )
+      break;
     fatal_error( EX_USAGE,
       "\"%s\": invalid value for -x; must be either \"c\" or \"c++\"\n", lang
     );
