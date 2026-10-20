@@ -82,7 +82,7 @@ inline char* nonconst_empty_if_null( char *s ) {
  */
 NODISCARD
 inline char const* null_if_empty( char const *s ) {
-  return s != NULL && *SKIP_CHARS( s, WS_CHARS ) == '\0' ? NULL : s;
+  return s != NULL && *SKIP_WS( s ) == '\0' ? NULL : s;
 }
 
 /// @cond DOXYGEN_IGNORE
