@@ -1099,14 +1099,7 @@ static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
   for ( unsigned i = 0; i < token_count; ++i ) {
     if ( clang_getTokenKind( tokens[i] ) != CXToken_Identifier )
       continue;
-
-    CXString const    token_cxs = clang_getTokenSpelling( tu, tokens[i] );
-    char const *const token_cs  = clang_getCString( token_cxs );
-    bool const        is_field_name = strcmp( token_cs, field_name_cs ) == 0;
-
-    clang_disposeString( token_cxs );
-
-    if ( is_field_name )
+    if ( tidy_Token_isEqualTo( tu, tokens[i], field_name_cs ) )
       continue;
 
     CXCursor const sym_csr = tidy_Token_getScopedNameCursor(
