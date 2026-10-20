@@ -674,11 +674,8 @@ bool tidy_Cursor_isReservedName( CXCursor cursor, enum CXLanguageKind lang ) {
   if ( name == NULL || name[0] == '\0' )
     goto done;                          // LCOV_EXCL_LINE
 
-  if ( lang == CXLanguage_CPlusPlus && strstr( name, "__" ) != NULL ) {
-    is_reserved = true;
-  }
-  else if ( name[0] == '_' ) {
-    if ( isupper( name[1] ) ) {
+  if ( name[0] == '_' ) {
+    if ( name[1] == '_' || isupper( STATIC_CAST( unsigned char, name[1] ) ) ) {
       is_reserved = true;
     }
     else {
@@ -698,6 +695,9 @@ bool tidy_Cursor_isReservedName( CXCursor cursor, enum CXLanguageKind lang ) {
           /* suppress warning */;
       } // switch
     }
+  }
+  else if ( lang == CXLanguage_CPlusPlus && strstr( name, "__" ) != NULL ) {
+    is_reserved = true;
   }
 
 done:
