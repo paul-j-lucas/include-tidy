@@ -1,3 +1,10 @@
+2026-10-20  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * man/man1/include-tidy.1, cli_options.c: Added support for --language.
+   * cli_options.c: Now accepting "none" for -x for gcc/clang compatibility.
+   * type_traits.h: Eliminated IS_POINTER_EXPR().
+   * symbol.c: Added token_count check.
+
 2026-10-19  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * clang_util.c: Now always checking for leading __.
