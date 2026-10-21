@@ -1094,10 +1094,9 @@ static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
   if ( unlikely( token_count == 0 ) )
     return;                             // LCOV_EXCL_LINE
 
+  CXCursor const    cls_csr = clang_getCursorSemanticParent( field_csr );
   CXString const    field_name_cxs = clang_getCursorSpelling( field_csr );
   char const *const field_name_cs  = clang_getCString( field_name_cxs );
-
-  CXCursor const cls_csr = clang_getCursorSemanticParent( field_csr );
 
   for ( unsigned i = 0; i < token_count; ++i ) {
     if ( clang_getTokenKind( tokens[i] ) != CXToken_Identifier )
