@@ -35,7 +35,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "October 15, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "October 20, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -116,8 +116,10 @@ and source (\f(CW.c\fP, \f(CW.cpp\fP, etc.)
 files
 since both should include what they use.
 (See the
+.B \-\-language
+or
 .B \-x
-option for additional filename extensions.)
+options for additional filename extensions.)
 .PP
 If
 .I source-file
@@ -646,7 +648,7 @@ options
 and are passed to it verbatim.
 Important C or C++ compiler options:
 .TP 6
-.BI \-x " s"
+.BI \-\-language \f1=\fPs "\f1 | \fP" "" \-x " s"
 Specifies the langauge
 .I s
 of
@@ -685,6 +687,8 @@ unlike with a C or C++ compiler,
 .BR include-tidy .
 If you use \f(CW.h\fP for C++ headers,
 you'll need to specify
+.BR \-\-language = c++
+or
 .B \-xc++
 explicitly.
 .SS Other Options

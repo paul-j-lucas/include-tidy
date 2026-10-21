@@ -558,6 +558,51 @@ static char const* get_short_opt_value( int argc, char const *const argv[],
 }
 
 /**
+ * Gets the language of the compiler's `-x` or `--language` option, if given.
+ *
+ * @param argc The command-line argument count from `main()`.
+ * @param argv The command-line argument values from `main()`.
+ * @return Returns the language or `CXLanguage_Invalid` if not given.
+ */
+NODISCARD
+static enum CXLanguageKind get_source_language( int argc,
+                                                char const *const argv[] ) {
+  assert( argc > 0 );
+  assert( argv != NULL );
+
+  struct lang_libclang_map {
+    char const         *lang_name;
+    enum CXLanguageKind lang_kind;
+  };
+  typedef struct lang_libclang_map lang_libclang_map;
+
+  static lang_libclang_map LANG_LIBCLANG_MAP[] = {
+    { "c",    CXLanguage_C          },
+    { "c++",  CXLanguage_CPlusPlus  },
+    { "none", CXLanguage_Invalid    }
+  };
+
+  for ( int i = 1; i < argc; ++i ) {
+    char const *lang = get_short_opt_value( argc, argv, 'x', &i );
+    if ( lang == NULL )
+      lang = get_long_opt_value( argc, argv, "language", &i );
+    if ( lang == NULL )
+      continue;
+
+    FOREACH_ARRAY_ELEMENT( lang_libclang_map, map, LANG_LIBCLANG_MAP ) {
+      if ( strcmp( lang, map->lang_name ) == 0 )
+        return map->lang_kind;
+    } // for
+
+    fatal_error( EX_USAGE,
+      "\"%s\": invalid value for -x; must be either \"c\" or \"c++\"\n", lang
+    );
+  } // for
+
+  return CXLanguage_Invalid;
+}
+
+/**
  * Gets the likely source path from \a argv.
  *
  * @param argc The argument count from `main()`.
@@ -577,38 +622,6 @@ static char const* get_source_path( int argc, char const *argv[] ) {
   } // for
 
   return NULL;
-}
-
-/**
- * Gets the language of the compiler's `-x` option, if given.
- *
- * @param argc The command-line argument count from `main()`.
- * @param argv The command-line argument values from `main()`.
- * @return Returns the language of the compiler's `-x` option or
- * `CXLanguage_Invalid` if not given.
- */
-NODISCARD
-static enum CXLanguageKind get_x_language( int argc,
-                                           char const *const argv[] ) {
-  assert( argc > 0 );
-  assert( argv != NULL );
-
-  for ( int i = 1; i < argc; ++i ) {
-    char const *const lang = get_short_opt_value( argc, argv, 'x', &i );
-    if ( lang == NULL )
-      continue;
-    if ( strcmp( lang, "c" ) == 0 )
-      return CXLanguage_C;
-    if ( strcmp( lang, "c++" ) == 0 )
-      return CXLanguage_CPlusPlus;
-    if ( strcmp( lang, "none" ) == 0 )
-      break;
-    fatal_error( EX_USAGE,
-      "\"%s\": invalid value for -x; must be either \"c\" or \"c++\"\n", lang
-    );
-  } // for
-
-  return CXLanguage_Invalid;
 }
 
 /**
@@ -1130,7 +1143,7 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
   char const *const compiler_path = get_compiler_path( *pargc, *pargv );
   char const *const source_ext =
     source_path != NULL ? path_ext( source_path ) : NULL;
-  enum CXLanguageKind source_lang = get_x_language( *pargc, *pargv );
+  enum CXLanguageKind source_lang = get_source_language( *pargc, *pargv );
   if ( source_lang == CXLanguage_Invalid && source_ext != NULL ) {
     tidy_file_ext const *const file_ext = file_ext_find( source_ext );
     if ( file_ext != NULL )

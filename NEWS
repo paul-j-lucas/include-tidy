@@ -17,6 +17,9 @@ Overloaded functions in C++ now have duplicates eliminated from comments.
 For a symbol table in a configuration file, the order of the includes is now
 preserved and represents a priority order.
 
+** `--language` option
+The `--language` compiler option option is now supported in addition to `-x`.
+
 ** TOML literal strings
 TOML literal strings (`'...'`) are now supported.
 
