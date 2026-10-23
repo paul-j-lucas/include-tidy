@@ -1,3 +1,9 @@
+2026-10-23  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * config_file.c: #include fixes.
+   * clang_util.c, clang_util.h, symbol.c: Moved
+     tidy_Token_getScopedNameCursor().
+
 2026-10-20  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * man/man1/include-tidy.1, cli_options.c: Added support for --language.
