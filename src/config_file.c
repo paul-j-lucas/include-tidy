@@ -35,7 +35,6 @@
 #include "hash_table.h"
 #include "include-tidy.h"
 #include "include.h"
-#include "ipath.h"
 #include "options.h"
 #include "path_util.h"
 #include "print.h"
