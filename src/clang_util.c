@@ -955,6 +955,46 @@ CXToken const* tidy_Token_getPrev( CXToken const tokens[], int *ptoken_idx ) {
   return pprev_token;
 }
 
+CXCursor tidy_Token_getScopedNameCursor( CXTranslationUnit tu,
+                                         CXToken const tokens[],
+                                         unsigned token_count,
+                                         unsigned *ptoken_idx,
+                                         CXCursor scope_csr,
+                                         enum CXLanguageKind lang ) {
+  assert( ptoken_idx != NULL );
+  unsigned token_idx = *ptoken_idx;
+
+  CXCursor rv_csr =
+    tidy_getCursorByNameToken( tu, tokens[ *ptoken_idx ], scope_csr );
+
+  if ( lang == CXLanguage_CPlusPlus ) {
+    while ( !tidy_Cursor_isInvalid( rv_csr ) ) {
+      unsigned next_idx = token_idx;
+      CXToken const *t;
+
+      // Look for "::".
+      if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
+        break;
+      if ( !tidy_Token_isScopeQualifier( tu, *t ) )
+        break;
+
+      // Look for an identifier.
+      if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
+        break;
+      CXCursor const next_csr = tidy_getCursorByNameToken( tu, *t, rv_csr );
+      if ( tidy_Cursor_isInvalid( next_csr ) )
+        break;                          // LCOV_EXCL_LINE
+
+      rv_csr = next_csr;
+      token_idx = next_idx;
+    } // while
+
+    *ptoken_idx = token_idx;
+  }
+
+  return rv_csr;
+}
+
 bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
                            char const *value ) {
   assert( value != NULL );

@@ -953,59 +953,6 @@ skip_children:
 }
 
 /**
- * Gets the cursor for the scoped symbol from \a tokens.
- *
- * @param tu The translation unit to use.
- * @param tokens The array of macro tokens.
- * @param token_count The length of \a tokens.
- * @param ptoken_idx A pointer to the current index within \a tokens.
- * @param scope_csr The scope to look in.
- * @param lang The language of the source file being tidied.
- * @return Returns said cursor or the null cursor for none.
- */
-NODISCARD
-static CXCursor tidy_Token_getScopedNameCursor( CXTranslationUnit tu,
-                                                CXToken const tokens[],
-                                                unsigned token_count,
-                                                unsigned *ptoken_idx,
-                                                CXCursor scope_csr,
-                                                enum CXLanguageKind lang ) {
-  assert( ptoken_idx != NULL );
-  unsigned token_idx = *ptoken_idx;
-
-  CXCursor rv_csr =
-    tidy_getCursorByNameToken( tu, tokens[ *ptoken_idx ], scope_csr );
-
-  if ( lang == CXLanguage_CPlusPlus ) {
-    while ( !tidy_Cursor_isInvalid( rv_csr ) ) {
-      unsigned next_idx = token_idx;
-      CXToken const *t;
-
-      // Look for "::".
-      if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
-        break;
-      if ( !tidy_Token_isScopeQualifier( tu, *t ) )
-        break;
-
-      // Look for an identifier.
-      if ( (t = tidy_Token_getNext( tokens, token_count, &next_idx )) == NULL )
-        break;
-      CXCursor const next_csr =
-        tidy_getCursorByNameToken( tu, *t, rv_csr );
-      if ( tidy_Cursor_isInvalid( next_csr ) )
-        break;                          // LCOV_EXCL_LINE
-
-      rv_csr = next_csr;
-      token_idx = next_idx;
-    } // while
-
-    *ptoken_idx = token_idx;
-  }
-
-  return rv_csr;
-}
-
-/**
  * Visits a `CXCursor_CallExpr` kind of cursor.
  *
  * @param call_csr The call expression's cursor to visit.
