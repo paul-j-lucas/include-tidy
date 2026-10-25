@@ -995,8 +995,14 @@ CXCursor tidy_Token_getScopedNameCursor( CXTranslationUnit tu,
   return rv_csr;
 }
 
-bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
-                           char const *value ) {
+bool tidy_Token_isScopeQualifier( CXTranslationUnit tu, CXToken token ) {
+  if ( clang_getTokenKind( token ) != CXToken_Punctuation )
+    return false;
+  return tidy_Token_isSpellingEqualTo( tu, token, "::" );
+}
+
+bool tidy_Token_isSpellingEqualTo( CXTranslationUnit tu, CXToken token,
+                                   char const *value ) {
   assert( value != NULL );
 
   CXString const    token_cxs = clang_getTokenSpelling( tu, token );
@@ -1007,8 +1013,8 @@ bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
   return cmp == 0;
 }
 
-int tidy_Token_isEqualToAny_impl( CXTranslationUnit tu, CXToken token,
-                                  char const *values[] ) {
+int tidy_Token_isSpellingEqualToAny_impl( CXTranslationUnit tu, CXToken token,
+                                          char const *values[] ) {
   assert( values != NULL );
 
   CXString const    token_cxs = clang_getTokenSpelling( tu, token );
@@ -1025,12 +1031,6 @@ int tidy_Token_isEqualToAny_impl( CXTranslationUnit tu, CXToken token,
 
   clang_disposeString( token_cxs );
   return equal_idx;
-}
-
-bool tidy_Token_isScopeQualifier( CXTranslationUnit tu, CXToken token ) {
-  if ( clang_getTokenKind( token ) != CXToken_Punctuation )
-    return false;
-  return tidy_Token_isEqualTo( tu, token, "::" );
 }
 
 ///////////////////////////////////////////////////////////////////////////////

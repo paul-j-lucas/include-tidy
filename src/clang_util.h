@@ -689,6 +689,17 @@ CXCursor tidy_Token_getScopedNameCursor( CXTranslationUnit tu,
                                          enum CXLanguageKind lang );
 
 /**
+ * Gets whether the spelling of \a token is the scope qualifier `"::"`.
+ *
+ * @param tu The translation unit to use.
+ * @param token The token to check.
+ * @return Returns `true` only if the spelling of \a token equals `"::"`.
+ * @sa tidy_Token_isSpellingEqualTo()
+ */
+NODISCARD
+bool tidy_Token_isScopeQualifier( CXTranslationUnit tu, CXToken token );
+
+/**
  * Gets whether the spelling of \a token equals \a value.
  *
  * @param tu The translation unit to use.
@@ -696,12 +707,12 @@ CXCursor tidy_Token_getScopedNameCursor( CXTranslationUnit tu,
  * @param value The value to compare against.
  * @return Returns `true` only if the spelling of \a token equals \a value.
  *
- * @sa #tidy_Token_isEqualToAny()
+ * @sa #tidy_Token_isSpellingEqualToAny()
  * @sa tidy_Token_isScopeQualifier()
  */
 NODISCARD
-bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
-                           char const *value );
+bool tidy_Token_isSpellingEqualTo( CXTranslationUnit tu, CXToken token,
+                                   char const *value );
 
 /**
  * Gets whether the spelling of \a token equals any one of \a values.
@@ -712,39 +723,28 @@ bool tidy_Token_isEqualTo( CXTranslationUnit tu, CXToken token,
  * implicitly NULL terminated.
  * @return Returns the index of the matched value or -1 for none.
  *
- * @sa tidy_Token_isEqualTo()
+ * @sa tidy_Token_isSpellingEqualTo()
  */
-#define tidy_Token_isEqualToAny(TU,TOKEN,...)   \
-  tidy_Token_isEqualToAny_impl( (TU), (TOKEN),  \
-                                (char const*[]){ __VA_ARGS__, NULL } )
+#define tidy_Token_isSpellingEqualToAny(TU,TOKEN,...)   \
+  tidy_Token_isSpellingEqualToAny_impl( (TU), (TOKEN),  \
+                                        (char const*[]){ __VA_ARGS__, NULL } )
 
 /**
  * Gets whether the spelling of \a token equals any one of \a values.
  *
  * @note This function isn't normally called directly; use the
- * #tidy_Token_isEqualToAny() macro instead.
+ * #tidy_Token_isSpellingEqualToAny() macro instead.
  *
  * @param tu The translation unit to use.
  * @param token The token to compare.
  * @param values The NULL terminated array of values to compare against.
  * @return Returns the index of the matched value or -1 for none.
  *
- * @sa tidy_Token_isEqualTo()
+ * @sa tidy_Token_isSpellingEqualTo()
  */
 NODISCARD
-int tidy_Token_isEqualToAny_impl( CXTranslationUnit tu, CXToken token,
-                                  char const *values[] );
-
-/**
- * Gets whether the spelling of \a token is the scope qualifier `"::"`.
- *
- * @param tu The translation unit to use.
- * @param token The token to check.
- * @return Returns `true` only if the spelling of \a token equals `"::"`.
- * @sa tidy_Token_isEqualTo()
- */
-NODISCARD
-bool tidy_Token_isScopeQualifier( CXTranslationUnit tu, CXToken token );
+int tidy_Token_isSpellingEqualToAny_impl( CXTranslationUnit tu, CXToken token,
+                                          char const *values[] );
 
 ///////////////////////////////////////////////////////////////////////////////
 
