@@ -95,7 +95,7 @@ enum config_table_kind {
 };
 
 /// @cond DOXYGEN_IGNORE
-#define TABLE_HEADER_SOURCE       (TABLE_HEADER | TABLE_SOURCE)
+#define TABLE_HEADER_OR_SOURCE    (TABLE_HEADER | TABLE_SOURCE)
 /// @endcond
 
 ////////// typedefs ///////////////////////////////////////////////////////////
@@ -232,28 +232,28 @@ static void         toml_value_print( toml_value const*, FILE* );
  * Configuration keys.
  */
 static config_key const CONFIG_KEYS[] = {
-  { "add-c-includes",     TABLE_INCLUDE_TIDY,   &add_c_includes_parse     },
-  { "add-cxx-includes",   TABLE_INCLUDE_TIDY,   &add_cxx_includes_parse   },
-  { "align-column",       TABLE_INCLUDE_TIDY,   &align_column_parse       },
-  { "all-includes",       TABLE_INCLUDE_TIDY,   &all_includes_parse       },
-  { "associated-header",  TABLE_SOURCE,         &associated_header_parse  },
-  { "color",              TABLE_INCLUDE_TIDY,   &color_parse              },
-  { "comment-style",      TABLE_INCLUDE_TIDY,   &comment_style_parse      },
-  { "comment-symbols",    TABLE_INCLUDE_TIDY,   &comment_symbols_parse    },
-  { "elide-includes",     TABLE_HEADER_SOURCE,  &elide_includes_parse     },
-  { "error",              TABLE_INCLUDE_TIDY,   &error_parse              },
-  { "first",              TABLE_HEADER,         &first_parse              },
-  { "ignore",             TABLE_SYMBOL,         &ignore_parse             },
-  { "ignore-as-argument", TABLE_HEADER_SOURCE,  &ignore_as_argument_parse },
-  { "ignore-symbols",     TABLE_HEADER_SOURCE,  &ignore_symbols_parse     },
-  { "includes",           TABLE_SYMBOL,         &includes_parse           },
-  { "keep",               TABLE_HEADER,         &keep_parse               },
-  { "keep-includes",      TABLE_HEADER_SOURCE,  &keep_includes_parse      },
-  { "line-length",        TABLE_INCLUDE_TIDY,   &line_length_parse        },
-  { "proxy",              TABLE_HEADER,         &proxy_parse              },
-  { "std-c-includes",     TABLE_INCLUDE_TIDY,   &std_c_includes_parse     },
-  { "std-cxx-includes",   TABLE_INCLUDE_TIDY,   &std_cxx_includes_parse   },
-  { "symbols",            TABLE_HEADER,         &symbols_parse            },
+  { "add-c-includes",     TABLE_INCLUDE_TIDY,     &add_c_includes_parse     },
+  { "add-cxx-includes",   TABLE_INCLUDE_TIDY,     &add_cxx_includes_parse   },
+  { "align-column",       TABLE_INCLUDE_TIDY,     &align_column_parse       },
+  { "all-includes",       TABLE_INCLUDE_TIDY,     &all_includes_parse       },
+  { "associated-header",  TABLE_SOURCE,           &associated_header_parse  },
+  { "color",              TABLE_INCLUDE_TIDY,     &color_parse              },
+  { "comment-style",      TABLE_INCLUDE_TIDY,     &comment_style_parse      },
+  { "comment-symbols",    TABLE_INCLUDE_TIDY,     &comment_symbols_parse    },
+  { "elide-includes",     TABLE_HEADER_OR_SOURCE, &elide_includes_parse     },
+  { "error",              TABLE_INCLUDE_TIDY,     &error_parse              },
+  { "first",              TABLE_HEADER,           &first_parse              },
+  { "ignore",             TABLE_SYMBOL,           &ignore_parse             },
+  { "ignore-as-argument", TABLE_HEADER_OR_SOURCE, &ignore_as_argument_parse },
+  { "ignore-symbols",     TABLE_HEADER_OR_SOURCE, &ignore_symbols_parse     },
+  { "includes",           TABLE_SYMBOL,           &includes_parse           },
+  { "keep",               TABLE_HEADER,           &keep_parse               },
+  { "keep-includes",      TABLE_HEADER_OR_SOURCE, &keep_includes_parse      },
+  { "line-length",        TABLE_INCLUDE_TIDY,     &line_length_parse        },
+  { "proxy",              TABLE_HEADER,           &proxy_parse              },
+  { "std-c-includes",     TABLE_INCLUDE_TIDY,     &std_c_includes_parse     },
+  { "std-cxx-includes",   TABLE_INCLUDE_TIDY,     &std_cxx_includes_parse   },
+  { "symbols",            TABLE_HEADER,           &symbols_parse            },
 };
 
 /**
@@ -268,7 +268,7 @@ static char const *const TABLE_KINDS[] = {
   [ TABLE_NONE ] = "none",
   [ TABLE_INCLUDE_TIDY ] = TABLE_INCLUDE_TIDY_NAME,
   [ TABLE_HEADER ] = "header",
-  [ TABLE_HEADER_SOURCE ] = "source or header",
+  [ TABLE_HEADER_OR_SOURCE ] = "source or header",
   [ TABLE_SOURCE ] = "source",
   [ TABLE_SYMBOL ] = "symbol"
 };
