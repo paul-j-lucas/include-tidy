@@ -1,3 +1,7 @@
+2026-10-27  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * ipath.c, path_util.c: s/PATH_MAX + 1/PATH_MAX/
+
 2026-10-23  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * config_file.c: #include fixes.
