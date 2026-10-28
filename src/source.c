@@ -85,23 +85,23 @@ void source_check_for_errors( tidy_source const *source ) {
         clang_getSpellingLocation(
           diag_loc, &diag_file, &diag_line, &diag_col, &diag_offset
         );
-        CXString const    diag_file_cxs = clang_getFileName( diag_file );
-        char const *const diag_file_cs = clang_getCString( diag_file_cxs );
         CXString const    diag_msg_cxs = clang_getDiagnosticSpelling( diag );
         char const *const diag_msg_cs = clang_getCString( diag_msg_cxs );
+        CXString const    diag_path_cxs = clang_getFileName( diag_file );
+        char const *const diag_path_cs = clang_getCString( diag_path_cxs );
 
-        if ( diag_file_cs != NULL ) {
+        if ( diag_path_cs != NULL && diag_path_cs[0] != '\0' ) {
           print_file_error(
-            diag_file_cs, diag_line, diag_col, "%s\n", diag_msg_cs
+            diag_path_cs, diag_line, diag_col, "%s\n", diag_msg_cs
           );
-          print_source_line( diag_file_cs, diag_line, diag_col, diag_offset );
+          print_source_line( diag_path_cs, diag_line, diag_col, diag_offset );
         }
         else {
           print_error_from( "libclang", "%s\n", diag_msg_cs );
         }
 
         clang_disposeString( diag_msg_cxs );
-        clang_disposeString( diag_file_cxs );
+        clang_disposeString( diag_path_cxs );
         break;
       default:
         /* suppress warning */;
