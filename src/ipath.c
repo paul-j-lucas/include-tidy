@@ -36,7 +36,7 @@
 
 // standard
 #include <assert.h>
-#include <limits.h>                     /* for PATH_MAX */
+#include <limits.h>                     /* PATH_MAX */
 #include <stdbool.h>
 #include <stdlib.h>                     /* for exit() */
 #include <string.h>                     /* for str...() */
@@ -83,7 +83,7 @@ static void ipaths_cleanup( void ) {
 void ipath_add( char const *path ) {
   assert( path != NULL );
 
-  char path_buf[ PATH_MAX + 1 ];
+  char path_buf[ PATH_MAX ];
   if ( realpath( path, path_buf ) == NULL )
     return;
 
@@ -132,7 +132,7 @@ bool ipath_find( char const *rel_path, strbuf_t *rv_abs_path_buf ) {
 char* ipath_relativize( char const *abs_path ) {
   assert( abs_path != NULL );
 
-  char path_buf[ PATH_MAX + 1 ];
+  char path_buf[ PATH_MAX ];
   if ( realpath( abs_path, path_buf ) != NULL )
     abs_path = path_buf;
 
