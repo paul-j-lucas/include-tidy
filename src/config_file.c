@@ -223,7 +223,6 @@ static void         symbol_include_add( char const*, tidy_include const* );
 static void         symbol_includes_cleanup( symbol_includes* );
 static void         symbols_parse( config_parse_fn_args const* );
 static void         symbols_parse_string( config_parse_fn_args const* );
-
 static void         toml_value_print( toml_value const*, FILE* );
 
 ////////// local constants ////////////////////////////////////////////////////
