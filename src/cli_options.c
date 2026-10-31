@@ -570,13 +570,13 @@ static enum CXLanguageKind get_source_language( int argc,
   assert( argc > 0 );
   assert( argv != NULL );
 
-  struct lang_libclang_map {
+  struct lang_map {
     char const         *lang_name;
     enum CXLanguageKind lang_kind;
   };
-  typedef struct lang_libclang_map lang_libclang_map;
+  typedef struct lang_map lang_map;
 
-  static lang_libclang_map LANG_LIBCLANG_MAP[] = {
+  static lang_map LANG_MAP[] = {
     { "c",    CXLanguage_C          },
     { "c++",  CXLanguage_CPlusPlus  },
     { "none", CXLanguage_Invalid    }
@@ -589,7 +589,7 @@ static enum CXLanguageKind get_source_language( int argc,
     if ( lang == NULL )
       continue;
 
-    FOREACH_ARRAY_ELEMENT( lang_libclang_map, map, LANG_LIBCLANG_MAP ) {
+    FOREACH_ARRAY_ELEMENT( lang_map, map, LANG_MAP ) {
       if ( strcmp( lang, map->lang_name ) == 0 )
         return map->lang_kind;
     } // for
