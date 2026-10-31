@@ -25,10 +25,10 @@ AUTOMAKE_OPTIONS = 1.12			# needed for TEST_LOG_DRIVER
 
 ###############################################################################
 
-# Basic sanity tests
+# Basic sanity tests.
 TESTS=	tests/hello.test
 
-# Command-line option tests
+# Command-line option tests.
 TESTS+=	tests/cli-compiler-no-exists.test \
 	tests/cli-compiler-no-include-end.test \
 	tests/cli-compiler-no-include-start.test \
@@ -40,7 +40,7 @@ TESTS+=	tests/cli-compiler-no-exists.test \
 	tests/cli-usage.test \
 	tests/libclang-error.test
 
-# Configuration file tests
+# Configuration file tests.
 TESTS+=	tests/config.test \
 	tests/config-associated-header.test \
 	tests/config-bad-semantics-1.test \
@@ -56,7 +56,7 @@ TESTS+=	tests/config.test \
 	tests/config-ignore-symbols.test \
 	tests/config-keep.test
 
-# Other tests
+# Other tests.
 TESTS+=	tests/home.test \
 	tests/ipaths.test \
 	tests/merge_ref_count.test \
@@ -66,7 +66,7 @@ TESTS+=	tests/home.test \
 	tests/xdg_config_dirs-1.test \
 	tests/xdg_config_dirs-2.test
 
-# Error tests
+# Error tests.
 TESTS+=	tests/duplicate.test \
 	tests/enoent.test \
 	tests/error.test \
