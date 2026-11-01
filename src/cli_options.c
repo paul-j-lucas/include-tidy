@@ -903,15 +903,15 @@ static void move_tidy_args( int *pargc, char const *argv[],
         char const *dir_arg;
 
         switch ( argv[i][ opt_len ] ) {
-          case '\0':                    // <long_opt> <dir>
+          case '\0':                            // --<long_opt> <dir>
             if ( ++i >= argc )
               fatal_error( EX_USAGE, "\"%s\" requires an argument\n", *popt );
             dir_arg = argv[ new_argc++ ] = argv[i];
             break;
-          case '=':                     // <long_opt>=<dir>
+          case '=':                             // --<long_opt>=<dir>
             dir_arg = argv[i] + opt_len + 1;
             break;
-          default:                      // <long_opt><dir>
+          default:                              // --<long_opt><dir>
             dir_arg = argv[i] + opt_len;
             break;
         } // switch
