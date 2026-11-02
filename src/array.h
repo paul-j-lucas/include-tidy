@@ -102,14 +102,25 @@
 ////////// macros /////////////////////////////////////////////////////////////
 
 /**
- * An initializer that can be assigned to stand-alone arrays.
+ * An initializer that can be used to initialize arrays.
  *
  * @param ESIZE The element size.
  *
  * @sa array_cleanup()
  * @sa array_init()
+ * @sa #ARRAY_LIT()
  */
-#define ARRAY_INIT(ESIZE)         (array_t){ .esize = (ESIZE) }
+#define ARRAY_INIT(ESIZE)         { .esize = (ESIZE) }
+
+/**
+ * An array literal that can be assigned to arrays.
+ *
+ * @param ESIZE The element size.
+ *
+ * @sa array_init()
+ * @sa #ARRAY_INIT()
+ */
+#define ARRAY_LIT(ESIZE)          ((array_t)ARRAY_INIT( (ESIZE) ))
 
 ////////// typedefs ///////////////////////////////////////////////////////////
 
@@ -457,10 +468,10 @@ inline void* nonconst_array_front( array_t *array ) {
  * @param esize The element size.
  *
  * @sa array_cleanup()
- * @sa #ARRAY_INIT()
+ * @sa #ARRAY_LIT()
  */
 inline void array_init( array_t *array, size_t esize ) {
-  *array = ARRAY_INIT( esize );
+  *array = ARRAY_LIT( esize );
 }
 
 /**
