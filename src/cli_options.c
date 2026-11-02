@@ -70,7 +70,7 @@
  * When given the `-v` (verbose) option, both `clang` and `gcc` emit this line
  * followed by a list of default system include search paths.
  *
- * @sa add_compiler_include_paths()
+ * @sa argv_add_include_paths()
  * @sa #COMPILER_SEARCH_END
  */
 #define COMPILER_SEARCH_START  "#include <...> search starts here:"
@@ -79,7 +79,7 @@
  * When given the `-v` (verbose) option, both `clang` and `gcc` emit this line
  * following a list of default system include search paths.
  *
- * @sa add_compiler_include_paths()
+ * @sa argv_add_include_paths()
  * @sa #COMPILER_SEARCH_START
  */
 #define COMPILER_SEARCH_END    "End of search list."
@@ -187,9 +187,9 @@ static bool         is_Xtidy_opt( int, char const *const[], int* );
  * @param compiler_path The path of the C or C++ compiler to use.
  * @param lang The language to use.
  */
-static void add_compiler_include_paths( int *pargc, char const **pargv[],
-                                        char const *compiler_path,
-                                        enum CXLanguageKind lang ) {
+static void argv_add_include_paths( int *pargc, char const **pargv[],
+                                    char const *compiler_path,
+                                    enum CXLanguageKind lang ) {
   assert(  pargc != NULL );
   assert( *pargc > 0 );
   assert(  pargv != NULL );
@@ -1153,7 +1153,7 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
       source_lang = file_ext->lang;
   }
   if ( compiler_path != NULL && source_lang != CXLanguage_Invalid )
-    add_compiler_include_paths( pargc, pargv, compiler_path, source_lang );
+    argv_add_include_paths( pargc, pargv, compiler_path, source_lang );
 
   strbuf_t      err_buf = STRBUF_INIT();
   char const   *opt_directory = NULL;
