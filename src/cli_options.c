@@ -807,13 +807,15 @@ static char* make_short_opts( struct option const options[static const 2],
  *          tidy_argv[3] = NULL
  * @endparblock
  *
- * @param pargc A pointer to `argc`.
- * @param argv A copy of `argv`.
- * @param ptidy_argc A pointer to an `argc` for **include-tidy** specific
- * options.
- * @param ptidy_argv A pointer to an `argv` for **include-tidy** specific
- * options.  The caller is responsible for free'ing the array of pointers to
- * strings, but _not_ the strings themselves.
+ * @param pargc A pointer to the command-line argument count from `main()`.  On
+ * return, it's set to the number of remaining options for libclang.
+ * @param argv The command-line argument values from `main()`.
+ * @param ptidy_argc A pointer to receive the argument count for **include-
+ * tidy** specific options.
+ * @param ptidy_argv A pointer to receive the argument values for **include-
+ * tidy** specific options.  The caller is responsible for free'ing the array
+ * of pointers to strings, but _not_ the strings themselves since they point at
+ * strings from \a argv.
  */
 static void move_tidy_args( int *pargc, char const *argv[],
                             int *ptidy_argc, char const **ptidy_argv[] ) {
