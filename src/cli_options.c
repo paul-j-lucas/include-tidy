@@ -273,10 +273,13 @@ static void add_compiler_include_paths( int *pargc, char const **pargv[],
   (*pargv)[ *pargc ] = NULL;
 
 done:
-  // To prevent a SIGPIPE, drain the pipe by reading any remaining output.
-  while ( getline( &line_buf, &line_cap, fcompiler ) != -1 )
-    ;
   free( line_buf );
+
+  // To prevent a SIGPIPE, drain the pipe by reading any remaining output.
+  char drain_buf[ BUFSIZ ];
+  while ( fread( drain_buf, 1, sizeof drain_buf, fcompiler ) > 0 )
+    ;
+
   int status = pclose( fcompiler );
   if ( status == -1 )
     goto error;                         // LCOV_EXCL_LINE
