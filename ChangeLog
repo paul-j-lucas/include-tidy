@@ -1,5 +1,6 @@
 2026-11-01  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
+   * cli_options.c: Better pipe draining.
    * array.h: Added ARRAY_LIT.
    * configure.ac, util.h: Added -Werror=pointer-arith, VOID_TO_CHAR_PTR.
 
