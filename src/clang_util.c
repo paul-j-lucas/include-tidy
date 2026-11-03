@@ -345,9 +345,9 @@ static enum CXChildVisitResult isBaseClass_visitor( CXCursor cursor,
  * @sa tidy_Cursor_getFirstChild()
  */
 static CXCursor tidy_Cursor_getFirstExprChild( CXCursor cursor ) {
-  CXCursor child_csr = clang_getNullCursor();
-  clang_visitChildren( cursor, &getFirstExprChild_visitor, &child_csr );
-  return child_csr;
+  CXCursor expr_child_csr = clang_getNullCursor();
+  clang_visitChildren( cursor, &getFirstExprChild_visitor, &expr_child_csr );
+  return expr_child_csr;
 }
 
 /**
