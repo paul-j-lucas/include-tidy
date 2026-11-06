@@ -1,3 +1,7 @@
+2026-11-06  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * hash_table.c: ht_table_find now checks buckets == NULL.
+
 2026-11-01  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c: Better pipe draining.
