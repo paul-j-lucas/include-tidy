@@ -454,9 +454,9 @@ void ht_table_cleanup( hash_table_t *table, ht_free_fn_t free_fn );
  * @parblock
  * This function deletes _only_ the entry from \a table.  If \ref
  * ht_entry::data "data" also needs to be deleted because \ref hash_table::dloc
- * "dloc" is \ref ht_dloc::HT_DPTR "HT_DPTR", the caller must delete it
- * explicitly.  For example, for some type `T` that is an entry's \ref
- * ht_entry::data "data":
+ * "dloc" is \ref ht_dloc::HT_DPTR "HT_DPTR", the caller must explicitly delete
+ * it.  For example, for some type `T` that is an entry's \ref ht_entry::data
+ * "data":
  *
  *      ht_entry_t *const entry = ht_table_find( table, find_data );
  *      if ( entry != NULL ) {
