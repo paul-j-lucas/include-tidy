@@ -55,7 +55,7 @@ struct tidy_source {
   enum CXLanguageKind lang;             ///< Language of \a ref path.
 
   /**
-   * The associated header for \ref path only if set explicitly via the
+   * The associated header for \ref path only if explicitly set via the
    * `associated-header` configuration key.
    */
   char const *assoc_header_rel_path;

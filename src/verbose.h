@@ -77,7 +77,7 @@
 /**
  * Prints each value of \a argv preceded by its index.
  *
- * @note verbose_section_begin() is called implicitly.
+ * @note verbose_section_begin() is implicitly called.
  *
  * @param label A label to print before the word `argv`.  A space is printed
  * after the label.

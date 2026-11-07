@@ -213,7 +213,7 @@ bool is_cxx_mbr_ref_iwyu_exc( CXCursor obj_csr );
  *
  * where \a cursor refers to `value_type`, the actual cursor libclang resolves
  * it to is `std::set<int>::value_type`.  The problem is that \b include-tidy
- * will think `foo.cpp` requires `<set>` explicitly even though `foo.cpp`
+ * will think `foo.cpp` explicitly requires `<set>` even though `foo.cpp`
  * includes `int_set.hpp` that declared `int_set`.  The fact that `int_set` is
  * a `std::set` should be irrelevant and `<set>` should not be required.
  * @endparblock
