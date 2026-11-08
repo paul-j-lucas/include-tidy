@@ -899,8 +899,8 @@ CXFile tidy_getCursorLocation_File( CXCursor cursor ) {
 CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
   assert( file != NULL );
 
-  CXFileUniqueID id;
-  if ( unlikely( clang_getFileUniqueID( file, &id ) != 0 ) ) {
+  CXFileUniqueID fuid;
+  if ( unlikely( clang_getFileUniqueID( file, &fuid ) != 0 ) ) {
     // LCOV_EXCL_START
     // clang_getFileUniqueID() failed, but we still want an ID: get a hash of
     // its full path.
@@ -910,12 +910,12 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
 
     clang_disposeString( abs_path_cxs );
 
-    id = (CXFileUniqueID){
+    fuid = (CXFileUniqueID){
       .data = { STATIC_CAST( CXFileUniqueID_data_t, hash ) }
     };
     // LCOV_EXCL_STOP
   }
-  return id;
+  return fuid;
 }
 
 CXToken const* tidy_Token_getNext( CXToken const tokens[], unsigned token_count,
