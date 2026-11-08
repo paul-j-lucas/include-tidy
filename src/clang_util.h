@@ -499,13 +499,13 @@ inline int tidy_FileUniqueID_cmp( CXFileUniqueID const *i_id,
 }
 
 /**
- * Calculates tha hash of \a id.
+ * Calculates tha hash of \a fuid.
  *
- * @param id The CXFileUniqueID to hash.
+ * @param fuid The CXFileUniqueID to hash.
  * @return Returns said hash.
  */
 NODISCARD
-fnv1a_t tidy_FileUniqueID_hash( CXFileUniqueID const *id );
+fnv1a_t tidy_FileUniqueID_hash( CXFileUniqueID const *fuid );
 
 /**
  * Attempts to get the cursor for the identifier having \a name within \a
