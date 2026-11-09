@@ -132,6 +132,9 @@ itidy: include-tidy
 	    include-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) "$$file" || exit $$?; \
 	done
 
+stidy:
+	@symbol-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) *.c
+
 clean-coverage-local:
 	rm -f *.gcda
 
