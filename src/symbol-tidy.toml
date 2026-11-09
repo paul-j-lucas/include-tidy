@@ -1,0 +1,165 @@
+##
+#       include-tidy -- #include tidier
+#       src/symbol-tidy.toml
+#
+#       Copyright (C) 2026  Paul J. Lucas
+#
+#       This program is free software: you can redistribute it and/or modify
+#       it under the terms of the GNU General Public License as published by
+#       the Free Software Foundation, either version 3 of the License, or
+#       (at your option) any later version.
+#
+#       This program is distributed in the hope that it will be useful,
+#       but WITHOUT ANY WARRANTY; without even the implied warranty of
+#       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#       GNU General Public License for more details.
+#
+#       You should have received a copy of the GNU General Public License
+#       along with this program.  If not, see <http://www.gnu.org/licenses/>.
+##
+
+##
+# Symbol-tidy configuration file.
+# See <https://github.com/paul-j-lucas/symbol-tidy>
+##
+
+[symbol-tidy]
+ignore-paths = [
+  "config.h"
+]
+
+[cli_options.c]
+ignore-symbols = [
+  "PUT_CONFIG_OPT"
+]
+
+[cli_options.h]
+ignore-symbols = [
+  "OPT_ALIGN_COLUMN",
+  "OPT_ALL_INCLUDES",
+  "OPT_COLOR",
+  "OPT_COMMENT_STYLE",
+  "OPT_COMMENT_SYMBOLS",
+  "OPT_COMPILER",
+  "OPT_CONFIG",
+  "OPT_DEBUG",
+  "OPT_DIRECTORY",
+  "OPT_ERROR",
+  "OPT_HELP",
+  "OPT_INCLUDE",
+  "OPT_LINE_LENGTH",
+  "OPT_NO_CONFIG_LAYERS",
+  "OPT_VERBOSE",
+  "OPT_VERSION",
+]
+
+[color.c]
+ignore-symbols = [
+  "SGR_BG_BLACK",
+  "SGR_BG_BLUE",
+  "SGR_BG_CYAN",
+  "SGR_BG_GREEN",
+  "SGR_BG_MAGENTA",
+  "SGR_BG_RED",
+  "SGR_BG_WHITE",
+  "SGR_BG_YELLOW",
+  "SGR_FG_BLACK",
+  "SGR_FG_BLUE",
+  "SGR_FG_CYAN",
+  "SGR_FG_GREEN",
+  "SGR_FG_MAGENTA",
+  "SGR_FG_RED",
+  "SGR_FG_WHITE",
+  "SGR_FG_YELLOW",
+]
+
+[include.h]
+ignore-symbols = [
+  "tidy_sort_rank::TIDY_SORT_DEFAULT"
+]
+
+[util.h]
+ignore-symbols = [
+  "ARG_11",
+  "ARGS_HAS_COMMA",
+  "ARGS_IS_EMPTY",
+  "ARGS_IS_EMPTY_CASES",
+  "ARGS_IS_EMPTY_COMMA",
+  "ARGS_IS_EMPTY_RESULT_0001",
+
+  "CHARIFY_0",
+  "CHARIFY_1",
+  "CHARIFY_2",
+  "CHARIFY_3",
+  "CHARIFY_4",
+  "CHARIFY_5",
+  "CHARIFY_6",
+  "CHARIFY_7",
+  "CHARIFY_8",
+  "CHARIFY_9",
+  "CHARIFY_A",
+  "CHARIFY_B",
+  "CHARIFY_C",
+  "CHARIFY_D",
+  "CHARIFY_E",
+  "CHARIFY_F",
+  "CHARIFY_G",
+  "CHARIFY_H",
+  "CHARIFY_I",
+  "CHARIFY_J",
+  "CHARIFY_K",
+  "CHARIFY_L",
+  "CHARIFY_M",
+  "CHARIFY_N",
+  "CHARIFY_O",
+  "CHARIFY_P",
+  "CHARIFY_Q",
+  "CHARIFY_R",
+  "CHARIFY_S",
+  "CHARIFY_T",
+  "CHARIFY_U",
+  "CHARIFY_V",
+  "CHARIFY_W",
+  "CHARIFY_X",
+  "CHARIFY_Y",
+  "CHARIFY_Z",
+  "CHARIFY__",
+  "CHARIFY_a",
+  "CHARIFY_b",
+  "CHARIFY_c",
+  "CHARIFY_d",
+  "CHARIFY_e",
+  "CHARIFY_f",
+  "CHARIFY_g",
+  "CHARIFY_h",
+  "CHARIFY_i",
+  "CHARIFY_j",
+  "CHARIFY_k",
+  "CHARIFY_l",
+  "CHARIFY_m",
+  "CHARIFY_n",
+  "CHARIFY_o",
+  "CHARIFY_p",
+  "CHARIFY_q",
+  "CHARIFY_r",
+  "CHARIFY_s",
+  "CHARIFY_t",
+  "CHARIFY_u",
+  "CHARIFY_v",
+  "CHARIFY_w",
+  "CHARIFY_x",
+  "CHARIFY_y",
+  "CHARIFY_z",
+
+  "NAME5",
+  "NAME5_HELPER",
+  "NO_OP"
+]
+
+[verbose.h]
+ignore-symbols = [
+  "VERBOSE_DEBUG_CURSOR",
+  "verbose_print_tokens"
+]
+
+# vim:se et sw=2 ts=2:
