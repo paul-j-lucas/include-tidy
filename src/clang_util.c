@@ -94,7 +94,7 @@ struct isBaseClass_data {
 ////////// local functions ////////////////////////////////////////////////////
 
 /**
- * A helper function for tidy_getCursorByName() that Visits each symbol within
+ * A helper function for tidy_getCursorByName() that visits each symbol within
  * a scope attempting to find one having \ref getCursorByName_data::find_name
  * "find_name".
  *
