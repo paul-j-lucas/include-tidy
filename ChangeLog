@@ -1,3 +1,7 @@
+2026-11-12  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * cli_options.c, toml_lite.c: Removed unnecessary forward declarations.
+
 2026-11-09  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * symbol-tidy.toml: Added symbol-tidy.toml.
