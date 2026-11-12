@@ -164,7 +164,6 @@ static char const*  get_long_opt_value( int, char const *const[], char const*,
 
 NODISCARD
 static struct option const
-                 *  get_option_long( char const* ),
                  *  get_option_short( int );
 
 static void         insert_argv( int*, char const**[], size_t, size_t,

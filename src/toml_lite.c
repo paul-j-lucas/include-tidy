@@ -168,7 +168,6 @@ static bool toml_space_comments_skip( toml_file* ),
 NODISCARD
 static int  toml_getc( toml_file* );
 
-static void toml_comment_parse( toml_file* );
 static void toml_recover( toml_file* );
 static void toml_value_cleanup( toml_value* );
 
