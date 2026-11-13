@@ -142,6 +142,7 @@ void* array_push_array_back( array_t *restrict dst_array,
 
 bool array_reserve( array_t *restrict array, size_t res_len ) {
   assert( array != NULL );
+  assert( array->esize > 0 );
 
   if ( res_len <= array->cap - array->len )
     return false;
