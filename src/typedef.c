@@ -56,6 +56,7 @@ static hash_table_t typedef_map;        ///< Map of typedefs.
 
 ////////// local functions ////////////////////////////////////////////////////
 
+// LCOV_EXCL_START
 /**
  * Prints statistics if requested.
  *
@@ -68,6 +69,7 @@ static void print_statistics( verbose_stat_ctx *vsc ) {
      ht_table_load_factor( &typedef_map )
   ); verbose_statf( vsc, "tm-size = %u\n", typedef_map.size );
 }
+// LCOV_EXCL_STOP
 
 /**
  * Cleans-up a tidy_typedef.

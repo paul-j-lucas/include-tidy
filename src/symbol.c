@@ -662,6 +662,7 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
   add_symbol( name_csr, sym_csr, sym_file, sid );
 }
 
+// LCOV_EXCL_START
 /**
  * Prints statistics if requested.
  *
@@ -675,6 +676,7 @@ static void print_statistics( verbose_stat_ctx *vsc ) {
   );
   verbose_statf( vsc, "ss-size = %u\n", symbol_set.size );
 }
+// LCOV_EXCL_STOP
 
 /**
  * Gets the cursor for the scope that should be used from \a sid for C++

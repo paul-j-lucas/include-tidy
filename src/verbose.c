@@ -332,6 +332,7 @@ void verbose_print_statistics( void (*print_fn)( verbose_stat_ctx* ) ) {
   if ( !IS_VERBOSE( STATISTICS ) )
     return;
 
+  // LCOV_EXCL_START
   static bool printed_header;
   if ( verbose_section_begin( &printed_header ) )
     verbose_printf( "statistics:\n" );
@@ -344,17 +345,19 @@ void verbose_print_statistics( void (*print_fn)( verbose_stat_ctx* ) ) {
   (*print_fn)( &vsc );
   uselocale( prev_loc );
   freelocale( loc );
+  // LCOV_EXCL_STOP
 }
 
 bool verbose_section_begin( bool *printed_header ) {
   if ( printed_header != NULL && true_or_set( printed_header ) )
-    return false;
+    return false;                       // LCOV_EXCL_LINE
   static bool print_blank_line;
   if ( true_or_set( &print_blank_line ) )
     verbose_printf( "\n" );
   return true;
 }
 
+// LCOV_EXCL_START
 void verbose_statf( verbose_stat_ctx *vsc, char const *format, ... ) {
   PUTS( VERBOSE_PREFIX );
 
@@ -374,6 +377,7 @@ void verbose_statf( verbose_stat_ctx *vsc, char const *format, ... ) {
   if ( is_header )
     ++vsc->indent;
 }
+// LCOV_EXCL_STOP
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -939,6 +939,7 @@ static char* path_no_ext_if( char const *path, char if_ext_0 ) {
   return file_ext != NULL ? path_no_ext( path ) : NULL;
 }
 
+// LCOV_EXCL_START
 /**
  * Prints statistics if requested.
  *
@@ -984,6 +985,7 @@ static void print_statistics( verbose_stat_ctx *vsc ) {
   verbose_statf( vsc, "isp-ss-size = %u\n", max_include->symbol_set.size );
   --vsc->indent;
 }
+// LCOV_EXCL_STOP
 
 /**
  * Gets whether \a include should be printed.
