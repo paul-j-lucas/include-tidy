@@ -132,7 +132,7 @@ NODISCARD
 static char*  path_no_ext_if( char const*, char );
 
 
-static void   print_statistics( void );
+static void   print_statistics( verbose_stat_ctx* );
 
 NODISCARD
 static int    symbol_cmp_by_name( tidy_symbol const*, tidy_symbol const* ),
@@ -484,7 +484,7 @@ static bool include_insert( CXFile included_file, CXFile includer_file,
  * Cleans-up set of included files.
  */
 static void includes_cleanup( void ) {
-  print_statistics();
+  verbose_print_statistics( &print_statistics );
 #ifdef NEED_II_MATRIX                   /* See comment above ii_matrix def. */
   free( ii_matrix );
 #endif /* NEED_II_MATRIX */
@@ -941,21 +941,16 @@ static char* path_no_ext_if( char const *path, char if_ext_0 ) {
 
 /**
  * Prints statistics if requested.
+ *
+ * @param vsc The verbose_stat_ctx to use.
  */
-static void print_statistics( void ) {
-  if ( !verbose_print_statistics() )
-    return;
-
-  verbose_printf(
-    "  include set:\n"
+static void print_statistics( verbose_stat_ctx *vsc ) {
+  verbose_statf( vsc, "include set:\n" );
+  verbose_statf( vsc,
+    "is-load-factor = " TIDY_STAT_LF_FMT "\n",
+     ht_table_load_factor( &tidy_include_set )
   );
-  verbose_printf(
-    "    is-load-factor = " TIDY_STAT_LF_FMT "\n",
-                          ht_table_load_factor( &tidy_include_set )
-  );
-  verbose_printf(
-    "    is-size = %u\n", tidy_include_set.size
-  );
+  verbose_statf( vsc, "is-size = %u\n", tidy_include_set.size );
 
   tidy_include const *max_include = NULL;
   double max_lf = -1.0;
@@ -972,26 +967,22 @@ static void print_statistics( void ) {
     }
   } // for
 
-  if ( max_include != NULL ) {
-    char const *const delims = include_get_delims( max_include );
-    char const *const max_include_path = opt_test != TIDY_TEST_NONE ?
-      max_include->rel_path : max_include->abs_path;
-    verbose_printf(
-      "    is-max-load-factor:\n"
-    );
-    verbose_printf(
-      "      is-path = %c%s%c\n", delims[0], max_include_path, delims[1]
-    );
-    verbose_printf(
-      "      symbol set:\n"
-    );
-    verbose_printf(
-      "        isp-ss-load-factor = " TIDY_STAT_LF_FMT "\n", max_lf
-    );
-    verbose_printf(
-      "        isp-ss-size = %u\n", max_include->symbol_set.size
-    );
-  }
+  if ( max_include == NULL )
+    return;
+
+  char const *const delims = include_get_delims( max_include );
+  char const *const max_include_path = opt_test != TIDY_TEST_NONE ?
+    max_include->rel_path : max_include->abs_path;
+
+  ++vsc->indent;
+  verbose_statf( vsc, "is-max-load-factor:\n" );
+  verbose_statf( vsc,
+    "is-path = %c%s%c\n", delims[0], max_include_path, delims[1]
+  );
+  verbose_statf( vsc, "symbol set:\n" );
+  verbose_statf( vsc, "isp-ss-load-factor = " TIDY_STAT_LF_FMT "\n", max_lf );
+  verbose_statf( vsc, "isp-ss-size = %u\n", max_include->symbol_set.size );
+  --vsc->indent;
 }
 
 /**

@@ -664,21 +664,16 @@ static void maybe_add_symbol( CXCursor name_csr, CXCursor sym_csr,
 
 /**
  * Prints statistics if requested.
+ *
+ * @param vsc The verbose_stat_ctx to use.
  */
-static void print_statistics( void ) {
-  if ( !verbose_print_statistics() )
-    return;
-
-  verbose_printf(
-    "  symbol set:\n"
+static void print_statistics( verbose_stat_ctx *vsc ) {
+  verbose_statf( vsc, "symbol set:\n" );
+  verbose_statf( vsc,
+    "ss-load-factor = " TIDY_STAT_LF_FMT "\n",
+    ht_table_load_factor( &symbol_set )
   );
-  verbose_printf(
-    "    ss-load-factor = " TIDY_STAT_LF_FMT "\n",
-                          ht_table_load_factor( &symbol_set )
-  );
-  verbose_printf(
-    "    ss-size = %u\n", symbol_set.size
-  );
+  verbose_statf( vsc, "ss-size = %u\n", symbol_set.size );
 }
 
 /**
@@ -810,7 +805,7 @@ static bool symbol_is_excluded( CXCursor sym_csr,
  * Cleans-up all symbols.
  */
 static void symbols_cleanup( void ) {
-  print_statistics();
+  verbose_print_statistics( &print_statistics );
   ht_table_cleanup(
     &symbol_set, POINTER_CAST( ht_free_fn_t, &symbol_cleanup )
   );

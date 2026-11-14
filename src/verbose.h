@@ -72,6 +72,19 @@
 #define verbose_print_cursor(CURSOR, LANG) \
   verbose_print_cursor_impl( "", (CURSOR), (LANG) )
 
+////////// typedefs ///////////////////////////////////////////////////////////
+
+typedef struct verbose_stat_ctx verbose_stat_ctx;
+
+////////// structs ////////////////////////////////////////////////////////////
+
+/**
+ * Context for verbose_statf().
+ */
+struct verbose_stat_ctx {
+  unsigned indent;                      ///< The current indentation.
+};
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
@@ -125,15 +138,15 @@ PJL_PRINTF_LIKE_FUNC(1)
 int verbose_printf( char const *format, ... );
 
 /**
- * Gets whether statistics should be printed.
+ * If statistics should be printed, calls \a print_fn.
  *
- * @remarks If so, the `statistics:` header is printed only the first time this
- * function is called.
+ * @remarks If statistics should be printed, the `statistics:` header is
+ * printed before \a print_fn is called, but only the first time this function
+ * is called.
  *
- * @return Returns `true` only if statistics should be printed.
+ * @param print_fn The function to call to print statistics.
  */
-NODISCARD
-bool verbose_print_statistics( void );
+void verbose_print_statistics( void (*print_fn)( verbose_stat_ctx* ) );
 
 /**
  * This should be called once just before starting to print a new verbose
@@ -146,6 +159,18 @@ bool verbose_print_statistics( void );
  */
 PJL_DISCARD
 bool verbose_section_begin( bool *printed_header );
+
+/**
+ * Prints a statistic preceeded by `"// tidy | "`.
+ *
+ * @param vsc The verbose_stat_ctx to use.
+ * @param format The `printf()` format string literal to use.
+ * @param ... The `printf()` arguments.
+ *
+ * @sa verbose_printf()
+ */
+PJL_PRINTF_LIKE_FUNC(2)
+void verbose_statf( verbose_stat_ctx *vsc, char const *format, ... );
 
 ///////////////////////////////////////////////////////////////////////////////
 

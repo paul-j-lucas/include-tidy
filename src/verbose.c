@@ -39,6 +39,7 @@
 
 // standard
 #include <assert.h>
+#include <locale.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -51,6 +52,13 @@
  * @addtogroup verbose-group
  * @{
  */
+
+////////// local constants ////////////////////////////////////////////////////
+
+/**
+ * Verbose output prefix.
+ */
+static char const VERBOSE_PREFIX[] = "// tidy | ";
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -312,7 +320,7 @@ void verbose_print_tokens( CXCursor cursor ) {
 #endif /* NDEBUG */
 
 int verbose_printf( char const *format, ... ) {
-  PUTS( "// tidy | " );
+  PUTS( VERBOSE_PREFIX );
   va_list args;
   va_start( args, format );
   int const raw_len = vprintf( format, args );
@@ -320,12 +328,22 @@ int verbose_printf( char const *format, ... ) {
   return raw_len;
 }
 
-bool verbose_print_statistics( void ) {
+void verbose_print_statistics( void (*print_fn)( verbose_stat_ctx* ) ) {
+  if ( !IS_VERBOSE( STATISTICS ) )
+    return;
+
   static bool printed_header;
-  bool const want_statistics = IS_VERBOSE( STATISTICS );
-  if ( want_statistics && verbose_section_begin( &printed_header ) )
+  if ( verbose_section_begin( &printed_header ) )
     verbose_printf( "statistics:\n" );
-  return want_statistics;
+
+  assert( print_fn != NULL );
+
+  locale_t loc = newlocale( LC_NUMERIC_MASK, /*locale=*/"", /*base=*/NULL );
+  locale_t const prev_loc = uselocale( loc );
+  verbose_stat_ctx vsc = { 0 };
+  (*print_fn)( &vsc );
+  uselocale( prev_loc );
+  freelocale( loc );
 }
 
 bool verbose_section_begin( bool *printed_header ) {
@@ -335,6 +353,26 @@ bool verbose_section_begin( bool *printed_header ) {
   if ( true_or_set( &print_blank_line ) )
     verbose_printf( "\n" );
   return true;
+}
+
+void verbose_statf( verbose_stat_ctx *vsc, char const *format, ... ) {
+  PUTS( VERBOSE_PREFIX );
+
+  char const *const colon = strrchr( format, ':' );
+  bool const        is_header = colon != NULL && colon[1] == '\n';
+
+  if ( is_header && vsc->indent > 0 )
+    --vsc->indent;
+
+  FPUTNSP( (vsc->indent + 1) * 2, stdout );
+
+  va_list args;
+  va_start( args, format );
+  vprintf( format, args );
+  va_end( args );
+
+  if ( is_header )
+    ++vsc->indent;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

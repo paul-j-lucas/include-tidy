@@ -58,21 +58,15 @@ static hash_table_t typedef_map;        ///< Map of typedefs.
 
 /**
  * Prints statistics if requested.
+ *
+ * @param vsc The verbose_stat_ctx to use.
  */
-static void print_statistics( void ) {
-  if ( !verbose_print_statistics() )
-    return;
-
-  verbose_printf(
-    "  typedef map:\n"
-  );
-  verbose_printf(
-    "    tm-load-factor = " TIDY_STAT_LF_FMT "\n",
-                          ht_table_load_factor( &typedef_map )
-  );
-  verbose_printf(
-    "    tm-size = %u\n", typedef_map.size
-  );
+static void print_statistics( verbose_stat_ctx *vsc ) {
+  verbose_statf( vsc, "typedef map:\n" );
+  verbose_statf( vsc,
+    "tm-load-factor = " TIDY_STAT_LF_FMT "\n",
+     ht_table_load_factor( &typedef_map )
+  ); verbose_statf( vsc, "tm-size = %u\n", typedef_map.size );
 }
 
 /**
@@ -89,7 +83,7 @@ static void typedef_cleanup( tidy_typedef *tdef ) {
  * Cleans-up all symbols.
  */
 static void typedefs_cleanup( void ) {
-  print_statistics();
+  verbose_print_statistics( &print_statistics );
   ht_table_cleanup(
     &typedef_map, POINTER_CAST( ht_free_fn_t, &typedef_cleanup )
   );

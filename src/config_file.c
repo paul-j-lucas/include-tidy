@@ -214,7 +214,7 @@ static void         keep_parse( config_parse_fn_args const* );
 static void         line_length_parse( config_parse_fn_args const* );
 static void         print_invalid_value( config_parse_fn_args const*,
                                          toml_value const*, toml_type );
-static void         print_statistics( void );
+static void         print_statistics( verbose_stat_ctx* );
 static void         proxy_parse( config_parse_fn_args const* );
 static void         proxy_parse_string( config_parse_fn_args const* );
 static void         std_c_includes_parse( config_parse_fn_args const* );
@@ -976,7 +976,7 @@ static void symbols_parse_string( config_parse_fn_args const *config ) {
  * Cleans-up all configuration data.
  */
 static void config_cleanup( void ) {
-  print_statistics();
+  verbose_print_statistics( &print_statistics );
   array_cleanup( &std_c_includes, &free_pptr );
   array_cleanup( &std_cxx_includes, &free_pptr );
   ht_table_cleanup( &ignore_symbol_set, /*free_fn=*/NULL );
@@ -1463,21 +1463,16 @@ static void print_invalid_value( config_parse_fn_args const *config,
 
 /**
  * Prints statistics if requested.
+ *
+ * @param vsc The verbose_stat_ctx to use.
  */
-static void print_statistics( void ) {
-  if ( !verbose_print_statistics() )
-    return;
-
-  verbose_printf(
-    "  ignore-symbol set:\n"
+static void print_statistics( verbose_stat_ctx *vsc ) {
+  verbose_statf( vsc, "ignore-symbol set:\n" );
+  verbose_statf( vsc,
+    "iss-load-factor = " TIDY_STAT_LF_FMT "\n",
+     ht_table_load_factor( &ignore_symbol_set )
   );
-  verbose_printf(
-    "    iss-load-factor = " TIDY_STAT_LF_FMT "\n",
-                           ht_table_load_factor( &ignore_symbol_set )
-  );
-  verbose_printf(
-    "    iss-size = %u\n", ignore_symbol_set.size
-  );
+  verbose_statf( vsc, "iss-size = %u\n", ignore_symbol_set.size );
 }
 
 /**
