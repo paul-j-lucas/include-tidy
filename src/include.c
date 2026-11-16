@@ -316,23 +316,6 @@ static void include_cleanup( tidy_include *include ) {
 }
 
 /**
- * Compares two \ref tidy_include objects by their unique file ID.
- *
- * @param i_include The first tidy_include.
- * @param j_include The second tidy_include.
- * @return Returns a number less than 0, 0, or greater than 0 if the file ID of
- * \a i_include is less than, equal to, or greater than the file ID of \a
- * j_include, respectively.
- */
-NODISCARD
-static int include_cmp_by_id( tidy_include const *i_include,
-                              tidy_include const *j_include ) {
-  assert( i_include != NULL );
-  assert( j_include != NULL );
-  return tidy_FileUniqueID_cmp( &i_include->file_id, &j_include->file_id );
-}
-
-/**
  * Compares two \ref tidy_include objects by their relative paths for printing.
  *
  * @param i_pp A pointer to the the first tidy_include pointer.
@@ -396,7 +379,7 @@ static tidy_include* include_find_by_rel_path_impl( tidy_source const *source,
       }
       else {
         tidy_include find_include = {
-          .file_id = tidy_getFileUniqueID( include_file )
+          .fuid = tidy_getFileUniqueID( include_file )
         };
         ht_entry_t const *const found_ht =
           ht_table_find( &tidy_include_set, &find_include );
@@ -423,7 +406,7 @@ static bool include_insert( CXFile included_file, CXFile includer_file,
   assert( pinclude != NULL );
 
   tidy_include new_include = {
-    .file_id = tidy_getFileUniqueID( included_file )
+    .fuid = tidy_getFileUniqueID( included_file )
   };
   ht_insert_rv_t const hti =
     ht_table_insert( &tidy_include_set, &new_include, sizeof new_include );
@@ -433,7 +416,7 @@ static bool include_insert( CXFile included_file, CXFile includer_file,
     CXString const abs_path_cxs = tidy_File_getRealPathName( included_file );
     include->abs_path = tidy_dupCString( abs_path_cxs );
     include->file     = included_file;
-    include->file_id  = tidy_getFileUniqueID( included_file );
+    include->fuid     = tidy_getFileUniqueID( included_file );
     include->is_local = path_is_local( include->abs_path );
 
     //
@@ -1157,10 +1140,17 @@ tidy_include const* include_add_symbol( CXFile include_file,
   return include;
 }
 
+int include_cmp_by_fuid( tidy_include const *i_include,
+                         tidy_include const *j_include ) {
+  assert( i_include != NULL );
+  assert( j_include != NULL );
+  return tidy_FileUniqueID_cmp( &i_include->fuid, &j_include->fuid );
+}
+
 tidy_include* include_find_by_File( CXFile file ) {
   assert( file != NULL );
 
-  tidy_include find_include = { .file_id = tidy_getFileUniqueID( file ) };
+  tidy_include find_include = { .fuid = tidy_getFileUniqueID( file ) };
   ht_entry_t const *const found_ht =
     ht_table_find( &tidy_include_set, &find_include );
   return found_ht != NULL ? HT_DINT( found_ht ) : NULL;
@@ -1189,7 +1179,7 @@ tidy_include const* (include_get_proxy)( tidy_include const *include ) {
 }
 
 fnv1a_t include_hash( tidy_include const *include ) {
-  return tidy_FileUniqueID_hash( &include->file_id );
+  return tidy_FileUniqueID_hash( &include->fuid );
 }
 
 void includes_init( tidy_source const *source ) {
@@ -1198,7 +1188,7 @@ void includes_init( tidy_source const *source ) {
   ASSERT_RUN_ONCE();
   ht_table_init(
     &tidy_include_set, HT_DINT, 2.0, 1024,
-    POINTER_CAST( ht_cmp_fn_t, &include_cmp_by_id ),
+    POINTER_CAST( ht_cmp_fn_t, &include_cmp_by_fuid ),
     POINTER_CAST( ht_hash_fn_t, &include_hash )
   );
   ATEXIT( &includes_cleanup );

@@ -89,7 +89,7 @@ typedef enum    tidy_sort_rank  tidy_sort_rank;
  */
 struct tidy_include {
   CXFile          file;                 ///< File that was included.
-  CXFileUniqueID  file_id;              ///< Unique file ID.
+  CXFileUniqueID  fuid;                 ///< The file's unique ID.
   char const     *abs_path;             ///< Absolute path of \a file.
   char const     *basename;             ///< Basename of \a file.
   char const     *rel_path;             ///< Relative path of \a file.
@@ -125,6 +125,19 @@ extern hash_table_t tidy_include_set;   ///< The set of includes files.
 NODISCARD
 tidy_include const* include_add_symbol( CXFile include_file,
                                         tidy_symbol const *sym );
+
+/**
+ * Compares two \ref tidy_include objects by their file unique ID.
+ *
+ * @param i_include The first tidy_include.
+ * @param j_include The second tidy_include.
+ * @return Returns a number less than 0, 0, or greater than 0 if the file ID of
+ * \a i_include is less than, equal to, or greater than the file ID of \a
+ * j_include, respectively.
+ */
+NODISCARD
+int include_cmp_by_fuid( tidy_include const *i_include,
+                         tidy_include const *j_include );
 
 /**
  * Attempts to find an include file having \a file by its unique file ID among

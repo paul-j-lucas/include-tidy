@@ -1340,23 +1340,6 @@ static char const* home_dir( void ) {
 }
 
 /**
- * Compares two \ref tidy_include objects by their relative paths.
- *
- * @param i_include The first tidy_include.
- * @param j_include The second tidy_include.
- * @return Returns a number less than 0, 0, or greater than 0 if the relative
- * path of \a i_include is less than, equal to, or greater than the relative
- * path of \a j_include, respectively.
- */
-NODISCARD
-static int include_cmp_by_file_id( tidy_include const *i_include,
-                                   tidy_include const *j_include ) {
-  assert( i_include != NULL );
-  assert( j_include != NULL );
-  return tidy_FileUniqueID_cmp( &i_include->file_id, &j_include->file_id );
-}
-
-/**
  * Sets the \ref tidy_include::handling "handling" field of the include file(s)
  * having \a rel_path to \a handling.
  *
@@ -1527,7 +1510,7 @@ static void symbol_include_add( char const *from_sym_name,
     si->from_sym_name = strdup_or_exit( from_sym_name );
     ht_table_init(
       &si->to_include_set, HT_DPTR, 2.0, 10,
-      POINTER_CAST( ht_cmp_fn_t, &include_cmp_by_file_id ),
+      POINTER_CAST( ht_cmp_fn_t, &include_cmp_by_fuid ),
       POINTER_CAST( ht_hash_fn_t, &include_hash )
     );
     array_init( &si->to_include_array, sizeof( tidy_include* ) );
