@@ -1,5 +1,12 @@
+2026-11-16  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * config_file.c, include.c, include.h: Removed duplicate
+     include_cmp_by_fuid().
+
 2026-11-14  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
+   * config_file.c, include.c, symbol.c, typedef.c, verbose.c: Excluding
+     statistics from code coverage.
    * config_file.c, include.c, symbol.c, typedef.c, verbose.c, verbose.h:
      Ported verbose_statf, etc., from symbol-tidy.
 
