@@ -105,7 +105,7 @@ bool is_cxx_arrow_iwyu_exc( CXCursor call_csr, CXCursor mbr_cls_csr );
  *
  * @note This function should be called only when the file being tidied is C++.
  *
- * @sa symbols_init_data::cxx_deferred_fn_csr
+ * @sa symbols_visit_data::cxx_deferred_fn_csr
  */
 NODISCARD
 bool is_cxx_fn_iwyu_exc( CXCursor call_csr, CXCursor fn_csr );
