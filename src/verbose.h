@@ -88,6 +88,29 @@ struct verbose_stat_ctx {
 ////////// extern functions ///////////////////////////////////////////////////
 
 /**
+ * This should be called just before printing a one-liner verbose output line
+ * to separate sections if necessary.
+ *
+ * @sa verbose_new_section()
+ */
+void verbose_new_line( void );
+
+/**
+ * This should be called once just before starting to print a multi-line
+ * verbose output section to print a blank line to separate sections if
+ * necessary.
+ *
+ * @param printed_header If not NULL, a pointer to flag to be tested and, if
+ * `false`, sets it to `true`.
+ * @return Returns `true` only if \a printed_header is NULL or \a
+ * *printed_header was `false` initially.
+ *
+ * @sa verbose_new_line()
+ */
+PJL_DISCARD
+bool verbose_new_section( bool *printed_header );
+
+/**
  * Prints each value of \a argv preceded by its index.
  *
  * @note verbose_section_begin() is implicitly called.
@@ -147,18 +170,6 @@ int verbose_printf( char const *format, ... );
  * @param print_fn The function to call to print statistics.
  */
 void verbose_print_statistics( void (*print_fn)( verbose_stat_ctx* ) );
-
-/**
- * This should be called once just before starting to print a new verbose
- * output section to print a blank line to separate sections if necessary.
- *
- * @param printed_header If not NULL, a pointer to flag to be tested and, if
- * `false`, sets it to `true`.
- * @return Returns `true` only if \a printed_header is NULL or \a
- * *printed_header was `false` initially.
- */
-PJL_DISCARD
-bool verbose_section_begin( bool *printed_header );
 
 /**
  * Prints a statistic preceeded by `"// tidy | "`.

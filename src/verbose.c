@@ -53,6 +53,35 @@
  * @{
  */
 
+////////// enums //////////////////////////////////////////////////////////////
+
+/**
+ * Verbose output section kind.
+ *
+ * @sa verbose_new_impl()
+ */
+enum verbose_kind {
+  /**
+   * For one-line output, e.g.: _key_ `=`
+   * <tt>&quot;</tt><i>value</i><tt>&quot;</tt>.
+   *
+   * @note This needs to be non-zero to distinguish it from a zero-initialize
+   * `static` variable of this kind. A `VERBOSE_NONE` could have been declared
+   * before this, but it's not otherwise used.
+   */
+  VERBOSE_LINE = 1,
+
+  /**
+   * For multi-line output with a header, e.g., <i>header</i><tt>:</tt>,
+   * followed by indented lines.
+   */
+  VERBOSE_SECTION
+};
+
+////////// typedefs ///////////////////////////////////////////////////////////
+
+typedef enum verbose_kind verbose_kind;
+
 ////////// local constants ////////////////////////////////////////////////////
 
 /**
@@ -224,12 +253,47 @@ static void tidy_Cursor_printAbridgedTokens( CXCursor cursor,
 }
 // LCOV_EXCL_STOP
 
+/**
+ * Starts new verbose output.
+ *
+ * @param kind The kind of the new section.
+ * @param printed_header If not NULL, a pointer to flag to be tested and, if
+ * `false`, sets it to `true`.
+ * @return Returns `true` only if \a printed_header is NULL or \a
+ * *printed_header was `false` initially.
+ *
+ * @sa verbose_new_line()
+ * @sa verbose_new_section()
+ */
+PJL_DISCARD
+static bool verbose_new_impl( verbose_kind kind, bool *printed_header ) {
+  if ( printed_header != NULL && true_or_set( printed_header ) )
+    return false;                       // LCOV_EXCL_LINE
+
+  static verbose_kind last_kind;
+  if ( last_kind == VERBOSE_SECTION ||
+       (last_kind == VERBOSE_LINE && kind == VERBOSE_SECTION) ) {
+    verbose_printf( "\n" );
+  }
+
+  last_kind = kind;
+  return true;
+}
+
 ////////// extern functions ///////////////////////////////////////////////////
+
+void verbose_new_line( void ) {
+  verbose_new_impl( VERBOSE_LINE, /*printed_header=*/NULL );
+}
+
+bool verbose_new_section( bool *printed_header ) {
+  return verbose_new_impl( VERBOSE_SECTION, printed_header );
+}
 
 // LCOV_EXCL_START: -I, -isystem, etc., options contain absolute paths.
 void verbose_print_argv( char const *label, int argc,
                          char const *const argv[] ) {
-  verbose_section_begin( /*printed_header=*/NULL );
+  verbose_new_section( /*printed_header=*/NULL );
   verbose_printf( "%s argv:\n", label );
   for ( int i = 0; i < argc; ++i )
     verbose_printf( "  %2d = \"%s\"\n", i, argv[i] );
@@ -334,7 +398,7 @@ void verbose_print_statistics( void (*print_fn)( verbose_stat_ctx* ) ) {
 
   // LCOV_EXCL_START
   static bool printed_header;
-  if ( verbose_section_begin( &printed_header ) )
+  if ( verbose_new_section( &printed_header ) )
     verbose_printf( "statistics:\n" );
 
   assert( print_fn != NULL );
@@ -346,15 +410,6 @@ void verbose_print_statistics( void (*print_fn)( verbose_stat_ctx* ) ) {
   uselocale( prev_loc );
   freelocale( loc );
   // LCOV_EXCL_STOP
-}
-
-bool verbose_section_begin( bool *printed_header ) {
-  if ( printed_header != NULL && true_or_set( printed_header ) )
-    return false;                       // LCOV_EXCL_LINE
-  static bool print_blank_line;
-  if ( true_or_set( &print_blank_line ) )
-    verbose_printf( "\n" );
-  return true;
 }
 
 // LCOV_EXCL_START

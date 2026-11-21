@@ -1174,7 +1174,7 @@ static FILE* config_open( char const *config_path, config_opts opts ) {
 
   if ( IS_VERBOSE( CONFIG_FILES ) ) {
     // LCOV_EXCL_START: configuration paths are absolute
-    if ( verbose_section_begin( &printed_configuration_header ) )
+    if ( verbose_new_section( &printed_configuration_header ) )
       verbose_printf( "configuration files:\n" );
     verbose_printf( "  \"%s\": %s\n", config_path, ok ? "OK" : STRERROR() );
     // LCOV_EXCL_STOP
@@ -1531,7 +1531,7 @@ static void symbol_include_add( char const *from_sym_name,
 static void symbol_includes_dump( void ) {
   if ( symbol_includes_map.size == 0 )
     return;
-  verbose_section_begin( /*printed_header=*/NULL );
+  verbose_new_section( /*printed_header=*/NULL );
   verbose_printf( "configuration symbols:\n" );
   rb_iterator_t si_iter;
   rb_iterator_init( &si_iter, &symbol_includes_map );

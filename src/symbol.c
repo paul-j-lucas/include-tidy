@@ -311,7 +311,7 @@ static void add_symbol( CXCursor name_csr, CXCursor sym_csr, CXFile sym_file,
     goto done;                          // LCOV_EXCL_LINE
 
   if ( IS_VERBOSE( SYMBOLS ) ) {
-    if ( verbose_section_begin( &sid->printed_symbols_header  ) )
+    if ( verbose_new_section( &sid->printed_symbols_header  ) )
       verbose_printf( "symbols:\n" );
     char const *const delims = include_get_delims( to_include );
 

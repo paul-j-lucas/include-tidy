@@ -206,7 +206,7 @@ static void include_proxies_dump( bool want_explicit ) {
       continue;
     if ( include->is_proxy_explicit != want_explicit )
       continue;                         // LCOV_EXCL_LINE
-    if ( verbose_section_begin( &printed_proxies_header ) ) {
+    if ( verbose_new_section( &printed_proxies_header ) ) {
       verbose_printf(
         "%s proxies:\n",
         want_explicit ? "explicit" : "implicit"

@@ -580,7 +580,7 @@ static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
 
   if ( IS_VERBOSE( INCLUDES_ALL ) ||
       (IS_VERBOSE( INCLUDES_DIRECT ) && included->depth == 0) ) {
-    if ( verbose_section_begin( &iid->printed_includes_header ) ) {
+    if ( verbose_new_section( &iid->printed_includes_header ) ) {
       verbose_printf(
         "%s includes:\n", IS_VERBOSE( INCLUDES_ALL ) ? "all" : "direct"
       );

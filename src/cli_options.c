@@ -1301,7 +1301,7 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
   check_options();
 
   if ( IS_VERBOSE( SRC_FILE_ALWAYS ) ) {
-    verbose_section_begin( /*printed_header=*/NULL );
+    verbose_new_line();
     verbose_printf( "source file = \"%s\"\n", source_path );
   }
 
@@ -1357,7 +1357,7 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
 
   if ( opt_directory != NULL ) {
     if ( IS_VERBOSE( DIRECTORY ) ) {
-      verbose_section_begin( /*printed_header=*/NULL );
+      verbose_new_line();
       verbose_printf( "directory = \"%s\"\n", opt_directory );
     }
     if ( chdir( opt_directory ) != 0 )
