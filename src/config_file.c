@@ -1591,7 +1591,7 @@ void config_init( tidy_source *source ) {
   ht_table_init(
     &ignore_symbol_set, HT_DINT, 2.0, 10,
     POINTER_CAST( ht_cmp_fn_t, &strcmp ),
-    POINTER_CAST( ht_hash_fn_t, &fnv1a_s )
+    POINTER_CAST( ht_hash_fn_t, &fnv1a_str )
   );
   rb_tree_init(
     &symbol_includes_map, RB_DINT,

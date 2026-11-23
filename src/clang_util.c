@@ -906,7 +906,7 @@ CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
     // its full path.
     CXString const    abs_path_cxs = tidy_File_getRealPathName( file );
     char const *const abs_path = clang_getCString( abs_path_cxs );
-    fnv1a_t const     hash = fnv1a_s( abs_path );
+    fnv1a_t const     hash = fnv1a_str( abs_path );
 
     clang_disposeString( abs_path_cxs );
 

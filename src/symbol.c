@@ -1101,7 +1101,7 @@ static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
   ht_table_init(
     &param_set, HT_DINT, 2.0, 10,
     POINTER_CAST( ht_cmp_fn_t, &strcmp ),
-    POINTER_CAST( ht_hash_fn_t, &fnv1a_s )
+    POINTER_CAST( ht_hash_fn_t, &fnv1a_str )
   );
 
   unsigned i = clang_Cursor_isMacroFunctionLike( macro_csr ) ?
@@ -1284,7 +1284,7 @@ int symbol_cmp_by_key( tidy_symbol const *i_sym, tidy_symbol const *j_sym ) {
 }
 
 ht_hash_val_t symbol_hash( tidy_symbol const *sym ) {
-  return fnv1a_s( sym->key );
+  return fnv1a_str( sym->key );
 }
 
 void symbols_init( tidy_source const *source ) {

@@ -847,7 +847,7 @@ static int toml_key_value_cmp( toml_key_value *i_kv, toml_key_value *j_kv ) {
  */
 NODISCARD
 static ht_hash_val_t toml_key_value_hash( toml_key_value const *kv ) {
-  return fnv1a_s( kv->key.name );
+  return fnv1a_str( kv->key.name );
 }
 
 /**
@@ -1293,7 +1293,7 @@ void toml_file_init( toml_file *toml, FILE *file ) {
   ht_table_init(
     &toml->table_names, HT_DINT, 2.0, 32,
     POINTER_CAST( ht_cmp_fn_t, &strcmp ),
-    POINTER_CAST( ht_hash_fn_t, &fnv1a_s )
+    POINTER_CAST( ht_hash_fn_t, &fnv1a_str )
   );
 }
 

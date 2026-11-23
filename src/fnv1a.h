@@ -62,7 +62,7 @@
  *
  * @sa fnv1a_mem()
  * @sa #FNV1A_PRIME
- * @sa fnv1a_s()
+ * @sa fnv1a_str()
  */
 #define FNV1A_INIT                FNV1A_C(14695981039346656037)
 
@@ -71,7 +71,7 @@
  *
  * @sa #FNV1A_INIT
  * @sa fnv1a_mem()
- * @sa fnv1a_s()
+ * @sa fnv1a_str()
  */
 #define FNV1A_PRIME               FNV1A_C(1099511628211)
 
@@ -82,7 +82,7 @@
  *
  * @sa #FNV1A_C()
  * @sa fnv1a_mem()
- * @sa fnv1a_s()
+ * @sa fnv1a_str()
  */
 typedef uint64_t fnv1a_t;
 
@@ -112,7 +112,7 @@ fnv1a_t fnv1a64_mem( fnv1a_t hash, void const *data, size_t n );
  * @sa [The FNV Non-Cryptographic Hash Algorithm](https://datatracker.ietf.org/doc/html/draft-eastlake-fnv-17.html)
  */
 NODISCARD
-fnv1a_t fnv1a_s( char const *s );
+fnv1a_t fnv1a_str( char const *s );
 
 ///////////////////////////////////////////////////////////////////////////////
 
