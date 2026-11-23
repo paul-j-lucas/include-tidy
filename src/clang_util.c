@@ -671,7 +671,7 @@ bool tidy_Cursor_isReservedName( CXCursor cursor, enum CXLanguageKind lang ) {
   CXString const    name_cxs = clang_getCursorSpelling( cursor );
   char const *const name = clang_getCString( name_cxs );
 
-  if ( name == NULL || name[0] == '\0' )
+  if ( null_or_empty( name ) )
     goto done;                          // LCOV_EXCL_LINE
 
   if ( name[0] == '_' ) {
@@ -799,7 +799,7 @@ CXString tidy_File_getRealPathName( CXFile file ) {
   CXString          abs_path_cxs = clang_File_tryGetRealPathName( file );
   char const *const abs_path = clang_getCString( abs_path_cxs );
 
-  if ( unlikely( abs_path == NULL || abs_path[0] == '\0' ) ) {
+  if ( unlikely( null_or_empty( abs_path ) ) ) {
     // LCOV_EXCL_START
     clang_disposeString( abs_path_cxs );
     abs_path_cxs = clang_getFileName( file );

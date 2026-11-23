@@ -79,6 +79,7 @@ inline char* nonconst_empty_if_null( char *s ) {
  * returns a pointer to the first non-whitespace character in \a s.
  *
  * @sa empty_if_null()
+ * @sa null_or_empty()
  */
 NODISCARD
 inline char const* null_if_empty( char const *s ) {
@@ -95,6 +96,19 @@ inline char* nonconst_null_if_empty( char *s ) {
 
 #define null_if_empty(S)          NONCONST_OVERLOAD( null_if_empty, (S) )
 /// @endcond
+
+/**
+ * Gets whether \a is is either NULL or empty.
+ *
+ * @param s The null-terminated string to check.
+ * @return Returns `true` only if \a is either NULL or empty.
+ *
+ * @sa null_if_empty()
+ */
+NODISCARD
+inline bool null_or_empty( char const *s ) {
+  return s == NULL || s[0] == '\0';
+}
 
 /**
  * Calls **strdup**(3) and checks for failure.

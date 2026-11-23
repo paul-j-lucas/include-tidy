@@ -113,6 +113,7 @@ extern inline char* (nonconst_null_if_empty)( char* );
 extern inline char* (nonconst_empty_if_null)( char* );
 extern inline char* (nonconst_strnrchr)( char*, size_t, int );
 extern inline char const* (null_if_empty)( char const* );
+extern inline bool null_or_empty( char const* );
 
 extern inline bool str_ends_with( char const*, char const*, size_t );
 
