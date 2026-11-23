@@ -87,7 +87,7 @@
 ///
 ///       ht_hash_val_t word_count_hash( void const *p ) {
 ///         struct word_count const *const wc = p;
-///         return fnv1a_s( wc->word );
+///         return fnv1a_str( wc->word );
 ///       }
 ///
 ///       void word_count_cleanup( void const *p ) {
@@ -117,7 +117,7 @@
 ///
 /// **Notes**:
 ///
-/// + The example assumes the existence of a string hash function `fnv1a_s`.
+/// + The example assumes the existence of a string hash function `fnv1a_str`.
 ///
 /// + \ref ht_cmp_fn_t "Comparison functions" return 0 when two entries are
 ///   equal (just like `strcmp` does with strings).
@@ -443,9 +443,22 @@ void* ht_iterator_next( ht_iterator_t *it );
  * @param free_fn A pointer to a function used to free data associated with
  * each entry or NULL if unnecessary.
  *
+ * @sa ht_table_clear()
  * @sa ht_table_init()
  */
 void ht_table_cleanup( hash_table_t *table, ht_free_fn_t free_fn );
+
+/**
+ * Removes all entries from \a table, but retains the memory for its buckets
+ * (at their current size) so the table can be reused.
+ *
+ * @param table The hash table to clear.  If NULL, does nothing.
+ * @param free_fn A pointer to a function used to free data associated with
+ * each entry or NULL if unnecessary.
+ *
+ * @sa ht_table_cleanup()
+ */
+void ht_table_clear( hash_table_t *table, ht_free_fn_t free_fn );
 
 /**
  * Deletes an entry from a hash table.

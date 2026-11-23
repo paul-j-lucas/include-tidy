@@ -130,27 +130,39 @@ void* ht_iterator_next( ht_iterator_t *it ) {
 }
 
 void ht_table_cleanup( hash_table_t *table, ht_free_fn_t free_fn ) {
-  if ( table == NULL || table->buckets == NULL )
+  if ( table != NULL && table->buckets != NULL ) {
+    ht_table_clear( table, free_fn );
+    free( table->buckets );
+  }
+  *table = (hash_table_t){ 0 };
+}
+
+void ht_table_clear( hash_table_t *table, ht_free_fn_t free_fn ) {
+  if ( table == NULL || table->buckets == NULL || table->size == 0 )
     return;
 
   unsigned const n_buckets = HT_PRIME[ table->prime_idx ];
 
   for ( unsigned b = 0; b < n_buckets; ++b ) {
-    for ( ht_entry_t *entry = table->buckets[b].next, *next;
+    ht_entry_t *const head = &table->buckets[b];
+
+    for ( ht_entry_t *entry = head->next, *next;
           entry != NULL; entry = next ) {
       if ( free_fn != NULL )
         (*free_fn)( ht_entry_data( table, entry ) );
       next = entry->next;
       free( entry );
     } // for
+
+    head->next = NULL;
   } // for
 
-  free( table->buckets );
-  *table = (hash_table_t){ 0 };
+  table->size = 0;
 }
 
 void ht_table_delete( hash_table_t *table, ht_entry_t *entry ) {
   assert( table != NULL );
+  assert( table->size > 0 );
   assert( entry != NULL );
 
   entry->prev->next = entry->next;
@@ -205,6 +217,7 @@ void ht_table_init( hash_table_t *table, ht_dloc_t dloc, double max_lf,
 ht_insert_rv_t ht_table_insert( hash_table_t *table, void *data,
                                 size_t data_size ) {
   assert( table != NULL );
+  assert( table->buckets != NULL );
   assert( data != NULL );
   assert( table->dloc == HT_DPTR || data_size > 0 );
 
