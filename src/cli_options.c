@@ -84,14 +84,6 @@
  */
 #define COMPILER_SEARCH_END    "End of search list."
 
-/**
- * Convenience macro for iterating over all command-line options.
- *
- * @param VAR The `struct option` loop variable.
- */
-#define FOREACH_CLI_OPTION(VAR, OPTIONS) \
-  for ( struct option const *VAR = (OPTIONS); (VAR)->name != NULL; ++(VAR) )
-
 ////////// local constants ////////////////////////////////////////////////////
 
 /**
@@ -129,7 +121,7 @@ static struct option const OPTIONS[] = {
  *
  * @note It is indexed by short option characters.
  *
- * @sa get_opt_help()
+ * @sa option_help()
  * @sa OPTIONS
  */
 static char const *const OPTIONS_HELP[] = {
@@ -470,21 +462,6 @@ static char const* get_opt_format( int short_opt ) {
 }
 
 /**
- * Gets the help message for \a short_opt.
- *
- * @param short_opt The option to get the help for.
- * @return Returns said help message.
- */
-NODISCARD
-static char const* get_opt_help( int short_opt ) {
-  assert( short_opt > 0 );
-  assert( STATIC_CAST( size_t, short_opt ) < ARRAY_SIZE( OPTIONS_HELP ) );
-  char const *const help = OPTIONS_HELP[ short_opt ];
-  assert( help != NULL );
-  return help;
-}
-
-/**
  * Gets the `option` corresponding to \a long_opt.
  *
  * @param long_opt The long option to get the option for.
@@ -499,7 +476,7 @@ static struct option const* get_option_long( char const *long_opt ) {
   size_t const n = equal != NULL ?
     STATIC_CAST( size_t, equal - long_opt ) : strlen( long_opt );
 
-  FOREACH_CLI_OPTION( option, OPTIONS ) {
+  FOREACH_CLI_OPTION( option ) {
     if ( strncmp( option->name, long_opt, n ) == 0 )
       return option;
   } // for
@@ -517,7 +494,7 @@ static struct option const* get_option_long( char const *long_opt ) {
 NODISCARD
 static struct option const* get_option_short( int short_opt ) {
   assert( short_opt > 0 && short_opt < 128 );
-  FOREACH_CLI_OPTION( option, OPTIONS ) {
+  FOREACH_CLI_OPTION( option ) {
     if ( option->val == short_opt )
       return option;
   } // for
@@ -712,22 +689,19 @@ error:
  * Makes the `optstring` (short option) equivalent of \a opts for the third
  * argument of `getopt_long()`.
  *
- * @param options An array of options to make the short option string from.
- * Its last element must be all zeros.
  * @param extra_opts Extra options to add.  May be NULL.
  * @return Returns the `optstring` for the third argument of `getopt_long()`.
  *
  * @note The caller is responsible for freeing the returned string.
  */
 NODISCARD
-static char* make_short_opts( struct option const options[static const 2],
-                              char const *extra_opts ) {
+static char* make_short_opts( char const *extra_opts ) {
   extra_opts = empty_if_null( extra_opts );
   size_t const extra_opts_len = strlen( extra_opts );
 
   // pre-flight to calculate string length
   size_t len = 1 /* for leading ':' */ + extra_opts_len;
-  FOREACH_CLI_OPTION( option, options ) {
+  FOREACH_CLI_OPTION( option ) {
     assert( option->has_arg >= 0 && option->has_arg <= 2 );
     len += 1 + STATIC_CAST( unsigned, option->has_arg );
   } // for
@@ -736,7 +710,7 @@ static char* make_short_opts( struct option const options[static const 2],
   char *s = short_opts;
 
   *s++ = ':';                           // return missing argument as ':'
-  FOREACH_CLI_OPTION( option, options ) {
+  FOREACH_CLI_OPTION( option ) {
     assert( option->val > 0 && option->val < 128 );
     *s++ = STATIC_CAST( char, option->val );
     switch ( option->has_arg ) {
@@ -971,101 +945,11 @@ short_opt_requires_argument:
   fatal_error( EX_USAGE, "\"-%c\" requires an argument\n", *opt );
 }
 
-/**
- * Prints the usage message to standard error and exits.
- *
- * @param status The status to exit with.  If it is `EX_OK`, prints to standard
- * output; otherwise prints to standard error.
- */
-_Noreturn
-static void print_usage( int status ) {
-  // pre-flight to calculate longest long option length
-  size_t longest_opt_len = 0;
-  FOREACH_CLI_OPTION( option, OPTIONS ) {
-    size_t long_opt_len = strlen( option->name );
-    switch ( option->has_arg ) {
-      case no_argument:
-        break;
-      case optional_argument:
-        // LCOV_EXCL_START: tidy doesn't currently have any optional arguments.
-        long_opt_len += STRLITLEN( "[=ARG]" );
-        break;
-        // LCOV_EXCL_STOP
-      case required_argument:
-        long_opt_len += STRLITLEN( "=ARG" );
-        break;
-    } // switch
-    if ( long_opt_len > longest_opt_len )
-      longest_opt_len = long_opt_len;
-  } // for
-
-  FILE *const fout = status == EX_OK ? stdout : stderr;
-
-  fprintf( fout,
-    "usage: %s [-Xtidy tidy-option]... [compiler-option]... source-file\n"
-    "       %s other-option\n"
-    "\n"
-    "tidy options:\n"
-    , prog_name, prog_name
-  );
-
-  FOREACH_CLI_OPTION( option, OPTIONS ) {
-    switch ( option->val ) {
-      case COPT(HELP):
-      case COPT(VERSION):
-        // These are special in that they are allowed directly rather than
-        // following -Xtidy.  Consequently, they must be printed seperately
-        // (below).
-        continue;
-    } // switch
-    fprintf( fout, "  --%s", option->name );
-    size_t long_opt_len = strlen( option->name );
-    switch ( option->has_arg ) {
-      case no_argument:
-        break;
-      case optional_argument:
-        // LCOV_EXCL_START: tidy doesn't currently have any optional arguments.
-        long_opt_len += STATIC_CAST( size_t, fprintf( fout, "[=ARG]" ) );
-        break;
-        // LCOV_EXCL_STOP
-      case required_argument:
-        long_opt_len += STATIC_CAST( size_t, fprintf( fout, "=ARG" ) );
-        break;
-    } // switch
-    assert( long_opt_len <= longest_opt_len );
-    FPUTNSP( longest_opt_len - long_opt_len, fout );
-    fprintf( fout, " (-%c) %s.\n", option->val, get_opt_help( option->val ) );
-  } // for
-
-  fputs( "\nother options:\n", fout );
-
-  FOREACH_CLI_OPTION( option, OPTIONS ) {
-    switch ( option->val ) {
-      case COPT(HELP):
-      case COPT(VERSION):
-        break;
-      default:
-        continue;
-    } // switch
-    fprintf( fout, "  --%s", option->name );
-    size_t const long_opt_len = strlen( option->name );
-    assert( option->has_arg == no_argument );
-    assert( long_opt_len <= longest_opt_len );
-    FPUTNSP( longest_opt_len - long_opt_len, fout );
-    fprintf( fout, " (-%c) %s.\n", option->val, get_opt_help( option->val ) );
-  } // for
-
-  fputs(
-    "\n"
-    PACKAGE_NAME " home page: " PACKAGE_URL "\n"
-    "Report bugs to: " PACKAGE_BUGREPORT "\n",
-    fout
-  );
-
-  exit( status );
-}
-
 ////////// extern functions ///////////////////////////////////////////////////
+
+struct option const* cli_option_next( struct option const *option ) {
+  return option == NULL ? OPTIONS : (++option)->name == NULL ? NULL : option;
+}
 
 tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
   assert(  pargc != NULL );
@@ -1112,7 +996,7 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
   char const   *opt_directory = NULL;
   bool          opt_help = false;
   unsigned      opt_version = 0;
-  char   *const short_opts = make_short_opts( OPTIONS, SOPT(INCLUDE) ":" );
+  char   *const short_opts = make_short_opts( SOPT(INCLUDE) ":" );
   int           tidy_argc;
   char const  **tidy_argv;
   array_t       tmp_include_paths = ARRAY_INIT( sizeof(char*) );
@@ -1335,6 +1219,14 @@ tidy_source cli_options_init( int *pargc, char const **pargv[] ) {
     .path = source_path,
     .lang = source_lang
   };
+}
+
+char const* option_help( int short_opt ) {
+  assert( short_opt > 0 );
+  assert( STATIC_CAST( size_t, short_opt ) < ARRAY_SIZE( OPTIONS_HELP ) );
+  char const *const help = OPTIONS_HELP[ short_opt ];
+  assert( help != NULL );
+  return help;
 }
 
 bool option_is_set( int short_opt ) {

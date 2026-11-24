@@ -236,6 +236,15 @@ void print_source_line( char const *path, unsigned line, unsigned col,
                         unsigned offset );
 
 /**
+ * Prints the usage message to standard error and exits.
+ *
+ * @param status The status to exit with.  If it is `EX_OK`, prints to standard
+ * output; otherwise prints to standard error.
+ */
+_Noreturn
+void print_usage( int status );
+
+/**
  * Prints the **include-tidy** version.
  *
  * @param verbose If `true`, prints configure feature &amp; package options.

@@ -35,6 +35,7 @@
 
 // standard
 #include <stdbool.h>
+#include <stddef.h>
 
 // in ascending option character ASCII order; sort using: sort -k3b,3f -k3b,3r
 #define OPT_ALIGN_COLUMN          a
@@ -70,7 +71,30 @@
 /// Command-line option as a string literal.
 #define SOPT(X)                   STRINGIFY(OPT_##X)
 
+/**
+ * Convenience macro for iterating over all command-line options.
+ *
+ * @param VAR The `struct option` loop variable.
+ */
+#define FOREACH_CLI_OPTION(VAR) \
+  for ( struct option const *VAR = NULL; (VAR = cli_option_next( VAR )) != NULL; )
+
 ////////// extern functions ///////////////////////////////////////////////////
+
+/**
+ * Iterates to the next **include-tidy** command-line option.
+ *
+ * @param option A pointer to the previous option. For the first iteration,
+ * NULL should be passed.
+ * @return Returns the next command-line option or NULL for none.
+ *
+ * @note This function isn't normally called directly; use the
+ * #FOREACH_CLI_OPTION() macro instead.
+ *
+ * @sa #FOREACH_CLI_OPTION()
+ */
+NODISCARD
+struct option const* cli_option_next( struct option const *option );
 
 /**
  * Initializes **include-tidy** options from the command-line.
@@ -81,6 +105,15 @@
  * @note This function must be called exactly once.
  */
 tidy_source cli_options_init( int *pargc, char const **pargv[] );
+
+/**
+ * Gets the help message for \a short_opt.
+ *
+ * @param short_opt The option to get the help for.
+ * @return Returns said help message.
+ */
+NODISCARD
+char const* option_help( int short_opt );
 
 /**
  * Gets whether the option has been set.

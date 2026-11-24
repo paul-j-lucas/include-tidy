@@ -26,6 +26,7 @@
 // local
 #include "pjl_config.h"                 /* must go first */
 #include "print.h"
+#include "cli_options.h"
 #include "color.h"
 #include "include-tidy.h"
 #include "options.h"
@@ -36,10 +37,12 @@
 
 // standard
 #include <assert.h>
+#include <getopt.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for free */
+#include <string.h>
 #include <sysexits.h>
 
 /// @endcond
@@ -242,6 +245,93 @@ void print_source_line( char const *path, unsigned line, unsigned col,
 
 done:
   fclose( fsource );
+}
+
+void print_usage( int status ) {
+  // pre-flight to calculate longest long option length
+  size_t longest_opt_len = 0;
+  FOREACH_CLI_OPTION( option ) {
+    size_t long_opt_len = strlen( option->name );
+    switch ( option->has_arg ) {
+      case no_argument:
+        break;
+      case optional_argument:
+        // LCOV_EXCL_START: tidy doesn't currently have any optional arguments.
+        long_opt_len += STRLITLEN( "[=ARG]" );
+        break;
+        // LCOV_EXCL_STOP
+      case required_argument:
+        long_opt_len += STRLITLEN( "=ARG" );
+        break;
+    } // switch
+    if ( long_opt_len > longest_opt_len )
+      longest_opt_len = long_opt_len;
+  } // for
+
+  FILE *const fout = status == EX_OK ? stdout : stderr;
+
+  fprintf( fout,
+    "usage: %s [-Xtidy tidy-option]... [compiler-option]... source-file\n"
+    "       %s other-option\n"
+    "\n"
+    "tidy options:\n"
+    , prog_name, prog_name
+  );
+
+  FOREACH_CLI_OPTION( option ) {
+    switch ( option->val ) {
+      case COPT(HELP):
+      case COPT(VERSION):
+        // These are special in that they are allowed directly rather than
+        // following -Xtidy.  Consequently, they must be printed seperately
+        // (below).
+        continue;
+    } // switch
+    fprintf( fout, "  --%s", option->name );
+    size_t long_opt_len = strlen( option->name );
+    switch ( option->has_arg ) {
+      case no_argument:
+        break;
+      case optional_argument:
+        // LCOV_EXCL_START: tidy doesn't currently have any optional arguments.
+        long_opt_len += STATIC_CAST( size_t, fprintf( fout, "[=ARG]" ) );
+        break;
+        // LCOV_EXCL_STOP
+      case required_argument:
+        long_opt_len += STATIC_CAST( size_t, fprintf( fout, "=ARG" ) );
+        break;
+    } // switch
+    assert( long_opt_len <= longest_opt_len );
+    FPUTNSP( longest_opt_len - long_opt_len, fout );
+    fprintf( fout, " (-%c) %s.\n", option->val, option_help( option->val ) );
+  } // for
+
+  fputs( "\nother options:\n", fout );
+
+  FOREACH_CLI_OPTION( option ) {
+    switch ( option->val ) {
+      case COPT(HELP):
+      case COPT(VERSION):
+        break;
+      default:
+        continue;
+    } // switch
+    fprintf( fout, "  --%s", option->name );
+    size_t const long_opt_len = strlen( option->name );
+    assert( option->has_arg == no_argument );
+    assert( long_opt_len <= longest_opt_len );
+    FPUTNSP( longest_opt_len - long_opt_len, fout );
+    fprintf( fout, " (-%c) %s.\n", option->val, option_help( option->val ) );
+  } // for
+
+  fputs(
+    "\n"
+    PACKAGE_NAME " home page: " PACKAGE_URL "\n"
+    "Report bugs to: " PACKAGE_BUGREPORT "\n",
+    fout
+  );
+
+  exit( status );
 }
 
 // LCOV_EXCL_START
