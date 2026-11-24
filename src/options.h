@@ -31,9 +31,6 @@
 #include "pjl_config.h"                 /* must go first */
 #include "color.h"
 
-// libclang
-#include <clang-c/Index.h>
-
 // standard
 #include <stdbool.h>
 

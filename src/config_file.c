@@ -29,7 +29,6 @@
 #include "config_file.h"
 #include "array.h"
 #include "bit_util.h"
-#include "clang_util.h"
 #include "cli_options.h"
 #include "fnv1a.h"
 #include "hash_table.h"
