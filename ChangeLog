@@ -1,3 +1,8 @@
+2026-11-24  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * configure.ac, clang_util.c, clang_util.h, symbol.c: Fixed anonymous
+     struct/union crash.
+
 2026-11-23  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * cli_options.c, cli_options.h, print.c, print.h: CLI options code re-org.
