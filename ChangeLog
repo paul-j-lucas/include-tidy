@@ -1,5 +1,6 @@
 2026-11-23  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
+   * cli_options.c, cli_options.h, print.c, print.h: CLI options code re-org.
    * config_file.c, options.c, options.h: #include fixes.
    * cli_options.c, print.c, print.h: Moved print_version.
    * clang_util.c, str_util.c, str_util.h: Added null_or_empty().
