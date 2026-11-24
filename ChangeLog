@@ -1,3 +1,10 @@
+2026-11-23  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * config_file.c, options.c, options.h: #include fixes.
+   * cli_options.c, print.c, print.h: Moved print_version.
+   * clang_util.c, str_util.c, str_util.h: Added null_or_empty().
+   * hash_table.c, hash_table.h: Ported minor changes from symbol-tidy.
+
 2026-11-21  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * Doxygen.sed: Hiding same-named enum typedefs.
