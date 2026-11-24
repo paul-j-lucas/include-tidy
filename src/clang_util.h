@@ -578,6 +578,18 @@ NODISCARD
 CXFile tidy_getCursorLocation_File( CXCursor cursor );
 
 /**
+ * Calls `clang_getCursorUSR()` on the canonical cursor of \a cursor.
+ *
+ * @param cursor The cursor to use.
+ * @return Returns the result of `clang_getCursorUSR()` on the canonical cursor
+ * of \a cursor.
+ *
+ * @note The caller is responsible for freeing the returned string.
+ */
+NODISCARD
+char* tidy_getCursorUSR( CXCursor cursor );
+
+/**
  * Calls `clang_getFileLocation()` and returns the `CXFile`.
  *
  * @param loc The `CXSourceLocation` to use.

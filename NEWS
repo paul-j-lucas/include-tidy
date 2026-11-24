@@ -5,6 +5,12 @@ See the end of the file for license conditions.
 
 -------------------------------------------------------------------------------
 
+* Changes in Include-tidy 3.1.1
+
+** Fixed anonymous `struct`/`union` crash
+Fixed a crash when encountering either one of those.
+
+
 * Changes in Include-tidy 3.1
 
 ** C++ overloaded functions

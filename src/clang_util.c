@@ -27,6 +27,7 @@
 #include "pjl_config.h"
 #include "clang_util.h"
 #include "fnv1a.h"
+#include "path_util.h"
 #include "str_util.h"
 #include "strbuf.h"
 #include "util.h"
@@ -60,6 +61,7 @@ typedef unsigned long long CXFileUniqueID_data_t;
 
 typedef struct getCursorByName_data getCursorByName_data;
 typedef CXString                  (*getCursorName_fn)( CXCursor );
+typedef CXCursor                  (*getCursorParent_fn)( CXCursor );
 typedef struct isBaseClass_data     isBaseClass_data;
 
 ////////// structs ////////////////////////////////////////////////////////////
@@ -335,6 +337,49 @@ static enum CXChildVisitResult isBaseClass_visitor( CXCursor cursor,
 }
 
 /**
+ * Helper function for tidy_Cursor_isOrInClassTemplate() that gets whether \a
+ * cursor is, or is nested within, a class template, or a specialization of
+ * one.
+ *
+ * @param cursor The cursor to check.
+ * @param parent_fn The libclang function to use to get the parent of \a
+ * cursor.
+ * @return Returns `true` only if \a cursor is, or is nested within, a class
+ * template.
+ */
+NODISCARD
+static bool isOrInClassTemplate_impl( CXCursor cursor,
+                                      getCursorParent_fn parent_fn ) {
+  assert( parent_fn != NULL );
+
+  for ( cursor = (*parent_fn)( cursor ); !tidy_Cursor_isInvalid( cursor );
+        cursor = (*parent_fn)( cursor ) ) {
+    enum CXCursorKind const kind = clang_getCursorKind( cursor );
+    switch ( kind ) {
+      case CXCursor_ClassDecl:
+      case CXCursor_StructDecl:
+      case CXCursor_UnionDecl:;
+        CXCursor const tmpl_csr = clang_getSpecializedCursorTemplate( cursor );
+        if ( !tidy_Cursor_isInvalid( tmpl_csr ) )
+          return true;
+        break;
+
+      case CXCursor_ClassTemplate:
+      case CXCursor_ClassTemplatePartialSpecialization:
+        return true;
+
+      case CXCursor_TranslationUnit:
+        return false;
+
+      default:
+        /* suppress warning */;
+    } // switch
+  } // for
+
+  return false;
+}
+
+/**
  * Gets the first expression child cursor of \a cursor, if any.
  *
  * @param cursor The cursor to get the first expression child cursor of, if
@@ -389,6 +434,23 @@ static bool tidy_Cursor_isInheritable( CXCursor cursor ) {
     default:
       return false;
   } // switch
+}
+
+/**
+ * Gets whether \a cursor is, or is nested within, a class template, or a
+ * specialization of one.
+ *
+ * @remarks Such cursors can't be matched via `clang_getCursorUSR()` since an
+ * instantiation's USR is different from its declaration's.
+ *
+ * @param cursor The cursor to check.
+ * @return Returns `true` only if \a cursor is, or is nested within, a class
+ * template.
+ */
+NODISCARD
+static bool tidy_Cursor_isOrInClassTemplate( CXCursor cursor ) {
+  return  isOrInClassTemplate_impl( cursor, &clang_getCursorSemanticParent ) ||
+          isOrInClassTemplate_impl( cursor, &clang_getCursorLexicalParent  );
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -788,7 +850,7 @@ CXCursor tidy_Cursor_skipUnexposedDown( CXCursor cursor ) {
 
 char* tidy_dupCString( CXString cxs ) {
   char const *const cs = clang_getCString( cxs );
-  char *const rv_cs = cs != NULL && cs[0] != '\0' ? strdup_or_exit( cs ) : NULL;
+  char *const rv_cs = null_or_empty( cs ) ? NULL : strdup_or_exit( cs );
   clang_disposeString( cxs );
   return rv_cs;
 }
@@ -894,6 +956,52 @@ CXFile tidy_getCursorLocation_File( CXCursor cursor ) {
   }
 
   return file;
+}
+
+char* tidy_getCursorUSR( CXCursor cursor ) {
+  cursor = clang_getCanonicalCursor( cursor );
+
+  //
+  // For a member of an implicit class template instantiation, use the member
+  // of the template it was instantiated from so that both have the same key.
+  //
+  for (;;) {
+    CXCursor const tmpl_csr = clang_getSpecializedCursorTemplate( cursor );
+    if ( tidy_Cursor_isInvalid( tmpl_csr ) )
+      break;
+    cursor = clang_getCanonicalCursor( tmpl_csr );
+  } // for
+
+
+  if ( !tidy_Cursor_isOrInClassTemplate( cursor ) ) {
+    CXString const usr_cxs = clang_getCursorUSR( cursor );
+    char *const usr = tidy_dupCString( usr_cxs );
+    if ( usr != NULL )
+      return usr;
+  }
+
+  //
+  // For some cursor kinds, libclang returns an empty string for its USR.  But
+  // we _really_ want a USR, so sythesize our own using the cursor's location.
+  //
+  CXSourceLocation const sloc = clang_getCursorLocation( cursor );
+  CXFile file;
+  unsigned line, col;
+  clang_getSpellingLocation( sloc, &file, &line, &col, /*offset=*/NULL );
+  if ( unlikely( file == NULL ) )
+    return NULL;                        // LCOV_EXCL_LINE
+
+  CXString const    path_cxs = clang_getFileName( file );
+  char const *const path_cs = path_no_dot_slash( clang_getCString( path_cxs ) );
+  CXString const    label_cxs = clang_getCursorSpelling( cursor );
+  char const *const label_cs = clang_getCString( label_cxs );
+
+  char *usr = NULL;
+  asprintf_or_exit( &usr, "tidy:%s@%u@%u@%s", path_cs, line, col, label_cs );
+
+  clang_disposeString( label_cxs );
+  clang_disposeString( path_cxs );
+  return usr;
 }
 
 CXFileUniqueID tidy_getFileUniqueID( CXFile file ) {
