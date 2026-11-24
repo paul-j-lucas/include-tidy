@@ -37,6 +37,7 @@
 // standard
 #include <assert.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>                     /* for free */
 #include <sysexits.h>
@@ -47,6 +48,16 @@
  * @addtogroup printing-group
  * @{
  */
+
+////////// macros /////////////////////////////////////////////////////////////
+
+/**
+ * Convenience macro for printing a `configure` option.
+ *
+ * @param OPT The option string literal to print (without the leading `--`).
+ */
+#define PUT_CONFIG_OPT(OPT) BLOCK( \
+  PUTS( "\n  --" OPT ); printed_opt = true; )
 
 ////////// local functions ////////////////////////////////////////////////////
 
@@ -232,6 +243,41 @@ void print_source_line( char const *path, unsigned line, unsigned col,
 done:
   fclose( fsource );
 }
+
+// LCOV_EXCL_START
+void print_version( bool verbose ) {
+  PUTS(
+    PACKAGE_STRING "\n"
+    "Copyright (C) " TIDY_COPYRIGHT_YEAR " " TIDY_AUTHOR "\n"
+    "License " TIDY_LICENSE " <" TIDY_LICENSE_URL ">.\n"
+    "This is free software: you are free to change and redistribute it.\n"
+    "There is NO WARRANTY to the extent permitted by law.\n"
+  );
+  if ( !verbose )
+    return;
+
+  PUTS( "\nconfigure feature & package options:" );
+  bool printed_opt = false;
+#ifdef NDEBUG
+  PUT_CONFIG_OPT( "disable-assert" );
+#endif /* NDEBUG */
+#ifdef ENABLE_ASAN
+  PUT_CONFIG_OPT( "enable-asan" );
+#endif /* ENABLE_ASAN */
+#ifdef ENABLE_COVERAGE
+  PUT_CONFIG_OPT( "enable-coverage" );
+#endif /* ENABLE_COVERAGE */
+#ifdef ENABLE_MSAN
+  PUT_CONFIG_OPT( "enable-msan" );
+#endif /* ENABLE_MSAN */
+#ifdef ENABLE_UBSAN
+  PUT_CONFIG_OPT( "enable-ubsan" );
+#endif /* ENABLE_UBSAN */
+  if ( !printed_opt )
+    PUTS( " none" );
+  putchar( '\n' );
+}
+// LCOV_EXCL_STOP
 
 ///////////////////////////////////////////////////////////////////////////////
 

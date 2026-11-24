@@ -33,6 +33,7 @@
 /// @cond DOXYGEN_IGNORE
 
 // standard
+#include <stdbool.h>
 #include <stddef.h>                     /* for NULL */
 
 /// @endcond
@@ -233,6 +234,13 @@ void print_include( char const *sgr_color, char const delims[static 2],
  */
 void print_source_line( char const *path, unsigned line, unsigned col,
                         unsigned offset );
+
+/**
+ * Prints the **include-tidy** version.
+ *
+ * @param verbose If `true`, prints configure feature &amp; package options.
+ */
+void print_version( bool verbose );
 
 ///////////////////////////////////////////////////////////////////////////////
 
