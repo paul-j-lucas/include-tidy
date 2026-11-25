@@ -22,9 +22,9 @@ ACLOCAL_AMFLAGS =	-I m4
 SUBDIRS =		etc lib src man test
 
 EXTRA_DIST =		bootstrap \
-			Doxygen.sed \
 			Doxyfile \
-			include-tidy.css \
+			Doxygen-pjl.css \
+			Doxygen.sed \
 			lcovrc \
 			m4/gnulib-cache.m4 \
 			m4/update_m4.sh \
