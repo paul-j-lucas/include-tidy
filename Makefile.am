@@ -30,6 +30,7 @@ EXTRA_DIST =		bootstrap \
 			m4/update_m4.sh \
 			makedoc.sh \
 			src/include-tidy.toml \
+			src/symbol-tidy.toml \
 			README.md
 
 DOCS_DIR =		docs
