@@ -1,3 +1,7 @@
+2026-11-25  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * Makefile.am: Added symbol-tidy.toml to EXTRA_DIST.
+
 2026-11-24  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * configure.ac, clang_util.c, clang_util.h, symbol.c: Fixed anonymous
