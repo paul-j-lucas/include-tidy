@@ -481,14 +481,14 @@ static void includes_cleanup( void ) {
  * tidy_include_set.
  *
  * @param cursor The cursor for the symbol in the AST being visited.
- * @param parent Not used.
+ * @param parent_csr Not used.
  * @param data A pointer to a includes_init_data.
  * @return Always returns `CXChildVisit_Continue`.
  */
 static enum CXChildVisitResult includes_init_visitor( CXCursor cursor,
-                                                      CXCursor parent,
+                                                      CXCursor parent_csr,
                                                       CXClientData data ) {
-  (void)parent;
+  (void)parent_csr;
   assert( data != NULL );
 
   if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )

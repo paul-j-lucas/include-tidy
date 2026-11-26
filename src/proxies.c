@@ -87,14 +87,14 @@ static char const* get_cxx_header( char const *c_name, strbuf_t *rv_path_buf ) {
  * implicit include proxies.
  *
  * @param cursor The cursor for the symbol in the AST being visited.
- * @param parent Not used.
+ * @param parent_csr Not used.
  * @param data A pointer to the tidy_source being tidied.
  * @return Always returns `CXChildVisit_Continue`.
  */
 static enum CXChildVisitResult implicit_proxies_visitor( CXCursor cursor,
-                                                         CXCursor parent,
+                                                         CXCursor parent_csr,
                                                          CXClientData data ) {
-  (void)parent;
+  (void)parent_csr;
   if ( clang_getCursorKind( cursor ) != CXCursor_InclusionDirective )
     goto skip;
 

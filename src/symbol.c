@@ -410,7 +410,7 @@ static CXFile get_symbol_file( CXCursor sym_csr,
  * @endparblock
  *
  * @param cursor The cursor to visit.
- * @param parent The parent cursor of \a cursor.
+ * @param parent_csr The parent cursor of \a cursor.
  * @param dec_csr The declaration cursor of \a cursor.
  * @param svd The symbols_visit_data to use.
  * @param rv_def_csr A pointer to receive the definition cursor of \a cursor
@@ -418,7 +418,7 @@ static CXFile get_symbol_file( CXCursor sym_csr,
  * @return Returns `true` only if the definition is needed.
  */
 NODISCARD
-static bool is_symbol_definition_needed( CXCursor cursor, CXCursor parent,
+static bool is_symbol_definition_needed( CXCursor cursor, CXCursor parent_csr,
                                          CXCursor dec_csr,
                                          symbols_visit_data const *svd,
                                          CXCursor *rv_def_csr ) {
@@ -427,7 +427,7 @@ static bool is_symbol_definition_needed( CXCursor cursor, CXCursor parent,
   CXCursor cls_csr;
 
   if ( svd->source->lang == CXLanguage_CPlusPlus &&
-       tidy_Cursor_isOutOfLineDefinition( cursor, parent, &cls_csr ) ) {
+       tidy_Cursor_isOutOfLineDefinition( cursor, parent_csr, &cls_csr ) ) {
     *rv_def_csr = clang_getCursorDefinition( cls_csr );
     return true;
   }
@@ -446,7 +446,7 @@ static bool is_symbol_definition_needed( CXCursor cursor, CXCursor parent,
       return false;
   } // switch
 
-  CXType type = clang_getCanonicalType( clang_getCursorType( parent ) );
+  CXType type = clang_getCanonicalType( clang_getCursorType( parent_csr ) );
   CXCursor const type_csr = clang_getTypeDeclaration( type );
   if ( tidy_Cursor_isInvalid( type_csr ) )
     return false;
@@ -817,14 +817,14 @@ static void symbols_cleanup( void ) {
  * Visits each symbol in a translation unit.
  *
  * @param cursor The cursor for the symbol in the AST being visited.
- * @param parent The parent cursor of \a cursor.
+ * @param parent_csr Not used.
  * @param data A pointer to a symbols_visit_data.
  * @return Always returns `CXChildVisit_Continue`.
  */
 static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
-                                                     CXCursor parent,
+                                                     CXCursor parent_csr,
                                                      CXClientData data ) {
-  (void)parent;
+  (void)parent_csr;
   assert( data != NULL );
   symbols_visit_data *const svd = data;
 
@@ -863,7 +863,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
 
   switch ( kind ) {
     case CXCursor_CallExpr:
-      if ( visit_CallExpr( cursor, parent, svd ) )
+      if ( visit_CallExpr( cursor, parent_csr, svd ) )
         goto skip_children;
       break;
 
@@ -875,19 +875,19 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
     case CXCursor_TypeAliasDecl:
     case CXCursor_TypedefDecl:
     case CXCursor_TypeRef:
-      visit_most_kinds( cursor, parent, svd );
+      visit_most_kinds( cursor, parent_csr, svd );
       break;
 
     case CXCursor_FieldDecl:
-      visit_FieldDecl( cursor, parent, svd );
+      visit_FieldDecl( cursor, parent_csr, svd );
       break;
 
     case CXCursor_MacroDefinition:
-      visit_MacroDefinition( cursor, parent, svd );
+      visit_MacroDefinition( cursor, parent_csr, svd );
       break;
 
     case CXCursor_MemberRefExpr:
-      visit_MemberRefExpr( cursor, parent, svd );
+      visit_MemberRefExpr( cursor, parent_csr, svd );
       break;
 
     case CXCursor_NamespaceRef:
@@ -899,7 +899,7 @@ static enum CXChildVisitResult symbols_init_visitor( CXCursor cursor,
       break;
 
     case CXCursor_OverloadedDeclRef:
-      visit_OverloadedDeclRef( cursor, parent, svd );
+      visit_OverloadedDeclRef( cursor, parent_csr, svd );
       break;
 
     default:
@@ -953,12 +953,12 @@ skip_children:
  * Visits a `CXCursor_CallExpr` kind of cursor.
  *
  * @param call_csr The call expression's cursor to visit.
- * @param parent The parent cursor of \a call_csr.
+ * @param parent_csr The parent cursor of \a call_csr.
  * @param svd The symbols_visit_data to use.
  * @return Returns `true` only if we've already visited our child AST nodes (so
  * symbols_init_visitor() shouldn't).
  */
-static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
+static bool visit_CallExpr( CXCursor call_csr, CXCursor parent_csr,
                             symbols_visit_data *svd ) {
   assert( svd != NULL );
 
@@ -994,7 +994,7 @@ static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
       return true;
   }
 
-  visit_most_kinds( call_csr, parent, svd );
+  visit_most_kinds( call_csr, parent_csr, svd );
   return svd->source->lang == CXLanguage_CPlusPlus;
 }
 
@@ -1021,12 +1021,12 @@ static bool visit_CallExpr( CXCursor call_csr, CXCursor parent,
  * @endparblock
  *
  * @param field_csr The field declaration's cursor to visit.
- * @param parent The parent cursor of \a field_csr.
+ * @param parent_csr Not used.
  * @param svd The symbols_visit_data to use.
  */
-static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
+static void visit_FieldDecl( CXCursor field_csr, CXCursor parent_csr,
                              symbols_visit_data *svd ) {
-  (void)parent;
+  (void)parent_csr;
   assert( svd != NULL );
 
   CXSourceRange const field_range = tidy_getCursorExtent( field_csr );
@@ -1074,12 +1074,12 @@ static void visit_FieldDecl( CXCursor field_csr, CXCursor parent,
  * @endparblock
  *
  * @param macro_csr The macro definition's cursor to visit.
- * @param parent The parent cursor of \a macro_csr.
+ * @param parent_csr Not used.
  * @param svd The symbols_visit_data to use.
  */
-static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
+static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent_csr,
                                    symbols_visit_data *svd ) {
-  (void)parent;
+  (void)parent_csr;
   assert( svd != NULL );
 
   CXSourceRange const macro_range = clang_getCursorExtent( macro_csr );
@@ -1123,10 +1123,10 @@ static void visit_MacroDefinition( CXCursor macro_csr, CXCursor parent,
  * Visit most kinds of cursor.
  *
  * @param cursor The cursor to visit.
- * @param parent The parent cursor of \a cursor.
+ * @param parent_csr The parent cursor of \a cursor.
  * @param svd The symbols_visit_data to use.
  */
-static void visit_most_kinds( CXCursor cursor, CXCursor parent,
+static void visit_most_kinds( CXCursor cursor, CXCursor parent_csr,
                               symbols_visit_data *svd ) {
   assert( svd != NULL );
 
@@ -1148,8 +1148,8 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
         if ( clang_equalCursors( dec_csr, svd->cxx_deferred_fn_csr ) )
           return;
 
-        CXCursor const scope_csr = sid_cxx_scope( svd, parent );
-        if ( is_cxx_proxy_qual_ref_iwyu_exc( cursor, parent, scope_csr ) )
+        CXCursor const scope_csr = sid_cxx_scope( svd, parent_csr );
+        if ( is_cxx_proxy_qual_ref_iwyu_exc( cursor, parent_csr, scope_csr ) )
           return;
         if ( is_cxx_mbr_or_base_iwyu_exc( dec_csr, scope_csr ) )
           return;
@@ -1159,20 +1159,22 @@ static void visit_most_kinds( CXCursor cursor, CXCursor parent,
   }
 
   CXCursor def_csr;
-  if ( is_symbol_definition_needed( cursor, parent, dec_csr, svd, &def_csr ) )
+  if ( is_symbol_definition_needed( cursor, parent_csr, dec_csr, svd,
+                                    &def_csr ) ) {
     maybe_add_symbol( dec_csr, def_csr, svd );
+  }
 }
 
 /**
  * Visits a `CXCursor_MemberRefExpr` kind of cursor.
  *
  * @param mbr_ref_csr The member reference's cursor to visit.
- * @param parent Not used.
+ * @param parent_csr Not used.
  * @param svd The symbols_visit_data to use.
  */
-static void visit_MemberRefExpr( CXCursor mbr_ref_csr, CXCursor parent,
+static void visit_MemberRefExpr( CXCursor mbr_ref_csr, CXCursor parent_csr,
                                  symbols_visit_data *svd ) {
-  (void)parent;
+  (void)parent_csr;
   assert( svd != NULL );
 
   CXCursor const mbr_csr = clang_getCursorReferenced( mbr_ref_csr );
@@ -1252,12 +1254,13 @@ skip:
  * invalid or null cursor.
  *
  * @param overloaded_csr The overloaded definition's cursor to visit.
- * @param parent Not used.
+ * @param parent_csr Not used.
  * @param svd The symbols_visit_data to use.
  */
-static void visit_OverloadedDeclRef( CXCursor overloaded_csr, CXCursor parent,
+static void visit_OverloadedDeclRef( CXCursor overloaded_csr,
+                                     CXCursor parent_csr,
                                      symbols_visit_data *svd ) {
-  (void)parent;
+  (void)parent_csr;
   assert( svd != NULL );
 
   unsigned const num_decls = clang_getNumOverloadedDecls( overloaded_csr );

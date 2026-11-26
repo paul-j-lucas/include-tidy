@@ -96,14 +96,14 @@ static char const VERBOSE_PREFIX[] = "// tidy | ";
  * Visits each child cursor of a cursor collecting its CXSourceRange.
  *
  * @param cursor being visited.
- * @param parent The parent cursor of \a cursor.
+ * @param parent_csr Not used.
  * @param data A pointer to an array_t to append the CXSourceRange to.
  * @return Always returns `CXChildVisit_Continue`.
  */
 static enum CXChildVisitResult cursor_ranges_visitor( CXCursor cursor,
-                                                      CXCursor parent,
+                                                      CXCursor parent_csr,
                                                       CXClientData data ) {
-  (void)parent;
+  (void)parent_csr;
 
   //
   // Restrict range collection to expressions and statements only.

@@ -223,7 +223,7 @@ bool is_cxx_mbr_ref_iwyu_exc( CXCursor obj_csr );
  * present, it serves as the "proxy" for any nested members within it.
  *
  * @param cursor The cursor for the the symbol.
- * @param parent The parent of \a cursor.
+ * @param parent_csr The parent of \a cursor.
  * @param scope_csr The cursor representing the surrounding C++ class scope, if
  * any.
  * @return Returns `true` only if \a cursor is explicitly qualified.
@@ -231,7 +231,7 @@ bool is_cxx_mbr_ref_iwyu_exc( CXCursor obj_csr );
  * @note This function should be called only when the file being tidied is C++.
  */
 NODISCARD
-bool is_cxx_proxy_qual_ref_iwyu_exc( CXCursor cursor, CXCursor parent,
+bool is_cxx_proxy_qual_ref_iwyu_exc( CXCursor cursor, CXCursor parent_csr,
                                      CXCursor scope_csr );
 
 ///////////////////////////////////////////////////////////////////////////////

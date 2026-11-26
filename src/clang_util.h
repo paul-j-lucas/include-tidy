@@ -332,13 +332,13 @@ inline bool tidy_Cursor_isInvalid( CXCursor cursor ) {
  * destructor, member function, conversion operator, or variable.
  *
  * @param cursor The cursor to check.
- * @param parent The lexical parent cursor of \a cursor.
+ * @param parent_csr The lexical parent cursor of \a cursor.
  * @param rv_cls_csr If not NULL and \a cursor is an out-of-line definition,
  * the class of \a cursor is put here.
  * @return Returns `true` only if \a cursor is an out-of-line definition.
  */
 NODISCARD
-bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent,
+bool tidy_Cursor_isOutOfLineDefinition( CXCursor cursor, CXCursor parent_csr,
                                         CXCursor *rv_cls_csr );
 
 /**

@@ -404,7 +404,7 @@ bool is_cxx_mbr_ref_iwyu_exc( CXCursor obj_csr ) {
   return false;
 }
 
-bool is_cxx_proxy_qual_ref_iwyu_exc( CXCursor cursor, CXCursor parent,
+bool is_cxx_proxy_qual_ref_iwyu_exc( CXCursor cursor, CXCursor parent_csr,
                                      CXCursor scope_csr ) {
   enum CXCursorKind const kind = clang_getCursorKind( cursor );
   if ( clang_isDeclaration( kind ) )    // not a reference
@@ -415,7 +415,7 @@ bool is_cxx_proxy_qual_ref_iwyu_exc( CXCursor cursor, CXCursor parent,
   if ( unlikely( cursor_offset == 0 ) )
     return false;                       // LCOV_EXCL_LINE
 
-  CXSourceRange range = clang_getCursorExtent( parent );
+  CXSourceRange range = clang_getCursorExtent( parent_csr );
   if ( unlikely( clang_Range_isNull( range ) ) )
     range = clang_getCursorExtent( cursor );  // LCOV_EXCL_LINE
   if ( unlikely( clang_Range_isNull( range ) ) )
