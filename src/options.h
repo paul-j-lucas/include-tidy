@@ -249,19 +249,6 @@ bool opt_test_parse( char const *test_format );
 NODISCARD
 bool opt_verbose_parse( char const *verbose_format );
 
-/**
- * If \a *pformat is:
- *
- *  + `"*"`: sets \a *pformat to \a all_value.
- *  + `"-"`: sets \a *pformat to `""` (the empty string).
- *
- * Otherwise does nothing.
- *
- * @param pformat A pointer to the format string to possibly set.
- * @param all_value The "all" value for when \a *pformat is `"*"`.
- */
-void option_str_set_all_or_none( char const **pformat, char const *all_value );
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @} */

@@ -95,6 +95,29 @@ static unsigned long long parse_ull( char const *s ) {
   fatal_error( EX_USAGE, "\"%s\": invalid integer\n", s );
 }
 
+/**
+ * If \a *pformat is:
+ *
+ *  + `"*"`: sets \a *pformat to \a all_value.
+ *  + `"-"`: sets \a *pformat to `""` (the empty string).
+ *
+ * Otherwise does nothing.
+ *
+ * @param pformat A pointer to the format string to possibly set.
+ * @param all_value The "all" value for when \a *pformat is `"*"`.
+ */
+static void set_all_or_none( char const **pformat, char const *all_value ) {
+  assert( pformat != NULL );
+  assert( *pformat != NULL );
+  assert( all_value != NULL );
+  assert( all_value[0] != '\0' );
+
+  if ( strcmp( *pformat, "*" ) == 0 )
+    *pformat = all_value;               // LCOV_EXCL_LINE
+  else if ( strcmp( *pformat, "-" ) == 0 )
+    *pformat = "";
+}
+
 ////////// extern functions ///////////////////////////////////////////////////
 
 bool opt_align_column_parse( char const *s ) {
@@ -220,7 +243,7 @@ bool opt_line_length_parse( char const *s ) {
 bool opt_test_parse( char const *test_format ) {
   assert( test_format != NULL );
 
-  option_str_set_all_or_none( &test_format, OPT_TEST_ALL );
+  set_all_or_none( &test_format, OPT_TEST_ALL );
   tidy_test test = TIDY_TEST_NONE;
 
   for ( char const *s = test_format; *s != '\0'; ++s ) {
@@ -243,7 +266,7 @@ bool opt_test_parse( char const *test_format ) {
 bool opt_verbose_parse( char const *verbose_format ) {
   assert( verbose_format != NULL );
 
-  option_str_set_all_or_none( &verbose_format, OPT_VERBOSE_ALL );
+  set_all_or_none( &verbose_format, OPT_VERBOSE_ALL );
   tidy_verbose verbose = TIDY_VERBOSE_NONE;
 
     for ( char const *s = verbose_format; *s != '\0'; ++s ) {
@@ -317,18 +340,6 @@ bool opt_verbose_parse( char const *verbose_format ) {
     verbose &= ~TO_UNSIGNED_EXPR( TIDY_VERBOSE_SRC_FILE_VIOLATIONS );
 
   return true;
-}
-
-void option_str_set_all_or_none( char const **pformat, char const *all_value ) {
-  assert( pformat != NULL );
-  assert( *pformat != NULL );
-  assert( all_value != NULL );
-  assert( all_value[0] != '\0' );
-
-  if ( strcmp( *pformat, "*" ) == 0 )
-    *pformat = all_value;               // LCOV_EXCL_LINE
-  else if ( strcmp( *pformat, "-" ) == 0 )
-    *pformat = "";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
