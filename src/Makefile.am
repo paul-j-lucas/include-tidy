@@ -54,7 +54,9 @@ AM_CFLAGS +=		--coverage -g -O0
 AM_LDFLAGS +=		--coverage
 endif
 
-TIDY_FLAGS =		-Xtidy --verbose=f -Xtidy --error=never
+TIDY_FLAGS =		-Xtidy --compiler=$(CC) -Xtidy --error=never
+ITIDY_FLAGS =		$(TIDY_FLAGS) -Xtidy --verbose=f
+STIDY_FLAGS =		$(TIDY_FLAGS)
 TIDY_CFLAGS =		$(CFLAGS) $(AM_CFLAGS) $(CPPFLAGS) $(AM_CPPFLAGS)
 
 include_tidy_SOURCES =	array.c array.h \
@@ -129,11 +131,11 @@ util_test_SOURCES = 	$(BASE_TEST_SOURCES) \
 itidy: include-tidy
 	@for file in *.h *.c; do \
 	  [ ! -f "$$file" ] || \
-	    include-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) "$$file" || exit $$?; \
+	    include-tidy $(ITIDY_FLAGS) $(TIDY_CFLAGS) "$$file" || exit $$?; \
 	done
 
 stidy:
-	@symbol-tidy $(TIDY_FLAGS) $(TIDY_CFLAGS) *.c
+	@symbol-tidy $(STIDY_FLAGS) $(TIDY_CFLAGS) *.c
 
 clean-coverage-local:
 	rm -f *.gcda

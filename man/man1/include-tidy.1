@@ -35,7 +35,7 @@
 .if !'\\$1'0' .sp
 ..
 .\" ---------------------------------------------------------------------------
-.TH \f3include-tidy\fP 1 "October 27, 2026" "PJL TOOLS"
+.TH \f3include-tidy\fP 1 "November 26, 2026" "PJL TOOLS"
 .SH NAME
 include-tidy \(em \f(CW#include\fP tidier
 .SH SYNOPSIS
@@ -143,7 +143,7 @@ In your
 .BR Makefile ,
 have:
 .cS
-TIDY_FLAGS  = -Xtidy --verbose=f -Xtidy --error=never
+TIDY_FLAGS  = -Xtidy --compiler=$(CC) -Xtidy -Vf -Xtidy -enever
 TIDY_CFLAGS = $(CFLAGS) $(AM_CFLAGS) $(CPPFLAGS) $(AM_CPPFLAGS)
 
 itidy:
@@ -154,18 +154,22 @@ itidy:
         done
 .cE
 then simply
-.B make tidy
+.B make itidy
 to analyze all your source files
 at once.
 (For C++,
-substitute your preferred C++ filename extensions,
+substitute
+.B CXX
+for
+.BR CC ,
 .B CXXFLAGS
 for
 .BR CFLAGS ,
 and
 .B AM_CXXFLAGS
 for
-.BR AM_CFLAGS .
+.BR AM_CFLAGS ,
+\f(CW.cpp\fP for \f(CW.c\fP.
 The
 .BR AM_
 variables are needed
@@ -189,24 +193,22 @@ options
 that affect compilation.
 .PP
 The
-.B @
-suppresses echoing of commands;
-.B \-\-verbose=f
+.B \-\-compiler=$(CC)
+ensures
+.B symbol-tidy
+uses the same compiler
+you are using;
+.B \-Vf
 prints each source file's name
 (so you know which file
 any printed violations are for);
-.B \-\-error=never
+.B \-enever
 causes
 .B include-tidy
 always to exit with a zero status
 even for violations so
 .B make
 doesn't think anything went wrong.
-(See the
-.B \-\-error
-and
-.B \-\-verbose
-options below.)
 .SS Predefined Macro
 .B include-tidy
 implicitly defines a macro
