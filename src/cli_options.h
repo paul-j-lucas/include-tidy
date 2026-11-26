@@ -34,6 +34,7 @@
 /// @cond DOXYGEN_IGNORE
 
 // standard
+#include <getopt.h>
 #include <stdbool.h>
 #include <stddef.h>
 

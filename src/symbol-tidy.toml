@@ -27,10 +27,11 @@
 ignore-paths = [
   "config.h"
 ]
-
-[cli_options.c]
-ignore-symbols = [
-  "PUT_CONFIG_OPT"
+root-symbols-from = [
+  "array.h",
+  "hash_table.h",
+  "red_black.h",
+  "strbuf.h"
 ]
 
 [cli_options.h]
@@ -75,7 +76,12 @@ ignore-symbols = [
 
 [include.h]
 ignore-symbols = [
-  "tidy_sort_rank::TIDY_SORT_DEFAULT"
+  "TIDY_SORT_DEFAULT"
+]
+
+[print.c]
+ignore-symbols = [
+  "PUT_CONFIG_OPT"
 ]
 
 [util.h]
