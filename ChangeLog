@@ -1,3 +1,11 @@
+2026-11-26  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
+
+   * clang_util.c, clang_util.h: symbol-tidy clean-up.
+   * options.c, options.h: Made set_all_or_none be static.
+   * cli_options.h, include-tidy.c, symbol-tidy.toml: symbol-tidy clean-up.
+   * man/man1/include-tidy.1, src/Makefile.am: Added --compiler to man page
+     example.
+
 2026-11-25  Paul J. Lucas <7366785+paul-j-lucas@users.noreply.github.com>
 
    * Makefile.am: Added symbol-tidy.toml to EXTRA_DIST.
