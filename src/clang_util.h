@@ -206,28 +206,6 @@ NODISCARD
 CXCursor tidy_Cursor_getUnderlyingType( CXCursor cursor );
 
 /**
- * Gets the root initializer for a variable.
- *
- * @par Example
- * @parblock
- * Given:
- *
- *      int a = 42;
- *      int b = a;
- *
- * If passed the cursor for the DeclRefExpr for `b`, will return `42`.
- * @endparblock
- *
- * @param expr_csr The cursor for the initializing expression.
- * @return Returns the root initializer expression or \a expr_csr (without
- * UnexposedExpr) if no other initializer expressions exist.
- *
- * @sa tidy_Cursor_getVarInitNoUnaryOps()
- */
-NODISCARD
-CXCursor tidy_Cursor_getVarInit( CXCursor expr_csr );
-
-/**
  * Calls tidy_Cursor_getVarInit(), but strips all unary operators (cast, `&`,
  * `*`) as well as `()`.
  *
@@ -381,19 +359,6 @@ NODISCARD
 bool tidy_Cursor_isReservedName( CXCursor cursor, enum CXLanguageKind lang );
 
 /**
- * Gets whether \a cursor is a class, class template, enumeration, namespace,
- * structure, or union declaration.
- *
- * @param cursor The cursor to check.
- * @return Returns `true` only if \a cursor is a class, class template,
- * enumeration, namespace, structure, or union.
- *
- * @sa tidy_Cursor_isClassDecl()
- */
-NODISCARD
-bool tidy_Cursor_isScopeDecl( CXCursor cursor );
-
-/**
  * Gets whether the spelling of \a cursor equals \a value.
  *
  * @param cursor The cursor to compare.
@@ -519,23 +484,6 @@ fnv1a_t tidy_FileUniqueID_hash( CXFileUniqueID const *fuid );
  */
 NODISCARD
 CXCursor tidy_getCursorByName( char const *name, CXCursor scope_csr );
-
-/**
- * Gets the cursor for the identifier given by \a token within \a scope_csr,
- * but only if \a token actually is an identifier.
- *
- * @param tu The translation unit to use.
- * @param token The token to get the cursor for.
- * @param scope_csr The cursor of the scope to search within.
- * @return Returns said cursor; or an invalid cursor if \a token is an
- * identifier, but not found; or the null cursor if \a token is not an
- * identifier.
- *
- * @sa tidy_getCursorByName()
- */
-NODISCARD
-CXCursor tidy_getCursorByNameToken( CXTranslationUnit tu, CXToken token,
-                                    CXCursor scope_csr );
 
 /**
  * Similar to `clang_getCursorExtent()` except that it works better when macros

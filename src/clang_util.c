@@ -95,6 +95,11 @@ struct isBaseClass_data {
 
 ////////// local functions ////////////////////////////////////////////////////
 
+NODISCARD
+static bool tidy_Cursor_isScopeDecl( CXCursor );
+
+////////// local functions ////////////////////////////////////////////////////
+
 /**
  * A helper function for tidy_getCursorByName() that visits each symbol within
  * a scope attempting to find one having \ref getCursorByName_data::find_name
@@ -410,6 +415,41 @@ static CXCursor tidy_Cursor_getTypeRef( CXCursor cursor ) {
 }
 
 /**
+ * Gets the root initializer for a variable.
+ *
+ * @par Example
+ * @parblock
+ * Given:
+ *
+ *      int a = 42;
+ *      int b = a;
+ *
+ * If passed the cursor for the DeclRefExpr for `b`, will return `42`.
+ * @endparblock
+ *
+ * @param expr_csr The cursor for the initializing expression.
+ * @return Returns the root initializer expression or \a expr_csr (without
+ * UnexposedExpr) if no other initializer expressions exist.
+ *
+ * @sa tidy_Cursor_getVarInitNoUnaryOps()
+ */
+NODISCARD
+static CXCursor tidy_Cursor_getVarInit( CXCursor expr_csr ) {
+  expr_csr = tidy_Cursor_skipUnexposedDown( expr_csr );
+  enum CXCursorKind kind = clang_getCursorKind( expr_csr );
+  if ( kind == CXCursor_DeclRefExpr ) {
+    CXCursor const ref_csr = clang_getCursorReferenced( expr_csr );
+    kind = clang_getCursorKind( ref_csr );
+    if ( kind == CXCursor_VarDecl ) {
+      CXCursor const init_csr = tidy_Cursor_getFirstExprChild( ref_csr );
+      if ( !clang_Cursor_isNull( init_csr ) )
+        return tidy_Cursor_getVarInit( init_csr );
+    }
+  }
+  return expr_csr;
+}
+
+/**
  * Gets whether the kind of \a cursor can be inherited from a base class into a
  * derived class.
  *
@@ -451,6 +491,62 @@ NODISCARD
 static bool tidy_Cursor_isOrInClassTemplate( CXCursor cursor ) {
   return  isOrInClassTemplate_impl( cursor, &clang_getCursorSemanticParent ) ||
           isOrInClassTemplate_impl( cursor, &clang_getCursorLexicalParent  );
+}
+
+/**
+ * Gets whether \a cursor is a class, class template, enumeration, namespace,
+ * structure, or union declaration.
+ *
+ * @param cursor The cursor to check.
+ * @return Returns `true` only if \a cursor is a class, class template,
+ * enumeration, namespace, structure, or union.
+ *
+ * @sa tidy_Cursor_isClassDecl()
+ */
+NODISCARD
+static bool tidy_Cursor_isScopeDecl( CXCursor cursor ) {
+  enum CXCursorKind const kind = clang_getCursorKind( cursor );
+  switch ( kind ) {
+    case CXCursor_ClassDecl:
+    case CXCursor_ClassTemplate:
+    case CXCursor_ClassTemplatePartialSpecialization:
+    case CXCursor_EnumDecl:
+    case CXCursor_Namespace:
+    case CXCursor_StructDecl:
+    case CXCursor_TypeAliasDecl:
+    case CXCursor_TypedefDecl:
+    case CXCursor_UnionDecl:
+      return true;
+    default:
+      return false;
+  } // switch
+}
+
+/**
+ * Gets the cursor for the identifier given by \a token within \a scope_csr,
+ * but only if \a token actually is an identifier.
+ *
+ * @param tu The translation unit to use.
+ * @param token The token to get the cursor for.
+ * @param scope_csr The cursor of the scope to search within.
+ * @return Returns said cursor; or an invalid cursor if \a token is an
+ * identifier, but not found; or the null cursor if \a token is not an
+ * identifier.
+ *
+ * @sa tidy_getCursorByName()
+ */
+NODISCARD
+static CXCursor tidy_getCursorByNameToken( CXTranslationUnit tu, CXToken token,
+                                           CXCursor scope_csr ) {
+  if ( clang_getTokenKind( token ) != CXToken_Identifier )
+    return clang_getNullCursor();       // LCOV_EXCL_LINE
+
+  CXString const    token_cxs = clang_getTokenSpelling( tu, token );
+  char const *const token_cs = clang_getCString( token_cxs );
+  CXCursor const    rv_csr = tidy_getCursorByName( token_cs, scope_csr );
+
+  clang_disposeString( token_cxs );
+  return rv_csr;
 }
 
 ////////// extern functions ///////////////////////////////////////////////////
@@ -543,21 +639,6 @@ CXCursor tidy_Cursor_getUnderlyingType( CXCursor cursor ) {
   } // for
 
   return clang_getTypeDeclaration( type );
-}
-
-CXCursor tidy_Cursor_getVarInit( CXCursor expr_csr ) {
-  expr_csr = tidy_Cursor_skipUnexposedDown( expr_csr );
-  enum CXCursorKind kind = clang_getCursorKind( expr_csr );
-  if ( kind == CXCursor_DeclRefExpr ) {
-    CXCursor const ref_csr = clang_getCursorReferenced( expr_csr );
-    kind = clang_getCursorKind( ref_csr );
-    if ( kind == CXCursor_VarDecl ) {
-      CXCursor const init_csr = tidy_Cursor_getFirstExprChild( ref_csr );
-      if ( !clang_Cursor_isNull( init_csr ) )
-        return tidy_Cursor_getVarInit( init_csr );
-    }
-  }
-  return expr_csr;
 }
 
 CXCursor tidy_Cursor_getVarInitNoUnaryOps( CXCursor expr_csr ) {
@@ -767,24 +848,6 @@ done:
   return is_reserved;
 }
 
-bool tidy_Cursor_isScopeDecl( CXCursor cursor ) {
-  enum CXCursorKind const kind = clang_getCursorKind( cursor );
-  switch ( kind ) {
-    case CXCursor_ClassDecl:
-    case CXCursor_ClassTemplate:
-    case CXCursor_ClassTemplatePartialSpecialization:
-    case CXCursor_EnumDecl:
-    case CXCursor_Namespace:
-    case CXCursor_StructDecl:
-    case CXCursor_TypeAliasDecl:
-    case CXCursor_TypedefDecl:
-    case CXCursor_UnionDecl:
-      return true;
-    default:
-      return false;
-  } // switch
-}
-
 bool tidy_Cursor_isSpellingEqualTo( CXCursor cursor, char const *value ) {
   assert( value != NULL );
 
@@ -901,19 +964,6 @@ CXCursor tidy_getCursorByName( char const *name, CXCursor scope_csr ) {
   } // while
 
   return (CXCursor){ .kind = CXCursor_NoDeclFound };
-}
-
-CXCursor tidy_getCursorByNameToken( CXTranslationUnit tu, CXToken token,
-                                    CXCursor scope_csr ) {
-  if ( clang_getTokenKind( token ) != CXToken_Identifier )
-    return clang_getNullCursor();       // LCOV_EXCL_LINE
-
-  CXString const    token_cxs = clang_getTokenSpelling( tu, token );
-  char const *const token_cs = clang_getCString( token_cxs );
-  CXCursor const    rv_csr = tidy_getCursorByName( token_cs, scope_csr );
-
-  clang_disposeString( token_cxs );
-  return rv_csr;
 }
 
 CXSourceRange tidy_getCursorExtent( CXCursor cursor ) {
