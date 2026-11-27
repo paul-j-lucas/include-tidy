@@ -687,12 +687,11 @@ static void first_parse( config_parse_fn_args const *config ) {
   if ( !toml_bool_parse( config, &first ) || !first )
     return;
 
-  ht_iterator_t iter;
+  ht_iterator_t it;
   size_t const  rel_path_len = strlen( config->table->key.name );
 
-  ht_iterator_init( &iter, &tidy_include_set );
-  for ( tidy_include *include;
-        (include = ht_iterator_next( &iter )) != NULL; ) {
+  ht_iterator_init( &it, &tidy_include_set );
+  for ( tidy_include *include; (include = ht_iterator_next( &it )) != NULL; ) {
     if ( path_ends_with( include->abs_path, strlen( include->abs_path ),
                          config->table->key.name, rel_path_len ) ) {
       include->sort_rank = TIDY_SORT_FIRST;
@@ -884,12 +883,12 @@ static void proxy_parse_string( config_parse_fn_args const *config ) {
   if ( unlikely( to_include == NULL ) )
     return;                             // LCOV_EXCL_LINE
 
-  ht_iterator_t iter;
+  ht_iterator_t it;
   size_t const  rel_path_len = strlen( config->value->s );
 
-  ht_iterator_init( &iter, &tidy_include_set );
+  ht_iterator_init( &it, &tidy_include_set );
   for ( tidy_include *from_include;
-        (from_include = ht_iterator_next( &iter )) != NULL; ) {
+        (from_include = ht_iterator_next( &it )) != NULL; ) {
     if ( !path_ends_with( from_include->abs_path,
                           strlen( from_include->abs_path ),
                           config->value->s, rel_path_len ) ) {
@@ -1239,10 +1238,10 @@ static void config_parse( tidy_source *source, char const *config_path,
       strcmp( table.key.name, TABLE_INCLUDE_TIDY_NAME ) == 0 ?
         TABLE_INCLUDE_TIDY : TABLE_NONE;
 
-    toml_iterator iter;
-    toml_iterator_init( &iter, &table );
+    toml_iterator it;
+    toml_iterator_init( &it, &table );
     for ( toml_key_value const *kv;
-          (kv = toml_iterator_next( &iter )) != NULL; ) {
+          (kv = toml_iterator_next( &it )) != NULL; ) {
       config_key const *const found_key = config_key_find( kv->key.name );
       if ( found_key == NULL ) {
         print_file_error(
@@ -1357,12 +1356,11 @@ static void include_handle( char const *config_path, char const *key_name,
   assert( loc != NULL );
   assert( handling != TIDY_HANDLE_DEFAULT );
 
-  ht_iterator_t iter;
+  ht_iterator_t it;
   size_t const  rel_path_len = strlen( rel_path );
 
-  ht_iterator_init( &iter, &tidy_include_set );
-  for ( tidy_include *include;
-        (include = ht_iterator_next( &iter )) != NULL; ) {
+  ht_iterator_init( &it, &tidy_include_set );
+  for ( tidy_include *include; (include = ht_iterator_next( &it )) != NULL; ) {
     if ( path_ends_with( include->abs_path, strlen( include->abs_path ),
                          rel_path, rel_path_len ) ) {
       if ( include->handling == TIDY_HANDLE_DEFAULT ) {
@@ -1532,10 +1530,10 @@ static void symbol_includes_dump( void ) {
     return;
   verbose_new_section( /*printed_header=*/NULL );
   verbose_printf( "configuration symbols:\n" );
-  rb_iterator_t si_iter;
-  rb_iterator_init( &si_iter, &symbol_includes_map );
+  rb_iterator_t si_it;
+  rb_iterator_init( &si_it, &symbol_includes_map );
   for ( symbol_includes const *si;
-        (si = rb_iterator_next( &si_iter )) != NULL; ) {
+        (si = rb_iterator_next( &si_it )) != NULL; ) {
     verbose_printf( "  \"%s\" -> [ ", si->from_sym_name );
 
     bool comma = false;

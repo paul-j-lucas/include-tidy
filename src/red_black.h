@@ -439,18 +439,18 @@ struct rb_insert_rv {
 /**
  * Initializes an rb_iterator.
  *
- * @param iter A pointer to the rb_iterator to initialize.
+ * @param it A pointer to the rb_iterator to initialize.
  * @param tree A pointer to the rb_tree to iterate over.
  *
  * @sa rb_iterator_next()
  * @sa rb_tree_visit()
  */
-void rb_iterator_init( rb_iterator_t *iter, rb_tree_t const *tree );
+void rb_iterator_init( rb_iterator_t *it, rb_tree_t const *tree );
 
 /**
  * Iterates to the next in-order node in the tree, if any.
  *
- * @param iter A pointer to the rb_iterator.
+ * @param it A pointer to the rb_iterator.
  * @return Returns a pointer to the data of the next node or NULL if none.
  *
  * @warning Even though this function returns a pointer to a non-`const` \ref
@@ -461,7 +461,7 @@ void rb_iterator_init( rb_iterator_t *iter, rb_tree_t const *tree );
  * @sa rb_iterator_init()
  */
 NODISCARD
-void* rb_iterator_next( rb_iterator_t *iter );
+void* rb_iterator_next( rb_iterator_t *it );
 
 /**
  * Gets a pointer to \a node's data.

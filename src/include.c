@@ -197,10 +197,10 @@ static tidy_include* get_associated_header( tidy_source const *source ) {
   char *const source_path_no_ext = path_no_ext_if( source->path, 'c' );
 
   if ( source_path_no_ext != NULL ) {
-    ht_iterator_t iter;
-    ht_iterator_init( &iter, &tidy_include_set );
+    ht_iterator_t it;
+    ht_iterator_init( &it, &tidy_include_set );
     for ( tidy_include *include;
-          (include = ht_iterator_next( &iter )) != NULL; ) {
+          (include = ht_iterator_next( &it )) != NULL; ) {
       if ( !include->is_local )
         continue;
       if ( source->assoc_header_rel_path != NULL ) {
@@ -705,9 +705,9 @@ static char* make_symbols_comment( tidy_source const *source,
   array_t symbol_array = ARRAY_INIT( sizeof(tidy_symbol) );
   array_reserve( &symbol_array, include->symbol_set.size );
 
-  ht_iterator_t iter;
-  ht_iterator_init( &iter, &include->symbol_set );
-  for ( tidy_symbol const *sym; (sym = ht_iterator_next( &iter )) != NULL; )
+  ht_iterator_t it;
+  ht_iterator_init( &it, &include->symbol_set );
+  for ( tidy_symbol const *sym; (sym = ht_iterator_next( &it )) != NULL; )
     *(tidy_symbol*)array_push_back( &symbol_array ) = *sym;
 
   if ( source->lang == CXLanguage_CPlusPlus ) {
@@ -940,10 +940,10 @@ static void print_statistics( verbose_stat_ctx *vsc ) {
   double max_lf = -1.0;
 
   // Find the include file having the symbol set with the largest load factor.
-  ht_iterator_t iter;
-  ht_iterator_init( &iter, &tidy_include_set );
+  ht_iterator_t it;
+  ht_iterator_init( &it, &tidy_include_set );
   for ( tidy_include const *include;
-        (include = ht_iterator_next( &iter )) != NULL; ) {
+        (include = ht_iterator_next( &it )) != NULL; ) {
     double const lf = ht_table_load_factor( &include->symbol_set );
     if ( lf > max_lf ) {
       max_include = include;
@@ -1213,10 +1213,10 @@ void includes_print( tidy_source *source ) {
     assoc_include->sort_rank = TIDY_SORT_ASSOCIATED;
   }
 
-  ht_iterator_t iter;
-  ht_iterator_init( &iter, &tidy_include_set );
+  ht_iterator_t it;
+  ht_iterator_init( &it, &tidy_include_set );
   for ( tidy_include const *include;
-        (include = ht_iterator_next( &iter )) != NULL; ) {
+        (include = ht_iterator_next( &it )) != NULL; ) {
     if ( should_print_include( include ) ) {
       *(tidy_include const**)array_push_back( &include_array ) = include;
       if ( include->handling != TIDY_HANDLE_KEEP ) {

@@ -196,12 +196,12 @@ skip:
  * implicit proxies only.
  */
 static void include_proxies_dump( bool want_explicit ) {
-  ht_iterator_t iter;
-  ht_iterator_init( &iter, &tidy_include_set );
+  ht_iterator_t it;
+  ht_iterator_init( &it, &tidy_include_set );
   bool printed_proxies_header = false;
 
   for ( tidy_include const *include;
-        (include = ht_iterator_next( &iter )) != NULL; ) {
+        (include = ht_iterator_next( &it )) != NULL; ) {
     if ( include->proxy == NULL )
       continue;
     if ( include->is_proxy_explicit != want_explicit )

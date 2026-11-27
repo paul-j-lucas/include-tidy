@@ -250,10 +250,10 @@ static bool test_various( rb_dloc_t dloc ) {
     TEST( strcmp( rb_node_data( &tree, rbi.node ), "A" ) == 0 );
 
   // test iterator
-  rb_iterator_t iter;
-  rb_iterator_init( &iter, &tree );
+  rb_iterator_t it;
+  rb_iterator_init( &it, &tree );
   unsigned letter_offset = 0;
-  for ( char const *str; (str = rb_iterator_next( &iter )) != NULL; ) {
+  for ( char const *str; (str = rb_iterator_next( &it )) != NULL; ) {
     TEST( str[0] == STATIC_CAST( char, 'A' + letter_offset ) );
     ++letter_offset;
   }

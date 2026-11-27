@@ -258,13 +258,13 @@ void toml_file_init( toml_file *toml, FILE *file );
 /**
  * Initializes a toml_iterator.
  *
- * @param iter The toml_iterator to initialize.
+ * @param it The toml_iterator to initialize.
  * @param table The toml_table to iterate over.
  *
  * @sa toml_iterator_next()
  */
-inline void toml_iterator_init( toml_iterator *iter, toml_table *table ) {
-  *iter = (toml_iterator){ .table = table };
+inline void toml_iterator_init( toml_iterator *it, toml_table *table ) {
+  *it = (toml_iterator){ .table = table };
 }
 
 /**
@@ -272,18 +272,17 @@ inline void toml_iterator_init( toml_iterator *iter, toml_table *table ) {
  *
  * @note The order in which keys are returned is unspecified.
  *
- * @param iter The toml_iterator.
+ * @param it The toml_iterator.
  * @return Returns a pointer to the next toml_key_value or NULL if the entire
  * table was visited.
  *
  * @sa toml_iterator_init()
  */
 NODISCARD
-inline toml_key_value const* toml_iterator_next( toml_iterator *iter ) {
-  array_t const *const ordered_kv_ptrs = &iter->table->ordered_kv_ptrs;
-  return iter->next_idx < ordered_kv_ptrs->len ?
-    *(toml_key_value**)array_at_nc( ordered_kv_ptrs, iter->next_idx++ ) :
-    NULL;
+inline toml_key_value const* toml_iterator_next( toml_iterator *it ) {
+  array_t const *const ordered_kv_ptrs = &it->table->ordered_kv_ptrs;
+  return it->next_idx < ordered_kv_ptrs->len ?
+    *(toml_key_value**)array_at_nc( ordered_kv_ptrs, it->next_idx++ ) : NULL;
 }
 
 /**

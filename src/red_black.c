@@ -482,31 +482,31 @@ static void rb_tree_reset( rb_tree_t *tree ) {
 
 ////////// extern functions ///////////////////////////////////////////////////
 
-void rb_iterator_init( rb_iterator_t *iter, rb_tree_t const *tree ) {
-  assert( iter != NULL );
+void rb_iterator_init( rb_iterator_t *it, rb_tree_t const *tree ) {
+  assert( it != NULL );
   assert( tree != NULL );
 
-  iter->curr = tree->root;
+  it->curr = tree->root;
   //    stack                           // intentionally not initialized
-  iter->stack_top = 0;
-  iter->tree = tree;
+  it->stack_top = 0;
+  it->tree = tree;
 }
 
-void* rb_iterator_next( rb_iterator_t *iter ) {
-  assert( iter != NULL );
+void* rb_iterator_next( rb_iterator_t *it ) {
+  assert( it != NULL );
 
-  while ( iter->curr != &iter->tree->nil ) {
-    assert( iter->stack_top < RB_ITERATOR_DEPTH_MAX );
-    iter->stack[ iter->stack_top++ ] = iter->curr;
-    iter->curr = iter->curr->child[RB_L];
+  while ( it->curr != &it->tree->nil ) {
+    assert( it->stack_top < RB_ITERATOR_DEPTH_MAX );
+    it->stack[ it->stack_top++ ] = it->curr;
+    it->curr = it->curr->child[RB_L];
   } // while
 
-  if ( iter->stack_top == 0 )
+  if ( it->stack_top == 0 )
     return NULL;
 
-  rb_node_t *const node = iter->stack[ --iter->stack_top ];
-  iter->curr = node->child[RB_R];
-  return rb_node_data( iter->tree, node );
+  rb_node_t *const node = it->stack[ --it->stack_top ];
+  it->curr = node->child[RB_R];
+  return rb_node_data( it->tree, node );
 }
 
 void rb_tree_cleanup( rb_tree_t *tree, rb_free_fn_t free_fn ) {
