@@ -82,13 +82,13 @@ inline bool cp_is_valid( unsigned long long cp ) {
  * Encodes a Unicode code-point into UTF-8.
  *
  * @param cp The Unicode code-point to encode.
- * @param u8c A pointer to the start of a buffer to receive the UTF-8 bytes;
+ * @param rv_u8c A pointer to the start of a buffer to receive the UTF-8 bytes;
  * must be at least #UTF8_CHAR_SIZE_MAX long.  No NULL byte is appended.
- * @return Returns the number of bytes comprising \a u8c only if \a cp is valid
- * or 0 if invalid.
+ * @return Returns the number of bytes comprising \a rv_u8c only if \a cp is
+ * valid or 0 if invalid.
  */
 NODISCARD
-unsigned utf32c_8c( char32_t cp, char8_t u8c[static UTF8_CHAR_SIZE_MAX] );
+unsigned utf32c_8c( char32_t cp, char8_t rv_u8c[static UTF8_CHAR_SIZE_MAX] );
 
 ///////////////////////////////////////////////////////////////////////////////
 
